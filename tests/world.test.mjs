@@ -10,7 +10,7 @@ test('large seamless four-district world with invisible logical grid',()=>{
  assert.ok(world.walkable(START.x,START.y));
 });
 test('all four districts are reachable from start without loading screens',()=>{
- const targets=[{x:41,y:40},{x:122,y:40},{x:41,y:98},{x:122,y:98}];
+ const targets=[START,SITES[3].entrance,SITES[6].entrance,SITES[9].entrance];
  for(const t of targets){
   assert.ok(world.walkable(t.x,t.y),'target blocked: '+JSON.stringify(t));
   const route=findPath(world,START,t);
