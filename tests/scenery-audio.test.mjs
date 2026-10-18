@@ -38,7 +38,7 @@ test('BGM prepares enough ahead for mobile main-thread stalls without forced sil
 test('walking uses quiet footfalls and zoom is locked across all input methods',()=>{
  const game=readFileSync(new URL('../game.js',import.meta.url),'utf8');
  const sound=readFileSync(new URL('../audio.js',import.meta.url),'utf8');
- assert.match(game,/7\.3/);
+ assert.match(game,/6\.15/);
  assert.match(game,/sfx\.play\('soft-step'\)/);
  assert.match(sound,/else if\(kind==='soft-step'\)/);
  assert.match(game,/if\(hero\.path\.length\)return false/);

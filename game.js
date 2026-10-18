@@ -1,14 +1,19 @@
-import {W,H,TILE,ZONES,SITES,NPCS,BRIDGES,START,makeWorld,findPath,nearestWalkable} from './world.js';
+import {W as TIDAL_W,H as TIDAL_H,TILE,ZONES as TIDAL_ZONES,SITES as TIDAL_SITES,NPCS as TIDAL_NPCS,BRIDGES as TIDAL_BRIDGES,START,makeWorld,findPath,nearestWalkable} from './world.js';
+import {SILK_W,SILK_H,SILK_ZONES,SILK_SITES,SILK_NPCS,SILK_BRIDGES,makeSilkWorld,silkPath} from './silk-world.js';
+import {drawSilkTile,drawSilkSite,SILK_PALETTE} from './silk-art.js';
+import {SILK_TALK,SILK_ASIDES} from './silk-dialogue.js';
 import {MUSIC_LIBRARY,createMusic} from './music.js';
 import {createAudio} from './audio.js';
 import {drawSrpgUnit} from './sprite-srpg.js';
-import {limitCamera} from './camera-limits.js';
+import {limitCamera,easeEdgeCamera} from './camera-limits.js';
 import {pickZoneTrack} from './zone-music.js';
 import {TALK,SITE_ASIDES} from './dialogue-data.js';
 
 const $=id=>document.getElementById(id);
 const stage=$('stage'),canvas=$('worldCanvas'),ctx=canvas.getContext('2d',{alpha:false});
-const world=makeWorld();
+const worlds={tidal:makeWorld(),silk:null};
+let currentWorldId='tidal',world=worlds.tidal;
+let W=world.w,H=world.h,ZONES=world.zones,SITES=world.sites,NPCS=world.npcs,BRIDGES=world.bridges;
 const storage={
  getItem(k){try{return localStorage.getItem('tidal-atlas:'+k);}catch{return null;}},
  setItem(k,v){try{localStorage.setItem('tidal-atlas:'+k,v);}catch{}}
@@ -46,6 +51,7 @@ const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):nu
 observer?.observe(stage);window.addEventListener('resize',resize);resize();
 
 function paintTile(c,x,y,t){
+ if(currentWorldId==='silk'){drawSilkTile(c,x,y,t);return;}
  const px=x*TILE,py=y*TILE,n=hash(x,y),n2=hash(y,x);
  rect(c,px,py,32,32,palette[t]||'#7b8c79');
  if(t==='~'){
@@ -184,6 +190,7 @@ function bridgeArt(c,b,time){
  c.restore();
 }
 function drawSite(c,s,t){
+ if(currentWorldId==='silk'){drawSilkSite(c,s,t);return;}
  const x=s.x*TILE,y=s.y*TILE,w=s.w*TILE,h=s.h*TILE,mid=x+w/2;
  const night=s.kind==='arcology'||s.kind==='observatory'||s.kind==='wheel';
  c.save();
@@ -342,6 +349,16 @@ function paint(t){
    ctx.drawImage(chunk(cx,cy),cx*CHUNK*TILE,cy*CHUNK*TILE);
  for(const b of BRIDGES)
   if(b.x1<=right&&b.x2>=left&&b.y1<=bottom&&b.y2>=top)bridgeArt(ctx,b,t);
+ // Landmarks marking the portals at the far end of each bridge.
+ for(const portal of world.transitions||[]){
+  if(portal.x<left||portal.x>right||portal.y<top||portal.y>bottom)continue;
+  const px=(portal.x+.5)*TILE,py=(portal.y+.5)*TILE;
+  const glow=6+2*Math.sin(t*.003);
+  ctx.save();ctx.fillStyle='#d8fff1a0';ctx.beginPath();ctx.arc(px,py,glow,0,Math.PI*2);ctx.fill();
+  ctx.textAlign='center';ctx.font='bold 13px system-ui';ctx.lineWidth=3;ctx.strokeStyle='#344d57';
+  const label=currentWorldId==='tidal'?'星風回廊 ⇢':'⇠ 潮環群島';
+  ctx.strokeText(label,px,py-24);ctx.fillStyle='#fff0cd';ctx.fillText(label,px,py-24);ctx.restore();
+ }
  // Detail props add rhythm without showing tactical grid lines.
  for(let y=top;y<=bottom;y+=6)for(let x=left;x<=right;x+=7){
   if(world.tileAt(x,y)!=='~')continue;
@@ -377,12 +394,28 @@ function updateZone(){
  toast(z.name+' — '+z.sub);
 }
 function updateDiscoveries(){
- $('discovered').textContent=discovered.size+' / '+SITES.length;
+ $('discovered').textContent=discovered.size+' / '+(TIDAL_SITES.length+SILK_SITES.length);
 }
+function switchWorld(id,spawn){
+ if(id===currentWorldId)return;
+ if(id!=='tidal'&&id!=='silk')return;
+ if(id==='silk'&&!worlds.silk)worlds.silk=makeSilkWorld();
+ const next=worlds[id];if(!next.walkable(spawn.x,spawn.y))throw Error('Invalid arrival tile '+id);
+ currentWorldId=id;world=next;W=world.w;H=world.h;
+ ZONES=world.zones;SITES=world.sites;NPCS=world.npcs;BRIDGES=world.bridges;
+ Object.assign(hero,{x:spawn.x,y:spawn.y,px:spawn.x,py:spawn.y,path:[],arrival:null,moving:false});
+ camera.x=(spawn.x+.5)*TILE;camera.y=(spawn.y+.5)*TILE;
+ cache.clear();zoneId='';syncZoomControls();closeDialogue();closePanels();
+ $('worldTitle').textContent=id==='silk'?'星風回廊':'潮環群島';
+ $('atlasTitle').textContent=id==='silk'?'星風回廊の地図':'潮環群島の地図';
+ rebuildZoneList();updateDiscoveries();updateZone();
+ toast(id==='silk'?'星風回廊へようこそ。遠い湖と草原を歩いてみましょう。':'潮環群島に帰ってきました。');
+}
+
 function startWalk(target,arrival=null){
  if(!world.walkable(target.x,target.y)){toast('ここには歩いて行けません。道や橋を選んでください。');return;}
  // Start from the next occupied grid cell instead of instantly teleporting away.
- const from={x:hero.x,y:hero.y},path=findPath(world,from,target);
+ const from={x:hero.x,y:hero.y},path=currentWorldId==='silk'?silkPath(world,from,target):findPath(world,from,target);
  if(!path||!path.length){toast('この場所へ続く道が見つかりません。');return;}
  hero.path=path.slice(1);hero.arrival=arrival;
  syncZoomControls();
@@ -393,14 +426,14 @@ function startWalk(target,arrival=null){
 function onArrive(){
  const obj=hero.arrival;hero.arrival=null;
  if(!obj)return;
- if(obj.kind==='npc'){openDialogue(obj.item.name,obj.item.role,TALK[obj.item.id]||obj.item.lines);return;}
+ if(obj.kind==='npc'){openDialogue(obj.item.name,obj.item.role,(currentWorldId==='silk'?SILK_TALK:TALK)[obj.item.id]||obj.item.lines);return;}
  if(obj.kind==='site'){
   const fresh=!discovered.has(obj.item.id);discovered.add(obj.item.id);
   updateDiscoveries();if(fresh)sfx.play('heal');
   openDialogue(obj.item.name,'DISCOVERED PLACE',[
    obj.item.desc,
-   SITE_ASIDES[obj.item.id]||'',
-   fresh?'新しい場所を見つけました。発見した建物：'+discovered.size+' / '+SITES.length:
+   (currentWorldId==='silk'?SILK_ASIDES:SITE_ASIDES)[obj.item.id]||'',
+   fresh?'新しい場所を見つけました。発見した建物：'+discovered.size+' / '+(TIDAL_SITES.length+SILK_SITES.length):
     'この場所は、すでに訪れたことがあります。'
   ]);
  }
@@ -425,6 +458,13 @@ function handleTap(e){
  const site=world.siteAt(p.x,p.y);
  if(site){startWalk(site.entrance,{kind:'site',item:site});return;}
  const bridge=world.bridgeAt(p.x,p.y);
+ // One tap on the long interchange bridge automatically walks to its end.
+ if(currentWorldId==='tidal'&&bridge?.id==='starwind'){
+  startWalk({x:160,y:38});toast('星風の渡り橋を越えて、新しい大地へ。');return;
+ }
+ if(currentWorldId==='silk'&&bridge?.id==='wind-gate'){
+  startWalk({x:13,y:146});toast('風を渡る橋を歩いて、潮環群島へ戻ります。');return;
+ }
  const t=world.walkable(p.x,p.y)?p:nearestWalkable(world,p.x,p.y,4);
  if(!t){toast('海の上は歩けません。橋をタップしてください。');return;}
  startWalk(t);
@@ -458,7 +498,7 @@ document.addEventListener('click',e=>{
 
 function updateMove(dt){
  if(dialogue||!hero.path.length){hero.moving=false;return;}
- let remaining=Math.min(dt,0.08)*7.3;
+ let remaining=Math.min(dt,0.08)*6.15;
  while(remaining>0&&hero.path.length){
   const step=hero.path[0];
   const dx=step.x-hero.px,dy=step.y-hero.py,distance=Math.hypot(dx,dy);
@@ -466,6 +506,8 @@ function updateMove(dt){
    hero.px=step.x;hero.py=step.y;hero.x=step.x;hero.y=step.y;
    hero.path.shift();remaining-=distance;
    if(distance>.001)sfx.play('soft-step');
+   const passage=world.transitionAt?.(hero.x,hero.y);
+   if(passage){switchWorld(passage.target,passage.spawn);return;}
    if(!hero.path.length){hero.moving=false;syncZoomControls();onArrive();break;}
   }else{
    hero.px+=dx/distance*remaining;hero.py+=dy/distance*remaining;remaining=0;
@@ -480,9 +522,14 @@ let lastPaint=-Infinity;
 function animate(time){
  const dt=last?Math.min(.07,(time-last)/1000):0;last=time;
  updateMove(dt);
- // Camera is static for normal walking. Only shift at the viewport edge to keep
- // the protagonist barely visible, never automatically recenter on the player.
- confineCamera();
+ // Static in open space, then a gentle ~6/s ease near the frame edge.
+ // The final boundary always keeps our explorer on-screen.
+ if(hero.moving){
+  const smooth=easeEdgeCamera(camera,{x:hero.px,y:hero.py},
+   {width:screen.w,height:screen.h,zoom:camera.zoom},
+   {width:W*TILE,height:H*TILE,tile:TILE},dt);
+  camera.x=smooth.x;camera.y=smooth.y;
+ }else confineCamera();
  // Idle scenery updates at 24 fps, travel at up to 45: gives WebAudio
  // time for its lookahead pump on resource-constrained phones.
  if(time-lastPaint>=(hero.moving?1000/45:1000/24)){
@@ -537,7 +584,7 @@ canvas.addEventListener('pointermove',e=>{
  const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;
  if(Math.hypot(dx,dy)>9)gesture.drag=true;
  if(gesture.drag){
-  confineCamera(gesture.cx-dx/camera.zoom,gesture.cy-dy/camera.zoom);
+  confineCamera(gesture.cx-dx*.58/camera.zoom,gesture.cy-dy*.58/camera.zoom);
  }
 });
 canvas.addEventListener('pointerup',e=>{
@@ -566,7 +613,7 @@ function closePanels(){
 function isPanelOpen(){return ['mapPanel','musicPanel','helpPanel'].some(id=>!$(id).classList.contains('hidden'));}
 function showPanel(id){
  closePanels();$(id).classList.remove('hidden');music.unlock();sfx.unlock();
- if(id==='mapPanel')drawMinimap();
+ if(id==='mapPanel'){rebuildZoneList();drawMinimap();}
 }
 $('mapBtn').addEventListener('click',()=>showPanel('mapPanel'));
 $('soundBtn').addEventListener('click',()=>showPanel('musicPanel'));
@@ -575,14 +622,16 @@ document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',
 document.querySelectorAll('.overlay').forEach(e=>e.addEventListener('click',ev=>{if(ev.target===e)closePanels();}));
 const mini=$('miniMap');
 function drawMinimap(){
+ mini.width=520;mini.height=Math.round(520*H/W);
+ mini.style.aspectRatio=`${W}/${H}`;
  const c=mini.getContext('2d'),sx=mini.width/W,sy=mini.height/H;
  c.clearRect(0,0,mini.width,mini.height);
  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
-  c.fillStyle=palette[world.tileAt(x,y)]||'#91a49a';c.fillRect(x*sx,y*sy,sx+1,sy+1);
+  c.fillStyle=(currentWorldId==='silk'?SILK_PALETTE:palette)[world.tileAt(x,y)]||'#91a49a';c.fillRect(x*sx,y*sy,sx+1,sy+1);
  }
  c.strokeStyle='#f3e5c8';c.lineWidth=2;
  for(const z of ZONES){
-  c.strokeRect((z.cx-z.rx)*sx,(z.cy-z.ry)*sy,z.rx*2*sx,z.ry*2*sy);
+  if(z.rx&&z.ry)c.strokeRect((z.cx-z.rx)*sx,(z.cy-z.ry)*sy,z.rx*2*sx,z.ry*2*sy);
   c.textAlign='center';c.fillStyle='#fff6db';c.font='bold 12px system-ui';
   c.strokeStyle='#17374a';c.lineWidth=3;c.strokeText(z.name,z.cx*sx,(z.cy-13)*sy);
   c.fillText(z.name,z.cx*sx,(z.cy-13)*sy);
@@ -595,12 +644,14 @@ mini.addEventListener('click',e=>{
  const r=mini.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
  const target=nearestWalkable(world,Math.max(0,Math.min(W-1,Math.floor(x))),Math.max(0,Math.min(H-1,Math.floor(y))),14);
  closePanels();
- if(target)startWalk(target);else toast('海の上は歩けません。陸か橋を選んでください。');
+ if(target){const bridge=world.bridgeAt(target.x,target.y);if(currentWorldId==='tidal'&&bridge?.id==='starwind')startWalk({x:160,y:38});else if(currentWorldId==='silk'&&bridge?.id==='wind-gate')startWalk({x:13,y:146});else startWalk(target);}else toast('水域は歩けません。陸か橋を選んでください。');
 });
 $('mapHome').addEventListener('click',()=>{
  centerCamera();closePanels();
 });
-for(const z of ZONES){
+function rebuildZoneList(){
+ $('zoneList').replaceChildren();
+ for(const z of ZONES){
  const btn=document.createElement('button');
  const title=document.createElement('span');title.textContent=z.name;
  const sub=document.createElement('small');sub.textContent=z.sub;
@@ -610,12 +661,14 @@ for(const z of ZONES){
   closePanels();if(target)startWalk(target);
  });
  $('zoneList').append(btn);
+ }
 }
+rebuildZoneList();
 const trackSelect=$('trackSelect');
 MUSIC_LIBRARY.forEach((score,i)=>{
  for(const [phase,key]of [[1,'ally'],[2,'hostile']]){
   const opt=document.createElement('option');opt.value=i+':'+phase;
-  opt.textContent=(i<6?'本編':'追加')+' '+String(i+1).padStart(2,'0')+' · '+score[key].title;
+  opt.textContent=(i<6?'本編':i<25?'追加':'星風')+' '+String(i+1).padStart(2,'0')+' · '+score[key].title;
   trackSelect.append(opt);
  }
 });

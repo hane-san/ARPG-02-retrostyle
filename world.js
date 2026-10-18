@@ -43,7 +43,8 @@ export const BRIDGES=[
  {id:'rainbow',name:'虹架橋',axis:'h',x1:72,x2:91,y1:29,y2:33,center:{x:82,y:31},desc:'西の森と東の未来都を結ぶ、海上の長い連絡橋。'},
  {id:'twilight',name:'暮潮連絡橋',axis:'h',x1:72,x2:91,y1:88,y2:92,center:{x:82,y:90},desc:'二つの港を結ぶ橋。海面をかすめて伸びる。'},
  {id:'oldnorth',name:'北の縦断橋',axis:'v',x1:39,x2:43,y1:53,y2:67,center:{x:41,y:60},desc:'森の庭園から旧港へ下る歩道橋。'},
- {id:'silverlink',name:'銀浜連絡橋',axis:'v',x1:120,x2:124,y1:53,y2:67,center:{x:122,y:60},desc:'展示都と蒼光の街を結ぶ夜景の橋。'}
+ {id:'silverlink',name:'銀浜連絡橋',axis:'v',x1:120,x2:124,y1:53,y2:67,center:{x:122,y:60},desc:'展示都と蒼光の街を結ぶ夜景の橋。'},
+ {id:'starwind',name:'星風の渡り橋',axis:'h',x1:151,x2:163,y1:36,y2:40,center:{x:159,y:38},desc:'海の向こうにある、風景の異なる広い大陸へ続く橋。'}
 ];
 const BLOCKED=new Set(['~','#']);
 const DIRS=[[1,0],[-1,0],[0,1],[0,-1]];
@@ -71,6 +72,8 @@ export function makeWorld(){
   if(tiles[y][x]==='~')continue;
   if(DIRS.some(([dx,dy])=>tiles[y+dy][x+dx]==='~'))tiles[y][x]=',';
  }
+ // Bridge approach joins the northeastern white city to the long Starwind pier.
+ for(let y=36;y<=40;y++)for(let x=142;x<=151;x++)set(x,y,'s');
  for(const b of BRIDGES)for(let y=b.y1;y<=b.y2;y++)for(let x=b.x1;x<=b.x2;x++)set(x,y,'+');
  function stripe(a,b,width=1,type='='){
   let x=a.x,y=a.y;const walk=(ax,ay)=>{for(let oy=-width;oy<=width;oy++)for(let ox=-width;ox<=width;ox++){const xx=ax+ox,yy=ay+oy;if(inside(xx,yy)&&tiles[yy][xx]!=='~'&&tiles[yy][xx]!=='+')set(xx,yy,type);}};
@@ -84,6 +87,7 @@ export function makeWorld(){
   stripe({x:hub.x,y:14+(i>=2?63:0)},{x:hub.x,y:48+(i>=2?53:0)},1,kind);
   stripe({x:15+(i%2)*83,y:hub.y},{x:67+(i%2)*83,y:hub.y},1,kind);
  }
+ stripe(hubs[1],{x:153,y:38},1,'s');
  stripe(hubs[0],{x:75,y:31},1);stripe(hubs[1],{x:89,y:31},1,'s');
  stripe(hubs[2],{x:75,y:90},1);stripe(hubs[3],{x:89,y:90},1,'n');
  stripe(hubs[0],{x:41,y:55},1);stripe(hubs[2],{x:41,y:66},1,'p');
@@ -95,7 +99,9 @@ export function makeWorld(){
  }
  for(const s of SITES){occupied[s.entrance.y*W+s.entrance.x]=0;set(s.entrance.x,s.entrance.y,'=');}
  for(const n of NPCS){if(tiles[n.y][n.x]==='~')set(n.x,n.y,'=');occupied[n.y*W+n.x]=0;}
- const world={tiles,occupied,sites:SITES,npcs:NPCS,bridges:BRIDGES,w:W,h:H,
+ const world={id:'tidal',tiles,occupied,sites:SITES,npcs:NPCS,bridges:BRIDGES,zones:ZONES,w:W,h:H,start:START,
+  transitions:[{x:160,y:38,target:'silk',spawn:{x:28,y:146},name:'星風回廊へ渡る'}],
+  transitionAt(x,y){return this.transitions.find(p=>p.x===x&&p.y===y);},
   tileAt(x,y){return inside(x,y)?tiles[y][x]:'~';},
   walkable(x,y){return inside(x,y)&&!BLOCKED.has(tiles[y][x])&&!occupied[y*W+x];},
   siteAt(x,y){return SITES.find(s=>x>=s.x&&x<s.x+s.w&&y>=s.y&&y<s.y+s.h);},

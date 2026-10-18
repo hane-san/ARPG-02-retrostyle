@@ -3,15 +3,17 @@ import assert from 'node:assert/strict';
 import {MUSIC_LIBRARY,buildTrack} from '../music.js';
 import {SCORES,BONUS_SCORES} from '../music.js';
 import {EXTRA_SCORES} from '../extra-music.js';
+import {SILK_SCORES} from '../silk-music.js';
 
 test('six battle scores, seven legacy bonus scores, 12 new exploration scores',()=>{
  assert.equal(SCORES.length,6);
  assert.equal(BONUS_SCORES.length,7);
  assert.equal(EXTRA_SCORES.length,12);
- assert.equal(MUSIC_LIBRARY.length,25);
- assert.equal(MUSIC_LIBRARY.length*2,50);
+ assert.equal(SILK_SCORES.length,9);
+ assert.equal(MUSIC_LIBRARY.length,34);
+ assert.equal(MUSIC_LIBRARY.length*2,68);
 });
-test('all 50 pieces have unique Japanese titles and valid musical phrase timings',()=>{
+test('all 68 pieces have unique Japanese titles and valid musical phrase timings',()=>{
  const titles=new Set();
  for(let i=0;i<MUSIC_LIBRARY.length;i++){
   const score=MUSIC_LIBRARY[i];
@@ -36,5 +38,5 @@ test('all 50 pieces have unique Japanese titles and valid musical phrase timings
    }
   }
  }
- assert.equal(titles.size,50);
+ assert.equal(titles.size,68);
 });

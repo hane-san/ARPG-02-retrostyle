@@ -43,7 +43,8 @@ test('camera respects map bounds at different zooms and the map corners',()=>{
  }
 });
 test('zone entry selects valid atmospheric songs without repeating previous choice',()=>{
- assert.deepEqual(Object.keys(ZONE_PLAYLISTS).sort(),['future','garden','harbour','neon']);
+ assert.ok(['future','garden','harbour','neon'].every(k=>k in ZONE_PLAYLISTS));
+ assert.equal(Object.keys(ZONE_PLAYLISTS).length,13);
  for(const [area,pool] of Object.entries(ZONE_PLAYLISTS)){
   assert.ok(pool.length>=6,area+' too few options');
   assert.equal(new Set(pool).size,pool.length);

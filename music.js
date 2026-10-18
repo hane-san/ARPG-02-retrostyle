@@ -1,4 +1,5 @@
 import {EXTRA_SCORES} from './extra-music.js';
+import {SILK_SCORES} from './silk-music.js';
 // Original map scores. No samples, downloads, quotes or melodies from other games.
 // A score has a composed A/B melody, harmony, bass and countermelody, then a varied reprise.
 const major=[0,2,4,5,7,9,11],minor=[0,2,3,5,7,8,10];
@@ -1315,7 +1316,7 @@ export const BONUS_SCORES=[
   }
  }
 ];
-export const MUSIC_LIBRARY=[...SCORES,...BONUS_SCORES,...EXTRA_SCORES];
+export const MUSIC_LIBRARY=[...SCORES,...BONUS_SCORES,...EXTRA_SCORES,...SILK_SCORES];
 const degree=(root,scale,n)=>root+12*Math.floor(n/7)+scale[((n%7)+7)%7];
 export function buildTrack(mapId,phase=1){
  const score=MUSIC_LIBRARY[mapId]||SCORES[0],side=phase===1?'ally':'hostile',part=score[side],bar=score.meter,length=bar*32;
@@ -1354,8 +1355,8 @@ export function scheduleNote(context,destination,event,time,secondsPerBeat){
  return {stop(at=context.currentTime){try{gain.gain.cancelScheduledValues(at);gain.gain.setTargetAtTime(0,at,.012);osc.stop(at+.06);}catch{}},clean,osc};
 }
 // Short overlap and scheduled lookahead avoid audible gaps on busy mobile render frames.
-export const MUSIC_TRANSITION={fade:.18,silence:0};
-export const MUSIC_SCHEDULER={lookAheadSeconds:.8,intervalMs:50,maxEventsPerPump:350};
+export const MUSIC_TRANSITION={fade:.24,silence:0};
+export const MUSIC_SCHEDULER={lookAheadSeconds:1.25,intervalMs:50,maxEventsPerPump:480};
 export function createMusic(storage){
  if(arguments.length===0)try{storage=globalThis.localStorage;}catch{}
  let enabled=false,volume=.32,context=null,master=null,bus=null,timer=null,track=null,key=null,currentSource=null,requested=null,preview=null,index=0,start=0,scheduled=0,serial=0,starts=0;
@@ -1363,11 +1364,15 @@ export function createMusic(storage){
  try{enabled=storage?.getItem('field-command-music')==='true';const saved=storage?.getItem('field-command-music-volume');if(saved!==null&&saved!==undefined&&Number.isFinite(Number(saved)))volume=Math.max(0,Math.min(1,Number(saved)));}catch{}
  function stop(){
   serial++;if(timer!==null){clearInterval(timer);timer=null;}const now=context?.currentTime||0;
-  if(bus)try{bus.gain.cancelScheduledValues(now);bus.gain.setValueAtTime(bus.gain.value,now);bus.gain.linearRampToValueAtTime(0,now+MUSIC_TRANSITION.fade);}catch{}
+  if(bus)try{
+   if(typeof bus.gain.cancelAndHoldAtTime==='function')bus.gain.cancelAndHoldAtTime(now);
+   else{bus.gain.cancelScheduledValues(now);bus.gain.setValueAtTime(bus.gain.value,now);}
+   bus.gain.linearRampToValueAtTime(0,now+MUSIC_TRANSITION.fade);
+  }catch{}
   // All future notes are already connected to the retiring bus. Fade that bus,
   // then release its oscillators; never abruptly drop a sounding note.
   for(const v of voices)v.stop(now+MUSIC_TRANSITION.fade);voices.clear();
-  if(bus){const old=bus;const cleanup=setTimeout(()=>{old.disconnect();retired.delete(cleanup);},440);retired.add(cleanup);}bus=null;key=null;currentSource=null;index=0;
+  if(bus){const old=bus;const cleanup=setTimeout(()=>{old.disconnect();retired.delete(cleanup);},700);retired.add(cleanup);}bus=null;key=null;currentSource=null;index=0;
  }
  function pump(){
   if(!context||context.state!=='running'||!bus||!track||(!enabled&&!preview))return;
@@ -1378,7 +1383,7 @@ export function createMusic(storage){
   while(count++<MUSIC_SCHEDULER.maxEventsPerPump){
    if(index===track.events.length){index=0;start+=track.seconds;}
    const event=track.events[index],time=start+event.beat*beat;if(time>limit)break;index++;
-   if(time<context.currentTime-.02)continue;
+   if(time<context.currentTime-.018)continue;
    try{const voice=scheduleNote(context,bus,event,Math.max(time,context.currentTime+.012),beat);voices.add(voice);const clean=voice.osc.onended;voice.osc.onended=()=>{clean();voices.delete(voice);};scheduled++;}catch{stop();return;}
   }
  }
@@ -1420,7 +1425,15 @@ export function createMusic(storage){
   preview=null;if(enabled&&requested?.status==='playing')activate();
   else stop();return true;
  }
- const visibility=()=>{if(globalThis.document?.hidden){stop();if(context?.state==='running')context.suspend().catch(()=>{});}else if((enabled||preview)&&context)unlock();};
+ let suspendTask=null;
+ const visibility=()=>{
+  if(suspendTask!==null){clearTimeout(suspendTask);suspendTask=null;}
+  if(globalThis.document?.hidden){
+   stop();
+   // Do not suspend the audio thread until the outgoing gain is silent.
+   suspendTask=setTimeout(()=>{suspendTask=null;if(globalThis.document?.hidden&&context?.state==='running')context.suspend().catch(()=>{});},MUSIC_TRANSITION.fade*1000+85);
+  }else if((enabled||preview)&&context)unlock();
+ };
  globalThis.document?.addEventListener('visibilitychange',visibility);
- return {unlock,setScene,setEnabled,setVolume,playPreview,stopPreview,get enabled(){return enabled;},get volume(){return volume;},snapshot:()=>({enabled,volume,scene:key,preview:preview?`${preview.mapId}:${preview.phase===1?'ally':'hostile'}`:null,title:track?.title||null,state:context?.state||'locked',scheduled,starts,voices:voices.size}),destroy(){preview=null;stop();globalThis.document?.removeEventListener('visibilitychange',visibility);for(const t of retired)clearTimeout(t);retired.clear();if(context&&context.state!=='closed')context.close().catch(()=>{});}};
+ return {unlock,setScene,setEnabled,setVolume,playPreview,stopPreview,get enabled(){return enabled;},get volume(){return volume;},snapshot:()=>({enabled,volume,scene:key,preview:preview?`${preview.mapId}:${preview.phase===1?'ally':'hostile'}`:null,title:track?.title||null,state:context?.state||'locked',scheduled,starts,voices:voices.size}),destroy(){preview=null;stop();if(suspendTask!==null)clearTimeout(suspendTask);globalThis.document?.removeEventListener('visibilitychange',visibility);for(const t of retired)clearTimeout(t);retired.clear();if(context&&context.state!=='closed')context.close().catch(()=>{});}};
 }
