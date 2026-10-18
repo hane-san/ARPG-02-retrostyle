@@ -5,7 +5,7 @@ import {W,H,START,SITES,NPCS,BRIDGES,ZONES,makeWorld,findPath,nearestWalkable} f
 const world=makeWorld();
 test('large seamless four-district world with invisible logical grid',()=>{
  assert.equal(world.tiles.length,H);assert.equal(world.tiles[0].length,W);
- assert.equal(ZONES.length,4);assert.equal(BRIDGES.length,4);
+ assert.equal(ZONES.length,4);assert.equal(BRIDGES.length,5); // includes the Starwind crossover bridge
  assert.equal(SITES.length,12);assert.equal(NPCS.length,13);
  assert.ok(world.walkable(START.x,START.y));
 });
