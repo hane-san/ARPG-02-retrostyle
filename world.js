@@ -1,4 +1,5 @@
 // Seamless, deterministic 32px-tile open world. The grid is never drawn.
+import {scenicTile} from './scenic-biomes.js';
 export const W=164,H=120,TILE=32;
 const INFINITY=Number.POSITIVE_INFINITY;
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
@@ -60,6 +61,8 @@ export function makeWorld(){
    if(zone.id==='garden'&&q>.78)t='f';
    if(zone.id==='harbour'&&q>.84)t='.';
    if(zone.id==='neon'&&q>.9)t='s';
+   // Coherent thematic pockets, not random single-tile noise; all remain walkable.
+   t=scenicTile(zone.id,x,y)||t;
    set(x,y,t);
   }
  }

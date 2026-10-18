@@ -18,7 +18,7 @@ const hero={x:START.x,y:START.y,px:START.x,py:START.y,face:'down',path:[],arriva
 const camera={x:(START.x+.5)*TILE,y:(START.y+.5)*TILE,zoom:1.25};
 let screen={w:1,h:1,dpr:1},last=0,zoneId='',noticeTimer=0,dialogue=null;
 const discovered=new Set(),cache=new Map(),CHUNK=16,MAX_CHUNKS=42;
-const palette={'~':'#497d93','.':'#8d9f7c',',':'#cbbc96',f:'#567864','=':'#baa986','+':'#ae987a',s:'#98b0b0',n:'#576d88',p:'#b7a993','#':'#58605d'};
+const palette={'~':'#497d93','.':'#8d9f7c',',':'#cbbc96',f:'#567864','=':'#baa986','+':'#ae987a',s:'#98b0b0',n:'#576d88',p:'#b7a993','#':'#58605d',M:'#9eb88a',A:'#aa986e',R:'#7f9188',F:'#3e6559',G:'#73a49e',P:'#d1d4c5',C:'#77adb7',D:'#d2b78e',T:'#bc856d',Q:'#789e9f',B:'#496d78',K:'#424563',E:'#528eae'};
 const clamp=(a,b,c)=>Math.max(b,Math.min(c,a));
 function confineCamera(x=camera.x,y=camera.y){
  const bounded=limitCamera({x,y},{x:hero.px,y:hero.py},
@@ -86,6 +86,68 @@ function paintTile(c,x,y,t){
   rect(c,px,py,32,32,'#9b8b71');
   for(let j=0;j<32;j+=8)rect(c,px,py+j,32,1,'#d5bc8e');
   if((x+y)%3===0)rect(c,px+7,py+4,18,2,'#c6c1aa');
+ }
+ // Fine-grained scene changes: each coherent region has its own architecture,
+ // planting and street furniture. All overlays are decorative, not obstacles.
+ if(t==='M'){
+  rect(c,px+3,py+3,26,26,'#abc69830');
+  for(let i=0;i<4;i++){
+   const fx=px+6+Math.floor(hash(x+i*7,y)*20),fy=py+5+Math.floor(hash(x,y+i*7)*20);
+   rect(c,fx,fy,2,8,'#4b846b');rect(c,fx-3,fy,7,4,i%2?'#f0d5ae':'#f3bfc6');rect(c,fx-1,fy+1,2,2,'#ffe4ad');
+  }
+ }else if(t==='A'||t==='F'){
+  const dark=t==='F';
+  rect(c,px+13,py+17,6,14,dark?'#3c544b':'#785744');
+  rect(c,px+4,py+9,25,15,dark?'#204d4b':'#a25e46');
+  rect(c,px+8,py+3,18,15,dark?'#356f5d':'#d49252');
+  rect(c,px+13,py+5,9,5,dark?'#72a78a':'#efc07a');
+ }else if(t==='R'){
+  rect(c,px+2,py+14,28,16,'#67786f');rect(c,px+5,py+16,22,12,'#a6aaa0');
+  rect(c,px+8,py+2,5,21,'#c1bfad');rect(c,px+19,py+6,5,18,'#b3b4a4');
+  rect(c,px+5,py+1,12,5,'#d8d0bc');rect(c,px+16,py+4,11,5,'#a6b7a7');
+  rect(c,px+12,py+26,8,4,'#567e69');
+ }else if(t==='G'){
+  rect(c,px+2,py+3,28,26,'#b9d4c777');
+  rect(c,px+3,py+4,26,2,'#e1eee0');rect(c,px+4,py+24,24,2,'#6f8c9a');
+  rect(c,px+12,py+8,9,16,'#428476');rect(c,px+7,py+12,18,8,'#5fa28a');
+  rect(c,px+15,py+11,3,3,'#cae2bc');
+ }else if(t==='P'){
+  for(let i=0;i<3;i++)rect(c,px,py+i*11,32,1,'#a4ada8');
+  rect(c,px+(x%2)*16,py,1,32,'#a8b7b4');
+  if(n>.56){
+   c.strokeStyle='#80b0ae';c.lineWidth=2;c.beginPath();c.arc(px+16,py+16,9,0,Math.PI*2);c.stroke();
+   rect(c,px+13,py+12,6,9,'#78bcc7');
+  }
+ }else if(t==='C'){
+  rect(c,px+2,py+3,28,25,'#a8cdd2');rect(c,px+4,py+5,24,21,'#5a9eaf');
+  rect(c,px+3,py+27,26,3,'#d5e8de');
+  rect(c,px+7,py+11,12,1,'#d8eee2');rect(c,px+13,py+19,10,1,'#98c8c7');
+ }else if(t==='D'){
+  for(let i=0;i<4;i++)rect(c,px+(i*9+x%3)%29,py+(i*11+y%7)%29,7,2,'#e9d1a6');
+  if(n>.65){rect(c,px+5,py+12,23,4,'#796f5e');rect(c,px+9,py+16,2,10,'#6b6558');rect(c,px+22,py+16,2,10,'#6b6558');}
+ }else if(t==='T'){
+  for(let i=0;i<3;i++)rect(c,px,py+i*10,32,1,'#d6aa86');
+  rect(c,px+16,py+3,2,7,'#7d625d');rect(c,px+9,py+14,2,6,'#846b5e');
+  if(n>.74){rect(c,px+12,py+20,8,9,'#708370');rect(c,px+13,py+18,6,3,'#6d9776');}
+ }else if(t==='Q'){
+  rect(c,px+2,py+2,28,28,'#8eada1');
+  for(let i=0;i<4;i++)rect(c,px+(i*8),py+14,7,2,'#c9ccac');
+  rect(c,px+14,py,4,32,'#5f8c9c');rect(c,px+15,py+4,2,10,'#c5e2d5');
+ }else if(t==='B'){
+  rect(c,px+6,py+12,20,15,'#285966');rect(c,px+12,py+9,9,20,'#296f70');
+  rect(c,px+4,py+16,9,6,'#419c9d');
+  rect(c,px+13,py+7,7,9,'#75e2cb');rect(c,px+19,py+19,6,7,'#8ccad3');
+  rect(c,px+4,py+10,2,2,'#d4ebbf');
+ }else if(t==='K'){
+  for(let i=0;i<3;i++)rect(c,px,py+i*12,32,1,'#547086');
+  rect(c,px+15,py,2,32,'#7594a7');rect(c,px+2,py+3,7,2,'#7f71af');
+  if(n>.66){rect(c,px+25,py+7,4,14,'#e5a5cb');rect(c,px+24,py+6,6,2,'#afd6d0');}
+ }else if(t==='E'){
+  rect(c,px+1,py+1,30,30,'#386b87');
+  rect(c,px+4,py+4,24,1,'#92c9d1');rect(c,px+4,py+27,24,1,'#92c9d1');
+  rect(c,px+15,py+5,2,22,'#72c8ce');
+  rect(c,px+10,py+15,12,2,'#8be0cc');
+  rect(c,px+14,py+14,4,4,'#d2eac5');
  }
 }
 function chunk(cx,cy){
@@ -323,8 +385,9 @@ function startWalk(target,arrival=null){
  const from={x:hero.x,y:hero.y},path=findPath(world,from,target);
  if(!path||!path.length){toast('この場所へ続く道が見つかりません。');return;}
  hero.path=path.slice(1);hero.arrival=arrival;
+ syncZoomControls();
  if(hero.path.length===0){hero.px=hero.x;hero.py=hero.y;onArrive();return;}
- if(path.length>12)toast(path.length-1+'歩先まで、道をたどって向かいます。');
+ // Walking does not display distances or step counts: explore visually.
  sfx.play('confirm');
 }
 function onArrive(){
@@ -395,15 +458,15 @@ document.addEventListener('click',e=>{
 
 function updateMove(dt){
  if(dialogue||!hero.path.length){hero.moving=false;return;}
- let remaining=Math.min(dt,0.08)*5.1;
+ let remaining=Math.min(dt,0.08)*7.3;
  while(remaining>0&&hero.path.length){
   const step=hero.path[0];
   const dx=step.x-hero.px,dy=step.y-hero.py,distance=Math.hypot(dx,dy);
   if(distance<=remaining+.0001){
    hero.px=step.x;hero.py=step.y;hero.x=step.x;hero.y=step.y;
    hero.path.shift();remaining-=distance;
-   if(distance>.001)sfx.play('step');
-   if(!hero.path.length){hero.moving=false;onArrive();break;}
+   if(distance>.001)sfx.play('soft-step');
+   if(!hero.path.length){hero.moving=false;syncZoomControls();onArrive();break;}
   }else{
    hero.px+=dx/distance*remaining;hero.py+=dy/distance*remaining;remaining=0;
   }
@@ -413,17 +476,36 @@ function updateMove(dt){
  }
  hero.moving=hero.path.length>0;updateZone();
 }
+let lastPaint=-Infinity;
 function animate(time){
  const dt=last?Math.min(.07,(time-last)/1000):0;last=time;
  updateMove(dt);
  // Camera is static for normal walking. Only shift at the viewport edge to keep
  // the protagonist barely visible, never automatically recenter on the player.
  confineCamera();
- paint(time);requestAnimationFrame(animate);
+ // Idle scenery updates at 24 fps, travel at up to 45: gives WebAudio
+ // time for its lookahead pump on resource-constrained phones.
+ if(time-lastPaint>=(hero.moving?1000/45:1000/24)){
+  paint(time);lastPaint=time;
+ }
+ requestAnimationFrame(animate);
+}
+let lastZoomLocked=null;
+function syncZoomControls(){
+ const locked=hero.path.length>0;
+ if(locked!==lastZoomLocked){
+  lastZoomLocked=locked;
+  $('zoomIn').title=$('zoomOut').title=locked?'移動中はズームできません':'';
+  $('zoomIn').setAttribute('aria-label',locked?'移動中のため拡大できません':'拡大');
+  $('zoomOut').setAttribute('aria-label',locked?'移動中のため縮小できません':'縮小');
+ }
+ $('zoomIn').disabled=locked||camera.zoom>=2.49;
+ $('zoomOut').disabled=locked||camera.zoom<=.67;
 }
 function zoomTo(v){
+ if(hero.path.length)return false; // also blocks wheel + two-finger pinch
  camera.zoom=clamp(v,.66,2.5);confineCamera();
- $('zoomIn').disabled=camera.zoom>=2.49;$('zoomOut').disabled=camera.zoom<=.67;
+ syncZoomControls();return true;
 }
 $('zoomIn').addEventListener('click',()=>zoomTo(camera.zoom*1.23));
 $('zoomOut').addEventListener('click',()=>zoomTo(camera.zoom/1.23));

@@ -1353,8 +1353,9 @@ export function scheduleNote(context,destination,event,time,secondsPerBeat){
  const clean=()=>{osc.disconnect();filter.disconnect();gain.disconnect();pan?.disconnect();};osc.onended=clean;
  return {stop(at=context.currentTime){try{gain.gain.cancelScheduledValues(at);gain.gain.setTargetAtTime(0,at,.012);osc.stop(at+.06);}catch{}},clean,osc};
 }
-// Phase/preview switches: fast fade, a short true silence, then normal-level playback.
-export const MUSIC_TRANSITION={fade:.085,silence:.055};
+// Short overlap and scheduled lookahead avoid audible gaps on busy mobile render frames.
+export const MUSIC_TRANSITION={fade:.18,silence:0};
+export const MUSIC_SCHEDULER={lookAheadSeconds:.8,intervalMs:50,maxEventsPerPump:350};
 export function createMusic(storage){
  if(arguments.length===0)try{storage=globalThis.localStorage;}catch{}
  let enabled=false,volume=.32,context=null,master=null,bus=null,timer=null,track=null,key=null,currentSource=null,requested=null,preview=null,index=0,start=0,scheduled=0,serial=0,starts=0;
@@ -1366,19 +1367,19 @@ export function createMusic(storage){
   // All future notes are already connected to the retiring bus. Fade that bus,
   // then release its oscillators; never abruptly drop a sounding note.
   for(const v of voices)v.stop(now+MUSIC_TRANSITION.fade);voices.clear();
-  if(bus){const old=bus;const cleanup=setTimeout(()=>{old.disconnect();retired.delete(cleanup);},260);retired.add(cleanup);}bus=null;key=null;currentSource=null;index=0;
+  if(bus){const old=bus;const cleanup=setTimeout(()=>{old.disconnect();retired.delete(cleanup);},440);retired.add(cleanup);}bus=null;key=null;currentSource=null;index=0;
  }
  function pump(){
   if(!context||context.state!=='running'||!bus||!track||(!enabled&&!preview))return;
-  const beat=60/track.bpm,limit=context.currentTime+.24;
+  const beat=60/track.bpm,limit=context.currentTime+MUSIC_SCHEDULER.lookAheadSeconds;
   // Recover cleanly from a throttled foreground timer instead of emitting stale notes.
   if(start+track.seconds<context.currentTime-.2){start=context.currentTime+.04;index=0;}
   let count=0;
-  while(count++<200){
+  while(count++<MUSIC_SCHEDULER.maxEventsPerPump){
    if(index===track.events.length){index=0;start+=track.seconds;}
    const event=track.events[index],time=start+event.beat*beat;if(time>limit)break;index++;
    if(time<context.currentTime-.02)continue;
-   try{const voice=scheduleNote(context,bus,event,Math.max(time,context.currentTime+.002),beat);voices.add(voice);const clean=voice.osc.onended;voice.osc.onended=()=>{clean();voices.delete(voice);};scheduled++;}catch{stop();return;}
+   try{const voice=scheduleNote(context,bus,event,Math.max(time,context.currentTime+.012),beat);voices.add(voice);const clean=voice.osc.onended;voice.osc.onended=()=>{clean();voices.delete(voice);};scheduled++;}catch{stop();return;}
   }
  }
  function activate(){
@@ -1389,10 +1390,12 @@ export function createMusic(storage){
   if(next===key&&currentSource===source)return;
   const switching=!!bus;stop();
   track=buildTrack(target.mapId,target.phase);key=next;currentSource=source;bus=context.createGain();
-  // Each oscillator already has its own gentle note attack. Do not fade in the new bus.
-  bus.gain.setValueAtTime(1,context.currentTime);bus.connect(master);
-  start=context.currentTime+(switching?MUSIC_TRANSITION.fade+MUSIC_TRANSITION.silence:.01);
-  index=0;pump();if(key===next){starts++;timer=setInterval(pump,100);}
+  // Crossfade without the old 140 ms dropout that sounded like a stutter.
+  const now=context.currentTime;
+  bus.gain.setValueAtTime(0,now);bus.gain.linearRampToValueAtTime(1,now+MUSIC_TRANSITION.fade);
+  bus.connect(master);
+  start=now+.02;
+  index=0;pump();if(key===next){starts++;timer=setInterval(pump,MUSIC_SCHEDULER.intervalMs);}
  }
  function unlock(){
   if((!enabled&&!preview)||globalThis.document?.hidden)return;

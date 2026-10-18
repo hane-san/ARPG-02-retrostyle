@@ -1,7 +1,7 @@
 // Small original synthesized cues. No files, network requests or autoplay.
 export function createAudio(storage){
  if(arguments.length===0)try{storage=globalThis.localStorage;}catch{}
- let enabled=true,context=null,played=0,lastStep=0,noiseBuffer=null;
+ let enabled=true,context=null,played=0,lastStep=0,softStepCount=0,noiseBuffer=null;
  try{enabled=storage?.getItem('field-command-sound')!=='false';}catch{}
  function unlock(){
   if(!enabled)return;
@@ -23,13 +23,19 @@ export function createAudio(storage){
  }
  function play(kind){
   if(!enabled||!context||globalThis.document?.hidden)return;
-  if(kind==='step'){const now=performance.now();if(now-lastStep<55)return;lastStep=now;}
+  if(kind==='step'||kind==='soft-step'){const now=performance.now();if(now-lastStep<(kind==='soft-step'?95:55))return;lastStep=now;}
   try{
    if(kind==='select')note(520,.045);
    else if(kind==='cursor')note(700,.025,0,'sine');
    else if(kind==='confirm'){note(520,.055);note(780,.08,.045);}
    else if(kind==='cancel')note(360,.07,0,'triangle',220);
    else if(kind==='step')note(125,.035,0,'triangle',70);
+   else if(kind==='soft-step'){
+    // Quiet, rounded alternating footfalls: no clicky noise or hard edge.
+    softStepCount++;
+    const f=softStepCount%2?112:125;
+    note(f,.052,.005,'sine',f*.7,.013);
+   }
    else if(kind==='swing'){burst(.075,.09,1900);note(760,.075,0,'sawtooth',130,.065);note(150,.09,.02,'triangle',65,.065);}
    else if(kind==='bow'){note(420,.07,0,'triangle',100,.09);note(1300,.22,.035,'sine',380,.055);}
    else if(kind==='magic'){note(240,.25,0,'sine',1100,.07);note(480,.22,.04,'triangle',1500,.035);}
