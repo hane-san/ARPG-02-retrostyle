@@ -23,7 +23,7 @@
   <div class="zone-label"><span class="tiny">CURRENT LOCATION</span><strong id="zoneName">風環の庭</strong><small id="zoneSub">霧の森と空を仰ぐ旧王国</small></div>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <div class="compass">N <span>↑</span></div>
-  <div class="map-hint">地面・橋をタップして歩く <span>·</span> ドラッグで見回す</div>
+  <div class="map-hint">タップで歩く <span>·</span> ドラッグは主人公が見える範囲まで</div>
  </main>
  <footer class="dock">
   <div class="discover"><span class="spark">✧</span><div><small>DISCOVERIES</small><strong id="discovered">0 / 12</strong></div></div>
@@ -35,15 +35,15 @@
  </footer>
  <section id="mapPanel" class="overlay hidden" aria-label="世界地図" role="dialog" aria-modal="true">
   <div class="sheet map-sheet"><div class="sheet-head"><div><small>WORLD ATLAS</small><h2>潮環群島の地図</h2></div><button class="close" data-close aria-label="閉じる">×</button></div>
-   <canvas id="miniMap" width="492" height="360" aria-label="全体地図。クリックするとその周辺を表示"></canvas>
-   <p class="secondary">4地区が橋で連結しています。地図をタップするとその地点を見渡せます。</p>
+   <canvas id="miniMap" width="492" height="360" aria-label="全体地図。タップした場所へ主人公が歩く"></canvas>
+   <p class="secondary">4地区は橋で連結しています。地図・地区名をタップすると、そこまで歩きます。画面は通常固定で、主人公が端に来たときだけ少し動きます。</p>
    <div id="zoneList" class="zone-grid"></div>
    <button id="mapHome" class="line-btn">主人公のところへ戻る</button>
   </div>
  </section>
  <section id="musicPanel" class="overlay hidden" aria-label="音楽の設定" role="dialog" aria-modal="true">
   <div class="sheet"><div class="sheet-head"><div><small>SOUND ROOM / SRPG ORIGINAL MUSIC</small><h2>潮の音楽室</h2></div><button class="close" data-close aria-label="閉じる">×</button></div>
-   <p class="secondary">『英雄叙事詩』の全26曲を持ち込んだ実験版です。フィールドを歩きながら好きな曲を流せます。</p>
+   <p class="secondary">『英雄叙事詩』の全26曲を持ち込んだ実験版です。地区をまたぐたび、その土地に似合う曲がランダムに切り替わります。ここで手動選曲もできます（次の地区まで有効）。</p>
    <label class="toggle-row"><span>フィールドBGM <small>初期設定：OFF</small></span><button id="musicToggle" class="pill-toggle" aria-pressed="false">OFF</button></label>
    <label class="field-label" for="trackSelect">再生する曲</label><select id="trackSelect"></select>
    <label class="field-label" for="volumeRange">音量 <span id="volumeLabel">32%</span></label><input id="volumeRange" type="range" min="0" max="100" value="32">
@@ -53,16 +53,16 @@
  </section>
  <section id="helpPanel" class="overlay hidden" aria-label="操作説明" role="dialog" aria-modal="true">
   <div class="sheet"><div class="sheet-head"><div><small>HOW TO EXPLORE</small><h2>歩いて、出会って、眺める</h2></div><button class="close" data-close aria-label="閉じる">×</button></div>
-   <p>タップした場所まで、主人公が道を選んで歩きます。長い橋も自動で渡ります。移動中に別の場所をタップすると、目的地を変更できます。</p>
-   <p>村人をタップすると話しかけに行きます。建物をタップすると入口まで歩いて、その場所のことを読めます。</p>
-   <p>ドラッグでカメラを動かし、＋／−で拡大縮小。PCは矢印キー・WASDでも一歩ずつ移動できます。</p>
+   <p>タップした場所まで、主人公が道を選んで歩きます。長い橋も自動で渡り、移動中にも行き先を変えられます。カメラは基本固定で、主人公が画面の端に来たときだけ最小限動きます。</p>
+   <p>村人をタップすると話しかけに行きます。建物をタップすると入口まで歩いて、その場所のことを読めます。会話中は画面のどこをタップしても次のセリフへ進みます。</p>
+   <p>ドラッグで主人公がぎりぎり映る範囲までカメラを動かせます。＋／−で拡大縮小。地図から遠方への徒歩移動も指定できます。PCは矢印キー・WASDでも移動できます。</p>
    <p class="secondary">戦闘、ターン制、セーブなし。SRPGとは別リポジトリの探索表現実験です。</p>
   </div>
  </section>
  <section id="dialogue" class="dialogue hidden" role="dialog" aria-label="会話">
   <div class="dialogue-top"><div><small id="dialogueRole">EXPLORER</small><h2 id="dialogueName"></h2></div><button id="dialogueClose" aria-label="会話を閉じる">×</button></div>
   <p id="dialogueText"></p>
-  <button id="dialogueNext">つづく <span>›</span></button>
+  <button id="dialogueNext">どこでもタップしてつづく <span>›</span></button>
  </section>
 </div>
 <script type="module" src="./game.js"></script>

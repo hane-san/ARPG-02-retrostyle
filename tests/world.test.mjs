@@ -6,7 +6,7 @@ const world=makeWorld();
 test('large seamless four-district world with invisible logical grid',()=>{
  assert.equal(world.tiles.length,H);assert.equal(world.tiles[0].length,W);
  assert.equal(ZONES.length,4);assert.equal(BRIDGES.length,4);
- assert.equal(SITES.length,12);assert.equal(NPCS.length,9);
+ assert.equal(SITES.length,12);assert.equal(NPCS.length,13);
  assert.ok(world.walkable(START.x,START.y));
 });
 test('all four districts are reachable from start without loading screens',()=>{

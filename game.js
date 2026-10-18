@@ -2,6 +2,9 @@ import {W,H,TILE,ZONES,SITES,NPCS,BRIDGES,START,makeWorld,findPath,nearestWalkab
 import {MUSIC_LIBRARY,createMusic} from './music.js';
 import {createAudio} from './audio.js';
 import {drawSrpgUnit} from './sprite-srpg.js';
+import {limitCamera} from './camera-limits.js';
+import {pickZoneTrack} from './zone-music.js';
+import {TALK,SITE_ASIDES} from './dialogue-data.js';
 
 const $=id=>document.getElementById(id);
 const stage=$('stage'),canvas=$('worldCanvas'),ctx=canvas.getContext('2d',{alpha:false});
@@ -12,11 +15,17 @@ const storage={
 };
 const music=createMusic(storage),sfx=createAudio(storage);
 const hero={x:START.x,y:START.y,px:START.x,py:START.y,face:'down',path:[],arrival:null,stride:0,moving:false};
-const camera={x:(START.x+.5)*TILE,y:(START.y+.5)*TILE,zoom:1.25,follow:true};
+const camera={x:(START.x+.5)*TILE,y:(START.y+.5)*TILE,zoom:1.25};
 let screen={w:1,h:1,dpr:1},last=0,zoneId='',noticeTimer=0,dialogue=null;
 const discovered=new Set(),cache=new Map(),CHUNK=16,MAX_CHUNKS=42;
 const palette={'~':'#497d93','.':'#8d9f7c',',':'#cbbc96',f:'#567864','=':'#baa986','+':'#ae987a',s:'#98b0b0',n:'#576d88',p:'#b7a993','#':'#58605d'};
 const clamp=(a,b,c)=>Math.max(b,Math.min(c,a));
+function confineCamera(x=camera.x,y=camera.y){
+ const bounded=limitCamera({x,y},{x:hero.px,y:hero.py},
+  {width:screen.w,height:screen.h,zoom:camera.zoom},{width:W*TILE,height:H*TILE,tile:TILE});
+ camera.x=bounded.x;camera.y=bounded.y;
+}
+function centerCamera(){confineCamera((hero.px+.5)*TILE,(hero.py+.5)*TILE);}
 const hash=(x,y)=>{let n=Math.imul(x+23,374761393)+Math.imul(y+51,668265263);n=Math.imul(n^(n>>>13),1274126177);return ((n^(n>>>16))>>>0)/4294967295;};
 const rect=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h);};
 function line(c,points,color,width=2){
@@ -31,6 +40,7 @@ function resize(){
  const r=stage.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1);
  screen={w:r.width,h:r.height,dpr};
  canvas.width=Math.max(1,Math.round(r.width*dpr));canvas.height=Math.max(1,Math.round(r.height*dpr));
+ confineCamera();
 }
 const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):null;
 observer?.observe(stage);window.addEventListener('resize',resize);resize();
@@ -219,19 +229,27 @@ function drawSite(c,s,t){
  c.restore();
 }
 function drawNpc(c,n,t){
- const x=n.x*TILE+16,y=n.y*TILE+14;
- rect(c,x-10,y+12,20,4,'#163c4777');
- const bob=Math.sin(t*.002+(n.x%6))*.8;
- rect(c,x-7,y+5+bob,14,17,'#273e49');
- rect(c,x-6,y+5+bob,12,14,n.color);
- rect(c,x-7,y-10+bob,14,15,'#263b49');
- rect(c,x-5,y-7+bob,10,10,'#f0d5a9');
- rect(c,x-6,y-13+bob,12,6,'#50423e');
- rect(c,x-7,y+20+bob,6,6,'#344650');
- rect(c,x+1,y+20+bob,6,6,'#344650');
- c.fillStyle='#f6e5ae';c.font='bold 18px system-ui';c.textAlign='center';
- c.fillText('···',x,y-19+Math.sin(t*.002)*2);
+ // Draw an approximately full 32×32 tile actor, like the SRPG unit sprite.
+ // NPCs are visibly distinct through costume colour and silhouette.
+ const x=n.x*TILE,y=n.y*TILE;
+ const bob=Math.sin(t*.002+(n.x%6))*.65;
+ c.save();c.translate(x,y-bob);
+ rect(c,4,28,25,3,'#173a4860');
+ rect(c,8,24,7,6,'#2b3944');rect(c,19,24,7,6,'#2b3944');
+ rect(c,6,13,22,14,'#273944');
+ rect(c,8,14,18,11,n.color);
+ rect(c,11,3,13,12,'#344349');
+ rect(c,12,7,11,8,'#f0d5a9');
+ rect(c,10,2,17,6,'#51494b');
+ rect(c,6,14,4,12,'#baaa91');rect(c,25,14,4,12,'#baaa91');
+ rect(c,14,11,2,2,'#2e3a41');rect(c,21,11,2,2,'#2e3a41');
+ rect(c,9,16,3,8,'#ffffff50');
+ c.font='bold 17px system-ui';c.textAlign='center';c.lineWidth=3;
+ c.strokeStyle='#203747';c.strokeText('…',x*0+16,-4+Math.sin(t*.002)*2);
+ c.fillStyle='#ffecb6';c.fillText('…',16,-4+Math.sin(t*.002)*2);
+ c.restore();
 }
+
 function drawHero(c,t){
  const bob=hero.moving?Math.abs(Math.sin(hero.stride*9))*2:Math.sin(t*.002)*.4;
  c.save();c.translate(0,-bob);
@@ -290,6 +308,10 @@ function updateZone(){
  const z=world.zoneAt(hero.x,hero.y);
  if(z.id===zoneId)return;
  zoneId=z.id;$('zoneName').textContent=z.name;$('zoneSub').textContent=z.sub;
+ // Randomly pick among songs matching the atmosphere; never immediately repeat.
+ const nextSong=pickZoneTrack(z.id,$('trackSelect').value);
+ $('trackSelect').value=nextSong;
+ applyTrack();
  toast(z.name+' — '+z.sub);
 }
 function updateDiscoveries(){
@@ -300,7 +322,7 @@ function startWalk(target,arrival=null){
  // Start from the next occupied grid cell instead of instantly teleporting away.
  const from={x:hero.x,y:hero.y},path=findPath(world,from,target);
  if(!path||!path.length){toast('この場所へ続く道が見つかりません。');return;}
- hero.path=path.slice(1);hero.arrival=arrival;camera.follow=true;
+ hero.path=path.slice(1);hero.arrival=arrival;
  if(hero.path.length===0){hero.px=hero.x;hero.py=hero.y;onArrive();return;}
  if(path.length>12)toast(path.length-1+'歩先まで、道をたどって向かいます。');
  sfx.play('confirm');
@@ -308,12 +330,13 @@ function startWalk(target,arrival=null){
 function onArrive(){
  const obj=hero.arrival;hero.arrival=null;
  if(!obj)return;
- if(obj.kind==='npc'){openDialogue(obj.item.name,obj.item.role,obj.item.lines);return;}
+ if(obj.kind==='npc'){openDialogue(obj.item.name,obj.item.role,TALK[obj.item.id]||obj.item.lines);return;}
  if(obj.kind==='site'){
   const fresh=!discovered.has(obj.item.id);discovered.add(obj.item.id);
   updateDiscoveries();if(fresh)sfx.play('heal');
   openDialogue(obj.item.name,'DISCOVERED PLACE',[
    obj.item.desc,
+   SITE_ASIDES[obj.item.id]||'',
    fresh?'新しい場所を見つけました。発見した建物：'+discovered.size+' / '+SITES.length:
     'この場所は、すでに訪れたことがあります。'
   ]);
@@ -345,21 +368,31 @@ function handleTap(e){
  if(bridge)toast(bridge.name+'へ歩いて向かいます。');
 }
 function openDialogue(name,role,lines){
- dialogue={name,role,lines,index:0};
- $('dialogueName').textContent=name;$('dialogueRole').textContent=role;$('dialogueText').textContent=lines[0];
- $('dialogueNext').innerHTML=lines.length>1?'つづく <span>›</span>':'閉じる <span>×</span>';
+ dialogue={name,role,lines:lines.filter(Boolean),index:0,openedAt:performance.now()};
+ $('dialogueName').textContent=name;$('dialogueRole').textContent=role;
+ $('dialogueText').textContent=dialogue.lines[0];
+ $('dialogueNext').innerHTML='タップしてつづく <span>›</span>';
  $('dialogue').classList.remove('hidden');sfx.play('select');
 }
 function closeDialogue(){dialogue=null;$('dialogue').classList.add('hidden');}
-$('dialogueClose').addEventListener('click',closeDialogue);
-$('dialogueNext').addEventListener('click',()=>{
+function advanceDialogue(){
  if(!dialogue)return;
  dialogue.index++;
  if(dialogue.index>=dialogue.lines.length){closeDialogue();return;}
  $('dialogueText').textContent=dialogue.lines[dialogue.index];
- $('dialogueNext').innerHTML=dialogue.index===dialogue.lines.length-1?'閉じる <span>×</span>':'つづく <span>›</span>';
+ $('dialogueNext').innerHTML=dialogue.index===dialogue.lines.length-1?'どこでもタップして閉じる <span>×</span>':'タップしてつづく <span>›</span>';
  sfx.play('select');
-});
+}
+// Capture the click before the underlying map/menu can receive it. A dialogue
+// opened by a pointer-up must not advance on that same gesture's subsequent click.
+document.addEventListener('click',e=>{
+ if(!dialogue)return;
+ e.preventDefault();e.stopImmediatePropagation();
+ if(e.target.closest('#dialogueClose')){closeDialogue();return;}
+ if(performance.now()-dialogue.openedAt<180)return;
+ advanceDialogue();
+},true);
+
 function updateMove(dt){
  if(dialogue||!hero.path.length){hero.moving=false;return;}
  let remaining=Math.min(dt,0.08)*5.1;
@@ -383,20 +416,18 @@ function updateMove(dt){
 function animate(time){
  const dt=last?Math.min(.07,(time-last)/1000):0;last=time;
  updateMove(dt);
- if(camera.follow){
-  const tx=(hero.px+.5)*TILE,ty=(hero.py+.5)*TILE;
-  const ease=1-Math.exp(-dt*6);
-  camera.x+=(tx-camera.x)*ease;camera.y+=(ty-camera.y)*ease;
- }
+ // Camera is static for normal walking. Only shift at the viewport edge to keep
+ // the protagonist barely visible, never automatically recenter on the player.
+ confineCamera();
  paint(time);requestAnimationFrame(animate);
 }
 function zoomTo(v){
- camera.zoom=clamp(v,.66,2.5);
+ camera.zoom=clamp(v,.66,2.5);confineCamera();
  $('zoomIn').disabled=camera.zoom>=2.49;$('zoomOut').disabled=camera.zoom<=.67;
 }
 $('zoomIn').addEventListener('click',()=>zoomTo(camera.zoom*1.23));
 $('zoomOut').addEventListener('click',()=>zoomTo(camera.zoom/1.23));
-$('homeBtn').addEventListener('click',()=>{camera.follow=true;camera.x=(hero.px+.5)*TILE;camera.y=(hero.py+.5)*TILE;});
+$('homeBtn').addEventListener('click',centerCamera);
 canvas.addEventListener('wheel',e=>{e.preventDefault();zoomTo(camera.zoom*(e.deltaY<0?1.13:.885));},{passive:false});
 
 const pointerMap=new Map();let gesture=null;
@@ -424,9 +455,7 @@ canvas.addEventListener('pointermove',e=>{
  const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;
  if(Math.hypot(dx,dy)>9)gesture.drag=true;
  if(gesture.drag){
-  camera.follow=false;
-  camera.x=clamp(gesture.cx-dx/camera.zoom,0,W*TILE);
-  camera.y=clamp(gesture.cy-dy/camera.zoom,0,H*TILE);
+  confineCamera(gesture.cx-dx/camera.zoom,gesture.cy-dy/camera.zoom);
  }
 });
 canvas.addEventListener('pointerup',e=>{
@@ -440,7 +469,8 @@ canvas.addEventListener('contextmenu',e=>e.preventDefault());
 canvas.addEventListener('dragstart',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
  if(e.key==='Escape'){closeDialogue();closePanels();return;}
- if(dialogue||isPanelOpen())return;
+ if(dialogue){if(e.key==='Enter'||e.key===' '){e.preventDefault();advanceDialogue();}return;}
+ if(isPanelOpen())return;
  const dirs={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]};
  const d=dirs[e.key];if(!d)return;
  e.preventDefault();sfx.unlock();music.unlock();
@@ -481,11 +511,12 @@ function drawMinimap(){
 }
 mini.addEventListener('click',e=>{
  const r=mini.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
- camera.follow=false;camera.x=clamp((x+.5)*TILE,0,W*TILE);camera.y=clamp((y+.5)*TILE,0,H*TILE);
- closePanels();toast('地図上の場所を見ています。フィールドをタップして移動できます。');
+ const target=nearestWalkable(world,Math.max(0,Math.min(W-1,Math.floor(x))),Math.max(0,Math.min(H-1,Math.floor(y))),14);
+ closePanels();
+ if(target)startWalk(target);else toast('海の上は歩けません。陸か橋を選んでください。');
 });
 $('mapHome').addEventListener('click',()=>{
- camera.follow=true;camera.x=(hero.px+.5)*TILE;camera.y=(hero.py+.5)*TILE;closePanels();
+ centerCamera();closePanels();
 });
 for(const z of ZONES){
  const btn=document.createElement('button');
@@ -493,7 +524,8 @@ for(const z of ZONES){
  const sub=document.createElement('small');sub.textContent=z.sub;
  btn.append(title,sub);
  btn.addEventListener('click',()=>{
-  camera.follow=false;camera.x=z.cx*TILE;camera.y=z.cy*TILE;closePanels();
+  const target=nearestWalkable(world,z.cx,z.cy,12);
+  closePanels();if(target)startWalk(target);
  });
  $('zoneList').append(btn);
 }
