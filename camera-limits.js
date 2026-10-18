@@ -10,7 +10,9 @@ export function limitCamera(target,hero,viewport,world){
   const worldHigh=half*2>=mapSize?mapSize/2:mapSize-half;
   const low=Math.max(worldLow,heroPos-half+margin);
   const high=Math.min(worldHigh,heroPos+half-margin);
-  if(low>high)return Math.max(worldLow,Math.min(worldHigh,desired));
+  // At the world border the requested sprite margin cannot coexist with the
+  // no-outside-world rule. Anchor nearest to the hero, never to the drag target.
+  if(low>high)return Math.max(worldLow,Math.min(worldHigh,heroPos));
   return Math.max(low,Math.min(high,desired));
  }
  return {x:axis(target.x,heroX,hw,wx),y:axis(target.y,heroY,hh,wy)};
