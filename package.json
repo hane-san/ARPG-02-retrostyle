@@ -1,0 +1,11 @@
+{
+  "name": "tidal-atlas-experiment",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Standalone 2D exploration prototype inspired by Odaiba with original SRPG scores",
+  "scripts": {
+    "check": "node --check game.js && node --check world.js && node --check music.js && node --check audio.js && node --test tests/*.test.mjs",
+    "test": "node --test tests/*.test.mjs"
+  }
+}
