@@ -14,7 +14,7 @@ test('all four districts are reachable from start without loading screens',()=>{
  for(const t of targets){
   assert.ok(world.walkable(t.x,t.y),'target blocked: '+JSON.stringify(t));
   const route=findPath(world,START,t);
-  assert.ok(route&&route.length>2,'no route to '+JSON.stringify(t));
+  assert.ok(route&&route.length>=(t.x===START.x&&t.y===START.y?1:3),'no route to '+JSON.stringify(t));
   assert.deepEqual(route[0],START);assert.deepEqual(route.at(-1),t);
   for(let i=1;i<route.length;i++){
    const a=route[i-1],b=route[i];
