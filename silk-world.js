@@ -18,7 +18,7 @@ export const SILK_ZONES=[
 const Z=Object.fromEntries(SILK_ZONES.map(z=>[z.id,z]));
 export function silkZoneAt(x,y){
  if(x>=303&&y<88)return Z['silk-future'];
- if(x>196&&y>=94&&y<=226)return Z['silk-lake'];
+ if(x>196&&y>=94&&y<=240)return Z['silk-lake'];
  if(x>=142&&y>=185)return Z['silk-canyon'];
  if(x<108&&y>181)return Z['silk-oasis'];
  if(x<105&&y<97)return Z['silk-aral'];
