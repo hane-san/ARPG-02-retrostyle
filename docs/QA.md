@@ -1,5 +1,7 @@
 # 品質検証・判定基準
 
+初期開発では既存CIを確認用に維持し、main保護や必須Approveを新設しない。low/戻せるmediumの独立監査・iPhone試遊は遊べる区切りでまとめ、毎PRの前提にしない。失敗・未検証は明記する。適用範囲は[DEVELOPMENT](DEVELOPMENT.md)の現在の運用を参照。
+
 ## CI（GitHub Actions）
 
 - `rules`: Node.js 22で `npm run check`。構文解析と `tests/*.test.mjs` の地形・可達性・カメラ・音楽・会話検証（2026-10-19基準31件）。
