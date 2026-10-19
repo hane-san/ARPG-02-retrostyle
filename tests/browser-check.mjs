@@ -50,8 +50,22 @@ async function main(){
  await page.locator('#mapBtn').click();
  assert.equal(await page.locator('#zoneList button').count(),9);
  await page.locator('#mapPanel [data-close]').click();
+ // Opt-in Small Journey retains the same controls while using a two-zone map.
+ const miniResponse=await page.goto(origin+'/?prototype=1',{waitUntil:'load'});
+ assert.ok(miniResponse?.ok(),'compact mode must load');
+ await page.waitForFunction(()=>document.querySelector('#discovered')?.textContent==='0 / 4');
+ assert.equal(await page.locator('#worldTitle').textContent(),'潮環・小さな旅');
+ await page.locator('#mapBtn').click();
+ assert.equal(await page.locator('#zoneList button').count(),2);
+ await page.locator('#zoneList button').last().click();
+ await page.waitForFunction(
+  ()=>document.querySelector('#zoneName')?.textContent==='潮騒の旧港',
+  null,{timeout:22000});
+ await page.locator('#helpBtn').click();
+ assert.ok(await page.getByRole('link',{name:'広い世界を遊ぶ（通常版）'}).isVisible());
+ await page.locator('#helpPanel [data-close]').click();
  if(errors.length)throw new Error('JavaScript browser errors: '+errors.join(' | '));
- console.log('Browser smoke passed: mobile viewport, 68 BGM tracks, four-step bridge to Starwind, nine zones.');
+ console.log('Browser smoke passed: default mobile exploration, 68 tracks, mainland bridge, compact two-zone walk.');
 }
 try{await main();}
 catch(err){
