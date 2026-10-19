@@ -1,14 +1,44 @@
-name: Prototype checks
+name: Atlas checks
 on:
   push:
     branches: [main]
   pull_request:
+permissions:
+  contents: read
 jobs:
-  test:
+  rules:
+    name: rules
     runs-on: ubuntu-latest
+    timeout-minutes: 7
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: '22'
-      - run: npm run check
+      - name: Verify JavaScript, pathfinding, camera and sound rules
+        run: npm run check
+  browser:
+    name: browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Install isolated browser test dependencies
+        run: npm install --no-save --package-lock=false playwright@1.57.0
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run mobile-viewport smoke tests
+        run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: atlas-browser-failure
+          path: test-results/*.png
+          if-no-files-found: ignore
+          retention-days: 3
