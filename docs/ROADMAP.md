@@ -4,6 +4,9 @@
 - [x] 既存ゲームの独立リポジトリ化と正式名への改名（`fantasy-adventure-test` → `ARPG-02-retrostyle`）。SRPG・ARPGとは別のGitHubリポジトリ。
 - [x] 2つの世界、近道橋・遠方橋、地区曲68曲、スムーズなカメラ。
 - [x] 開発手順・文書・テンプレート・ブラウザCIの導入（Issue #1 / PR #2 マージ済み、両ジョブ成功）。
+- [x] 小さな旅の任意モード `?prototype=1` を実装・統合（Issue #6 / PR #7）。通常版は維持。既定入口の変更は未採用。
+- [x] 改名後の資料修正PR #4を統合済み。現行mainから共通開発導線を同期（Issue #8）。
+- [ ] 統合済みPR #7の別担当監査・iPhone試遊の証拠を確認し、なければ[PROTOTYPE](PROTOTYPE.md)の依頼で追跡する。GitHubレビュー一覧は空で、CIや自己確認は代替にならない。
 - [ ] 人間のiPhone実機試遊：起動、両方向の橋、NPC会話、ズーム禁止、カメラ、音切れ。
 - [ ] 人間のGitHub Settings：main ruleset必須PR / rules / browser / force push禁止 / deletion禁止。効果確認。
 - [x] 第三ゲームの正式GitHubリポジトリ名を `ARPG-02-retrostyle` に決定・改名済み（2026-10-19）。ゲーム内タイトルは変更しない。
