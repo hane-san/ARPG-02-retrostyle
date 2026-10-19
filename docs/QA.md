@@ -18,6 +18,12 @@ npm run test:browser
 ブラウザテストは内部でPython静的サーバーを開くため、先に `npm run dev` を同じポートで起動しない。
 予期せぬ失敗ではブラウザスクリーンショットを `test-results/` に保存する（Gitに入れない）。CIは失敗時の添付のみ。
 
+## GitHub Pages改名後の公開確認
+
+- 新しいURLは **https://hane-san.github.io/ARPG-02-retrostyle/**。GitHubのPagesデプロイActionは成功しているが、実際のSafari起動・リソース取得は未検証。
+- 旧 `fantasy-adventure-test` のPages URLの自動転送は前提にしない。ホーム画面・ブックマークを新URLへ更新する。
+- `tidal-atlas:` のlocalStorageプレフィックスは改名しても維持。別パスでの起動でも同じ `hane-san.github.io` オリジンならブラウザ側の設定共有が見込まれる。
+
 ## iPhone Safari 実機で確かめること
 
 1. 画面開始位置から東約4マスに小橋が見え、タップすると星風回廊へ渡れるか。

@@ -28,7 +28,7 @@
 
 ## 動かす
 
-GitHub Pages 現在の公開URLは https://hane-san.github.io/fantasy-adventure-test/ です。**正式なGitHubリポジトリ名は `ARPG-02` に決定済みですが、改名は未実施**（[移行Issue #3](https://github.com/hane-san/fantasy-adventure-test/issues/3)）。改名後の新URLは https://hane-san.github.io/ARPG-02/ を予定しています。ゲーム本体や既存SRPG/ARPGは変更しません。
+**正式リポジトリ**：[hane-san/ARPG-02-retrostyle](https://github.com/hane-san/ARPG-02-retrostyle)（旧名：`fantasy-adventure-test`、2026-10-19改名済み）。GitHub Pagesの設定済み公開先は **https://hane-san.github.io/ARPG-02-retrostyle/** です。Actions上のPagesデプロイは成功していますが、iPhone Safariでの新URL起動・音声は実機確認が必要です（[移行Issue #3](https://github.com/hane-san/ARPG-02-retrostyle/issues/3)）。ゲーム内タイトル、設定保存キー、既存SRPG/ARPGは変更しません。
 
 ローカルではHTTPサーバー経由で起動できます（\`file://\` の ES Modules 読込は非推奨）。
 

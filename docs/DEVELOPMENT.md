@@ -1,6 +1,6 @@
 # 探索ゲーム：共通AI開発ルール
 
-対象：`hane-san/fantasy-adventure-test`（正式運用候補の独立ゲーム『潮環群島 × 星風回廊』）。
+対象：`hane-san/ARPG-02-retrostyle`（旧 `fantasy-adventure-test`、2026-10-19改名済み）。独立ゲーム『潮環群島 × 星風回廊』。
 SRPG・ARPGと**共通なのは手順・レビュー・権限の境界**であり、各作品のゲーム仕様は共有しない。
 共通契約は `AGENTS.md`、Claude Codeの入口は `CLAUDE.md`。チャット固有のメモリは正本ではない。
 
@@ -53,9 +53,9 @@ Chromium検査は一時的に `npm install --no-save --package-lock=false playwr
 SRPG／ARPGの既存設定に準拠。これは権限上、ファイル追加やPR作成だけでは有効にならない。
 
 1. **Settings → Rules → Rulesets → New branch ruleset**。名前 `main-protection`、対象 `main`、Active、Require pull request、Block force pushes（non-fast-forward）、Restrict deletions、Require status checksを設定。必須ジョブ名は成功したPRから **`rules` / `browser`** を選択。Strict（mainへの追従必須）。他人のApproveを必須にして個人開発が詰まらないようレビュー数0。実際に拒否されることまでテスト。
-2. **Settings → Pages**：現在のmain/root公開と既存URLを維持する。ファイルを読めることはPages設定を書けることとは別。
+2. **Settings → Pages**：改名後の新URL `https://hane-san.github.io/ARPG-02-retrostyle/` を確認する。GitHub ActionsのPagesデプロイは成功しているが、実機で新URLを開く確認は別。
 3. **Codex / Claude Code / GitHub**：このrepoだけを個別に接続・有効化。AIの独断でmainを変更しない権限ルールを優先する。
-4. **リポジトリ改名（Issue #3）**：第三ゲームのGitHub名は `ARPG-02` に採用済み。現行 `fantasy-adventure-test` からの変更は、PR #2を人間が統合した後、Settingsで本人が実施する。PagesのURL・相対リンク・公開説明・外部連携・設定/保存キー影響を監査。既存の `SRPG` / `ARPG` の改名は本Issueの対象外。
+4. **リポジトリ改名（Issue #3）**：第三ゲームのGitHub名は `ARPG-02-retrostyle` として**改名済み**。元の `fantasy-adventure-test` とGit履歴・Issue・PRは同一リポジトリで引き継ぎ済み。Pages URL・相対リンク・外部連携・設定/保存キー影響を確認する。既存の `SRPG` / `ARPG` の改名は対象外。
 
 ## 6. 引き継ぎ
 
