@@ -28,7 +28,7 @@ test('manual pan is frame-time independent and bounded by the protagonist',()=>{
  assert.ok(at60.x>=viewport.width/(2*viewport.zoom));
 });
 test('walking camera starts moving earlier with the same gentle ease',()=>{
- const person={x:START.x+5,y:START.y+5};
+ const person={x:START.x+5,y:START.y+7}; // vertical viewport is taller than horizontal
  const before=easeEdgeCamera(center,person,viewport,map,.016);
  assert.ok(before.x>center.x);
  assert.ok(before.y>center.y);
