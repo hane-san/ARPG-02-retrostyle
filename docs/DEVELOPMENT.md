@@ -8,6 +8,7 @@ SRPG・ARPGと**共通なのは手順・レビュー・権限の境界**であ�
 
 1. `git status --short`、`git log -5 --oneline`、`git fetch origin`。他者の未コミット変更は消さない。
 2. AGENTS・DESIGN・DECISIONS・ROADMAP・QAと対象Issueを読む。既存のIssue/PRも確認して編集衝突を避ける。
+   通常版と小さな旅は同じソースを使うため、[PROTOTYPE](PROTOTYPE.md)の不変条件と統合後の未確認事項も読む。
 3. `npm run check` を実行し、既知の失敗と新規失敗を区別する。
 4. `git switch -c type/ISSUE-topic origin/main`。main直書き、force push、auto mergeは禁止。
 
@@ -18,7 +19,7 @@ SRPG・ARPGと**共通なのは手順・レビュー・権限の境界**であ�
 3. **AI実装**：Codex/Claude Code/Sonnet等を利用枠・環境・具体的タスクで選択。名前は固定バージョンでなく役割。複数実装者は変更予定ファイルをPR/Issueで調整。
 4. **PR**：Issueをリンクし、変更点、対象外、テスト結果、環境、SHA、ブラウザ/iPhone未検証、独立監査と試遊項目を書く。ブランチだけをpushする。
 5. **CI**：PRで `rules`（Node syntax・決定論的テスト）と `browser`（Chromiumの起動・UI・近道橋の渡航）が両方成功すること。
-6. **独立監査**：low＝限定文言/資料で省略可（理由明記）。medium＝UI・カメラ・BGM・NPC・単一地形。high＝地形・経路・クロスワールド状態や将来の保存等。medium以上は別担当/別セッションにレビュー。highは事前設計と深い監査。担当者本人のセルフチェックは独立監査ではない。
+6. **独立監査**：low＝限定文言/資料で省略可（理由明記）。medium＝UI・カメラ・BGM・NPC・単一地形。high＝地形・経路・クロスワールド状態や将来の保存等。medium以上は別担当/別セッションにレビュー。highは事前設計と深い監査（必要なら利用可能なOpusへ上申）。担当者本人のセルフチェックは独立監査ではない。担当や実機を確保できなければ未検証として引き継ぎ、PASSと書かない。
 7. **人間が試遊・採否判断**：特にiPhone Safariで移動・ドラッグ・ズーム禁止・BGMと足音・2本の橋・湖の印象をチェック。
 8. **main統合/Pages確認**：人間の最終承認後にのみPRをマージ。ビルド完了・Pages表示・操作確認・SHAを記録。
 
@@ -39,6 +40,7 @@ Chromium検査は一時的に `npm install --no-save --package-lock=false playwr
 ## 4. 実装境界
 
 - `world.js`、`silk-world.js`：地形、遮断、水域、道、施設、NPC、橋、ワープ接続・A*。
+- `prototype-world.js`：通常版の座標系を保つ80×110の切り出し。4施設・4NPC・2地区、通常版と共通の経路探索。小さな旅の詳細と未確認の独立監査は[PROTOTYPE](PROTOTYPE.md)。
 - `game.js`：描画、タッチ/マウス/キー、NPC会話、UI、世界切替、カメラ統合。
 - `camera-limits.js`：物理的なカメラの可視範囲、パン/追従の時間依存補間。
 - `music.js`、`audio.js`、`zone-music.js`、`silk-music.js`：曲生成、合成、スケジューリング、クロスフェード、選曲、効果音。
@@ -52,10 +54,11 @@ Chromium検査は一時的に `npm install --no-save --package-lock=false playwr
 
 SRPG／ARPGの既存設定に準拠。これは権限上、ファイル追加やPR作成だけでは有効にならない。
 
-1. **Settings → Rules → Rulesets → New branch ruleset**。名前 `main-protection`、対象 `main`、Active、Require pull request、Block force pushes（non-fast-forward）、Restrict deletions、Require status checksを設定。必須ジョブ名は成功したPRから **`rules` / `browser`** を選択。Strict（mainへの追従必須）。他人のApproveを必須にして個人開発が詰まらないようレビュー数0。実際に拒否されることまでテスト。
+1. **Settings → Rules → Rulesets → New ruleset → New branch ruleset**。名前 `main-protection`、Enforcement statusは **Active**。Target branchesの **Add target → Include by pattern** に `main` を入力（`refs/heads/main`に一致）。Bypass listは空。**Require a pull request before merging**（required approvalsは0）、**Require status checks to pass**で成功したPRの **`rules` / `browser`**（GitHub Actions）を追加し、**Require branches to be up to date before merging**を有効化。**Block force pushes** と **Restrict deletions**も有効化して保存。これは文書の追加だけでは設定されない。
+   2026-10-19確認ではRulesetsは0件、mainはprotected=false（[Issue #5](https://github.com/hane-san/ARPG-02-retrostyle/issues/5)）。設定後はmainの有効ルールを読み取り確認する。失敗CIの遮断を実地確認する場合は別Issue・専用PRで行い、mainへの試験pushや意図的な失敗PRのマージはしない。他repoの成功例はこのrepoの設定済み証拠にはならない。
 2. **Settings → Pages**：改名後の新URL `https://hane-san.github.io/ARPG-02-retrostyle/` を確認する。GitHub ActionsのPagesデプロイは成功しているが、実機で新URLを開く確認は別。
 3. **Codex / Claude Code / GitHub**：このrepoだけを個別に接続・有効化。AIの独断でmainを変更しない権限ルールを優先する。
-4. **リポジトリ改名（Issue #3）**：第三ゲームのGitHub名は `ARPG-02-retrostyle` として**改名済み**。元の `fantasy-adventure-test` とGit履歴・Issue・PRは同一リポジトリで引き継ぎ済み。Pages URL・相対リンク・外部連携・設定/保存キー影響を確認する。既存の `SRPG` / `ARPG` の改名は対象外。
+4. **リポジトリ改名（Issue #3）**：第三ゲームのGitHub名は `ARPG-02-retrostyle` として**改名済み**（参照修正PR #4も統合済み）。元の `fantasy-adventure-test` とGit履歴・Issue・PRは同一リポジトリで引き継ぎ済み。Pages URL・相対リンク・外部連携・設定/保存キー影響を確認する。別repoの現在名は `SRPG-01-FEstyle` / `ARPG-01-SkyrimStyle`。本作のためにそれらを変更しない。
 
 ## 6. 引き継ぎ
 
