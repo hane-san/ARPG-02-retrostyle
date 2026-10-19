@@ -28,7 +28,7 @@
 
 ## 動かす
 
-GitHub Pages 公開URLは https://hane-san.github.io/fantasy-adventure-test/ です。ゲーム本体と独立したSRPG/ARPGには変更を加えません。
+GitHub Pages 現在の公開URLは https://hane-san.github.io/fantasy-adventure-test/ です。**正式なGitHubリポジトリ名は `ARPG-02` に決定済みですが、改名は未実施**（[移行Issue #3](https://github.com/hane-san/fantasy-adventure-test/issues/3)）。改名後の新URLは https://hane-san.github.io/ARPG-02/ を予定しています。ゲーム本体や既存SRPG/ARPGは変更しません。
 
 ローカルではHTTPサーバー経由で起動できます（\`file://\` の ES Modules 読込は非推奨）。
 

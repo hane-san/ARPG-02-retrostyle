@@ -43,4 +43,4 @@ No mandatory release rebuild or generated `dist/`; Pages serves the repository r
 
 ## Release / handoff
 
-Record Issue, PR, verified commit SHA, exact executed tests, risk/audit outcome, untested behavior, live Pages result, and required iPhone steps. Main merge and repository Settings remain human controlled. A future repo rename to the `hane-no-...01` family requires separate approval and URL/manifest/Actions/storage/link audit.
+Record Issue, PR, verified commit SHA, exact executed tests, risk/audit outcome, untested behavior, live Pages result, and required iPhone steps. Main merge and repository Settings remain human controlled. The repository name **ARPG-02** is approved (2026-10-19, Issue #3), but the actual rename is pending; until then, keep the current URL and GitHub repository identifier. Rename only via the separately approved migration with Pages, links, Actions, AI integrations and storage audit.

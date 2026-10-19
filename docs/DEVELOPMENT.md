@@ -55,7 +55,7 @@ SRPG／ARPGの既存設定に準拠。これは権限上、ファイル追加や
 1. **Settings → Rules → Rulesets → New branch ruleset**。名前 `main-protection`、対象 `main`、Active、Require pull request、Block force pushes（non-fast-forward）、Restrict deletions、Require status checksを設定。必須ジョブ名は成功したPRから **`rules` / `browser`** を選択。Strict（mainへの追従必須）。他人のApproveを必須にして個人開発が詰まらないようレビュー数0。実際に拒否されることまでテスト。
 2. **Settings → Pages**：現在のmain/root公開と既存URLを維持する。ファイルを読めることはPages設定を書けることとは別。
 3. **Codex / Claude Code / GitHub**：このrepoだけを個別に接続・有効化。AIの独断でmainを変更しない権限ルールを優先する。
-4. **将来の改名**：SRPG/ARPGも `hane-no-SRPG01`・`hane-no-ARPG01` にしたいという別途計画がある。探索ゲームのリポジトリ名は未決定。名前を確定してから別Issueで変更し、PagesのURL・相対リンク・公開説明・manifest・外部連携・設定/保存キー影響を監査。改名は開発規則整備と混ぜない。
+4. **リポジトリ改名（Issue #3）**：第三ゲームのGitHub名は `ARPG-02` に採用済み。現行 `fantasy-adventure-test` からの変更は、PR #2を人間が統合した後、Settingsで本人が実施する。PagesのURL・相対リンク・公開説明・外部連携・設定/保存キー影響を監査。既存の `SRPG` / `ARPG` の改名は本Issueの対象外。
 
 ## 6. 引き継ぎ
 
