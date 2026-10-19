@@ -52,7 +52,8 @@ test('hidden landmarks do not leave invisible colliders, and original world is u
  const world=makePrototypeWorld();
  assert.equal(world.siteAt(50,20),undefined,'unselected castle is not a visible landmark');
  assert.ok(world.walkable(50,20),'the unselected castle must not leave invisible walls');
- assert.equal(world.siteAt(52,88),undefined,'unselected market-adjacent area is normal ground unless selected');
+ assert.equal(world.siteAt(17,100),undefined,'unselected dock is no longer a landmark');
+ assert.ok(world.walkable(17,100),'unselected dock should not leave invisible walls');
  const original=makeWorld();
  assert.equal(original.w,164);
  assert.equal(original.h,120);
