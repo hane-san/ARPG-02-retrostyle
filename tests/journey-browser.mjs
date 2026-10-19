@@ -6,12 +6,25 @@ import {JOURNEY_PLAYLISTS} from '../journey-music.js';
 
 export async function checkJourney(page,origin){
  mkdirSync('test-results',{recursive:true});
+ // Test-only Web Audio instrumentation: the UI must actually schedule sound,
+ // and crossing regions must not create a new audio context each time.
+ await page.addInitScript(()=>{
+  const Native=window.AudioContext;
+  const probe=window.journeyAudioProbe={contexts:[],notes:0};
+  window.AudioContext=class extends Native{
+   constructor(...args){super(...args);probe.contexts.push(this);}
+   createOscillator(){const oscillator=super.createOscillator();const start=oscillator.start.bind(oscillator);oscillator.start=(...args)=>{probe.notes++;return start(...args);};return oscillator;}
+  };
+ });
  const response=await page.goto(origin+'/?journey=1',{waitUntil:'load'});
  assert.ok(response?.ok());
  await page.waitForFunction(()=>document.querySelector('#discovered')?.textContent==='0 / 6');
  assert.equal(await page.locator('#worldTitle').textContent(),'小さく壮大な旅');
  assert.equal(await page.title(),'潮環群島 × 星風回廊 — TIDAL ATLAS');
  assert.equal(await page.locator('#zoneName').textContent(),'白い船着場');
+ assert.ok(await page.locator('.topbar').isHidden());
+ assert.ok(await page.locator('.map-hint').isHidden());
+ assert.ok(await page.locator('.discover').isHidden());
  assert.ok(await page.locator('#vistaBtn').isVisible(),'a distant view is available at departure');
  await page.screenshot({path:'test-results/journey-port.png'});
 
@@ -62,6 +75,7 @@ export async function checkJourney(page,origin){
  assert.equal(await page.locator('#vistaTitle').textContent(),'岸の向こう、石の影');
  assert.ok(await page.locator('#vistaCanvas').isVisible());
  await page.keyboard.press('Escape');assert.ok(await page.locator('#vistaCard').isHidden());
+ assert.equal(await page.evaluate(()=>document.activeElement.id),'vistaBtn');
 
  await page.locator('#soundBtn').click();
  assert.equal(await page.locator('#trackSelect option').count(),68);
@@ -73,6 +87,7 @@ export async function checkJourney(page,origin){
  await page.waitForTimeout(250);
  assert.equal(await page.locator('#trackSelect').inputValue(),'0:2','manual selection persists in a region');
  assert.ok((await page.locator('#nowPlaying').textContent()).startsWith('再生中：'));
+ await page.waitForFunction(()=>window.journeyAudioProbe.notes>0&&window.journeyAudioProbe.contexts.some(c=>c.state==='running'));
  await page.locator('#musicPanel [data-close]').click();
 
  // Field tap: approach an NPC at the edge of the quay, then converse.
@@ -81,7 +96,25 @@ export async function checkJourney(page,origin){
  await page.mouse.click(field.x+field.width/2-32*1.25,field.y+field.height/2+6*32*1.25);
  await page.waitForSelector('#dialogue:not(.hidden)',{timeout:10000});
  assert.equal(await page.locator('#dialogueName').textContent(),'灯りをともす人');
+ const reading=await page.locator('#dialogue').boundingBox();
+ const arrivalY=field.y+field.height/2+5*32*1.25;
+ assert.ok(reading.y+reading.height<arrivalY-35||reading.y>arrivalY+12,'reading card leaves the traveller and nearby NPC visible');
+ await page.screenshot({path:'test-results/journey-dialogue.png'});
  await page.locator('#dialogueClose').click();
+ await page.locator('#homeBtn').click();
+ const quay=await page.locator('#worldCanvas').boundingBox();
+ const tapNPC=()=>page.touchscreen.tap(quay.x+quay.width/2,quay.y+quay.height/2+40);
+ await tapNPC();await page.waitForTimeout(220);
+ assert.ok(await page.locator('#dialogue').isVisible(),'revisiting an adjacent NPC must survive its opening click');
+ await page.locator('#mapBtn').click();
+ assert.ok(await page.locator('#dialogue').isHidden(),'reading never captures the bottom menu');
+ assert.ok(await page.locator('#mapPanel').isVisible());
+ await page.locator('#mapBtn').click();
+ assert.ok(await page.locator('#mapPanel').isHidden(),'the same menu button closes its sheet');
+ await tapNPC();await page.waitForTimeout(220);
+ await page.keyboard.press('ArrowLeft');
+ assert.ok(await page.locator('#dialogue').isHidden(),'walking keys dismiss the reading card');
+ await page.waitForFunction(()=>!document.querySelector('#zoomIn').disabled);
  await walk(12,71,{name:'白い連絡舎',arrival:{x:12,y:75}});
  assert.equal(await page.locator('#discovered').textContent(),'1 / 6');
 
@@ -101,6 +134,7 @@ export async function checkJourney(page,origin){
  assert.equal(await page.locator('#vistaTitle').textContent(),'夕空に、飲み込まれる');
  await page.screenshot({path:'test-results/journey-sunset.png'});
  await page.locator('#vistaClose').click();assert.ok(await page.locator('#vistaCard').isHidden());
+ assert.equal(await page.evaluate(()=>document.activeElement.id),'vistaBtn');
  // Opening the atlas closes the optional view without making movement modal.
  await page.locator('#vistaBtn').click();await page.locator('#mapBtn').click();
  assert.ok(await page.locator('#vistaCard').isHidden());await page.locator('#mapPanel [data-close]').click();
@@ -119,12 +153,15 @@ export async function checkJourney(page,origin){
  assert.equal(await page.locator('#discovered').textContent(),'6 / 6');
  await walk(19,70);
  assert.equal(await page.locator('#zoneName').textContent(),'白い船着場');
+ assert.ok(await page.evaluate(()=>window.journeyAudioProbe.contexts.length<=2),'music and SFX contexts are reused for the entire loop');
 
  await page.locator('#helpBtn').click();
  assert.ok(await page.getByRole('link',{name:'広い世界を遊ぶ（通常版）'}).isVisible());
  assert.ok(await page.getByRole('link',{name:'小さな旅を試す（台場ミニ版）'}).isVisible());
  await page.getByRole('link',{name:'広い世界を遊ぶ（通常版）'}).click();
  await page.waitForFunction(()=>document.querySelector('#worldTitle').textContent==='潮環群島');
+ assert.ok(await page.locator('.topbar').isVisible(),'default UI remains intact');
+ assert.equal(await page.locator('.journey-menu').count(),0);
  await page.locator('#soundBtn').click();
  assert.equal(await page.locator('#musicToggle').textContent(),'ON');
  assert.equal(await page.locator('#sfxToggle').textContent(),'OFF');
@@ -133,5 +170,24 @@ export async function checkJourney(page,origin){
  await page.goto(origin+'/?prototype=1&journey=1');
  await page.waitForFunction(()=>document.querySelector('#worldTitle').textContent==='小さく壮大な旅');
  assert.equal(await page.locator('#discovered').textContent(),'0 / 6','mode flags have explicit precedence, with no game-save added');
+ for(const [width,height] of [[320,568],[844,390],[390,844]]){
+  await page.setViewportSize({width,height});await page.waitForTimeout(150);
+  const layout=await page.evaluate(()=>{
+   const field=document.querySelector('#worldCanvas').getBoundingClientRect();
+   const buttons=['mapBtn','soundBtn','homeBtn','zoomOut','zoomIn','helpBtn'].map(id=>{
+    const r=document.getElementById(id).getBoundingClientRect();return {id,x:r.x,y:r.y,right:r.right,bottom:r.bottom,width:r.width};
+   });
+   return {fieldTop:field.top,fieldBottom:field.bottom,buttons,overflow:document.documentElement.scrollWidth>innerWidth};
+  });
+  assert.equal(layout.fieldTop,0,'unobstructed field begins at the top');assert.equal(layout.overflow,false);
+  for(const b of layout.buttons)assert.ok(b.x>=0&&b.right<=width&&b.y>=layout.fieldBottom&&b.bottom<=height&&b.width>=44,JSON.stringify({width,height,b}));
+  await page.locator('#mapBtn').click();
+  const sheet=await page.locator('#mapPanel .sheet').boundingBox();
+  assert.ok(sheet.y>=0&&sheet.y+sheet.height<=layout.fieldBottom,'map stays above the reachable menu');
+  await page.locator('#soundBtn').click();
+  assert.ok(await page.locator('#mapPanel').isHidden());assert.ok(await page.locator('#musicPanel').isVisible());
+  await page.keyboard.press('Escape');
+  assert.equal(await page.evaluate(()=>document.activeElement.id),'soundBtn','closing a sheet restores focus to its tool');
+ }
  console.log('Journey browser passed: real-time loop, six sites, NPC, redirection, music, three vistas, mode links and persistent settings.');
 }

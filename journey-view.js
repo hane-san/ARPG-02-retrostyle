@@ -15,17 +15,18 @@ export function createJourneyView(stage,world){
  let nearby=null;
  function hide(restoreFocus=false){
   const wasOpen=!card.hidden;card.hidden=true;button.setAttribute('aria-expanded','false');
+  button.hidden=!nearby;
   if(wasOpen&&restoreFocus)button.focus();
  }
  button.addEventListener('click',()=>{
   if(!nearby)return;
-  title.textContent=nearby.title;caption.textContent=nearby.sub+'　閉じれば、すぐにまた歩けます。';
+  title.textContent=nearby.title;caption.textContent=nearby.sub;
   canvas.setAttribute('aria-label',nearby.kind==='sunset'?'大きな夕日と遠い山並み、湖の光、小さな旅人。':nearby.title+'。遠い山と草原、名のない石、小さな旅人。');
   drawJourneyPanorama(canvas,nearby.kind);card.hidden=false;button.setAttribute('aria-expanded','true');close.focus();
  });
  close.addEventListener('click',()=>hide(true));
  return {
-  close(){hide();},
+  close(restoreFocus=false){hide(restoreFocus);},
   update(hero,covered=false){
    const next=!covered&&!hero.path.length?world.vistas.find(v=>Math.hypot(v.x-hero.px,v.y-hero.py)<=v.radius):null;
    if(next!==nearby){nearby=next;hide();}

@@ -13,6 +13,7 @@ import {makeJourneyWorld,routeJourneyWalk} from './journey-world.js';
 import {drawJourneyTile,drawJourneySite,drawJourneyAtmosphere,JOURNEY_PALETTE} from './journey-art.js';
 import {createJourneyMusicDirector,pickJourneyTrack} from './journey-music.js';
 import {createJourneyView} from './journey-view.js';
+import {installJourneyUI} from './journey-ui.js';
 
 const $=id=>document.getElementById(id);
 const stage=$('stage'),canvas=$('worldCanvas'),ctx=canvas.getContext('2d',{alpha:false});
@@ -57,14 +58,19 @@ if(JOURNEY_MODE){
  $('atlasTitle').textContent='風と湖をめぐる地図';
  document.querySelector('.brand small').textContent='TIDAL ATLAS · A SMALL, VAST JOURNEY';
  document.querySelector('.discover small').textContent='PLACES ALONG THE WAY';
- document.querySelector('.map-hint').textContent='地図から遠くへ歩く · 移動中はズーム固定';
+ document.querySelector('.map-hint').textContent='';
  $('worldCanvas').setAttribute('aria-label','中央アジアの地形に着想した、草原と湖を歩く試遊マップ');
  $('mapPanel').querySelector('p.secondary').textContent=
-  '白い船着場から、円い草原へ。湖の岸と石の峠は、どちらからでも回れます。地図や土地の名前をタップすると、そこまで歩きます。光る丸が今のあなたです。';
+  '岸の向こうへも、歩いて行けます。';
  $('helpPanel').querySelector('.sheet p').textContent=
-  'これは中央アジアの地形に着想した、小さく壮大な旅の試遊版です。白い橋から円い草原へ、湖岸から塩原や石の峠へ。順番は自由です。展望地点の「眺める」で遠い空を見られます。閉じればすぐに徒歩へ戻れます。';
+  '白い橋から円い草原へ。湖岸から塩原や石の峠へ。道を選ぶ順番は自由です。遠くを眺めたくなったら、岸や高台のそばで少し立ち止まってみてください。';
+ const helpParagraphs=$('helpPanel').querySelectorAll('.sheet > p');
+ helpParagraphs[1].textContent='地面や地図で行き先を選ぶと、主人公が道を探して歩きます。途中でも行き先を変えられます。建物や人を選ぶと、そのそばまで歩いて向かいます。';
+ helpParagraphs[2].textContent='指で景色を見回せます。＋／−で近くや遠くを眺め、「自分へ」で主人公のところに戻ります。歩いている間は拡大縮小を休みます。会話は続きを読んでも、景色を選んでそのまま歩き出しても大丈夫です。';
+ helpParagraphs[3].textContent='訪れた場所の記録は、この画面を開いているあいだだけ残ります。';
  $('musicPanel').querySelector('p.secondary').textContent=
-  '全68曲をそのまま収録。草原・湖・茶屋・塩原・峠・夕景で選曲が変わります。地域の選曲を12秒以上保ち、新しい土地に少し留まると切り替わります。手動選曲は次の地域の曲へ切り替わるまで有効です。';
+  '土地ごとの曲が流れます。ここでは68曲から、好きな一曲を選ぶこともできます。';
+ installJourneyUI();
 }
 const modeNav=document.createElement('p');
 modeNav.className='secondary mode-nav';
@@ -100,6 +106,7 @@ function resize(){
  screen={w:r.width,h:r.height,dpr};
  canvas.width=Math.max(1,Math.round(r.width*dpr));canvas.height=Math.max(1,Math.round(r.height*dpr));
  confineCamera();
+ if(JOURNEY_MODE&&dialogue)placeJourneyDialogue();
 }
 const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):null;
 observer?.observe(stage);window.addEventListener('resize',resize);resize();
@@ -452,14 +459,13 @@ function screenToWorld(clientX,clientY){
 function updateZone(){
  const z=world.zoneAt(hero.x,hero.y);
  if(z.id===zoneId)return;
- const previousZone=zoneId;
  zoneId=z.id;$('zoneName').textContent=z.name;$('zoneSub').textContent=z.sub;
  // Randomly pick among songs matching the atmosphere; never immediately repeat.
  if(!JOURNEY_MODE){
   const nextSong=pickZoneTrack(z.id,$('trackSelect').value);
   $('trackSelect').value=nextSong;applyTrack();
  }
- if(!JOURNEY_MODE||previousZone)toast(z.name+' — '+z.sub);
+ if(!JOURNEY_MODE)toast(z.name+' — '+z.sub);
 }
 function updateDiscoveries(){
  $('discovered').textContent=discovered.size+' / '+DISCOVERY_TOTAL;
@@ -505,6 +511,7 @@ function onArrive(){
  if(obj.kind==='site'){
   const fresh=!discovered.has(obj.item.id);discovered.add(obj.item.id);
   updateDiscoveries();if(fresh)sfx.play('heal');
+  if(JOURNEY_MODE){openDialogue(obj.item.name,'この場所で',[obj.item.desc,obj.item.aside]);return;}
   openDialogue(obj.item.name,'DISCOVERED PLACE',[
    obj.item.desc,
    JOURNEY_MODE?obj.item.aside:(currentWorldId==='silk'?SILK_ASIDES:SITE_ASIDES)[obj.item.id]||'',
@@ -526,7 +533,7 @@ function walkToNpc(n){
  if(best)startWalk(best,{kind:'npc',item:n});
 }
 function handleTap(e){
- if(dialogue)return;
+ if(dialogue){if(!JOURNEY_MODE)return;closeDialogue();}
  music.unlock();sfx.unlock();
  const p=screenToWorld(e.clientX,e.clientY);
  if(p.x<0||p.y<0||p.x>=W||p.y>=H)return;
@@ -552,8 +559,18 @@ function openDialogue(name,role,lines){
  dialogue={name,role,lines:lines.filter(Boolean),index:0,openedAt:performance.now()};
  $('dialogueName').textContent=name;$('dialogueRole').textContent=role;
  $('dialogueText').textContent=dialogue.lines[0];
- $('dialogueNext').innerHTML='タップしてつづく <span>›</span>';
- $('dialogue').classList.remove('hidden');sfx.play('select');
+ $('dialogueNext').innerHTML=JOURNEY_MODE?'つづき <span>›</span>':'タップしてつづく <span>›</span>';
+ $('dialogue').classList.remove('hidden');
+ if(JOURNEY_MODE)placeJourneyDialogue();
+ sfx.play('select');
+}
+function placeJourneyDialogue(){
+ const card=$('dialogue');
+ // Keep the people visible without moving the camera when conversation starts.
+ // A traveller near the lower edge needs the reading card on the opposite side.
+ const heroY=screen.h/2+((hero.py+.5)*TILE-camera.y)*camera.zoom;
+ const cardHeight=card.getBoundingClientRect().height;
+ card.classList.toggle('journey-dialogue-above',heroY>screen.h-cardHeight-42&&heroY>cardHeight+50);
 }
 function closeDialogue(){dialogue=null;$('dialogue').classList.add('hidden');}
 function advanceDialogue(){
@@ -561,13 +578,23 @@ function advanceDialogue(){
  dialogue.index++;
  if(dialogue.index>=dialogue.lines.length){closeDialogue();return;}
  $('dialogueText').textContent=dialogue.lines[dialogue.index];
- $('dialogueNext').innerHTML=dialogue.index===dialogue.lines.length-1?'どこでもタップして閉じる <span>×</span>':'タップしてつづく <span>›</span>';
+ $('dialogueNext').innerHTML=JOURNEY_MODE?
+  (dialogue.index===dialogue.lines.length-1?'とじる <span>×</span>':'つづき <span>›</span>'):
+  (dialogue.index===dialogue.lines.length-1?'どこでもタップして閉じる <span>×</span>':'タップしてつづく <span>›</span>');
  sfx.play('select');
 }
 // Capture the click before the underlying map/menu can receive it. A dialogue
 // opened by a pointer-up must not advance on that same gesture's subsequent click.
 document.addEventListener('click',e=>{
  if(!dialogue)return;
+ // This journey's quiet reading card never captures the rest of the interface.
+ // Field taps already resume walking in handleTap; menus can dismiss it too.
+ if(JOURNEY_MODE&&!e.target.closest('#dialogue')){
+  // An adjacent NPC opens on pointerup; its following click belongs to the
+  // same gesture and must not immediately dismiss the newly opened card.
+  if(e.target===canvas&&performance.now()-dialogue.openedAt<180)return;
+  closeDialogue();return;
+ }
  e.preventDefault();e.stopImmediatePropagation();
  if(e.target.closest('#dialogueClose')){closeDialogue();return;}
  if(performance.now()-dialogue.openedAt<180)return;
@@ -684,8 +711,12 @@ canvas.addEventListener('lostpointercapture',e=>{pointerMap.delete(e.pointerId);
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 canvas.addEventListener('dragstart',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
- if(e.key==='Escape'){closeDialogue();closePanels();journeyView?.close();return;}
- if(dialogue){if(e.key==='Enter'||e.key===' '){e.preventDefault();advanceDialogue();}return;}
+ if(e.key==='Escape'){closeDialogue();closePanels();journeyView?.close(true);return;}
+ if(dialogue){
+  if(e.key==='Enter'||e.key===' '){e.preventDefault();advanceDialogue();return;}
+  if(JOURNEY_MODE&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d'].includes(e.key))closeDialogue();
+  else return;
+ }
  if(isPanelOpen())return;
  const dirs={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]};
  const d=dirs[e.key];if(!d)return;
@@ -694,13 +725,22 @@ window.addEventListener('keydown',e=>{
  if(world.walkable(next.x,next.y))startWalk(next);
 });
 
-function closePanels(){
+function closePanels(restoreFocus=true){
+ const active=JOURNEY_MODE&&restoreFocus?document.activeElement?.closest('.overlay'):null;
  for(const id of ['mapPanel','musicPanel','helpPanel'])$(id).classList.add('hidden');
+ if(JOURNEY_MODE)for(const id of ['mapBtn','soundBtn','helpBtn'])$(id).setAttribute('aria-expanded','false');
+ if(active)$({mapPanel:'mapBtn',musicPanel:'soundBtn',helpPanel:'helpBtn'}[active.id]).focus();
 }
 function isPanelOpen(){return ['mapPanel','musicPanel','helpPanel'].some(id=>!$(id).classList.contains('hidden'));}
 function showPanel(id){
  journeyView?.close();
- closePanels();$(id).classList.remove('hidden');music.unlock();sfx.unlock();
+ const wasOpen=!$(id).classList.contains('hidden');
+ closePanels(false);if(JOURNEY_MODE&&wasOpen)return;
+ $(id).classList.remove('hidden');music.unlock();sfx.unlock();
+ if(JOURNEY_MODE){
+  $({mapPanel:'mapBtn',musicPanel:'soundBtn',helpPanel:'helpBtn'}[id]).setAttribute('aria-expanded','true');
+  $(id).querySelector('[data-close]').focus({preventScroll:true});
+ }
  if(id==='mapPanel'){rebuildZoneList();drawMinimap();}
 }
 $('mapBtn').addEventListener('click',()=>showPanel('mapPanel'));

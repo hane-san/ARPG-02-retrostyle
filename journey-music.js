@@ -1,6 +1,6 @@
 // Existing scores only. Each region has a small, intentional set of colours.
 export const JOURNEY_PLAYLISTS={
- 'journey-port':['2:1','19:2','23:1'],
+ 'journey-port':['13:1','14:1','20:1'],
  'journey-steppe':['25:1','31:1','26:1'],
  'journey-tea':['30:1','30:2','31:1'],
  'journey-lake':['29:1','29:2','23:1'],
