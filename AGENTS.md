@@ -9,14 +9,23 @@ Entry documents: [DEVELOPMENT](docs/DEVELOPMENT.md), [DESIGN](docs/DESIGN.md), [
 The opt-in Small Journey mode and its post-merge review handoff are in [PROTOTYPE](docs/PROTOTYPE.md).
 Claude Code reads this contract from `CLAUDE.md`. Use checked-in documents, current code, Issues and Git history as source of truth—not private AI chat memory.
 
+## Current phase: rapid prototype iteration
+
+Human instruction on 2026-10-19: defer main protection and prioritize adding and trying improvements during early development. This phase applies only to ARPG-02 and takes precedence over the per-change review/device steps below.
+
+- Do not make Ruleset setup or old pending review/device records a prerequisite for new development. Leave the current unprotected main setting as it is; retain existing CI as feedback.
+- Related small improvements may share an Issue and PR. Copy the adopted Chat request into a short scope/acceptance summary and continue without repeatedly asking for the same approval. PRs can be concise: purpose, changes, checks and remaining items.
+- For low-risk and reversible medium-risk changes, independent review and iPhone playtests may be batched at a playable milestone instead of blocking every PR. Record what was deferred; do not call it tested or independently approved. Keep targeted design/review for high-risk pathfinding, cross-world or storage-contract changes.
+- Use a work branch and PR, run relevant checks and report failures honestly. Human merge decisions remain; direct main push, force-push and auto-merge are still prohibited. Resume stricter release checks when the human chooses stabilization or wider distribution.
+
 ## Shared development contract (same policy as SRPG / ARPG)
 
 1. The human producer approves product specifications, judges playtest acceptance and controls merging into main. Do not invent unapproved decisions or quietly turn a brainstorm into a requirement.
 2. Start with an Issue: scope, verified acceptance criteria, non-goals, invariants, risk, tests, approved design references. Read active PRs and coordinate overlapping files.
 3. Implement from latest `origin/main` on an isolated `type/issue-topic` branch; submit PR. **Never directly push to main, force-push or enable auto-merge.**
 4. Test the exact commit under review. Record failures/unknowns and evidence in the PR. The `rules` and `browser` Actions jobs are the machine checks; PASS/WARN/BLOCK are human-readable audit outcomes, not checks.
-5. For low risk (docs/copy), CI and human review may suffice; medium risk (UI, audio, terrain patch, camera, interactions) requires review by an independent implementer/session; high risk (pathfinding topology, cross-world transition/save contract, world-data core) requires a written technical plan and deeper independent audit. Self-review is not independent audit.
-6. Human iPhone/Safari playtest and human PR approval precede main integration. A Chromium emulation is not a physical iPhone test.
+5. Standard stabilization policy: for low risk (docs/copy), CI and human review may suffice; medium risk (UI, audio, terrain patch, camera, interactions) requires review by an independent implementer/session; high risk (pathfinding topology, cross-world transition/save contract, world-data core) requires a written technical plan and deeper independent audit. Apply the current-phase batching above during early development. Self-review is not independent audit.
+6. Human PR approval precedes main integration. iPhone/Safari playtest follows the current phase: batched for ordinary prototype changes, before release acceptance during stabilization. A Chromium emulation is not a physical iPhone test.
 7. Confirm Actions and GitHub Pages after merge. Preserve the existing URL unless a separately approved rename occurs. Never include access tokens, local secrets or private messages in commits.
 8. When independent audit or device testing is unavailable, mark it explicitly as **unverified**; do not claim approval or secretly merge.
 
