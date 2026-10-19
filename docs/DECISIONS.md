@@ -16,8 +16,8 @@
 
 ## 別途決める・保留
 - 公式ゲームタイトル（現行の仮題「潮環群島 × 星風回廊」を保持）。
-- **2026-10-19採用**：第三ゲームの正式GitHubリポジトリ名は `ARPG-02`。現在の `fantasy-adventure-test` から改名予定（Issue #3）。既存の `ARPG`・`SRPG` は改名しない。
-- **実施待ち**：GitHub Settingsでの `ARPG-02` への改名と、新Pages URL `https://hane-san.github.io/ARPG-02/` の公開・外部接続更新（Issue #3）。実施完了までは現行URLが正本。
+- **2026-10-19採用・実施済み**：第三ゲームの正式GitHubリポジトリ名は **`ARPG-02-retrostyle`**（`hane-san/ARPG-02-retrostyle`）。元の `fantasy-adventure-test` から改名済み（Issue #3）。一時案の `ARPG-02` は正式名ではない。既存の `ARPG`・`SRPG` は改名しない。
+- **確認待ち**：新Pages URL `https://hane-san.github.io/ARPG-02-retrostyle/` でのiPhone Safari実機起動・音声、Codex/Claudeの対象リポジトリ選択、main保護Rulesetの設定。GitHub PagesのデプロイActionは成功済み。
 - 戦闘、クエスト、セーブ等の追加。現段階の機能だとは記載しない。
 
 ## 旧仕様と混同しない

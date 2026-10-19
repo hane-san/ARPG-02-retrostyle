@@ -1,6 +1,6 @@
 # TIDAL ATLAS / 潮環群島 × 星風回廊
 
-This is the **independent exploration game** in `hane-san/fantasy-adventure-test`.
+This is the **independent exploration game** in `hane-san/ARPG-02-retrostyle` (renamed from `hane-san/fantasy-adventure-test` on 2026-10-19).
 It is **not** SRPG (`hane-san/SRPG`) or ARPG (`hane-san/ARPG`).
 The current canonical product is the live 2D browser prototype in this repository.
 The display title, repository name, public Pages path and localStorage key are different identifiers. Do **not** rename any of them as a side effect of unrelated work.
@@ -43,4 +43,4 @@ No mandatory release rebuild or generated `dist/`; Pages serves the repository r
 
 ## Release / handoff
 
-Record Issue, PR, verified commit SHA, exact executed tests, risk/audit outcome, untested behavior, live Pages result, and required iPhone steps. Main merge and repository Settings remain human controlled. The repository name **ARPG-02** is approved (2026-10-19, Issue #3), but the actual rename is pending; until then, keep the current URL and GitHub repository identifier. Rename only via the separately approved migration with Pages, links, Actions, AI integrations and storage audit.
+Record Issue, PR, verified commit SHA, exact executed tests, risk/audit outcome, untested behavior, live Pages result, and required iPhone steps. Main merge and repository Settings remain human controlled. The repository was renamed to **ARPG-02-retrostyle** on 2026-10-19 (Issue #3); use the current repository name and the Pages URL `https://hane-san.github.io/ARPG-02-retrostyle/`. Do not rename the display title or the `tidal-atlas:` storage namespace. Validate Pages, links, Actions and AI integrations after renaming; branch protection is still a separate GitHub Settings task.
