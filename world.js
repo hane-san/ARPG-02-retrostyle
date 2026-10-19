@@ -44,7 +44,8 @@ export const BRIDGES=[
  {id:'twilight',name:'暮潮連絡橋',axis:'h',x1:72,x2:91,y1:88,y2:92,center:{x:82,y:90},desc:'二つの港を結ぶ橋。海面をかすめて伸びる。'},
  {id:'oldnorth',name:'北の縦断橋',axis:'v',x1:39,x2:43,y1:53,y2:67,center:{x:41,y:60},desc:'森の庭園から旧港へ下る歩道橋。'},
  {id:'silverlink',name:'銀浜連絡橋',axis:'v',x1:120,x2:124,y1:53,y2:67,center:{x:122,y:60},desc:'展示都と蒼光の街を結ぶ夜景の橋。'},
- {id:'starwind',name:'星風の渡り橋',axis:'h',x1:151,x2:163,y1:36,y2:40,center:{x:159,y:38},desc:'海の向こうにある、風景の異なる広い大陸へ続く橋。'}
+ {id:'starwind',name:'星風の渡り橋',axis:'h',x1:151,x2:163,y1:36,y2:40,center:{x:159,y:38},desc:'海の向こうにある、風景の異なる広い大陸へ続く橋。'},
+ {id:'starwind-near',name:'星風の小橋',axis:'h',x1:42,x2:45,y1:39,y2:41,center:{x:43,y:40},desc:'スタート地点のすぐ東にある、星風回廊への小さな橋。'}
 ];
 const BLOCKED=new Set(['~','#']);
 const DIRS=[[1,0],[-1,0],[0,1],[0,-1]];
@@ -72,6 +73,9 @@ export function makeWorld(){
   if(tiles[y][x]==='~')continue;
   if(DIRS.some(([dx,dy])=>tiles[y+dy][x+dx]==='~'))tiles[y][x]=',';
  }
+ // A tiny waterway beside the starting path marks the nearby second-world bridge.
+ // The short bridge is laid across the channel below, leaving every route walkable.
+ for(let y=36;y<=44;y++)for(let x=43;x<=44;x++)set(x,y,'~');
  // Bridge approach joins the northeastern white city to the long Starwind pier.
  for(let y=36;y<=40;y++)for(let x=142;x<=151;x++)set(x,y,'s');
  for(const b of BRIDGES)for(let y=b.y1;y<=b.y2;y++)for(let x=b.x1;x<=b.x2;x++)set(x,y,'+');
@@ -100,7 +104,10 @@ export function makeWorld(){
  for(const s of SITES){occupied[s.entrance.y*W+s.entrance.x]=0;set(s.entrance.x,s.entrance.y,'=');}
  for(const n of NPCS){if(tiles[n.y][n.x]==='~')set(n.x,n.y,'=');occupied[n.y*W+n.x]=0;}
  const world={id:'tidal',tiles,occupied,sites:SITES,npcs:NPCS,bridges:BRIDGES,zones:ZONES,w:W,h:H,start:START,
-  transitions:[{x:160,y:38,target:'silk',spawn:{x:28,y:146},name:'星風回廊へ渡る'}],
+  transitions:[
+   {x:160,y:38,target:'silk',spawn:{x:28,y:146},name:'星風回廊へ渡る'},
+   {x:45,y:40,target:'silk',spawn:{x:28,y:146},name:'星風の小橋を渡る'}
+  ],
   transitionAt(x,y){return this.transitions.find(p=>p.x===x&&p.y===y);},
   tileAt(x,y){return inside(x,y)?tiles[y][x]:'~';},
   walkable(x,y){return inside(x,y)&&!BLOCKED.has(tiles[y][x])&&!occupied[y*W+x];},

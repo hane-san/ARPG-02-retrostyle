@@ -20,8 +20,16 @@ test('Starwind is a broad standalone continent and two bridges provide return tr
  assert.ok(silk.walkable(out.spawn.x,out.spawn.y));
  assert.ok(tidal.walkable(back.spawn.x,back.spawn.y));
  assert.ok(findPath(tidal,START,{x:out.x,y:out.y})?.length>25);
+ const nearby=tidal.transitions.find(p=>p.x===45&&p.y===40);
+ assert.ok(nearby,'a portal must be visible from the starting garden');
+ assert.ok(tidal.walkable(nearby.x,nearby.y));
+ const shortcut=findPath(tidal,START,{x:nearby.x,y:nearby.y});
+ assert.ok(shortcut&&shortcut.length<=7,'the shortcut should be only a few steps away');
+ assert.equal(nearby.target,'silk');
+ assert.ok(silk.walkable(nearby.spawn.x,nearby.spawn.y));
  assert.ok(silkPath(silk,SILK_START,{x:back.x,y:back.y})?.length>8);
  assert.ok(BRIDGES.some(b=>b.id==='starwind'));
+ assert.ok(BRIDGES.some(b=>b.id==='starwind-near'));
 });
 test('enormous Issyk-Kul-inspired lake cannot fit onscreen even at widest zoom',()=>{
  assert.ok(LAKE.rx*2>=180);
@@ -83,5 +91,5 @@ test('browser runtime switches full world metadata, routes and renders art',()=>
  assert.match(game,/world\.transitionAt\?\./);
  assert.match(game,/Math\.min\(dt,0\.08\)\*6\.15/);
  assert.match(game,/easeEdgeCamera/);
- assert.match(game,/dx\*\.58/);
+ assert.match(game,/PAN_SENSITIVITY/);
 });

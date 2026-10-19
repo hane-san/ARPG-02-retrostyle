@@ -23,14 +23,25 @@ export function heroVisible(camera,hero,viewport,world){
         Math.abs(posY-camera.y)<=viewport.height/(2*viewport.zoom)-1;
 }
 
-// Recreates the gentle response of the original camera (approximately 6/s)
+// Slightly more responsive edge tracking, with real-time easing independent of frame rate.
 // but keeps normal walking static, only easing when the actor nears a screen edge.
 export function easeEdgeCamera(current,hero,viewport,world,dt){
- const lead=limitCamera(current,hero,viewport,world,2.15);
- const ease=1-Math.exp(-Math.max(0,Math.min(dt,.12))*6);
+ const lead=limitCamera(current,hero,viewport,world,2.45);
+ const ease=1-Math.exp(-Math.max(0,Math.min(dt,.12))*7.4);
  const eased={x:current.x+(lead.x-current.x)*ease,
               y:current.y+(lead.y-current.y)*ease};
  // A loose final safety boundary guarantees the player stays on-screen,
  // including at extreme zoom and map corners.
  return limitCamera(eased,hero,viewport,world,.08);
+}
+
+// A separate animated target for manual dragging: each pointer event only
+// adjusts the desired position, and RAF does the time-based interpolation.
+export const PAN_SENSITIVITY=.72;
+export function smoothPanCamera(current,target,hero,viewport,world,dt){
+ const bounded=limitCamera(target,hero,viewport,world,.65);
+ const factor=1-Math.exp(-Math.max(0,Math.min(dt,.12))*13.5);
+ const next={x:current.x+(bounded.x-current.x)*factor,
+             y:current.y+(bounded.y-current.y)*factor};
+ return limitCamera(next,hero,viewport,world,.08);
 }

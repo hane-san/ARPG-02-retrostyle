@@ -5,7 +5,7 @@ import {W,H,START,SITES,NPCS,BRIDGES,ZONES,makeWorld,findPath,nearestWalkable} f
 const world=makeWorld();
 test('large seamless four-district world with invisible logical grid',()=>{
  assert.equal(world.tiles.length,H);assert.equal(world.tiles[0].length,W);
- assert.equal(ZONES.length,4);assert.equal(BRIDGES.length,5); // includes the Starwind crossover bridge
+ assert.equal(ZONES.length,4);assert.equal(BRIDGES.length,6); // distant Starwind bridge and starting-garden shortcut
  assert.equal(SITES.length,12);assert.equal(NPCS.length,13);
  assert.ok(world.walkable(START.x,START.y));
 });
@@ -28,7 +28,7 @@ test('major bridges can be selected and entered using long range pathfinder',()=
   const target=bridge.center;
   assert.equal(world.tileAt(target.x,target.y),'+',bridge.name);
   const route=findPath(world,START,target);
-  assert.ok(route&&route.length>5,'bridge inaccessible: '+bridge.name);
+  assert.ok(route&&route.length>(bridge.id==='starwind-near'?2:5),'bridge inaccessible: '+bridge.name);
   assert.deepEqual(route.at(-1),target);
  }
 });
