@@ -463,6 +463,9 @@ function handleTap(e){
  music.unlock();sfx.unlock();
  const p=screenToWorld(e.clientX,e.clientY);
  if(p.x<0||p.y<0||p.x>=W||p.y>=H)return;
+ // A tap on the small glowing portal always means crossing the bridge.
+ const directGate=world.transitionAt?.(p.x,p.y);
+ if(directGate){startWalk({x:directGate.x,y:directGate.y});return;}
  const npc=NPCS.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<1.8);
  if(npc){walkToNpc(npc);return;}
  const site=world.siteAt(p.x,p.y);
