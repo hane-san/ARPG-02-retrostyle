@@ -8,10 +8,13 @@ import {drawSrpgUnit} from './sprite-srpg.js';
 import {limitCamera,easeEdgeCamera,smoothPanCamera,PAN_SENSITIVITY} from './camera-limits.js';
 import {pickZoneTrack} from './zone-music.js';
 import {TALK,SITE_ASIDES} from './dialogue-data.js';
+import {makePrototypeWorld} from './prototype-world.js';
 
 const $=id=>document.getElementById(id);
 const stage=$('stage'),canvas=$('worldCanvas'),ctx=canvas.getContext('2d',{alpha:false});
-const worlds={tidal:makeWorld(),silk:null};
+const PROTOTYPE_MODE=new URLSearchParams(window.location.search).get('prototype')==='1';
+const worlds={tidal:PROTOTYPE_MODE?makePrototypeWorld():makeWorld(),silk:null};
+const DISCOVERY_TOTAL=PROTOTYPE_MODE?worlds.tidal.sites.length:TIDAL_SITES.length+SILK_SITES.length;
 let currentWorldId='tidal',world=worlds.tidal;
 let W=world.w,H=world.h,ZONES=world.zones,SITES=world.sites,NPCS=world.npcs,BRIDGES=world.bridges;
 const storage={
@@ -25,6 +28,27 @@ let panTarget=null;
 let screen={w:1,h:1,dpr:1},last=0,zoneId='',noticeTimer=0,dialogue=null;
 const discovered=new Set(),cache=new Map(),CHUNK=16,MAX_CHUNKS=42;
 const palette={'~':'#497d93','.':'#8d9f7c',',':'#cbbc96',f:'#567864','=':'#baa986','+':'#ae987a',s:'#98b0b0',n:'#576d88',p:'#b7a993','#':'#58605d',M:'#9eb88a',A:'#aa986e',R:'#7f9188',F:'#3e6559',G:'#73a49e',P:'#d1d4c5',C:'#77adb7',D:'#d2b78e',T:'#bc856d',Q:'#789e9f',B:'#496d78',K:'#424563',E:'#528eae'};
+// The regular two-world journey remains unchanged; this is an opt-in test slice.
+if(PROTOTYPE_MODE){
+ $('worldTitle').textContent='潮環・小さな旅';
+ $('atlasTitle').textContent='小さな旅の地図';
+ document.querySelector('.brand small').textContent='TIDAL ATLAS · SMALL JOURNEY';
+ document.querySelector('.discover small').textContent='PLACES TO FIND';
+ document.querySelector('.map-hint').textContent='森と港の4つの場所を探す · タップで歩く';
+ $('worldCanvas').setAttribute('aria-label','小さな旅。森と旧港の探索マップ');
+ $('mapPanel').querySelector('p.secondary').textContent=
+  '森と旧港をつなぐ橋を歩いて、4つの場所を探してみましょう。地図や地区名をタップすると、そこまで歩きます。';
+ $('helpPanel').querySelector('.sheet p').textContent=
+  'これは潮環群島の小さな探索プロトタイプです。森と港を歩き、気になる4つの建物を訪ねてみましょう。目的地のタップ・地図・ドラッグ・ズーム・NPCとの会話は通常版と同じです。';
+}
+const modeNav=document.createElement('p');
+modeNav.className='secondary';
+const modeLink=document.createElement('a');
+modeLink.href=PROTOTYPE_MODE?'./':'./?prototype=1';
+modeLink.textContent=PROTOTYPE_MODE?'広い世界を遊ぶ（通常版）':'小さな旅を試す（台場ミニ版）';
+modeLink.style.color='#fff0b1';
+modeNav.append(modeLink);
+$('helpPanel').querySelector('.sheet').append(modeNav);
 const clamp=(a,b,c)=>Math.max(b,Math.min(c,a));
 function confineCamera(x=camera.x,y=camera.y){
  const bounded=limitCamera({x,y},{x:hero.px,y:hero.py},
@@ -404,7 +428,7 @@ function updateZone(){
  toast(z.name+' — '+z.sub);
 }
 function updateDiscoveries(){
- $('discovered').textContent=discovered.size+' / '+(TIDAL_SITES.length+SILK_SITES.length);
+ $('discovered').textContent=discovered.size+' / '+DISCOVERY_TOTAL;
 }
 function switchWorld(id,spawn){
  if(id===currentWorldId)return;
@@ -443,8 +467,10 @@ function onArrive(){
   openDialogue(obj.item.name,'DISCOVERED PLACE',[
    obj.item.desc,
    (currentWorldId==='silk'?SILK_ASIDES:SITE_ASIDES)[obj.item.id]||'',
-   fresh?'新しい場所を見つけました。発見した建物：'+discovered.size+' / '+(TIDAL_SITES.length+SILK_SITES.length):
-    'この場所は、すでに訪れたことがあります。'
+   fresh?'新しい場所を見つけました。発見した建物：'+discovered.size+' / '+DISCOVERY_TOTAL:
+    'この場所は、すでに訪れたことがあります。',
+   PROTOTYPE_MODE&&fresh&&discovered.size===DISCOVERY_TOTAL?
+    '森から港へ、4つの場所を巡りました。小さな旅はここでひと区切り。まだ歩いていても大丈夫です。':''
   ]);
  }
 }
