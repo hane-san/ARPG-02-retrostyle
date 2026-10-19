@@ -1,0 +1,15 @@
+/* Only loaded in the opt-in journey; original two modes retain their layout. */
+.journey-mode .zone-label{background:#29424acc;border-color:#e5dec66b;box-shadow:none}
+.journey-mode .map-hint{background:#29434ccc;color:#f1ebd3}
+.journey-mode .mode-nav{display:flex;flex-direction:column;gap:10px}
+.journey-mode .mode-nav a{color:#f3dfb3;min-height:32px;display:flex;align-items:center}
+.vista-button{position:absolute;left:50%;bottom:57px;transform:translateX(-50%);min-height:42px;padding:9px 18px;border:1px solid #eee1ba;border-radius:30px;background:#f1e8ceeb;color:#294a58;font-size:13px;box-shadow:0 4px 15px #30474933;cursor:pointer}
+.vista-button[hidden],.vista-card[hidden]{display:none}
+.vista-card{position:absolute;z-index:4;left:50%;bottom:57px;transform:translateX(-50%);width:min(94%,560px);border:1px solid #dac9a3;background:#223e49f5;border-radius:11px;overflow:hidden;box-shadow:0 12px 30px #20374644}
+.vista-heading{display:flex;justify-content:space-between;align-items:center;padding:7px 9px 7px 14px;gap:8px}
+.vista-heading strong{font-family:serif;font-size:15px;font-weight:500;color:#f6e4bf;letter-spacing:.08em}
+.vista-heading button{min-width:35px;min-height:35px;background:transparent;border:1px solid #9cadab66;border-radius:7px;font-size:22px;color:#e9e8d0;cursor:pointer}
+.vista-card canvas{width:100%;height:auto;aspect-ratio:480/252;display:block;image-rendering:pixelated}
+.vista-card p{margin:0;padding:9px 14px;font-size:11px;color:#d4ddcf;line-height:1.65}
+@media(max-width:560px){.vista-button,.vista-card{bottom:50px}.vista-card{width:94%}.journey-mode .map-hint{font-size:9px}.journey-mode .brand strong{font-size:16px}}
+@media(max-height:560px){.vista-card{width:min(70%,480px);bottom:14px}.vista-card canvas{max-height:40vh;object-fit:cover}.vista-button{bottom:14px}}

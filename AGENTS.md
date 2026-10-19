@@ -7,6 +7,7 @@ The display title, repository name, public Pages path and localStorage key are d
 
 Entry documents: [DEVELOPMENT](docs/DEVELOPMENT.md), [DESIGN](docs/DESIGN.md), [DECISIONS](docs/DECISIONS.md), [ROADMAP](docs/ROADMAP.md), [QA](docs/QA.md).
 The opt-in Small Journey mode and its post-merge review handoff are in [PROTOTYPE](docs/PROTOTYPE.md).
+The separately approved Central Asia-inspired journey (`?journey=1`, Issue #14) is in [JOURNEY](docs/JOURNEY.md). It has its own 112×88 coordinates and dimension-aware pathfinding; the two-world and crop invariants below continue to apply to their original modes. It does not replace the default entrance.
 Claude Code reads this contract from `CLAUDE.md`. Use checked-in documents, current code, Issues and Git history as source of truth—not private AI chat memory.
 
 ## Shared development contract (same policy as SRPG / ARPG)
