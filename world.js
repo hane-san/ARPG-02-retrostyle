@@ -125,6 +125,18 @@ export function avoidTransitions(world,target){
  return Object.create(world,{walkable:{value:(x,y)=>world.walkable(x,y)&&
   (!world.transitionAt(x,y)||x===target.x&&y===target.y)}});
 }
+// A redirect while the walker is between two cells keeps it on that edge
+// (Issue #24): finish the step it is taking, or step back when that cell is a
+// portal that is not the new goal, then follow the new route from there.
+export function routeWalk(world,hero,target,pathfind){
+ const route=avoidTransitions(world,target),here={x:hero.x,y:hero.y};
+ const next=Math.hypot(hero.px-hero.x,hero.py-hero.y)>.0001&&hero.path.length?hero.path[0]:null;
+ if(!next){const path=pathfind(route,here,target);return path&&path.slice(1);}
+ if(world.transitionAt?.(next.x,next.y)&&(next.x!==target.x||next.y!==target.y)){
+  const path=pathfind(route,here,target);return path&&[here,...path.slice(1)];
+ }
+ return pathfind(route,next,target);
+}
 export function nearestWalkable(world,x,y,maxRadius=7){
  if(world.walkable(x,y))return {x,y};
  for(let r=1;r<=maxRadius;r++){let best=null,score=Infinity;
