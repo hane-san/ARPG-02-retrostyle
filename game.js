@@ -15,12 +15,14 @@ import {createJourneyMusicDirector,pickJourneyTrack} from './journey-music.js';
 import {createJourneyView} from './journey-view.js';
 import {installJourneyUI} from './journey-ui.js';
 import {createJourneyFoley} from './journey-foley.js';
+import {resolveGameMode} from './game-mode.js';
+import {createJourneyCamera,journeyCameraScene,easeJourneyCamera,nearestJourneyZoom,stepJourneyZoom,JOURNEY_ZOOM_STAGES} from './journey-camera.js';
 
 const $=id=>document.getElementById(id);
 const stage=$('stage'),canvas=$('worldCanvas'),ctx=canvas.getContext('2d',{alpha:false});
-const modeParams=new URLSearchParams(window.location.search);
-const JOURNEY_MODE=modeParams.get('journey')==='1';
-const PROTOTYPE_MODE=!JOURNEY_MODE&&modeParams.get('prototype')==='1';
+const gameMode=resolveGameMode(window.location.search);
+const JOURNEY_MODE=gameMode==='journey';
+const PROTOTYPE_MODE=gameMode==='prototype';
 const worlds={tidal:JOURNEY_MODE?null:PROTOTYPE_MODE?makePrototypeWorld():makeWorld(),silk:null,journey:JOURNEY_MODE?makeJourneyWorld():null};
 let currentWorldId=JOURNEY_MODE?'journey':'tidal',world=worlds[currentWorldId];
 const DISCOVERY_TOTAL=JOURNEY_MODE||PROTOTYPE_MODE?world.sites.length:TIDAL_SITES.length+SILK_SITES.length;
@@ -32,14 +34,15 @@ const storage={
 const music=createMusic(storage),sfx=JOURNEY_MODE?createJourneyFoley(storage):createAudio(storage);
 const spawn=world.start||START;
 const hero={x:spawn.x,y:spawn.y,px:spawn.x,py:spawn.y,face:'down',path:[],arrival:null,stride:0,moving:false};
-const camera={x:(spawn.x+.5)*TILE,y:(spawn.y+.5)*TILE,zoom:1.25};
+const journeyCamera=JOURNEY_MODE?createJourneyCamera():null;
+const camera={x:(spawn.x+.5)*TILE,y:(spawn.y+.5)*TILE,zoom:journeyCamera?.target||1.25};
 const journeyMusic=JOURNEY_MODE?createJourneyMusicDirector():null;
 const journeyView=JOURNEY_MODE?createJourneyView(stage,world):null;
 let panTarget=null;
 let screen={w:1,h:1,dpr:1},last=0,zoneId='',noticeTimer=0,dialogue=null;
 const discovered=new Set(),cache=new Map(),CHUNK=16,MAX_CHUNKS=42;
 const palette={'~':'#497d93','.':'#8d9f7c',',':'#cbbc96',f:'#567864','=':'#baa986','+':'#ae987a',s:'#98b0b0',n:'#576d88',p:'#b7a993','#':'#58605d',M:'#9eb88a',A:'#aa986e',R:'#7f9188',F:'#3e6559',G:'#73a49e',P:'#d1d4c5',C:'#77adb7',D:'#d2b78e',T:'#bc856d',Q:'#789e9f',B:'#496d78',K:'#424563',E:'#528eae'};
-// The regular two-world journey remains unchanged; this is an opt-in test slice.
+// The previous two worlds remain explicitly available; the grassland journey is the current entrance.
 if(PROTOTYPE_MODE){
  $('worldTitle').textContent='潮環・小さな旅';
  $('atlasTitle').textContent='小さな旅の地図';
@@ -67,7 +70,7 @@ if(JOURNEY_MODE){
   '白い橋から円い草原へ。湖岸から塩原や石の峠へ。道を選ぶ順番は自由です。遠くを眺めたくなったら、岸や高台のそばで少し立ち止まってみてください。';
  const helpParagraphs=$('helpPanel').querySelectorAll('.sheet > p');
  helpParagraphs[1].textContent='地面や地図で行き先を選ぶと、主人公が道を探して歩きます。途中でも行き先を変えられます。建物や人を選ぶと、そのそばまで歩いて向かいます。';
- helpParagraphs[2].textContent='指で景色を見回せます。＋／−で近くや遠くを眺め、「自分へ」で主人公のところに戻ります。歩いている間は拡大縮小を休みます。会話は続きを読んでも、景色を選んでそのまま歩き出しても大丈夫です。';
+ helpParagraphs[2].textContent='村では近くに、草原や湖では遠くへ。場所に合わせて景色がゆっくり広がります。指で見回し、「自分へ」で主人公のところに戻ります。立ち止まれば、＋／−で自分でも画角を選べます。会話は続きを読んでも、景色を選んでそのまま歩き出しても大丈夫です。';
  helpParagraphs[3].textContent='訪れた場所の記録は、この画面を開いているあいだだけ残ります。';
  $('musicPanel').querySelector('p.secondary').textContent=
   '土地ごとの曲が流れます。ここでは68曲から、好きな一曲を選ぶこともできます。';
@@ -76,7 +79,7 @@ if(JOURNEY_MODE){
 const modeNav=document.createElement('p');
 modeNav.className='secondary mode-nav';
 for(const [mode,href,label] of [
- ['normal','./','広い世界を遊ぶ（通常版）'],
+ ['normal','./?mode=classic','以前の広い世界を歩く'],
  ['prototype','./?prototype=1','小さな旅を試す（台場ミニ版）'],
  ['journey','./?journey=1','草原と湖の旅を試す（新マップ）']
 ]){
@@ -635,6 +638,14 @@ function animate(time){
  updateMove(dt);
  updateJourneyMusic(time);
  journeyView?.update(hero,!!dialogue||isPanelOpen(),time);
+ if(journeyCamera){
+  const target=journeyCamera.update(journeyCameraScene(world,hero),time);
+  if(!dialogue&&!isPanelOpen()&&!gesture&&!panTarget&&$('vistaCard').hidden){
+   Object.assign(camera,easeJourneyCamera(camera,{x:hero.px,y:hero.py},target,dt,
+    {width:screen.w,height:screen.h},{width:W*TILE,height:H*TILE,tile:TILE}));
+   syncZoomControls();
+  }
+ }
  // Time-based smoothing makes both fingertip panning and edge-following fluid.
  const viewport={width:screen.w,height:screen.h,zoom:camera.zoom};
  const bounds={width:W*TILE,height:H*TILE,tile:TILE};
@@ -666,18 +677,24 @@ function syncZoomControls(){
   $('zoomIn').setAttribute('aria-label',locked?'移動中のため拡大できません':'拡大');
   $('zoomOut').setAttribute('aria-label',locked?'移動中のため縮小できません':'縮小');
  }
- $('zoomIn').disabled=locked||camera.zoom>=2.49;
- $('zoomOut').disabled=locked||camera.zoom<=.67;
+ $('zoomIn').disabled=locked||camera.zoom>=(JOURNEY_MODE?JOURNEY_ZOOM_STAGES.at(-1)-.001:2.49);
+ $('zoomOut').disabled=locked||camera.zoom<=(JOURNEY_MODE?JOURNEY_ZOOM_STAGES[0]+.001:.67);
 }
 function zoomTo(v){
  if(hero.path.length)return false; // also blocks wheel + two-finger pinch
- panTarget=null;camera.zoom=clamp(v,.66,2.5);confineCamera();
+ panTarget=null;camera.zoom=JOURNEY_MODE?journeyCamera.manual(nearestJourneyZoom(v)):clamp(v,.66,2.5);confineCamera();
  syncZoomControls();return true;
 }
-$('zoomIn').addEventListener('click',()=>zoomTo(camera.zoom*1.23));
-$('zoomOut').addEventListener('click',()=>zoomTo(camera.zoom/1.23));
+$('zoomIn').addEventListener('click',()=>zoomTo(JOURNEY_MODE?stepJourneyZoom(camera.zoom,1):camera.zoom*1.23));
+$('zoomOut').addEventListener('click',()=>zoomTo(JOURNEY_MODE?stepJourneyZoom(camera.zoom,-1):camera.zoom/1.23));
 $('homeBtn').addEventListener('click',centerCamera);
-canvas.addEventListener('wheel',e=>{e.preventDefault();zoomTo(camera.zoom*(e.deltaY<0?1.13:.885));},{passive:false});
+let lastWheelZoom=-Infinity;
+canvas.addEventListener('wheel',e=>{
+ e.preventDefault();
+ if(e.deltaY===0)return;
+ if(JOURNEY_MODE){if(performance.now()-lastWheelZoom<180)return;lastWheelZoom=performance.now();zoomTo(stepJourneyZoom(camera.zoom,e.deltaY<0?1:-1));}
+ else zoomTo(camera.zoom*(e.deltaY<0?1.13:.885));
+},{passive:false});
 
 const pointerMap=new Map();let gesture=null;
 const cancelledClickPointers=new Set();

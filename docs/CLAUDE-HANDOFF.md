@@ -1,6 +1,6 @@
 # Claude受渡し：ARPG-02（2026-10-20）
 
-正本は現在のorigin/main、CLAUDE.md → AGENTS.md / DEVELOPMENT.md。通常版 `./`、台場ミニ `?prototype=1`、草原湖 `?journey=1` は別モード。既定入口の変更、戦闘・クエスト・進行保存は未採用。
+正本は現在のorigin/main、CLAUDE.md → AGENTS.md / DEVELOPMENT.md。Issue #28により既定 `./` は草原湖（`?journey=1` も互換）。以前の2世界 `?mode=classic` と台場ミニ `?prototype=1` を保持する。戦闘・クエスト・進行保存は未採用。入口・5段階画角・音の新しい受渡しは [JOURNEY-PRESENTATION](JOURNEY-PRESENTATION.md)。
 
 ## 整理した範囲
 

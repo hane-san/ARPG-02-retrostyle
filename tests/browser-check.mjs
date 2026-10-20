@@ -8,6 +8,7 @@ import {chromium} from 'playwright';
 import {checkJourney} from './journey-browser.mjs';
 import {checkCameraInput} from './camera-browser.mjs';
 import {checkPortalRoutes} from './portal-browser.mjs';
+import {checkAudioContinuity} from './audio-continuity-browser.mjs';
 
 const origin='http://127.0.0.1:4173';
 const server=spawn('python3',['-m','http.server','4173','--bind','127.0.0.1'],{
@@ -31,7 +32,7 @@ async function main(){
  page.on('pageerror',e=>errors.push(e.message));
  page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status()+' '+r.url());});
  page.on('requestfailed',r=>{if(r.failure()?.errorText!=='net::ERR_ABORTED')errors.push('Request '+r.url()+': '+r.failure()?.errorText);});
- const response=await page.goto(origin+'/',{waitUntil:'load'});
+ const response=await page.goto(origin+'/?mode=classic',{waitUntil:'load'});
  assert.ok(response?.ok(),'static entry point must serve');
  await page.waitForSelector('#worldCanvas');
  await page.waitForFunction(()=>document.querySelector('#zoneName')?.textContent==='風環の庭');
@@ -83,16 +84,17 @@ async function main(){
   ()=>document.querySelector('#zoneName')?.textContent==='潮騒の旧港',
   null,{timeout:22000});
  await page.locator('#helpBtn').click();
- assert.ok(await page.getByRole('link',{name:'広い世界を遊ぶ（通常版）'}).isVisible());
+ assert.ok(await page.getByRole('link',{name:'以前の広い世界を歩く'}).isVisible());
  await page.locator('#helpPanel [data-close]').click();
  await checkPortalRoutes(page,origin);
  await checkCameraInput(page,origin);
  await checkJourney(page,origin);
  await checkJourneyFoley(browser,origin);
+ await checkAudioContinuity(browser,origin);
  if(errors.length)throw new Error('JavaScript browser errors: '+errors.join(' | '));
  // Landscape phone: a separate page so the portrait walk above keeps its own viewport.
  const landscape=await browser.newPage({viewport:{width:844,height:390},isMobile:true,hasTouch:true});
- await landscape.goto(origin+'/',{waitUntil:'load'});
+ await landscape.goto(origin+'/?mode=classic',{waitUntil:'load'});
  assert.equal(await landscape.evaluate(()=>[...document.querySelectorAll('.nav-btn,.dock button')]
   .filter(b=>{const r=b.getBoundingClientRect();return r.width<44||r.height<44;}).length),0,'landscape controls must keep 44px touch targets');
  await landscape.close();

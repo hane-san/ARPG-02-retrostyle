@@ -7,7 +7,7 @@ The display title, repository name, public Pages path and localStorage key are d
 
 Entry documents: [DEVELOPMENT](docs/DEVELOPMENT.md), [DESIGN](docs/DESIGN.md), [DECISIONS](docs/DECISIONS.md), [ROADMAP](docs/ROADMAP.md), [QA](docs/QA.md).
 The opt-in Small Journey mode and its post-merge review handoff are in [PROTOTYPE](docs/PROTOTYPE.md).
-The separately approved Central Asia-inspired journey (`?journey=1`, Issue #14) is in [JOURNEY](docs/JOURNEY.md). It has its own 112×88 coordinates and dimension-aware pathfinding; the two-world and crop invariants below continue to apply to their original modes. It does not replace the default entrance.
+The separately approved Central Asia-inspired journey (`?journey=1`, Issue #14) is in [JOURNEY](docs/JOURNEY.md). It has its own 112×88 coordinates and dimension-aware pathfinding; the two-world and crop invariants below continue to apply to their original modes. Human approval in Issue #28 makes this the default `./` entrance; `?journey=1` remains compatible and `?mode=classic` retains both older worlds.
 Claude Code reads this contract from `CLAUDE.md`. Use checked-in documents, current code, Issues and Git history as source of truth—not private AI chat memory.
 
 ## Current phase: rapid prototype iteration
@@ -36,13 +36,13 @@ Human instruction on 2026-10-19: defer main protection and prioritize adding and
 - Starting archipelago tile `START` is (41,40), with a nearby portal at (45,40) on Starwind footbridge, and a distant second portal at (160,38). Both reach the same continent spawn (28,146); the return passage on the continent also works.
 - Seamless keyboard and tap-to-path travel uses legal orthogonal steps, building collision and non-traversable water. Paths must not cross water or structures; all 24 facilities and 25 NPCs remain accessible.
 - The Issyk-Kul-inspired huge lake is a traversable-shore / non-traversable-water landscape. Do not shrink it into a whole-screen decoration.
-- Camera is static-first: manual drag eases to a bounded target, edge-follow is gentle, the explorer remains visible, map bounds hold, and zoom is disabled while a route is active. Mobile controls and tap-anywhere conversation must work.
+- Camera is static-first: manual drag eases to a bounded target, edge-follow is gentle, the explorer remains visible, map bounds hold, and manual zoom is disabled while a route is active. Issue #28 additionally authorizes five place-directed framing targets with smooth transitions during travel in the default journey only: open landscapes pull back, settlements come closer, and boundary jitter must not repeatedly change framing. Mobile controls and tap-anywhere conversation must work.
 - The complete 68-piece original music library and per-zone selection survive; player BGM and SFX preferences persist independently. BGM defaults OFF, SFX ON; audio must never block movement. Avoid abrupt gain discontinuities, timer starvation and click/pop regressions.
 - Maintain independent storage namespace `tidal-atlas:`; no accidental shared data with SRPG or ARPG. A rename of repo/display name must not silently change persistent keys.
 - No combat, quests, savegame, monetization or inherited SRPG 4-phase rules. Those are not implemented and must not be presented as features.
 - Avoid runtime dependencies/CDNs and audio downloads. Support GitHub Pages at a repository-relative path without breaking links. All assets are original or expressly ported and remain independently checked into this repo.
 - New art, landscapes, scoring, story and mechanics require human product approval, even when another project has similar components.
-- Default `./` retains both complete worlds. Only `./?prototype=1` selects Small Journey: an 80×110 crop at original coordinates, two districts, four sites/four NPCs, no mainland transitions. Keep the original pathfinder's 164-wide coordinate indexing, crop bounds and removed-building collision cleanup. Do not make this mode the default without a separately approved Issue.
+- Default `./` selects the grassland/lake journey (Issue #28); explicit `?journey=1` keeps precedence. `./?mode=classic` retains both complete older worlds, with `?journey=0` as an alias. `./?prototype=1` selects Small Journey: an 80×110 crop at original coordinates, two districts, four sites/four NPCs, no mainland transitions. Keep the original pathfinder's 164-wide coordinate indexing, crop bounds and removed-building collision cleanup. The mini mode does not become the default.
 
 ## Working commands and files
 

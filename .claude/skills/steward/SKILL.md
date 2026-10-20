@@ -76,4 +76,4 @@ npm run test:browser     # Chromium（クラウドではSessionStartフックが
 - 巨大湖は歩けない水のまま。カメラは静止優先・主人公可視・移動中ズーム禁止。
 - 68曲と地区選曲、BGM既定OFF・SE既定ON・音で移動を止めない。
 - `tidal-atlas:` 保存名、戦闘・クエスト・セーブなし、CDN・外部音源なし。
-- 既定入口 `./` は2世界のまま。`?prototype=1` と `?journey=1` は別モード。
+- Issue #28により既定入口 `./` は草原湖。旧2世界は `?mode=classic`、ミニは `?prototype=1`、明示 `?journey=1` も維持。草原湖だけで場所に合う5段階の自動画角を採用し、手動は歩行中ロック。

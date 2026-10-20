@@ -17,13 +17,18 @@ export async function checkJourney(page,origin){
    createBufferSource(){const source=super.createBufferSource();const start=source.start.bind(source);source.start=(...args)=>{probe.footfalls++;return start(...args);};return source;}
   };
   window.journeyVistaDraws=0;
+  const scale=CanvasRenderingContext2D.prototype.scale;
+  CanvasRenderingContext2D.prototype.scale=function(x,y){
+   if(this.canvas.id==='worldCanvas')window.journeyRenderZoom=x;
+   return scale.call(this,x,y);
+  };
   const draw=CanvasRenderingContext2D.prototype.drawImage;
   CanvasRenderingContext2D.prototype.drawImage=function(...args){
    if(this.canvas.id==='vistaCanvas')window.journeyVistaDraws++;
    return draw.apply(this,args);
   };
  });
- const response=await page.goto(origin+'/?journey=1',{waitUntil:'load'});
+ const response=await page.goto(origin+'/',{waitUntil:'load'});
  assert.ok(response?.ok());
  await page.waitForFunction(()=>document.querySelector('#discovered')?.textContent==='0 / 6');
  assert.equal(await page.locator('#worldTitle').textContent(),'小さく壮大な旅');
@@ -33,6 +38,7 @@ export async function checkJourney(page,origin){
  assert.ok(await page.locator('.map-hint').isHidden());
  assert.ok(await page.locator('.discover').isHidden());
  assert.ok(await page.locator('#vistaBtn').isVisible(),'a distant view is available at departure');
+ await page.waitForFunction(()=>Math.abs(window.journeyRenderZoom-1.5)<.002);
  await page.screenshot({path:'test-results/journey-port.png'});
 
  async function mapPosition(){
@@ -57,7 +63,7 @@ export async function checkJourney(page,origin){
  async function walk(x,y,{name=null,arrival=null,shot=null}={}){
   await mapClick(x,y);
   await page.waitForFunction(()=>document.querySelector('#zoomIn').disabled);
-  await page.waitForFunction(()=>!document.querySelector('#zoomIn').disabled,null,{timeout:40000});
+  await page.waitForFunction(()=>(!document.querySelector('#zoomIn').disabled||!document.querySelector('#zoomOut').disabled),null,{timeout:40000});
   if(name){
    await page.waitForSelector('#dialogue:not(.hidden)');
    assert.equal(await page.locator('#dialogueName').textContent(),name);
@@ -156,17 +162,17 @@ export async function checkJourney(page,origin){
  // Field tap: approach an NPC at the edge of the quay, then converse.
  await page.locator('#homeBtn').click();
  const field=await page.locator('#worldCanvas').boundingBox();
- await page.mouse.click(field.x+field.width/2-32*1.25,field.y+field.height/2+6*32*1.25);
+ await page.mouse.click(field.x+field.width/2-32*1.5,field.y+field.height/2+6*32*1.5);
  await page.waitForSelector('#dialogue:not(.hidden)',{timeout:10000});
  assert.equal(await page.locator('#dialogueName').textContent(),'灯りをともす人');
  const reading=await page.locator('#dialogue').boundingBox();
- const arrivalY=field.y+field.height/2+5*32*1.25;
+ const arrivalY=field.y+field.height/2+5*32*1.5;
  assert.ok(reading.y+reading.height<arrivalY-35||reading.y>arrivalY+12,'reading card leaves the traveller and nearby NPC visible');
  await page.screenshot({path:'test-results/journey-dialogue.png'});
  await page.locator('#dialogueClose').click();
  await page.locator('#homeBtn').click();
  const quay=await page.locator('#worldCanvas').boundingBox();
- const tapNPC=()=>page.touchscreen.tap(quay.x+quay.width/2,quay.y+quay.height/2+40);
+ const tapNPC=()=>page.touchscreen.tap(quay.x+quay.width/2,quay.y+quay.height/2+48);
  await tapNPC();await page.waitForTimeout(220);
  assert.ok(await page.locator('#dialogue').isVisible(),'revisiting an adjacent NPC must survive its opening click');
  await page.locator('#mapBtn').click();
@@ -177,7 +183,7 @@ export async function checkJourney(page,origin){
  await tapNPC();await page.waitForTimeout(220);
  await page.keyboard.press('ArrowLeft');
  assert.ok(await page.locator('#dialogue').isHidden(),'walking keys dismiss the reading card');
- await page.waitForFunction(()=>!document.querySelector('#zoomIn').disabled);
+ await page.waitForFunction(()=>(!document.querySelector('#zoomIn').disabled||!document.querySelector('#zoomOut').disabled));
  await walk(12,71,{name:'白い連絡舎',arrival:{x:12,y:75}});
  assert.equal(await page.locator('#discovered').textContent(),'1 / 6');
 
@@ -187,8 +193,9 @@ export async function checkJourney(page,origin){
  await page.mouse.wheel(0,-300);
  assert.ok(await page.locator('#zoomIn').isDisabled());
  await mapClick(36,60);
- await page.waitForFunction(()=>!document.querySelector('#zoomIn').disabled,null,{timeout:30000});
+ await page.waitForFunction(()=>(!document.querySelector('#zoomIn').disabled||!document.querySelector('#zoomOut').disabled),null,{timeout:30000});
  await walk(36,38,{shot:'journey-steppe'});
+ await page.waitForFunction(()=>Math.abs(window.journeyRenderZoom-.8)<.002,null,{timeout:9000});
  await page.waitForFunction(pool=>pool.includes(document.querySelector('#trackSelect').value),JOURNEY_PLAYLISTS['journey-steppe'],{timeout:14000});
 
  await walk(55,52,{shot:'journey-lake'});
@@ -204,7 +211,9 @@ export async function checkJourney(page,origin){
 
  await walk(98,69,{name:'青い岸の小屋',arrival:{x:98,y:72},shot:'journey-hut'});
  await walk(90,19,{name:'潮を待つ船',arrival:{x:90,y:22},shot:'journey-salt'});
+ await page.waitForFunction(()=>Math.abs(window.journeyRenderZoom-1)<.002,null,{timeout:9000});
  await walk(55,13,{name:'名のない石',arrival:{x:55,y:19}});
+ await page.waitForFunction(()=>Math.abs(window.journeyRenderZoom-1.25)<.002,null,{timeout:9000});
  await page.locator('#zoomOut').click();await page.locator('#zoomOut').click();
  await page.screenshot({path:'test-results/journey-monolith.png'});
  await page.locator('#zoomIn').click();await page.locator('#zoomIn').click();
@@ -214,15 +223,16 @@ export async function checkJourney(page,origin){
  await page.locator('#vistaClose').click();
  await walk(14,38);await walk(36,60);
  await walk(46,65,{name:'水路の茶屋',arrival:{x:46,y:69}});
+ await page.waitForFunction(()=>Math.abs(window.journeyRenderZoom-1.8)<.002,null,{timeout:9000});
  assert.equal(await page.locator('#discovered').textContent(),'6 / 6');
  await walk(19,70);
  assert.equal(await page.locator('#zoneName').textContent(),'白い船着場');
  assert.ok(await page.evaluate(()=>window.journeyAudioProbe.contexts.length<=2),'music and SFX contexts are reused for the entire loop');
 
  await page.locator('#helpBtn').click();
- assert.ok(await page.getByRole('link',{name:'広い世界を遊ぶ（通常版）'}).isVisible());
+ assert.ok(await page.getByRole('link',{name:'以前の広い世界を歩く'}).isVisible());
  assert.ok(await page.getByRole('link',{name:'小さな旅を試す（台場ミニ版）'}).isVisible());
- await page.getByRole('link',{name:'広い世界を遊ぶ（通常版）'}).click();
+ await page.getByRole('link',{name:'以前の広い世界を歩く'}).click();
  await page.waitForFunction(()=>document.querySelector('#worldTitle').textContent==='潮環群島');
  assert.ok(await page.locator('.topbar').isVisible(),'default UI remains intact');
  assert.equal(await page.locator('.journey-menu').count(),0);

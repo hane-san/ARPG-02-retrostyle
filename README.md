@@ -1,12 +1,18 @@
 # 潮環群島 × 星風回廊 — TIDAL ATLAS
 
-**独立した2DオープンワールドRPGの実験版。** お台場の人工島・連絡橋・海辺をモチーフに、古い城、森と社、異国情緒の港町、白い展示都市、ネオンの近未来地区が連続する、歩くためのブラウザゲームです。
+**独立した2D探索ゲーム。** 円形の草原、青い湖、白い塩原、村と巨大な石をめぐる、歩くためのブラウザゲームです。以前の潮環群島と星風回廊も、手引きから引き続き遊べます。
 
 戦闘、敵、ターン制、キャラクター選択、攻撃／待機コマンドはありません。『英雄叙事詩』側のゲームとは完全に独立した実験です。
 
 **開発・引継ぎの入口**： [AGENTS.md](AGENTS.md)（ChatGPT/Codex/Claude Code共通の契約）・[開発手順](docs/DEVELOPMENT.md)・[設計](docs/DESIGN.md)・[採用判断](docs/DECISIONS.md)・[残課題](docs/ROADMAP.md)・[品質検証](docs/QA.md)。
 
-## 主な実装
+## 現在の入口
+
+公開URLとローカルの `/` は、円形草原と湖をめぐる112×88の旅から始まります。村や茶屋では寄り、草原・湖・夕景では引く、場所に応じた5段階の画角で歩けます。草原湖の既存URL `?journey=1` も使えます。詳しい仕様と音の修正は [JOURNEY-PRESENTATION](docs/JOURNEY-PRESENTATION.md)。未統合ブランチの変更はマージ後に公開へ反映されます。
+
+以前の潮環群島と星風回廊は **`?mode=classic`**、台場ミニは **`?prototype=1`**。手引きからも行き来できます。
+
+## 以前の広い世界の実装
 
 - **シームレスなフィールド**：164×120（計19,680タイル）の広さ。４地区「風環の庭」「白磁の未来都」「潮騒の旧港」「蒼光の新港」が、海上の４本の連絡橋と、星風回廊へ渡る２本の橋がつながります。マップ切替・ローディングはなし。地区内にも16の景観小エリア（琥珀の林・苔むす遺構・ガラス庭園・赤瓦の街区・発光植物園など）を設け、徒歩中に風景の表情が頻繁に変化します。
 - **移動だけに集中**：隠れた32pxグリッドとA*経路探索を使用。地形や橋をタップすると、自動で道を探して長距離でも少し速めにてくてく歩きます（約6.15タイル／秒）。小さな足音はSE設定に従い再生します。歩数ポップアップは非表示。戦術マス、移動範囲、ターン表示はなし。途中で目的地を変えられます。
@@ -47,11 +53,11 @@ Node.js 22+。GitHub ActionsはPRとmain更新時に、地形・各地区の到�
 
 ## 小さな旅（任意の試遊モード）
 
-通常版の2世界はそのまま残し、[小さな旅](https://hane-san.github.io/ARPG-02-retrostyle/?prototype=1)では森と旧港の2地区・4施設・4NPCを歩けます。PR #7でmainへ統合済みですが、独立監査とiPhone実機受入の証拠は未確認です。ヘルプから通常版へ戻れます。仕様とレビュー依頼は[PROTOTYPE](docs/PROTOTYPE.md)。
+以前の2世界は `?mode=classic` に残し、[小さな旅](https://hane-san.github.io/ARPG-02-retrostyle/?prototype=1)では森と旧港の2地区・4施設・4NPCを歩けます。PR #7でmainへ統合済みですが、独立監査とiPhone実機受入の証拠は未確認です。手引きから以前の広い世界へ戻れます。仕様とレビュー依頼は[PROTOTYPE](docs/PROTOTYPE.md)。
 
 ## 構成
 
-独立試遊版：[草原と湖の旅を遊ぶ](https://hane-san.github.io/ARPG-02-retrostyle/?journey=1)。PR #15はmainへ統合済み（`14ea85b3fdceb6a730e1da462816f10d0e96275d`）。112×88の地図に円形草原、大湖、塩原、巨大な石、夕景、少数の暮らしを再構成しています。通常版・台場ミニ版は維持。ローカルは `npm run dev` の後 `http://localhost:4173/?journey=1`。仕様・試遊ルート・検証範囲は [JOURNEY](docs/JOURNEY.md)、最新の受渡しは [CLAUDE-HANDOFF](docs/CLAUDE-HANDOFF.md)。
+現在の入口：[草原と湖の旅を遊ぶ](https://hane-san.github.io/ARPG-02-retrostyle/)。PR #15はmainへ統合済み（`14ea85b3fdceb6a730e1da462816f10d0e96275d`）。112×88の地図に円形草原、大湖、塩原、巨大な石、夕景、少数の暮らしを再構成しています。通常版・台場ミニ版は維持。ローカルは `npm run dev` の後 `http://localhost:4173/`。仕様・試遊ルート・検証範囲は [JOURNEY](docs/JOURNEY.md)、最新の受渡しは [CLAUDE-HANDOFF](docs/CLAUDE-HANDOFF.md)。
 
 - `index.html` / `style.css`: UI
 - `world.js`: ４地区の地形、橋、施設、NPC、A*経路探索
