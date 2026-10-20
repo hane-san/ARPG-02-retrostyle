@@ -16,7 +16,7 @@ import {createJourneyView} from './journey-view.js';
 import {installJourneyUI} from './journey-ui.js';
 import {createJourneyFoley} from './journey-foley.js';
 import {resolveGameMode} from './game-mode.js';
-import {createJourneyCamera,journeyCameraScene,easeJourneyCamera,nearestJourneyZoom,stepJourneyZoom,JOURNEY_ZOOM_STAGES} from './journey-camera.js';
+import {createJourneyCamera,journeyCameraScene,easeJourneyCamera} from './journey-camera.js';
 
 const $=id=>document.getElementById(id);
 const stage=$('stage'),canvas=$('worldCanvas'),ctx=canvas.getContext('2d',{alpha:false});
@@ -53,7 +53,7 @@ if(PROTOTYPE_MODE){
  $('mapPanel').querySelector('p.secondary').textContent=
   '森と旧港をつなぐ橋を歩いて、4つの場所を探してみましょう。地図や地区名をタップすると、そこまで歩きます。';
  $('helpPanel').querySelector('.sheet p').textContent=
-  'これは潮環群島の小さな探索プロトタイプです。森と港を歩き、気になる4つの建物を訪ねてみましょう。目的地のタップ・地図・ドラッグ・ズーム・NPCとの会話は通常版と同じです。';
+  'これは潮環群島の小さな探索プロトタイプです。森と港を歩き、気になる4つの建物を訪ねてみましょう。目的地のタップ・地図・ドラッグ・NPCとの会話は通常版と同じです。';
 }
 if(JOURNEY_MODE){
  document.body.classList.add('journey-mode');
@@ -70,7 +70,7 @@ if(JOURNEY_MODE){
   '白い橋から円い草原へ。湖岸から塩原や石の峠へ。道を選ぶ順番は自由です。遠くを眺めたくなったら、岸や高台のそばで少し立ち止まってみてください。';
  const helpParagraphs=$('helpPanel').querySelectorAll('.sheet > p');
  helpParagraphs[1].textContent='地面や地図で行き先を選ぶと、主人公が道を探して歩きます。途中でも行き先を変えられます。建物や人を選ぶと、そのそばまで歩いて向かいます。';
- helpParagraphs[2].textContent='村では近くに、草原や湖では遠くへ。場所に合わせて景色がゆっくり広がります。指で見回し、「自分へ」で主人公のところに戻ります。立ち止まれば、＋／−で自分でも画角を選べます。会話は続きを読んでも、景色を選んでそのまま歩き出しても大丈夫です。';
+ helpParagraphs[2].textContent='村では近くに、草原や湖では遠くへ。場所に合わせて景色がゆっくり広がります。指で見回し、「自分へ」で主人公のところに戻ります。会話は続きを読んでも、景色を選んでそのまま歩き出しても大丈夫です。';
  helpParagraphs[3].textContent='訪れた場所の記録は、この画面を開いているあいだだけ残ります。';
  $('musicPanel').querySelector('p.secondary').textContent=
   '土地ごとの曲が流れます。ここでは68曲から、好きな一曲を選ぶこともできます。';
@@ -492,7 +492,7 @@ function switchWorld(id,spawn){
  ZONES=world.zones;SITES=world.sites;NPCS=world.npcs;BRIDGES=world.bridges;
  Object.assign(hero,{x:spawn.x,y:spawn.y,px:spawn.x,py:spawn.y,path:[],arrival:null,moving:false});
  camera.x=(spawn.x+.5)*TILE;camera.y=(spawn.y+.5)*TILE;
- cache.clear();zoneId='';panTarget=null;syncZoomControls();closeDialogue();closePanels();
+ cache.clear();zoneId='';panTarget=null;syncTravelState();closeDialogue();closePanels();
  $('worldTitle').textContent=id==='silk'?'星風回廊':'潮環群島';
  $('atlasTitle').textContent=id==='silk'?'星風回廊の地図':'潮環群島の地図';
  rebuildZoneList();updateDiscoveries();updateZone();
@@ -507,7 +507,7 @@ function startWalk(target,arrival=null){
   routeWalk(world,hero,target,currentWorldId==='silk'?silkPath:findPath);
  if(!path){toast('この場所へ続く道が見つかりません。');return;}
  hero.path=path;hero.arrival=arrival;
- panTarget=null;syncZoomControls();
+ panTarget=null;syncTravelState();
  if(hero.path.length===0){hero.px=hero.x;hero.py=hero.y;onArrive();return;}
  // Walking does not display distances or step counts: explore visually.
  sfx.play('confirm');
@@ -622,7 +622,7 @@ function updateMove(dt){
    if(!JOURNEY_MODE&&distance>.001)sfx.play('soft-step');
    const passage=world.transitionAt?.(hero.x,hero.y);
    if(passage){switchWorld(passage.target,passage.spawn);return;}
-   if(!hero.path.length){hero.moving=false;syncZoomControls();onArrive();break;}
+   if(!hero.path.length){hero.moving=false;syncTravelState();onArrive();break;}
   }else{
    hero.px+=dx/distance*remaining;hero.py+=dy/distance*remaining;remaining=0;
   }
@@ -643,7 +643,7 @@ function animate(time){
   if(!dialogue&&!isPanelOpen()&&!gesture&&!panTarget&&$('vistaCard').hidden){
    Object.assign(camera,easeJourneyCamera(camera,{x:hero.px,y:hero.py},target,dt,
     {width:screen.w,height:screen.h},{width:W*TILE,height:H*TILE,tile:TILE}));
-   syncZoomControls();
+   syncTravelState();
   }
  }
  // Time-based smoothing makes both fingertip panning and edge-following fluid.
@@ -670,33 +670,14 @@ function animate(time){
  }
  requestAnimationFrame(animate);
 }
-let lastZoomLocked=null;
-function syncZoomControls(){
- const locked=hero.path.length>0;
- if(locked!==lastZoomLocked){
-  lastZoomLocked=locked;
-  $('zoomIn').title=$('zoomOut').title=locked?'移動中はズームできません':'';
-  $('zoomIn').setAttribute('aria-label',locked?'移動中のため拡大できません':'拡大');
-  $('zoomOut').setAttribute('aria-label',locked?'移動中のため縮小できません':'縮小');
- }
- $('zoomIn').disabled=locked||camera.zoom>=(JOURNEY_MODE?JOURNEY_ZOOM_STAGES.at(-1)-.001:2.49);
- $('zoomOut').disabled=locked||camera.zoom<=(JOURNEY_MODE?JOURNEY_ZOOM_STAGES[0]+.001:.67);
+let lastTravelBusy=null;
+function syncTravelState(){
+ const busy=hero.path.length>0;
+ if(busy!==lastTravelBusy){lastTravelBusy=busy;canvas.setAttribute('aria-busy',String(busy));}
 }
-function zoomTo(v){
- if(hero.path.length)return false; // also blocks wheel + two-finger pinch
- panTarget=null;camera.zoom=JOURNEY_MODE?journeyCamera.manual(nearestJourneyZoom(v)):clamp(v,.66,2.5);confineCamera();
- syncZoomControls();return true;
-}
-$('zoomIn').addEventListener('click',()=>zoomTo(JOURNEY_MODE?stepJourneyZoom(camera.zoom,1):camera.zoom*1.23));
-$('zoomOut').addEventListener('click',()=>zoomTo(JOURNEY_MODE?stepJourneyZoom(camera.zoom,-1):camera.zoom/1.23));
 $('homeBtn').addEventListener('click',centerCamera);
-let lastWheelZoom=-Infinity;
-canvas.addEventListener('wheel',e=>{
- e.preventDefault();
- if(e.deltaY===0)return;
- if(JOURNEY_MODE){if(performance.now()-lastWheelZoom<180)return;lastWheelZoom=performance.now();zoomTo(stepJourneyZoom(camera.zoom,e.deltaY<0?1:-1));}
- else zoomTo(camera.zoom*(e.deltaY<0?1.13:.885));
-},{passive:false});
+// Framing is authored by place. Wheel and multi-touch never alter magnification.
+canvas.addEventListener('wheel',e=>e.preventDefault(),{passive:false});
 
 const pointerMap=new Map();let gesture=null;
 const cancelledClickPointers=new Set();
@@ -739,14 +720,7 @@ canvas.addEventListener('pointermove',e=>{
  p.x=e.clientX;p.y=e.clientY;
  if(!gesture)return;
  if(pointerMap.size>1){
-  if(!gesture?.pinchStart){
-   const pts=[...pointerMap.values()];
-   gesture.pinchStart=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
-   gesture.pinchZoom=camera.zoom;
-  }else{
-   const pts=[...pointerMap.values()],d=Math.hypot(pts[0].x-pts[1].x,pts[0].y-pts[1].y);
-   zoomTo(gesture.pinchZoom*d/Math.max(20,gesture.pinchStart));
-  }
+  gesture.pinch=true;gesture.drag=true;
   return;
  }
  if(gesture.pinch||gesture.id!==e.pointerId)return;
