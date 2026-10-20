@@ -1,5 +1,6 @@
 import {EXTRA_SCORES} from './extra-music.js';
 import {SILK_SCORES} from './silk-music.js';
+import {holdFadeAt} from './journey-sound.js';
 // Original map scores. No samples, downloads, quotes or melodies from other games.
 // A score has a composed A/B melody, harmony, bass and countermelody, then a varied reprise.
 const major=[0,2,4,5,7,9,11],minor=[0,2,3,5,7,8,10];
@@ -1359,20 +1360,19 @@ export const MUSIC_TRANSITION={fade:.24,silence:0};
 export const MUSIC_SCHEDULER={lookAheadSeconds:1.25,intervalMs:50,maxEventsPerPump:480};
 export function createMusic(storage){
  if(arguments.length===0)try{storage=globalThis.localStorage;}catch{}
- let enabled=false,volume=.32,context=null,master=null,bus=null,timer=null,track=null,key=null,currentSource=null,requested=null,preview=null,index=0,start=0,scheduled=0,serial=0,starts=0;
+ let enabled=false,volume=.32,context=null,master=null,bus=null,timer=null,track=null,key=null,currentSource=null,requested=null,preview=null,index=0,start=0,scheduled=0,serial=0,starts=0,busFadeStart=0;
  const voices=new Set(),retired=new Set();
  try{enabled=storage?.getItem('field-command-music')==='true';const saved=storage?.getItem('field-command-music-volume');if(saved!==null&&saved!==undefined&&Number.isFinite(Number(saved)))volume=Math.max(0,Math.min(1,Number(saved)));}catch{}
  function stop(){
   serial++;if(timer!==null){clearInterval(timer);timer=null;}const now=context?.currentTime||0;
   if(bus)try{
-   if(typeof bus.gain.cancelAndHoldAtTime==='function')bus.gain.cancelAndHoldAtTime(now);
-   else{bus.gain.cancelScheduledValues(now);bus.gain.setValueAtTime(bus.gain.value,now);}
+   holdFadeAt(bus.gain,now,busFadeStart,MUSIC_TRANSITION.fade);
    bus.gain.linearRampToValueAtTime(0,now+MUSIC_TRANSITION.fade);
   }catch{}
   // All future notes are already connected to the retiring bus. Fade that bus,
   // then release its oscillators; never abruptly drop a sounding note.
   for(const v of voices)v.stop(now+MUSIC_TRANSITION.fade);voices.clear();
-  if(bus){const old=bus;const cleanup=setTimeout(()=>{old.disconnect();retired.delete(cleanup);},700);retired.add(cleanup);}bus=null;key=null;currentSource=null;index=0;
+  if(bus){const old=bus;const cleanup=setTimeout(()=>{old.disconnect();retired.delete(cleanup);},700);retired.add(cleanup);}bus=null;busFadeStart=0;key=null;currentSource=null;index=0;
  }
  function pump(){
   if(!context||context.state!=='running'||!bus||!track||(!enabled&&!preview))return;
@@ -1397,7 +1397,7 @@ export function createMusic(storage){
   track=buildTrack(target.mapId,target.phase);key=next;currentSource=source;bus=context.createGain();
   // Crossfade without the old 140 ms dropout that sounded like a stutter.
   const now=context.currentTime;
-  bus.gain.setValueAtTime(0,now);bus.gain.linearRampToValueAtTime(1,now+MUSIC_TRANSITION.fade);
+  bus.gain.setValueAtTime(0,now);bus.gain.linearRampToValueAtTime(1,now+MUSIC_TRANSITION.fade);busFadeStart=now;
   bus.connect(master);
   start=now+.02;
   index=0;pump();if(key===next){starts++;timer=setInterval(pump,MUSIC_SCHEDULER.intervalMs);}

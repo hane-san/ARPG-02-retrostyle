@@ -1,5 +1,9 @@
 # 探索ゲームの残課題
 
+## 現在の優先順位
+
+初期開発の速度を優先する（2026-10-19の人間の追加指示）。main保護は保留。関連改善をまとめたIssue/PRと既存CIで進め、low/戻せるmediumの監査・実機試遊は遊べる区切りへまとめる。下記の未確認事項は、無関係な開発を止める前提条件ではない。
+
 ## 新しい草原と湖の旅（Issue #14）
 
 - [x] `?journey=1` の独立112×88マップ、円形草原・両岸ループ・塩原・峠・モノリス・白い港、6施設/4NPC、3つの任意遠望を実装。
@@ -16,7 +20,7 @@
 - [x] 改名後の資料修正PR #4を統合済み。現行mainから共通開発導線を同期（Issue #8）。
 - [ ] 統合済みPR #7の別担当監査・iPhone試遊の証拠を確認し、なければ[PROTOTYPE](PROTOTYPE.md)の依頼で追跡する。GitHubレビュー一覧は空で、CIや自己確認は代替にならない。
 - [ ] 人間のiPhone実機試遊：起動、両方向の橋、NPC会話、ズーム禁止、カメラ、音切れ。
-- [ ] 人間のGitHub Settings：main ruleset必須PR / rules / browser / force push禁止 / deletion禁止。効果確認。
+- [ ] 【保留・安定化時に再検討】人間のGitHub Settings：main ruleset必須PR / rules / browser / force push禁止 / deletion禁止。効果確認（Issue #5）。現在は設定せず、開発・PR統合の前提にしない。
 - [x] 第三ゲームの正式GitHubリポジトリ名を `ARPG-02-retrostyle` に決定・改名済み（2026-10-19）。ゲーム内タイトルは変更しない。
 - [ ] Issue #3：改名後の新Pages URL `https://hane-san.github.io/ARPG-02-retrostyle/` をiPhone Safariで実機確認し、Codex/Claude連携・設定互換性を確認。GitHub ActionsのPagesデプロイは成功済み。
 

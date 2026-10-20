@@ -88,6 +88,39 @@ export async function checkJourney(page,origin){
  assert.equal(await page.locator('#trackSelect').inputValue(),'0:2','manual selection persists in a region');
  assert.ok((await page.locator('#nowPlaying').textContent()).startsWith('再生中：'));
  await page.waitForFunction(()=>window.journeyAudioProbe.notes>0&&window.journeyAudioProbe.contexts.some(c=>c.state==='running'));
+
+ // Offline waveform check: Safari-style AudioParam fallback must not jump
+ // when a scheduled fade-in is interrupted halfway through.
+ const waveform=await page.evaluate(async()=>{
+  const {holdFadeAt,gainDuringFade}=await import('./journey-sound.js');
+  const sampleRate=48000,transition=.12,fade=.24;
+  if(Math.abs(gainDuringFade(transition,fade)-.5)>1e-9)throw Error('invalid fade midpoint');
+  async function render(fallback){
+   const ctx=new OfflineAudioContext(1,Math.ceil(sampleRate*.39),sampleRate);
+   const tone=ctx.createOscillator(),bus=ctx.createGain();
+   tone.type='sine';tone.frequency.value=1000;tone.connect(bus);bus.connect(ctx.destination);
+   bus.gain.setValueAtTime(0,0);bus.gain.linearRampToValueAtTime(1,fade);
+   const param=fallback?{
+    cancelScheduledValues:at=>bus.gain.cancelScheduledValues(at),
+    setValueAtTime:(v,at)=>bus.gain.setValueAtTime(v,at)
+   }:bus.gain;
+   holdFadeAt(param,transition,0,fade);
+   bus.gain.linearRampToValueAtTime(0,transition+fade);
+   tone.start(0);tone.stop(.38);
+   return (await ctx.startRendering()).getChannelData(0);
+  }
+  const offlineFallback=await render(true);
+  const offlineNative=await render(false);
+  function rms(samples,from,to){let sum=0,n=0;for(let i=Math.floor(from*sampleRate);i<Math.floor(to*sampleRate);i++){sum+=samples[i]**2;n++;}return Math.sqrt(sum/n);}
+  return [offlineFallback,offlineNative].map(samples=>({
+   before:rms(samples,.116,.12),
+   after:rms(samples,.12,.124)
+  }));
+ });
+ for(const result of waveform){
+  assert.ok(result.before>.2,'fade must be audible before transition');
+  assert.ok(Math.abs(result.after-result.before)<.055,'no abrupt volume jump at transition: '+JSON.stringify(result));
+ }
  await page.locator('#musicPanel [data-close]').click();
 
  // Field tap: approach an NPC at the edge of the quay, then converse.

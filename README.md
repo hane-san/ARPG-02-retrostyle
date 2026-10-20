@@ -94,6 +94,6 @@ Node.js 22+。GitHub ActionsはPRとmain更新時に、地形・各地区の到�
 
 ## 共同開発運用（SRPG・ARPGと同じ）
 
-採用済み仕様 → Issue → 専用ブランチ → PR → 自動CI（rules / browser） → リスクに応じた独立監査 → 人間による実機試遊・最終承認 → mainへのマージ → GitHub Pages確認。以後、AIは直接mainにpushせず、他ゲームの設計制約を混ぜません。GitHub Rulesetの有効化は管理画面で別途必要です。
+採用済み仕様 → Issue → 専用ブランチ → PR → 自動CI（rules / browser） → 人間の判断でmainへマージ → GitHub Pages確認。**現在は初期開発を優先し、main保護の設定は後回し**です。関連する小さな改善はまとめて進め、low/戻せるmediumの独立監査・実機試遊は遊べる区切りにまとめられます。詳しい範囲は[開発手順](docs/DEVELOPMENT.md)。AIは直接mainにpushせず、他ゲームの設計制約を混ぜません。
 
 ローカルのブラウザ検査は `npm install --no-save --package-lock=false playwright@1.57.0` と `npx playwright install chromium` の後に `npm run test:browser`。詳細は [QA](docs/QA.md)。
