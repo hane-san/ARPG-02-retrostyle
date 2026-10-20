@@ -119,6 +119,12 @@ export function makeWorld(){
  return world;
 }
 function cost(tile){return tile==='f'?1.45:tile==='='||tile==='p'||tile==='s'||tile==='n'||tile==='+'?.86:1;}
+// Reaching a portal switches worlds, so a route may enter one only as its goal.
+export function avoidTransitions(world,target){
+ if(!world.transitions?.length)return world;
+ return Object.create(world,{walkable:{value:(x,y)=>world.walkable(x,y)&&
+  (!world.transitionAt(x,y)||x===target.x&&y===target.y)}});
+}
 export function nearestWalkable(world,x,y,maxRadius=7){
  if(world.walkable(x,y))return {x,y};
  for(let r=1;r<=maxRadius;r++){let best=null,score=Infinity;

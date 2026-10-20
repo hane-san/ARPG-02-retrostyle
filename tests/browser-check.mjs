@@ -3,9 +3,11 @@
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {mkdirSync} from 'node:fs';
+import {checkJourneyFoley} from './journey-foley-browser.mjs';
 import {chromium} from 'playwright';
 import {checkJourney} from './journey-browser.mjs';
 import {checkCameraInput} from './camera-browser.mjs';
+import {checkPortalRoutes} from './portal-browser.mjs';
 
 const origin='http://127.0.0.1:4173';
 const server=spawn('python3',['-m','http.server','4173','--bind','127.0.0.1'],{
@@ -35,6 +37,15 @@ async function main(){
  await page.waitForFunction(()=>document.querySelector('#zoneName')?.textContent==='風環の庭');
  assert.equal(await page.locator('#worldTitle').textContent(),'潮環群島');
  assert.ok(await page.locator('#worldCanvas').isVisible());
+ // Phone layout: the arrival notice must not cover the location card; controls stay 44px.
+ const layout=await page.evaluate(()=>{
+  const box=s=>document.querySelector(s).getBoundingClientRect();
+  const label=box('.zone-label'),notice=box('#toast');
+  return {overlap:notice.top<label.bottom&&notice.bottom>label.top&&notice.left<label.right&&notice.right>label.left,
+   small:[...document.querySelectorAll('.nav-btn,.dock button')].map(b=>b.getBoundingClientRect()).filter(r=>r.width<44||r.height<44).length};
+ });
+ assert.equal(layout.overlap,false,'arrival notice overlaps the location card');
+ assert.equal(layout.small,0,'header/dock controls must keep 44px touch targets');
  // Verify all 68 original pieces are discoverable in the sound room.
  await page.locator('#soundBtn').click();
  assert.equal(await page.locator('#trackSelect option').count(),68);
@@ -74,9 +85,17 @@ async function main(){
  await page.locator('#helpBtn').click();
  assert.ok(await page.getByRole('link',{name:'広い世界を遊ぶ（通常版）'}).isVisible());
  await page.locator('#helpPanel [data-close]').click();
+ await checkPortalRoutes(page,origin);
  await checkCameraInput(page,origin);
  await checkJourney(page,origin);
+ await checkJourneyFoley(browser,origin);
  if(errors.length)throw new Error('JavaScript browser errors: '+errors.join(' | '));
+ // Landscape phone: a separate page so the portrait walk above keeps its own viewport.
+ const landscape=await browser.newPage({viewport:{width:844,height:390},isMobile:true,hasTouch:true});
+ await landscape.goto(origin+'/',{waitUntil:'load'});
+ assert.equal(await landscape.evaluate(()=>[...document.querySelectorAll('.nav-btn,.dock button')]
+  .filter(b=>{const r=b.getBoundingClientRect();return r.width<44||r.height<44;}).length),0,'landscape controls must keep 44px touch targets');
+ await landscape.close();
  console.log('Browser smoke passed: default mobile exploration, 68 tracks, mainland bridge, compact two-zone walk.');
 }
 try{await main();}

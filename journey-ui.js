@@ -31,6 +31,13 @@ export function installJourneyUI(){
   menu.append(button);
  }
  dock.querySelector('.dock-tools').hidden=true;dock.append(placebar,menu);
+ const musicPanel=document.getElementById('musicPanel');
+ musicPanel.querySelector('label[for="volumeRange"]').firstChild.textContent='音楽の音量 ';
+ const soundLabel=document.createElement('label');soundLabel.className='field-label';soundLabel.htmlFor='sfxVolumeRange';
+ soundLabel.append('足音・操作音の音量 ');
+ const value=document.createElement('span');value.id='sfxVolumeLabel';soundLabel.append(value);
+ const range=document.createElement('input');range.id='sfxVolumeRange';range.type='range';range.min='0';range.max='100';range.step='1';
+ document.getElementById('sfxToggle').closest('.toggle-row').after(soundLabel,range);
  // Position non-modal cards above the actual dock, including Safari's safe area.
  const resize=()=>document.body.style.setProperty('--journey-dock-height',dock.getBoundingClientRect().height+'px');
  if(typeof ResizeObserver!=='undefined')new ResizeObserver(resize).observe(dock);

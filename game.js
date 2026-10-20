@@ -1,4 +1,4 @@
-import {W as TIDAL_W,H as TIDAL_H,TILE,ZONES as TIDAL_ZONES,SITES as TIDAL_SITES,NPCS as TIDAL_NPCS,BRIDGES as TIDAL_BRIDGES,START,makeWorld,findPath,nearestWalkable} from './world.js';
+import {W as TIDAL_W,H as TIDAL_H,TILE,ZONES as TIDAL_ZONES,SITES as TIDAL_SITES,NPCS as TIDAL_NPCS,BRIDGES as TIDAL_BRIDGES,START,makeWorld,findPath,nearestWalkable,avoidTransitions} from './world.js';
 import {SILK_W,SILK_H,SILK_ZONES,SILK_SITES,SILK_NPCS,SILK_BRIDGES,makeSilkWorld,silkPath} from './silk-world.js';
 import {drawSilkTile,drawSilkSite,SILK_PALETTE} from './silk-art.js';
 import {SILK_TALK,SILK_ASIDES} from './silk-dialogue.js';
@@ -14,6 +14,7 @@ import {drawJourneyTile,drawJourneySite,drawJourneyAtmosphere,JOURNEY_PALETTE} f
 import {createJourneyMusicDirector,pickJourneyTrack} from './journey-music.js';
 import {createJourneyView} from './journey-view.js';
 import {installJourneyUI} from './journey-ui.js';
+import {createJourneyFoley} from './journey-foley.js';
 
 const $=id=>document.getElementById(id);
 const stage=$('stage'),canvas=$('worldCanvas'),ctx=canvas.getContext('2d',{alpha:false});
@@ -28,7 +29,7 @@ const storage={
  getItem(k){try{return localStorage.getItem('tidal-atlas:'+k);}catch{return null;}},
  setItem(k,v){try{localStorage.setItem('tidal-atlas:'+k,v);}catch{}}
 };
-const music=createMusic(storage),sfx=createAudio(storage);
+const music=createMusic(storage),sfx=JOURNEY_MODE?createJourneyFoley(storage):createAudio(storage);
 const spawn=world.start||START;
 const hero={x:spawn.x,y:spawn.y,px:spawn.x,py:spawn.y,face:'down',path:[],arrival:null,stride:0,moving:false};
 const camera={x:(spawn.x+.5)*TILE,y:(spawn.y+.5)*TILE,zoom:1.25};
@@ -98,6 +99,9 @@ function line(c,points,color,width=2){
  points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();
 }
 function toast(message){
+ // Narrow screens: drop the notice below the location card instead of covering it.
+ const label=document.querySelector('.zone-label'),below=!JOURNEY_MODE&&label?.parentElement===stage&&stage.clientWidth<=560;
+ $('toast').style.top=below?(label.offsetTop+label.offsetHeight+8)+'px':'';
  $('toast').textContent=message;$('toast').classList.add('show');
  clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>$('toast').classList.remove('show'),2300);
 }
@@ -495,8 +499,9 @@ function switchWorld(id,spawn){
 function startWalk(target,arrival=null){
  if(!world.walkable(target.x,target.y)){toast('ここには歩いて行けません。道や橋を選んでください。');return;}
  // Start from the next occupied grid cell instead of instantly teleporting away.
- const from={x:hero.x,y:hero.y},path=JOURNEY_MODE?routeJourneyWalk(world,hero,target):
-  currentWorldId==='silk'?silkPath(world,from,target):findPath(world,from,target);
+ // A portal crosses worlds on arrival, so only a route ending there may use it.
+ const from={x:hero.x,y:hero.y},route=avoidTransitions(world,target),path=JOURNEY_MODE?routeJourneyWalk(world,hero,target):
+  currentWorldId==='silk'?silkPath(route,from,target):findPath(route,from,target);
  if(!path){toast('この場所へ続く道が見つかりません。');return;}
  hero.path=JOURNEY_MODE?path:path.slice(1);hero.arrival=arrival;
  panTarget=null;syncZoomControls();
@@ -607,10 +612,11 @@ function updateMove(dt){
  while(remaining>0&&hero.path.length){
   const step=hero.path[0];
   const dx=step.x-hero.px,dy=step.y-hero.py,distance=Math.hypot(dx,dy);
+  if(JOURNEY_MODE)sfx.step(Math.min(distance,remaining),world.tileAt(step.x,step.y));
   if(distance<=remaining+.0001){
    hero.px=step.x;hero.py=step.y;hero.x=step.x;hero.y=step.y;
    hero.path.shift();remaining-=distance;
-   if(distance>.001)sfx.play('soft-step');
+   if(!JOURNEY_MODE&&distance>.001)sfx.play('soft-step');
    const passage=world.transitionAt?.(hero.x,hero.y);
    if(passage){switchWorld(passage.target,passage.spawn);return;}
    if(!hero.path.length){hero.moving=false;syncZoomControls();onArrive();break;}
@@ -628,7 +634,7 @@ function animate(time){
  const dt=last?Math.min(.07,(time-last)/1000):0;last=time;
  updateMove(dt);
  updateJourneyMusic(time);
- journeyView?.update(hero,!!dialogue||isPanelOpen());
+ journeyView?.update(hero,!!dialogue||isPanelOpen(),time);
  // Time-based smoothing makes both fingertip panning and edge-following fluid.
  const viewport={width:screen.w,height:screen.h,zoom:camera.zoom};
  const bounds={width:W*TILE,height:H*TILE,tile:TILE};
@@ -867,6 +873,10 @@ function syncMusic(){
  $('sfxToggle').setAttribute('aria-pressed',String(sfx.enabled));
  $('volumeRange').value=Math.round(music.volume*100);
  $('volumeLabel').textContent=Math.round(music.volume*100)+'%';
+ if(JOURNEY_MODE){
+  $('sfxVolumeRange').value=Math.round(sfx.volume*100);
+  $('sfxVolumeLabel').textContent=Math.round(sfx.volume*100)+'%';
+ }
  applyTrack();
 }
 trackSelect.addEventListener('change',()=>{music.unlock();applyTrack();});
@@ -877,5 +887,8 @@ $('volumeRange').addEventListener('input',e=>{
  music.setVolume(Number(e.target.value)/100);$('volumeLabel').textContent=e.target.value+'%';
 });
 $('sfxToggle').addEventListener('click',()=>{sfx.toggle();syncMusic();});
+if(JOURNEY_MODE)$('sfxVolumeRange').addEventListener('input',e=>{
+ sfx.setVolume(Number(e.target.value)/100);sfx.unlock();$('sfxVolumeLabel').textContent=e.target.value+'%';
+});
 syncMusic();
 updateDiscoveries();updateZone();updateJourneyMusic(performance.now());requestAnimationFrame(animate);
