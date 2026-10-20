@@ -46,7 +46,7 @@ Human instruction on 2026-10-19: defer main protection and prioritize adding and
 
 ## Working commands and files
 
-`npm run check` verifies JavaScript parsing and deterministic tests on Node 22+ (31 tests at the 2026-10-19 baseline).
+`npm run check` verifies JavaScript parsing and deterministic tests on Node 22+ (53 tests on main at 2026-10-20; new checks raise the count).
 `npm run dev` runs a local static server at http://127.0.0.1:4173.
 `npm run test:browser` checks Chromium interactions (after temporary local Playwright install).
 `game.js` owns input, world switching, Canvas and camera integration. `world.js` and `silk-world.js` own data and pathfinding. `camera-limits.js` owns camera bounds. `music.js`, `zone-music.js`, `audio.js` and `silk-music.js` own audio. `silk-art.js`, `scenic-biomes.js`, `sprite-srpg.js` own visuals. `dialogue-data.js` and `silk-dialogue.js` own conversation. See DESIGN for detailed map.

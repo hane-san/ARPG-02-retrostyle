@@ -12,7 +12,7 @@
 
 ## CI（GitHub Actions）
 
-- `rules`: Node.js 22で `npm run check`。構文解析と `tests/*.test.mjs` の地形・可達性・カメラ・音楽・会話検証（2026-10-19基準31件）。
+- `rules`: Node.js 22で `npm run check`。構文解析と `tests/*.test.mjs` の地形・可達性・カメラ・音楽・会話検証（2026-10-20のmainで53件。検査の追加で増える）。
 - `browser`: Chromium + Playwright 1.57.0。実際のroot版index.htmlを起動して、読み込み・初期UI・68曲の音楽室・スタート地点近くの小橋をタップして星風回廊へ移動する操作を検査。続けて `?prototype=1` の4施設表示・2地区の地図・森→旧港の徒歩移動・通常版へのリンクを検査。
 - CI成功は機械テストの成功のみ。人間の採用判断・独立監査・iPhone実機試遊の代わりにならない。
 
