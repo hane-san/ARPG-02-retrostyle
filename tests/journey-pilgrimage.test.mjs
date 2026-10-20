@@ -43,6 +43,7 @@ test('all additional voices, viewpoints and discoveries remain on reachable dry 
   assert.ok(at(v),'viewpoint reachable: '+v.id);
   assert.ok(v.title&&v.sub&&v.radius>0,'viewpoint has a label and deliberate proximity: '+v.id);
  }
- const all=w.tiles.flat().filter(tile=>!['~','L','l','X'].includes(tile)).length;
- assert.ok(seen.size>=all-100,'most traversable ground stays in one connected country');
+ let walkable=0;
+ for(let y=0;y<w.h;y++)for(let x=0;x<w.w;x++)if(w.walkable(x,y))walkable++;
+ assert.equal(seen.size,walkable,'all legal paths remain connected');
 });
