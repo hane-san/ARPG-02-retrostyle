@@ -6,7 +6,7 @@
 
 この変更を含むブランチで `npm run dev` を実行し、**http://localhost:4173/?journey=1** を開く。通常版は `/`、台場ミニ版は `/?prototype=1`。操作説明（⋯）から3モード間を移動できる。`journey=1` と `prototype=1` の両方が指定された場合は新マップを優先する。
 
-未マージの間、公開GitHub Pagesはmainの内容であり、新マップのプレビューURLではない。iPhoneでブランチを試す場合は、同じLANのPCでサーバーを立て、`http://PCのLANアドレス:4173/?journey=1` をSafariで開く。`localhost` はiPhone自身を指す。
+PR #15はmainへ統合済み（`14ea85b3fdceb6a730e1da462816f10d0e96275d`）。[公開版の草原と湖](https://hane-san.github.io/ARPG-02-retrostyle/?journey=1)から遊べる。今後の未統合ブランチを試す場合だけ、同じLANのPCでサーバーを立て、`http://PCのLANアドレス:4173/?journey=1` をSafariで開く。`localhost` はiPhone自身を指す。公開への統合とiPhone実機受入は別であり、後者は未検証。
 
 ## 地理と歩行
 

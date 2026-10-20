@@ -85,9 +85,9 @@ for(const [mode,href,label] of [
 }
 $('helpPanel').querySelector('.sheet').append(modeNav);
 const clamp=(a,b,c)=>Math.max(b,Math.min(c,a));
-function confineCamera(x=camera.x,y=camera.y){
+function confineCamera(x=camera.x,y=camera.y,margin=.65){
  const bounded=limitCamera({x,y},{x:hero.px,y:hero.py},
-  {width:screen.w,height:screen.h,zoom:camera.zoom},{width:W*TILE,height:H*TILE,tile:TILE});
+  {width:screen.w,height:screen.h,zoom:camera.zoom},{width:W*TILE,height:H*TILE,tile:TILE},margin);
  camera.x=bounded.x;camera.y=bounded.y;
 }
 function centerCamera(){panTarget=null;confineCamera((hero.px+.5)*TILE,(hero.py+.5)*TILE);}
@@ -633,13 +633,16 @@ function animate(time){
  const viewport={width:screen.w,height:screen.h,zoom:camera.zoom};
  const bounds={width:W*TILE,height:H*TILE,tile:TILE};
  if(panTarget){
+  // The hero or viewport can change after a drag; settle against the current
+  // reachable target instead of keeping an impossible target alive forever.
+  panTarget=limitCamera(panTarget,{x:hero.px,y:hero.py},viewport,bounds);
   const next=smoothPanCamera(camera,panTarget,{x:hero.px,y:hero.py},viewport,bounds,dt);
   camera.x=next.x;camera.y=next.y;
   if(!gesture?.drag&&Math.hypot(next.x-panTarget.x,next.y-panTarget.y)<.6)panTarget=null;
  }else if(hero.moving){
   const next=easeEdgeCamera(camera,{x:hero.px,y:hero.py},viewport,bounds,dt);
   camera.x=next.x;camera.y=next.y;
- }else confineCamera();
+ }else confineCamera(camera.x,camera.y,.08);
  // Prioritize 60fps while the camera moves, but retain low-cost idle frames.
  const scrolling=panTarget!==null||Math.hypot(camera.x-lastPaintCamera.x,camera.y-lastPaintCamera.y)>.05;
  const frameMs=scrolling?1000/60:hero.moving?1000/45:1000/24;
@@ -671,16 +674,45 @@ $('homeBtn').addEventListener('click',centerCamera);
 canvas.addEventListener('wheel',e=>{e.preventDefault();zoomTo(camera.zoom*(e.deltaY<0?1.13:.885));},{passive:false});
 
 const pointerMap=new Map();let gesture=null;
+const cancelledClickPointers=new Set();
+function cancelCameraGesture(){
+ const ids=[...pointerMap.keys()];pointerMap.clear();gesture=null;panTarget=null;
+ for(const id of ids)cancelledClickPointers.add(id);
+ // OS-cancelled contacts may never produce a click; bound retained IDs.
+ while(cancelledClickPointers.size>32)cancelledClickPointers.delete(cancelledClickPointers.values().next().value);
+ for(const id of ids)if(canvas.hasPointerCapture(id))canvas.releasePointerCapture(id);
+}
+// After resize/cancel, a still-held finger may be released over the dock.
+// Suppress only that contact's synthetic click, never a fresh toolbar gesture.
+document.addEventListener('pointerdown',e=>cancelledClickPointers.delete(e.pointerId),true);
+window.addEventListener('click',e=>{
+ if(!cancelledClickPointers.delete(e.pointerId))return;
+ e.preventDefault();e.stopImmediatePropagation();
+},true);
+function finishCameraPointer(id){
+ if(!pointerMap.has(id))return;
+ pointerMap.delete(id);
+ if(!pointerMap.size)gesture=null;
+ else if(gesture){
+  // A multi-finger group stays a pinch until every finger is lifted. Never
+  // reinterpret its remaining finger as a tap or an old-origin manual pan.
+  gesture.pinch=true;gesture.drag=true;gesture.pinchStart=null;
+ }
+}
+window.addEventListener('resize',cancelCameraGesture);
+window.addEventListener('blur',cancelCameraGesture);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelCameraGesture();});
 canvas.addEventListener('pointerdown',e=>{
  if(e.button!==0)return;e.preventDefault();canvas.setPointerCapture(e.pointerId);
  panTarget=null;
  pointerMap.set(e.pointerId,{x:e.clientX,y:e.clientY});
  if(pointerMap.size===1)gesture={id:e.pointerId,x:e.clientX,y:e.clientY,cx:camera.x,cy:camera.y,drag:false,pinch:false};
- else if(gesture){gesture.pinch=true;gesture.drag=true;}
+ else if(gesture){gesture.pinch=true;gesture.drag=true;gesture.pinchStart=null;}
 },{passive:false});
 canvas.addEventListener('pointermove',e=>{
  const p=pointerMap.get(e.pointerId);if(!p)return;
  p.x=e.clientX;p.y=e.clientY;
+ if(!gesture)return;
  if(pointerMap.size>1){
   if(!gesture?.pinchStart){
    const pts=[...pointerMap.values()];
@@ -692,7 +724,7 @@ canvas.addEventListener('pointermove',e=>{
   }
   return;
  }
- if(gesture?.id!==e.pointerId)return;
+ if(gesture.pinch||gesture.id!==e.pointerId)return;
  const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;
  if(Math.hypot(dx,dy)>9)gesture.drag=true;
  if(gesture.drag){
@@ -703,11 +735,15 @@ canvas.addEventListener('pointermove',e=>{
 });
 canvas.addEventListener('pointerup',e=>{
  const g=gesture;const tapped=g&&g.id===e.pointerId&&!g.drag&&!g.pinch;
- pointerMap.delete(e.pointerId);if(pointerMap.size===0)gesture=null;
+ finishCameraPointer(e.pointerId);
  if(tapped)handleTap(e);
 });
-canvas.addEventListener('pointercancel',e=>{pointerMap.delete(e.pointerId);gesture=null;});
-canvas.addEventListener('lostpointercapture',e=>{pointerMap.delete(e.pointerId);gesture=null;});
+canvas.addEventListener('pointercancel',e=>{if(pointerMap.has(e.pointerId))cancelCameraGesture();});
+canvas.addEventListener('lostpointercapture',e=>{
+ // Implicit capture loss follows normal pointerup. Only an unexpected loss
+ // of a still-active pointer cancels the group and any pending camera motion.
+ if(pointerMap.has(e.pointerId))cancelCameraGesture();
+});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 canvas.addEventListener('dragstart',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
