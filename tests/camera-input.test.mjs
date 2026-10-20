@@ -79,3 +79,10 @@ test('cancelled release cannot click the dock, but a fresh pointerdown can',()=>
  t.documentEvents.pointerdown({pointerId:2});
  t.events.click({...click,pointerId:2});assert.equal(blocked,2,'a fresh toolbar gesture is not suppressed');
 });
+
+test('player-facing help never offers the removed manual zoom controls',()=>{
+ for(const file of ['../game.js','../index.html']){
+  const source=readFileSync(new URL(file,import.meta.url),'utf8');
+  assert.doesNotMatch(source,/＋／−|拡大縮小|ズーム/,file+' still mentions manual zoom');
+ }
+});
