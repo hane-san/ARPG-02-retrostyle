@@ -10,10 +10,17 @@ export async function checkJourney(page,origin){
  // and crossing regions must not create a new audio context each time.
  await page.addInitScript(()=>{
   const Native=window.AudioContext;
-  const probe=window.journeyAudioProbe={contexts:[],notes:0};
+  const probe=window.journeyAudioProbe={contexts:[],notes:0,footfalls:0};
   window.AudioContext=class extends Native{
    constructor(...args){super(...args);probe.contexts.push(this);}
    createOscillator(){const oscillator=super.createOscillator();const start=oscillator.start.bind(oscillator);oscillator.start=(...args)=>{probe.notes++;return start(...args);};return oscillator;}
+   createBufferSource(){const source=super.createBufferSource();const start=source.start.bind(source);source.start=(...args)=>{probe.footfalls++;return start(...args);};return source;}
+  };
+  window.journeyVistaDraws=0;
+  const draw=CanvasRenderingContext2D.prototype.drawImage;
+  CanvasRenderingContext2D.prototype.drawImage=function(...args){
+   if(this.canvas.id==='vistaCanvas')window.journeyVistaDraws++;
+   return draw.apply(this,args);
   };
  });
  const response=await page.goto(origin+'/?journey=1',{waitUntil:'load'});
@@ -71,16 +78,36 @@ export async function checkJourney(page,origin){
  const start=await mapPosition();assert.ok(Math.hypot(start.x-19,start.y-70)<1,'new-world spawn');
  await page.screenshot({path:'test-results/journey-atlas.png'});
  await page.locator('#mapPanel [data-close]').click();
+ const stepsBefore=await page.evaluate(()=>window.journeyAudioProbe.footfalls);
+ await walk(19,74);await walk(19,70);
+ assert.equal(await page.evaluate(()=>window.journeyAudioProbe.footfalls)-stepsBefore,4,'eight real walked tiles make four quiet footfalls');
+ const idleSteps=await page.evaluate(()=>window.journeyAudioProbe.footfalls);await page.waitForTimeout(220);
+ assert.equal(await page.evaluate(()=>window.journeyAudioProbe.footfalls),idleSteps,'standing still makes no queued footsteps');
  await page.locator('#vistaBtn').click();
  assert.equal(await page.locator('#vistaTitle').textContent(),'岸の向こう、石の影');
  assert.ok(await page.locator('#vistaCanvas').isVisible());
+ const draws=await page.evaluate(()=>window.journeyVistaDraws);await page.waitForTimeout(420);
+ const animated=await page.evaluate(()=>window.journeyVistaDraws);
+ assert.ok(animated>draws&&animated-draws<=12,'visible panorama updates at a bounded, low frame rate');
+ await page.emulateMedia({reducedMotion:'reduce'});await page.waitForTimeout(120);
+ const still=await page.locator('#vistaCanvas').evaluate(c=>c.toDataURL());
+ const stopped=await page.evaluate(()=>window.journeyVistaDraws);await page.waitForTimeout(250);
+ assert.equal(await page.evaluate(()=>window.journeyVistaDraws),stopped,'reduced motion does not redraw');
+ assert.equal(await page.locator('#vistaCanvas').evaluate(c=>c.toDataURL()),still);
+ await page.screenshot({path:'test-results/journey-departure-view.png'});
+ await page.emulateMedia({reducedMotion:'no-preference'});
  await page.keyboard.press('Escape');assert.ok(await page.locator('#vistaCard').isHidden());
  assert.equal(await page.evaluate(()=>document.activeElement.id),'vistaBtn');
+ const closed=await page.evaluate(()=>window.journeyVistaDraws);await page.waitForTimeout(180);
+ assert.equal(await page.evaluate(()=>window.journeyVistaDraws),closed,'closed panoramas perform no rendering');
 
  await page.locator('#soundBtn').click();
  assert.equal(await page.locator('#trackSelect option').count(),68);
  assert.equal(await page.locator('#musicToggle').textContent(),'OFF');
  assert.equal(await page.locator('#sfxToggle').textContent(),'ON');
+ assert.equal(await page.locator('#sfxVolumeRange').inputValue(),'55');
+ await page.locator('#sfxVolumeRange').evaluate(e=>{e.value='27';e.dispatchEvent(new Event('input',{bubbles:true}));});
+ assert.equal(await page.locator('#sfxVolumeLabel').textContent(),'27%');
  await page.locator('#musicToggle').click();
  await page.locator('#sfxToggle').click();
  await page.locator('#trackSelect').selectOption('0:2');
@@ -183,6 +210,7 @@ export async function checkJourney(page,origin){
  await page.locator('#zoomIn').click();await page.locator('#zoomIn').click();
  await page.waitForSelector('#vistaBtn:visible');await page.locator('#vistaBtn').click();
  assert.equal(await page.locator('#vistaTitle').textContent(),'石影の向こうに');
+ await page.screenshot({path:'test-results/journey-highland-view.png'});
  await page.locator('#vistaClose').click();
  await walk(14,38);await walk(36,60);
  await walk(46,65,{name:'水路の茶屋',arrival:{x:46,y:69}});
@@ -198,6 +226,7 @@ export async function checkJourney(page,origin){
  await page.waitForFunction(()=>document.querySelector('#worldTitle').textContent==='潮環群島');
  assert.ok(await page.locator('.topbar').isVisible(),'default UI remains intact');
  assert.equal(await page.locator('.journey-menu').count(),0);
+ assert.equal(await page.locator('#sfxVolumeRange').count(),0,'journey sound controls do not leak into default mode');
  await page.locator('#soundBtn').click();
  assert.equal(await page.locator('#musicToggle').textContent(),'ON');
  assert.equal(await page.locator('#sfxToggle').textContent(),'OFF');
@@ -206,6 +235,9 @@ export async function checkJourney(page,origin){
  await page.goto(origin+'/?prototype=1&journey=1');
  await page.waitForFunction(()=>document.querySelector('#worldTitle').textContent==='小さく壮大な旅');
  assert.equal(await page.locator('#discovered').textContent(),'0 / 6','mode flags have explicit precedence, with no game-save added');
+ await page.locator('#soundBtn').click();
+ assert.equal(await page.locator('#sfxVolumeRange').inputValue(),'27','foley volume persists separately from music');
+ await page.locator('#soundBtn').click();
  for(const [width,height] of [[320,568],[844,390],[390,844]]){
   await page.setViewportSize({width,height});await page.waitForTimeout(150);
   const layout=await page.evaluate(()=>{
@@ -222,6 +254,11 @@ export async function checkJourney(page,origin){
   assert.ok(sheet.y>=0&&sheet.y+sheet.height<=layout.fieldBottom,'map stays above the reachable menu');
   await page.locator('#soundBtn').click();
   assert.ok(await page.locator('#mapPanel').isHidden());assert.ok(await page.locator('#musicPanel').isVisible());
+  await page.locator('#sfxVolumeRange').scrollIntoViewIfNeeded();
+  const soundSheet=await page.locator('#musicPanel .sheet').boundingBox();
+  const slider=await page.locator('#sfxVolumeRange').boundingBox();
+  assert.ok(soundSheet.y>=0&&soundSheet.y+soundSheet.height<=layout.fieldBottom,'sound controls stay above the menu');
+  assert.ok(slider.y>=soundSheet.y&&slider.y+slider.height<=soundSheet.y+soundSheet.height,'foley volume remains reachable');
   await page.keyboard.press('Escape');
   assert.equal(await page.evaluate(()=>document.activeElement.id),'soundBtn','closing a sheet restores focus to its tool');
  }

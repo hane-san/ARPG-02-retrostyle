@@ -32,7 +32,7 @@
 .journey-mode .pill-toggle.on{color:#fff7e5;background:#77998c;border-color:#77998c}
 .journey-mode .field-label{color:#536f69;font-size:12px}
 .journey-mode #trackSelect{padding:10px;font-size:13px;color:#3d6165;background:#f4f0e4;border-color:#b7c6b6}
-.journey-mode #volumeRange{accent-color:#8eaa91}
+.journey-mode #volumeRange,.journey-mode #sfxVolumeRange{width:100%;accent-color:#8eaa91;min-height:24px}
 .journey-mode .now-playing{color:#597568!important;background:#e1e7d7;border-left:2px solid #99ad8e;font-size:11px!important}
 .journey-mode .mode-nav{display:flex;flex-direction:column;gap:6px;margin-bottom:0}
 .journey-mode .mode-nav br{display:none}

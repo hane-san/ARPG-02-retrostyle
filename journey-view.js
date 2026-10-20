@@ -13,6 +13,10 @@ export function createJourneyView(stage,world){
  const caption=document.createElement('p');
  card.append(head,canvas,caption);stage.append(button,card);
  let nearby=null;
+ const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)');
+ let viewTime=0,lastFrame=0;
+ const redraw=()=>{if(nearby&&!card.hidden&&!document.hidden)drawJourneyPanorama(canvas,nearby.kind,reducedMotion.matches?0:viewTime);};
+ reducedMotion.addEventListener('change',()=>{viewTime=0;lastFrame=performance.now();redraw();});
  function hide(restoreFocus=false){
   const wasOpen=!card.hidden;card.hidden=true;button.setAttribute('aria-expanded','false');
   button.hidden=!nearby;
@@ -22,16 +26,22 @@ export function createJourneyView(stage,world){
   if(!nearby)return;
   title.textContent=nearby.title;caption.textContent=nearby.sub;
   canvas.setAttribute('aria-label',nearby.kind==='sunset'?'大きな夕日と遠い山並み、湖の光、小さな旅人。':nearby.title+'。遠い山と草原、名のない石、小さな旅人。');
-  drawJourneyPanorama(canvas,nearby.kind);card.hidden=false;button.setAttribute('aria-expanded','true');close.focus();
+  viewTime=0;lastFrame=performance.now();card.hidden=false;redraw();
+  button.setAttribute('aria-expanded','true');close.focus();
  });
  close.addEventListener('click',()=>hide(true));
  return {
   close(restoreFocus=false){hide(restoreFocus);},
-  update(hero,covered=false){
+  update(hero,covered=false,time=performance.now()){
    const next=!covered&&!hero.path.length?world.vistas.find(v=>Math.hypot(v.x-hero.px,v.y-hero.py)<=v.radius):null;
    if(next!==nearby){nearby=next;hide();}
    button.hidden=!nearby||!card.hidden;
    if(nearby)button.textContent=nearby.kind==='sunset'?'夕空を眺める':'遠くを眺める';
+   if(document.hidden){lastFrame=time;return;}
+   // Reuse the existing game clock and pause the illustration when not visible.
+   if(!card.hidden&&!reducedMotion.matches&&time-lastFrame>=100){
+    viewTime+=Math.min(150,time-lastFrame);lastFrame=time;redraw();
+   }
   }
  };
 }

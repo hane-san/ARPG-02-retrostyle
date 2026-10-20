@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {mkdirSync} from 'node:fs';
+import {checkJourneyFoley} from './journey-foley-browser.mjs';
 import {chromium} from 'playwright';
 import {checkJourney} from './journey-browser.mjs';
 import {checkCameraInput} from './camera-browser.mjs';
@@ -76,6 +77,7 @@ async function main(){
  await page.locator('#helpPanel [data-close]').click();
  await checkCameraInput(page,origin);
  await checkJourney(page,origin);
+ await checkJourneyFoley(browser,origin);
  if(errors.length)throw new Error('JavaScript browser errors: '+errors.join(' | '));
  console.log('Browser smoke passed: default mobile exploration, 68 tracks, mainland bridge, compact two-zone walk.');
 }

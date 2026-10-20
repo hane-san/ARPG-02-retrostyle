@@ -57,6 +57,7 @@ Node.js 22+。GitHub ActionsはPRとmain更新時に、地形・各地区の到�
 - `world.js`: ４地区の地形、橋、施設、NPC、A*経路探索
 - `prototype-world.js`: 通常版の座標系を保持した小さな旅の切り出し
 - `journey-world.js` / `journey-art.js` / `journey-view.js` / `journey-music.js` / `journey-ui.js` / `journey.css`: 独立した草原と湖の旅、任意の遠望、地域選曲、景色を広く見せる下部メニュー
+- `journey-foley.js` / `journey-panorama.js`: 草原湖専用の地面に応じた足音・独立音量、3構図の任意遠望（[追加制作とClaude再監査の引継ぎ](docs/JOURNEY-SENSORY.md)）
 - `game.js`: Canvas描画、カメラ、移動、会話、発見、音楽画面
 - `sprite-srpg.js`: SRPGのドット絵ユニット描画から移植した主人公
 - `music.js`, `audio.js`: 元のSRPGから移植した合成エンジン・26曲
