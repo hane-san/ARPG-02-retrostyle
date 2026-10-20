@@ -32,4 +32,4 @@ Claudeの最初の作業は最新main SHAと未処理PRを再取得し、この�
 
 - 人間：採用・iPhone試遊・main統合。ChatGPT：企画とIssue化。Claude Code：高リスクの修正計画、他担当のPRの独立監査、全体整合。Codex／Claude Code（第二ライン）：実装。作った担当と別の担当・別セッションが監査する。
 - `.claude/settings.json` は読取・検査コマンドだけを許可する。push・削除・設定変更は許可しない。
-- 夜間点検は人間の承認（2026-10-20）による定期タスク。毎晩、新しいセッションで未処理PRとCIを読み、対象SHAごとにPASS/WARN/BLOCK・実行テスト・未検証・iPhone試遊項目をPRへ記録する。同じSHAの再監査はしない。マージ・main直接push・force-push・auto-merge・Settings変更・新機能の実装はしない。未処理PRがなければ何もせず終わる。
+- 夜間点検は人間の承認（2026-10-20）による定期タスク。毎晩、PRを作った担当とは別のセッションで未処理PRとCIを読み、対象SHAごとにPASS/WARN/BLOCK・実行テスト・未検証・iPhone試遊項目をPRへ記録する。同じSHAの再監査はしない。マージ・main直接push・force-push・auto-merge・Settings変更・新機能の実装はしない。未処理PRがなければ何もせず終わる。初回の試運転はリポジトリ未接続（HTTP 403）で失敗した。設定手順と指示文は [NIGHTLY-AUDIT](NIGHTLY-AUDIT.md)。
