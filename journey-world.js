@@ -585,7 +585,7 @@ export function makeJourneyWorld(){
  for(const s of JOURNEY_SITES){
   for(let y=s.y;y<s.y+s.h;y++)for(let x=s.x;x<s.x+s.w;x++){
    if(s.blocking!==false)occupied[y*w+x]=1;
-   if(['~','L','X'].includes(tiles[y][x]))set(x,y,s.kind==='monolith'?'h':s.kind==='shipwreck'?'S':'p');
+   if(s.kind!=='relic'&&['~','L','X'].includes(tiles[y][x]))set(x,y,s.kind==='monolith'?'h':s.kind==='shipwreck'?'S':'p');
   }
   occupied[s.entrance.y*w+s.entrance.x]=0;set(s.entrance.x,s.entrance.y,'=');
  }
