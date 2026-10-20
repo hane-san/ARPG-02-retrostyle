@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {mkdirSync} from 'node:fs';
 import {checkJourneyFoley} from './journey-foley-browser.mjs';
+import {checkLayout} from './layout-browser.mjs';
 import {chromium} from 'playwright';
 import {checkJourney} from './journey-browser.mjs';
 import {checkCameraInput} from './camera-browser.mjs';
@@ -98,6 +99,7 @@ async function main(){
  assert.equal(await landscape.evaluate(()=>[...document.querySelectorAll('.nav-btn,.dock button')]
   .filter(b=>{const r=b.getBoundingClientRect();return r.width<44||r.height<44;}).length),0,'landscape controls must keep 44px touch targets');
  await landscape.close();
+ await checkLayout(browser,origin);
  console.log('Browser smoke passed: default mobile exploration, 68 tracks, mainland bridge, compact two-zone walk.');
 }
 try{await main();}

@@ -5,3 +5,10 @@
 /* Phone comfort: keep header/dock controls at least 44px and labels on one line. */
 @media(max-width:560px){.nav-btn{min-height:44px;min-width:44px;white-space:nowrap}.brand-mark{flex:none}.brand>div{min-width:0}.brand small{overflow:hidden;text-overflow:ellipsis}.dock button{min-width:44px;min-height:44px}}
 @media(max-height:560px){.nav-btn,.dock button{min-height:44px;min-width:44px}}
+/* Tablets and desktops keep the same 44px header/dock controls (Issue #37). */
+.nav-btn,.dock button{min-height:44px;min-width:44px}
+/* Panels keep the overlay's 15px gutter on both sides, down to 320px phones. */
+body:not(.journey-mode) .sheet{max-width:calc(100vw - 30px)}
+/* Small quiet controls keep their look; an invisible margin widens the tap area past 44px. */
+.close,.dialogue-top button,.dialogue>button,.pill-toggle,.vista-heading button{position:relative}
+.close::after,.dialogue-top button::after,.dialogue>button::after,.pill-toggle::after,.vista-heading button::after{content:"";position:absolute;inset:-7px -4px}

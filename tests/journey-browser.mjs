@@ -17,10 +17,16 @@ export async function checkJourney(page,origin){
    createBufferSource(){const source=super.createBufferSource();const start=source.start.bind(source);source.start=(...args)=>{probe.footfalls++;return start(...args);};return source;}
   };
   window.journeyVistaDraws=0;
-  const scale=CanvasRenderingContext2D.prototype.scale;
+  const scale=CanvasRenderingContext2D.prototype.scale,translate=CanvasRenderingContext2D.prototype.translate;
+  let cameraNext=false;
   CanvasRenderingContext2D.prototype.scale=function(x,y){
-   if(this.canvas.id==='worldCanvas')window.journeyRenderZoom=x;
+   if(this.canvas.id==='worldCanvas'){window.journeyRenderZoom=x;cameraNext=true;}
    return scale.call(this,x,y);
+  };
+  // The translate right after the zoom is the painted camera centre.
+  CanvasRenderingContext2D.prototype.translate=function(x,y){
+   if(cameraNext&&this.canvas.id==='worldCanvas'){window.journeyRenderCamera={x:-x,y:-y};cameraNext=false;}
+   return translate.call(this,x,y);
   };
   const draw=CanvasRenderingContext2D.prototype.drawImage;
   CanvasRenderingContext2D.prototype.drawImage=function(...args){
@@ -55,6 +61,15 @@ export async function checkJourney(page,origin){
    return {x:(minX+maxX)/2/canvas.width*112-.5,y:(minY+maxY)/2/canvas.height*88-.5};
   });
  }
+ // 自分へ glides back instead of jumping; taps relative to the centre wait until it rests.
+ async function returnHome(){
+  await page.evaluate(()=>{window.journeyCameraSample=null;});
+  await page.locator('#homeBtn').click();
+  await page.waitForFunction(()=>{
+   const now=window.journeyRenderCamera,before=window.journeyCameraSample;window.journeyCameraSample=now&&{...now};
+   return before&&now&&Math.hypot(now.x-before.x,now.y-before.y)<.25;
+  },null,{polling:150,timeout:5000});
+ }
  async function mapClick(x,y){
   await page.locator('#mapBtn').click();
   const box=await page.locator('#miniMap').boundingBox();
@@ -74,7 +89,7 @@ export async function checkJourney(page,origin){
   const actual=await mapPosition();
   assert.ok(Math.hypot(actual.x-target.x,actual.y-target.y)<1,'atlas position '+JSON.stringify({target,actual}));
   await page.locator('#mapPanel [data-close]').click();
-  await page.locator('#homeBtn').click();
+  await returnHome();
   if(shot)await page.screenshot({path:'test-results/'+shot+'.png'});
   console.log('Journey walked to',name||`${x},${y}`);
  }
@@ -160,7 +175,7 @@ export async function checkJourney(page,origin){
  await page.locator('#musicPanel [data-close]').click();
 
  // Field tap: approach an NPC at the edge of the quay, then converse.
- await page.locator('#homeBtn').click();
+ await returnHome();
  const field=await page.locator('#worldCanvas').boundingBox();
  await page.mouse.click(field.x+field.width/2-32*1.5,field.y+field.height/2+6*32*1.5);
  await page.waitForSelector('#dialogue:not(.hidden)',{timeout:10000});
@@ -170,7 +185,7 @@ export async function checkJourney(page,origin){
  assert.ok(reading.y+reading.height<arrivalY-35||reading.y>arrivalY+12,'reading card leaves the traveller and nearby NPC visible');
  await page.screenshot({path:'test-results/journey-dialogue.png'});
  await page.locator('#dialogueClose').click();
- await page.locator('#homeBtn').click();
+ await returnHome();
  const quay=await page.locator('#worldCanvas').boundingBox();
  const tapNPC=()=>page.touchscreen.tap(quay.x+quay.width/2,quay.y+quay.height/2+48);
  await tapNPC();await page.waitForTimeout(220);
