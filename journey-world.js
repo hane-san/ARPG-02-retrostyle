@@ -187,12 +187,12 @@ JOURNEY_SITES.push(...[
   "kind": "relic",
   "form": "stairs",
   "x": 72,
-  "y": 64,
+  "y": 76,
   "w": 5,
-  "h": 4,
+  "h": 3,
   "entrance": {
-   "x": 74,
-   "y": 70
+   "x": 73,
+   "y": 79
   },
   "blocking": false,
   "desc": "水面へ降りていた石段が、今は旧湖底へ続く。濡れていた段ほど明るい色をしている。",
@@ -271,12 +271,12 @@ JOURNEY_SITES.push(...[
   "name": "天秤の石門",
   "kind": "relic",
   "form": "arch",
-  "x": 65,
+  "x": 69,
   "y": 17,
   "w": 5,
   "h": 4,
   "entrance": {
-   "x": 68,
+   "x": 71,
    "y": 23
   },
   "blocking": false,
@@ -445,8 +445,8 @@ JOURNEY_NPCS.push(...[
   "id": "journey-balance-guardian",
   "name": "二本柱の番人",
   "role": "門の案内役",
-  "x": 68,
-  "y": 20,
+  "x": 70,
+  "y": 19,
   "color": "#c0b8b4",
   "lines": [
    "左右を同じにするのが公平なら、片方にしか病人がいない日はどうする？",
