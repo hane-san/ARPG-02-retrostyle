@@ -1,23 +1,25 @@
 import {limitCamera} from './camera-limits.js';
 
-// Five destination framings, not a continuously drifting zoom preference.
-export const JOURNEY_ZOOM_STAGES=Object.freeze([.8,1,1.25,1.5,1.8]);
+// Stage 1 is closest; stage 5 is the new widest landscape framing.
+// Stages 1/2 are reserved for future close views / actual interiors.
+export const JOURNEY_ZOOM_STAGES=Object.freeze([1.8,1.35,1,.8,.6]);
 export const JOURNEY_CAMERA_PROFILES=Object.freeze({
- 'journey-steppe':.8,'journey-lake':.8,'journey-sunset':.8,
- 'journey-salt':1,'journey-pass':1.25,'journey-port':1.5,
- 'journey-tea':1.8,'journey-hut':1.5
+ 'journey-detail':1.8,'journey-interior':1.35,
+ 'journey-port':1,'journey-tea':1,'journey-hut':1,
+ 'journey-road':.8,'journey-pass':.8,
+ 'journey-steppe':.6,'journey-lake':.6,'journey-salt':.6,'journey-sunset':.6
 });
-export function nearestJourneyZoom(value){
- return JOURNEY_ZOOM_STAGES.reduce((best,next)=>Math.abs(next-value)<Math.abs(best-value)?next:best);
-}
-export function stepJourneyZoom(value,direction){
- const index=JOURNEY_ZOOM_STAGES.indexOf(nearestJourneyZoom(value));
- return JOURNEY_ZOOM_STAGES[Math.max(0,Math.min(4,index+Math.sign(direction)))];
-}
 export function journeyCameraScene(world,hero){
- const hut=world.sites.find(site=>site.id==='journey-hut');
- if(hut&&Math.hypot(hero.px-hut.entrance.x,hero.py-hut.entrance.y)<=7)return 'journey-hut';
- return world.zoneAt(hero.px,hero.py).id;
+ for(const [id,radius] of [['journey-hut',7],['journey-chaikhana',8]]){
+  const site=world.sites.find(site=>site.id===id);
+  if(site&&Math.hypot(hero.px-site.entrance.x,hero.py-site.entrance.y)<=radius)
+   return id==='journey-hut'?'journey-hut':'journey-tea';
+ }
+ const scene=world.zoneAt(hero.px,hero.py).id;
+ if(scene==='journey-tea')return 'journey-road';
+ // Only the open centre is panoramic. Ordinary approach roads retain stage 4.
+ if(scene==='journey-steppe'&&Math.hypot(hero.px-36,hero.py-38)>18)return 'journey-road';
+ return scene;
 }
 export function createJourneyCamera(){
  let scene='journey-port',target=JOURNEY_CAMERA_PROFILES[scene],candidate=null,since=0,acceptedAt=0;
@@ -31,7 +33,6 @@ export function createJourneyCamera(){
    }
    return target;
   },
-  manual(value){target=nearestJourneyZoom(value);return target;},
   get target(){return target;},get scene(){return scene;}
  };
 }

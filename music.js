@@ -2,6 +2,7 @@ import {EXTRA_SCORES} from './extra-music.js';
 import {SILK_SCORES} from './silk-music.js';
 import {holdFadeAt} from './journey-sound.js';
 import {holdEnvelopeAt} from './audio-envelope.js';
+import {renderMusicLoop,createMusicLoopCache} from './music-loop.js';
 // Original map scores. No samples, downloads, quotes or melodies from other games.
 // A score has a composed A/B melody, harmony, bass and countermelody, then a varied reprise.
 const major=[0,2,4,5,7,9,11],minor=[0,2,3,5,7,8,10];
@@ -1372,15 +1373,19 @@ export function createMusic(storage){
  if(arguments.length===0)try{storage=globalThis.localStorage;}catch{}
  let enabled=false,volume=.32,context=null,master=null,bus=null,timer=null,track=null,key=null,currentSource=null,requested=null,preview=null,index=0,start=0,scheduled=0,serial=0,starts=0,busFadeStart=0;
  const voices=new Set(),retired=new Set();
+ const Offline=globalThis.OfflineAudioContext||globalThis.webkitOfflineAudioContext;
+ const loops=createMusicLoopCache((score,alive)=>renderMusicLoop(score,scheduleNote,Offline,alive));
+ let bufferSource=null,pending=null,destroyed=false,renderer=Offline?'buffer':'synth';
  try{enabled=storage?.getItem('field-command-music')==='true';const saved=storage?.getItem('field-command-music-volume');if(saved!==null&&saved!==undefined&&Number.isFinite(Number(saved)))volume=Math.max(0,Math.min(1,Number(saved)));}catch{}
  function stop(){
-  serial++;if(timer!==null){clearInterval(timer);timer=null;}const now=context?.currentTime||0;
+  serial++;pending=null;loops.cancel();if(timer!==null){clearInterval(timer);timer=null;}const now=context?.currentTime||0;
   if(bus)try{
    holdFadeAt(bus.gain,now,busFadeStart,MUSIC_TRANSITION.fade);
    bus.gain.linearRampToValueAtTime(0,now+MUSIC_TRANSITION.fade);
   }catch{}
   // All future notes are already connected to the retiring bus. Fade that bus,
   // then release its oscillators; never abruptly drop a sounding note.
+  if(bufferSource){const old=bufferSource;bufferSource=null;try{old.stop(now+MUSIC_TRANSITION.fade+.02);}catch{}}
   for(const v of voices)v.stop(now+MUSIC_TRANSITION.fade);voices.clear();
   if(bus){const old=bus;const cleanup=setTimeout(()=>{old.disconnect();retired.delete(cleanup);},700);retired.add(cleanup);}bus=null;busFadeStart=0;key=null;currentSource=null;index=0;
  }
@@ -1397,30 +1402,49 @@ export function createMusic(storage){
    try{const voice=scheduleNote(context,bus,event,Math.max(time,context.currentTime+.012),beat);voices.add(voice);const clean=voice.osc.onended;voice.osc.onended=()=>{clean();voices.delete(voice);};scheduled++;}catch{stop();return;}
   }
  }
- function activate(){
-  if(globalThis.document?.hidden||context?.state!=='running')return;
-  const target=preview||(enabled&&requested?.status==='playing'?requested:null);
-  if(!target){if(key)stop();return;}
-  const next=`${target.mapId}:${target.phase===1?'ally':'hostile'}`,source=preview?'preview':'game';
-  if(next===key&&currentSource===source)return;
-  const switching=!!bus;stop();
-  track=buildTrack(target.mapId,target.phase);key=next;currentSource=source;bus=context.createGain();
-  // Crossfade without the old 140 ms dropout that sounded like a stutter.
+ function desired(){
+  return preview||(enabled&&requested?.status==='playing'?requested:null);
+ }
+ function begin(target,next,source,buffer){
+  stop();track=buildTrack(target.mapId,target.phase);key=next;currentSource=source;
+  bus=context.createGain();
   const now=context.currentTime;
   bus.gain.setValueAtTime(0,now);bus.gain.linearRampToValueAtTime(1,now+MUSIC_TRANSITION.fade);busFadeStart=now;
-  bus.connect(master);
-  start=now+.02;
-  index=0;pump();if(key===next){starts++;timer=setInterval(pump,MUSIC_SCHEDULER.intervalMs);}
+  bus.connect(master);start=now+.02;
+  if(buffer){
+   bufferSource=context.createBufferSource();bufferSource.buffer=buffer;bufferSource.loop=true;bufferSource.connect(bus);
+   const playing=bufferSource;playing.onended=()=>playing.disconnect();playing.start(start);scheduled+=track.events.length;renderer='buffer';
+  }else{index=0;pump();if(key===next)timer=setInterval(pump,MUSIC_SCHEDULER.intervalMs);renderer='synth';}
+  if(key===next)starts++;
+ }
+ function activate(){
+  if(destroyed||globalThis.document?.hidden||context?.state!=='running')return;
+  const target=desired();
+  if(!target){if(key||pending)stop();return;}
+  const next=`${target.mapId}:${target.phase===1?'ally':'hostile'}`,source=preview?'preview':'game';
+  const request=next+':'+source;
+  if(next===key&&currentSource===source){
+   if(pending){serial++;pending=null;loops.cancel();}return;
+  }
+  if(pending===request)return;
+  if(!Offline){begin(target,next,source,null);return;}
+  // Leave the current music playing until the requested loop is ready.
+  // A stale completion after OFF / hidden / another selection cannot restart it.
+  pending=request;const token=++serial;
+  loops.get(next,buildTrack(target.mapId,target.phase)).then(buffer=>{
+   if(!buffer||destroyed||token!==serial||globalThis.document?.hidden||context?.state!=='running')return;
+   begin(target,next,source,buffer);
+  }).catch(()=>{if(token===serial&&!destroyed){pending=null;stop();}});
  }
  function unlock(){
-  if((!enabled&&!preview)||globalThis.document?.hidden)return;
+  if(destroyed||(!enabled&&!preview)||globalThis.document?.hidden)return;
   try{const Audio=globalThis.AudioContext||globalThis.webkitAudioContext;if(!Audio)return;
-   if(!context||context.state==='closed'){context=new Audio();master=context.createGain();master.gain.value=volume*.34;const limiter=context.createDynamicsCompressor();limiter.threshold.value=-18;limiter.knee.value=18;limiter.ratio.value=4;master.connect(limiter);limiter.connect(context.destination);}
+   if(!context||context.state==='closed'){context=new Audio({latencyHint:'playback'});master=context.createGain();master.gain.value=volume*.34;const limiter=context.createDynamicsCompressor();limiter.threshold.value=-18;limiter.knee.value=18;limiter.ratio.value=4;master.connect(limiter);limiter.connect(context.destination);}
    if(context.state==='running')activate();else{const token=serial;context.resume().then(()=>{if(token===serial)activate();}).catch(()=>{});}
   }catch{/* Music never blocks input or phase resolution. */}
  }
  function setScene(mapId,phase,status='playing'){
-  requested={mapId,phase,status};if(preview)return;if(status!=='playing'){if(key)stop();return;}try{if(enabled)activate();}catch{stop();}
+  requested={mapId,phase,status};if(preview)return;if(status!=='playing'){if(key||pending)stop();return;}try{if(enabled)activate();}catch{stop();}
  }
  function setEnabled(value){enabled=!!value;try{storage?.setItem('field-command-music',String(enabled));}catch{}
   if(enabled)unlock();else if(!preview)stop();return enabled;
@@ -1445,5 +1469,5 @@ export function createMusic(storage){
   }else if((enabled||preview)&&context)unlock();
  };
  globalThis.document?.addEventListener('visibilitychange',visibility);
- return {unlock,setScene,setEnabled,setVolume,playPreview,stopPreview,get enabled(){return enabled;},get volume(){return volume;},snapshot:()=>({enabled,volume,scene:key,preview:preview?`${preview.mapId}:${preview.phase===1?'ally':'hostile'}`:null,title:track?.title||null,state:context?.state||'locked',scheduled,starts,voices:voices.size}),destroy(){preview=null;stop();if(suspendTask!==null)clearTimeout(suspendTask);globalThis.document?.removeEventListener('visibilitychange',visibility);for(const t of retired)clearTimeout(t);retired.clear();if(context&&context.state!=='closed')context.close().catch(()=>{});}};
+ return {unlock,setScene,setEnabled,setVolume,playPreview,stopPreview,get enabled(){return enabled;},get volume(){return volume;},snapshot:()=>({enabled,volume,scene:key,preview:preview?`${preview.mapId}:${preview.phase===1?'ally':'hostile'}`:null,title:track?.title||null,state:context?.state||'locked',scheduled,starts,voices:voices.size,renderer,preparing:pending!==null,cachedLoops:loops.size}),destroy(){destroyed=true;preview=null;stop();loops.destroy();if(suspendTask!==null)clearTimeout(suspendTask);globalThis.document?.removeEventListener('visibilitychange',visibility);for(const t of retired)clearTimeout(t);retired.clear();if(context&&context.state!=='closed')context.close().catch(()=>{});}};
 }

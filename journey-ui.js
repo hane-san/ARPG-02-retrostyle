@@ -23,7 +23,7 @@ export function installJourneyUI(){
  const placebar=document.createElement('div');placebar.className='journey-placebar';
  placebar.append(document.querySelector('.zone-label'),document.getElementById('vistaBtn'));
  const menu=document.createElement('nav');menu.className='journey-menu';menu.setAttribute('aria-label','旅の道具');
- for(const [id,label] of [['mapBtn','地図'],['soundBtn','音楽'],['homeBtn','自分へ'],['zoomOut',null],['zoomIn',null],['helpBtn','手引き']]){
+ for(const [id,label] of [['mapBtn','地図'],['soundBtn','音楽'],['homeBtn','自分へ'],['helpBtn','手引き']]){
   const button=document.getElementById(id);button.classList.add('journey-tool');
   if(label){const text=document.createElement('span');text.textContent=label;button.replaceChildren(icon(id),text);}
   const panel={mapBtn:'mapPanel',soundBtn:'musicPanel',helpBtn:'helpPanel'}[id];
