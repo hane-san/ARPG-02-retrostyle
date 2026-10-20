@@ -36,7 +36,7 @@ export async function checkJourney(page,origin){
  });
  const response=await page.goto(origin+'/',{waitUntil:'load'});
  assert.ok(response?.ok());
- await page.waitForFunction(()=>document.querySelector('#discovered')?.textContent==='0 / 6');
+ await page.waitForFunction(()=>document.querySelector('#discovered')?.textContent==='0 / 22');
  assert.equal(await page.locator('#worldTitle').textContent(),'小さく壮大な旅');
  assert.equal(await page.title(),'潮環群島 × 星風回廊 — TIDAL ATLAS');
  assert.equal(await page.locator('#zoneName').textContent(),'白い船着場');
@@ -200,7 +200,7 @@ export async function checkJourney(page,origin){
  assert.ok(await page.locator('#dialogue').isHidden(),'walking keys dismiss the reading card');
  await page.waitForFunction(()=>document.querySelector('#worldCanvas').getAttribute('aria-busy')==='false');
  await walk(12,71,{name:'白い連絡舎',arrival:{x:12,y:75}});
- assert.equal(await page.locator('#discovered').textContent(),'1 / 6');
+ assert.equal(await page.locator('#discovered').textContent(),'1 / 22');
 
  // Redirect before arrival; wheel cannot change the authored framing.
  await mapClick(36,38);
@@ -237,7 +237,7 @@ export async function checkJourney(page,origin){
  await walk(14,38);await walk(36,60);
  await walk(46,65,{name:'水路の茶屋',arrival:{x:46,y:69}});
  await page.waitForFunction(()=>Math.abs(window.journeyRenderZoom-1)<.002,null,{timeout:9000});
- assert.equal(await page.locator('#discovered').textContent(),'6 / 6');
+ assert.equal(await page.locator('#discovered').textContent(),'6 / 22');
  await walk(19,70);
  assert.equal(await page.locator('#zoneName').textContent(),'白い船着場');
  assert.ok(await page.evaluate(()=>window.journeyAudioProbe.contexts.length<=2),'music and SFX contexts are reused for the entire loop');
@@ -257,7 +257,7 @@ export async function checkJourney(page,origin){
  assert.ok(keys.length>0&&keys.every(key=>key.startsWith('tidal-atlas:')));
  await page.goto(origin+'/?prototype=1&journey=1');
  await page.waitForFunction(()=>document.querySelector('#worldTitle').textContent==='小さく壮大な旅');
- assert.equal(await page.locator('#discovered').textContent(),'0 / 6','mode flags have explicit precedence, with no game-save added');
+ assert.equal(await page.locator('#discovered').textContent(),'0 / 22','mode flags have explicit precedence, with no game-save added');
  await page.locator('#soundBtn').click();
  assert.equal(await page.locator('#sfxVolumeRange').inputValue(),'27','foley volume persists separately from music');
  await page.locator('#soundBtn').click();
@@ -285,5 +285,5 @@ export async function checkJourney(page,origin){
   await page.keyboard.press('Escape');
   assert.equal(await page.evaluate(()=>document.activeElement.id),'soundBtn','closing a sheet restores focus to its tool');
  }
- console.log('Journey browser passed: real-time loop, six sites, NPC, redirection, music, three vistas, mode links and persistent settings.');
+ console.log('Journey browser passed: real-time loop, six original sites plus sixteen optional relic sites, NPC, redirection, music, three vistas, mode links and persistent settings.');
 }

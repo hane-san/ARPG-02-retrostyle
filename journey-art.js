@@ -76,6 +76,71 @@ export function drawJourneyTile(c,x,y,t,world){
  }
 }
 
+
+function drawJourneyRelic(c,s,x,y,w,h,cx,time){
+ // Readable stepped silhouettes: a new culture built inside the old geometry.
+ const edge='#607782',face='#9aa9a2',pale='#d8d8c2',ochre='#c8ad8e';
+ const beam=(xx,yy,ww,hh,color)=>rect(c,xx,yy,ww,hh,color);
+ const lo=y+h-23;
+ const base=()=>{poly(c,[[x+6,lo],[x+w-9,lo],[x+w-1,lo+11],[x+10,lo+13]],'#b8b9a6');beam(x+10,lo+2,w-25,3,pale);};
+ const arch=()=>{
+  base();beam(x+19,y+24,13,h-45,face);beam(x+w-32,y+24,13,h-45,face);
+  beam(x+15,y+16,w-29,17,edge);beam(x+18,y+16,w-35,5,pale);
+  beam(x+32,y+39,w-64,3,'#6d8586');
+  for(let i=1;i<5;i++)beam(x+32+i*(w-64)/5,y+42+i*7,2,h-73-i*7,'#bfbdab');
+ };
+ const form=s.form;
+ if(form==='boat'){
+  base();poly(c,[[x+12,y+h*.45],[x+w-11,y+h*.45],[x+w-35,y+h*.78],[x+31,y+h*.78]],'#927f77');
+  beam(x+33,y+h*.45,w-70,7,'#d0b7a0');beam(cx-3,y+10,6,h*.46,'#877e70');
+  poly(c,[[cx+3,y+16],[cx+w*.18,y+h*.42],[cx+3,y+h*.38]],'#e5d5bb');
+  for(let i=0;i<4;i++)beam(x+28+i*20,y+h*.53,7,3,'#ead5a8');
+ }else if(form==='marker'){
+  base();for(let i=0;i<4;i++){const xx=x+26+i*(w-50)/4,yy=y+24+(i%2)*14;
+   beam(xx,yy,9,lo-yy+1,i%2?face:edge);beam(xx-2,yy,13,4,pale);}
+ }else if(form==='arch'){
+  arch();
+ }else if(form==='watch'){
+  base();beam(x+32,y+34,6,h-54,edge);beam(x+w-42,y+34,6,h-54,edge);
+  beam(x+20,y+42,w-40,11,ochre);poly(c,[[x+15,y+39],[cx,y+8],[x+w-14,y+39]],'#899d99');
+  beam(cx+9,y+47,21,19,'#566977');
+ }else if(form==='disc'){
+  base();const cy=y+h*.51,rx=Math.min(w*.37,98),ry=Math.min(h*.24,44);
+  c.save();c.lineWidth=7;c.strokeStyle='#aab9b3';c.beginPath();c.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);c.stroke();
+  c.strokeStyle=edge;c.lineWidth=3;c.beginPath();c.ellipse(cx,cy,rx*.61,ry*.56,0,0,Math.PI*2);c.stroke();
+  beam(cx-4,cy-4,8,8,'#f5d6a4');
+  for(let i=0;i<8;i++){const a=i*Math.PI/4;beam(cx+Math.cos(a)*rx*.79-2,cy+Math.sin(a)*ry*.77-2,4,4,pale);}c.restore();
+ }else if(form==='garden'){
+  base();for(let j=0;j<4;j++){const xx=x+24+j*(w-55)/4;beam(xx,y+38,13,h-68,'#8ea995');
+   for(let k=0;k<3;k++){beam(xx-5+k*8,y+48+k*18,12,6,k%2?'#b7c9a4':'#d6ceaa');}}
+  beam(x+16,y+18,w-32,3,'#c2b6a5');for(let i=0;i<8;i++)beam(x+20+i*(w-45)/8,y+18,2,h-44,'#c7c9b74a');
+ }else if(form==='market'){
+  base();for(let i=0;i<3;i++){const xx=x+12+i*(w-24)/3;
+   beam(xx+4,y+45,4,h-68,edge);beam(xx+4+(w-28)/3-7,y+45,4,h-68,edge);
+   poly(c,[[xx,y+45],[xx+(w-24)/6,y+19+(i%2)*5],[xx+(w-24)/3,y+45]],i%2?'#cfb9a4':'#9fbbb5');
+   beam(xx+10,y+h*.6,18,12,ochre);
+  }
+ }else if(form==='stairs'){
+  base();for(let i=0;i<6;i++){const inset=i*6;beam(x+16+inset,y+19+i*18,w-32-inset*2,10,i%2?'#bdc3b5':'#889a9a');beam(x+18+inset,y+29+i*18,w-36-inset*2,3,pale);}
+ }else if(form==='well'){
+  base();beam(cx-7,y+19,5,h*.37,edge);beam(cx+27,y+19,5,h*.37,edge);
+  beam(cx-15,y+17,55,7,ochre);
+  c.fillStyle=edge;c.beginPath();c.ellipse(cx+10,y+h*.68,45,24,0,0,Math.PI*2);c.fill();
+  c.fillStyle='#8fb2ae';c.beginPath();c.ellipse(cx+10,y+h*.65,31,13,0,0,Math.PI*2);c.fill();
+  beam(cx-4,y+h*.36,7,21,'#c4ae8b');
+ }else if(form==='wall'){
+  base();poly(c,[[x+10,y+h*.78],[x+20,y+12],[x+w-28,y+4],[x+w-9,y+h*.78]],edge);
+  poly(c,[[x+20,y+12],[x+w*.54,y+9],[x+w*.5,y+h*.77],[x+10,y+h*.78]],face);
+  beam(x+24,y+12,w-56,4,'#d6d9c3');
+  for(let i=1;i<10;i++)beam(x+25+i*(w-65)/10,y+34+(i%3)*5,2,h*.48,i%2?'#a6b2aa':'#74898b');
+  beam(x+30,y+h*.61,15,18,'#5c707c');
+ }
+ // Small, restrained living details soften the relic without becoming neon signs.
+ if(['market','garden','boat','well'].includes(form)){
+  beam(x+16,lo-4,3,11,'#817f76');beam(x+13,lo-6,9,3,'#e5bc91');
+ }
+}
+
 export function drawJourneySite(c,s,time){
  const x=s.x*32,y=s.y*32,w=s.w*32,h=s.h*32,cx=x+w/2;
  c.save();
@@ -123,6 +188,8 @@ export function drawJourneySite(c,s,time){
   rect(c,x+35,y+66,26,21,'#dfe2c2');rect(c,cx+16,y+62,23,48,'#678994');
   rect(c,x+w-38,y+65,4,46,'#8c8e79');
   for(let i=0;i<4;i++)rect(c,x+20+i*20,y+h-18,14,2,'#8b9b8a');
+ }else if(s.kind==='relic'){
+  drawJourneyRelic(c,s,x,y,w,h,cx,time);
  }else if(s.kind==='terrace'){
   for(let i=0;i<3;i++)rect(c,x+i*7,y+i*15,w-i*14,13,'#d5d4bf');
   rect(c,x+12,y+9,w-24,2,'#f4e5c5');

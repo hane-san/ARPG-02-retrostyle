@@ -7,6 +7,16 @@ const palettes={
  highland:{sky:['#7899b0','#a5bdc8','#d7daca','#ede2bd'],cloud:'#eee7d4',cloudShade:'#c9d3d2',far:'#b8c4c8',middle:'#94a9b4',near:'#738e9d',water:'#91b5b4'},
  sunset:{sky:['#7c8aa9','#b5a2b9','#e3b3bc','#f2d6bc'],cloud:'#f2c8c4',cloudShade:'#baa4ba',far:'#b2a8bc',middle:'#9298af',near:'#788d9e',water:'#8fabae'}
 };
+
+Object.assign(palettes,{
+ fleet:{sky:['#789fb2','#b0c5c7','#d6d9ca','#f2dfb6'],cloud:'#f0e8d4',cloudShade:'#b5c4c7',water:'#8db8ba'},
+ pilgrim:{sky:['#8ba9b4','#c2cec7','#e2dfc9','#f0dfb5'],cloud:'#f4ead5',cloudShade:'#c1ccc5'},
+ geometric:{sky:['#849da8','#b7c6c7','#dedfce','#f0e1be'],cloud:'#f1e8d6',cloudShade:'#b8c5c4'},
+ settlement:{sky:['#819eaa','#bbc7c3','#dbd7c4','#ead6b7'],cloud:'#f4e5cf',cloudShade:'#a9bdb7'},
+ wall:{sky:['#7799ac','#a4b9bd','#d2d8ce','#eadfca'],cloud:'#ebeadb',cloudShade:'#b7c0bd'},
+ basin:{sky:['#8ea3b1','#bfcbc6','#e3dfcf','#f2ddbb'],cloud:'#f6ead4',cloudShade:'#bdc8c4'}
+});
+
 const noise=(i,seed=0)=>{let n=Math.imul(i+79,374761393)^Math.imul(seed+31,668265263);n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967295;};
 function rect(c,x,y,w,h,color){c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));}
 function polygon(c,points,color){c.fillStyle=color;c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(Math.round(x),Math.round(y)):c.moveTo(Math.round(x),Math.round(y)));c.closePath();c.fill();}
@@ -136,12 +146,82 @@ function foreground(c,kind){
  if(!high){rect(c,191,98,2,1,sunset?'#9a91a2':'#a6b8b7');rect(c,194,98,2,1,sunset?'#9a91a2':'#a6b8b7');rect(c,193,99,1,1,sunset?'#9a91a2':'#a6b8b7');}
 }
 
+
+function drawFutureRelicVista(c,kind){
+ const sand='#dcd9c8',shade='#b6bcb1',deep='#5b7580',soft='#8fa6a2',bright='#efddbf';
+ rect(c,0,174,WIDTH,HEIGHT-174,kind==='fleet'?'#91b4b5':sand);
+ polygon(c,[[0,176],[60,164],[103,169],[161,153],[220,163],[298,152],[367,164],[426,155],[480,162],[480,190],[0,188]],'#aebdb4');
+ if(kind==='fleet'){
+  rect(c,0,176,480,76,'#83aeb1');rect(c,0,181,480,2,'#c7d5c5');
+  polygon(c,[[55,202],[187,202],[166,235],[79,234]],'#927f78');
+  rect(c,104,125,5,79,'#7f827d');polygon(c,[[110,129],[175,199],[110,196]],'#e8dcc5');
+  polygon(c,[[235,192],[342,192],[323,220],[257,220]],'#a0877a');
+  rect(c,278,139,4,55,'#778d8c');polygon(c,[[282,145],[323,190],[282,190]],'#e4d0b0');
+  for(let i=0;i<5;i++){rect(c,65+i*23,206,12,3,'#c1aa94');rect(c,13+i*101,180+i%2*14,46,1,'#dae0ce');}
+  rect(c,207,151,8,51,'#8c9487');rect(c,205,151,13,5,'#efdaa7');rect(c,209,154,5,6,'#ffe8ac');
+  polygon(c,[[0,235],[40,223],[146,229],[171,252],[0,252]],'#bdc5b0');
+ }else if(kind==='pilgrim'){
+  polygon(c,[[0,206],[72,192],[162,180],[302,183],[428,188],[480,184],[480,252],[0,252]],'#a9bf9d');
+  // The path goes under a gate which once felt impossible to pass.
+  polygon(c,[[139,195],[154,87],[173,89],[162,197]],deep);
+  polygon(c,[[294,194],[286,86],[305,84],[318,192]],deep);
+  polygon(c,[[145,100],[151,76],[305,76],[307,96]],'#789092');
+  rect(c,155,79,145,5,'#cfd3bf');rect(c,167,97,9,76,'#acb7ac');
+  polygon(c,[[220,182],[239,177],[271,180],[267,184],[229,185]],'#e6d5b5');
+  rect(c,246,166,3,14,'#6c7d7d');rect(c,242,165,9,4,'#d6c5a9');
+  polygon(c,[[171,252],[206,210],[248,186],[257,187],[229,215],[216,252]],'#dfcba9');
+ }else if(kind==='geometric'){
+  polygon(c,[[0,197],[480,190],[480,252],[0,252]],'#e6e0d0');
+  // An exposed system of concentric rings dwarfing the roadside shrine.
+  c.save();c.lineWidth=7;c.strokeStyle='#a7b7b1';
+  for(let i=0;i<5;i++){c.beginPath();c.ellipse(259,234,53+i*49,14+i*13,0,Math.PI,Math.PI*2);c.stroke();}
+  c.restore();
+  polygon(c,[[199,171],[211,51],[255,43],[268,169]],deep);
+  polygon(c,[[199,171],[211,51],[233,46],[230,173]],'#91aaa6');
+  polygon(c,[[319,170],[327,107],[346,108],[350,172]],'#728d94');
+  rect(c,208,57,23,3,'#e5e1cd');rect(c,332,117,9,2,'#bdc9bf');
+  for(let i=0;i<6;i++)rect(c,90+i*52,195+(i%3)*7,12,3,shade);
+ }else if(kind==='settlement'){
+  polygon(c,[[30,193],[47,49],[316,45],[354,194]],deep);
+  polygon(c,[[47,49],[146,45],[160,193],[30,193]],'#8fa6a2');
+  rect(c,66,58,256,3,'#d7d8c4');
+  for(let i=0;i<9;i++)rect(c,78+i*27,86+(i%2)*12,2,83,'#bac7b5');
+  // Houses and washing lines bring human scale under the impossible wall.
+  for(let i=0;i<5;i++){const xx=24+i*94,yy=198+i%2*7;
+   rect(c,xx,yy-13,69,38,i%2?'#b4b7a7':'#c5bda7');
+   polygon(c,[[xx-6,yy-13],[xx+33,yy-36],[xx+74,yy-13]],i%2?'#d2a9a0':'#9daaa4');
+   rect(c,xx+17,yy+3,13,20,'#718f91');
+   rect(c,xx+45,yy-6,12,8,bright);}
+  rect(c,170,188,3,33,'#7e8882');rect(c,270,183,3,34,'#7e8882');
+  rect(c,173,185,97,2,'#e4cba7');
+  for(let i=0;i<7;i++)rect(c,183+i*12,185,7,9,i%2?'#c2caa9':'#d0b6a3');
+ }else if(kind==='wall'){
+  polygon(c,[[96,194],[111,21],[480,16],[480,208]],'#64808a');
+  polygon(c,[[111,21],[268,17],[277,200],[96,194]],'#8fa6a3');
+  rect(c,119,29,350,5,'#d5d7c4');
+  for(let i=0;i<13;i++){const xx=138+i*26;rect(c,xx,60+(i%3)*4,2,125,'#a8b9ae');rect(c,xx+8,81+(i%4)*6,13,2,'#c1c7b8');}
+  polygon(c,[[0,199],[150,204],[250,196],[480,208],[480,252],[0,252]],'#d8d7c6');
+  rect(c,45,211,3,13,'#4b6570');rect(c,42,209,10,5,'#c5bca4');
+  polygon(c,[[0,252],[42,226],[96,216],[151,220],[140,252]],'#e6d8b8');
+ }else if(kind==='basin'){
+  polygon(c,[[0,193],[480,188],[480,252],[0,252]],'#e8e0cf');
+  for(let i=0;i<13;i++){const xx=i*47;rect(c,xx,201+(i%4)*10,53,2,i%2?'#c0c3b6':'#f0e8d3');}
+  polygon(c,[[58,178],[217,180],[191,216],[93,215]],'#a18b80');
+  rect(c,125,116,5,64,'#787d7b');polygon(c,[[130,124],[188,177],[130,176]],'#e5d6bd');
+  rect(c,332,136,13,64,deep);rect(c,320,135,37,6,'#b6bbae');rect(c,327,145,2,39,bright);
+  polygon(c,[[254,233],[279,209],[294,207],[311,223],[319,241]],'#b8b6a5');
+  rect(c,288,204,9,23,'#778c8c');rect(c,278,204,31,4,'#d1c2ae');
+ }
+ // One minuscule traveller anchors the otherwise inhuman scale.
+ if(kind!=='pilgrim'){rect(c,413,211,4,5,'#edd3b0');rect(c,412,217,7,12,'#526d75');rect(c,412,229,2,5,'#42545c');rect(c,417,229,2,5,'#42545c');}
+}
+
 function buildScene(kind){
  const p=palettes[kind],sky=surface(),land=surface();
  paintSky(sky.getContext('2d'),kind,p);
- const c=land.getContext('2d');distantRidges(c,kind,p);
- if(kind==='steppe')steppeGround(c,p);else lakeGround(c,kind,p);
- foreground(c,kind);
+ const c=land.getContext('2d');
+ if(['fleet','pilgrim','geometric','settlement','wall','basin'].includes(kind))drawFutureRelicVista(c,kind);
+ else {distantRidges(c,kind,p);if(kind==='steppe')steppeGround(c,p);else lakeGround(c,kind,p);foreground(c,kind);}
  return{sky,land};
 }
 
@@ -157,7 +237,7 @@ function clouds(c,kind,time){
 }
 
 function waterLight(c,kind,time){
- if(kind==='steppe')return;
+ if(kind!=='highland'&&kind!=='sunset')return;
  const sunset=kind==='sunset',phase=time/9500;
  // Every stroke stays on open water; none passes over the bank or traveller.
  for(let i=0;i<28;i++){
