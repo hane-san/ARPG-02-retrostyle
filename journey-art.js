@@ -155,55 +155,5 @@ export function drawJourneyAtmosphere(c,{left,right,top,bottom},time){
  }
 }
 
-// Optional pixel panorama: a near horizon, layers of distance, and a very small
-// traveller. It is a place to look from, not a cutscene or a second game world.
-export function drawJourneyPanorama(canvas,kind){
- const c=canvas.getContext('2d');canvas.width=480;canvas.height=252;
- const sunset=kind==='sunset',high=kind==='highland';
- const bands=sunset?[[104,126,154],[150,143,173],[224,172,174],[249,216,174]]:[[139,169,186],[175,197,202],[212,219,204],[239,224,193]];
- const skyColour=y=>{
-  const at=Math.min(2.999,y/55),i=Math.floor(at),f=at-i;
-  return `rgb(${bands[i].map((v,j)=>Math.round(v+(bands[i+1][j]-v)*f)).join(',')})`;
- };
- for(let y=0;y<164;y+=3)rect(c,0,y,480,3,skyColour(y));
- // High, stretched clouds and a few thin gaps in the glowing haze.
- for(const [xx,yy,ww] of [[-18,42,123],[55,47,62],[186,64,143],[213,69,74],[368,28,135],[391,32,57]]){
-  rect(c,xx,yy,ww,2,sunset?'#c6b0bc55':'#e1dfcf55');
- }
- if(sunset){
-  for(let i=3;i>=0;i--){c.fillStyle=['#ffedbd','#ffe2ae40','#ffe0b025','#fddab317'][i];c.beginPath();c.arc(348,116,35+i*14,0,Math.PI*2);c.fill();}
-  rect(c,272,90,154,3,'#f7d8bd');rect(c,302,98,112,2,'#f2c7b5');
- }
- const mountains=(base,amplitude,colour,seed)=>{
-  const pts=[[0,252],[0,base]];
-  for(let x=0;x<=488;x+=5){const h=Math.sin(x*.013+seed)*.4+Math.sin(x*.041+seed*2)*.22+Math.sin(x*.079+seed)*.15;pts.push([x,base-amplitude*(.5+h)]);}
-  pts.push([488,252]);poly(c,pts,colour);
- };
- mountains(159,high?61:48,sunset?'#a39aa9':'#afbec0',2);
- mountains(177,high?50:31,sunset?'#858a9b':'#94abae',4);
- mountains(183,28,sunset?'#6d8090':'#7e9e9f',7);
- if(kind!=='steppe'){
-  rect(c,0,182,480,70,sunset?'#a8a3a1':'#9ab9b7');
-  for(let i=0;i<36;i++){
-   const yy=184+i*1.6,span=12+i*1.8,x=348-span/2+(n(i,4)-.5)*38;
-   if(sunset)rect(c,x,yy,span,1,i%3?'#efd2b0':'#f8dfb4');
-   const xx=n(i,7)*480;rect(c,xx,yy,5+n(i,9)*18,1,sunset?'#c3b7aa':'#b7cec4');
-  }
- }else{
-  rect(c,0,181,480,71,'#b9c5a0');
-  poly(c,[[0,215],[132,185],[297,197],[480,184],[480,252],[0,252]],'#9eb596');
-  poly(c,[[95,252],[210,195],[254,191],[126,252]],'#d9cfac');
- }
- // The same distant form seen before approaching its actual footprint on foot.
- if(!sunset){
-  const mx=high?119:316,my=high?111:139,mh=high?57:37;
-  poly(c,[[mx,my+mh],[mx-2,my],[mx+9,my-4],[mx+15,my],[mx+14,my+mh]],'#697d83');
-  rect(c,mx,my,3,mh,'#91a09b');
- }
- poly(c,[[0,213],[42,209],[81,223],[128,226],[173,252],[0,252]],sunset?'#536d76':'#718b7e');
- poly(c,[[388,252],[417,225],[480,218],[480,252]],sunset?'#607782':'#849a89');
- // Nine pixels tall against a sky that does not care who is looking at it.
- rect(c,69,213,3,4,'#e6cfac');rect(c,67,217,7,7,'#395e70');
- rect(c,65,217,8,2,'#b5d7d5');rect(c,67,224,2,4,'#314d5e');rect(c,72,224,2,4,'#314d5e');
- for(let i=0;i<14;i++)rect(c,9+i*7,232+n(i,3)*15,1,4,'#b5c1a5');
-}
+// Scenic compositions are isolated from terrain rendering.
+export {drawJourneyPanorama} from './journey-panorama.js';
