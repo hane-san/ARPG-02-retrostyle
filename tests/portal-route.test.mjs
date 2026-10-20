@@ -42,9 +42,12 @@ test('every portal is still reachable when it is the chosen destination',()=>{
 });
 test('named destinations are walked to without passing a portal and without detours',()=>{
  for(const [id,world,pathfind,start] of cases){
-  const goals=[...world.sites.map(s=>s.entrance),...world.npcs.map(n=>({x:n.x,y:n.y})),
+  const people=world.npcs.map(n=>({x:n.x,y:n.y})),entrances=world.sites.map(s=>s.entrance);
+  const goals=[...entrances,...people,
    ...world.bridges.map(b=>b.center),...world.zones.map(z=>nearestWalkable(world,z.cx,z.cy,12))].filter(Boolean);
-  const origins=id==='tidal'?[start,{x:156,y:38},...world.sites.map(s=>s.entrance)]:[start];
+  // Start, every arrival from the other world, every entrance and every villager.
+  const arrivals=cases.flatMap(([,other])=>other.transitions).filter(t=>t.target===id).map(t=>t.spawn);
+  const origins=[start,...arrivals,...entrances,...people];
   for(const from of origins)for(const goal of goals){
    const plain=pathfind(world,from,goal),route=pathfind(avoidTransitions(world,goal),from,goal);
    assert.equal(!!route,!!plain,id+' reachability changed for '+JSON.stringify(goal));
