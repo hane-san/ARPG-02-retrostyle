@@ -94,7 +94,8 @@ function confineCamera(x=camera.x,y=camera.y,margin=.65){
   {width:screen.w,height:screen.h,zoom:camera.zoom},{width:W*TILE,height:H*TILE,tile:TILE},margin);
  camera.x=bounded.x;camera.y=bounded.y;
 }
-function centerCamera(){panTarget=null;confineCamera((hero.px+.5)*TILE,(hero.py+.5)*TILE);}
+// Glide back with the drag easing; a one-frame jump of a whole screen loses the traveller.
+function centerCamera(){panTarget={x:(hero.px+.5)*TILE,y:(hero.py+.5)*TILE};}
 const hash=(x,y)=>{let n=Math.imul(x+23,374761393)+Math.imul(y+51,668265263);n=Math.imul(n^(n>>>13),1274126177);return ((n^(n>>>16))>>>0)/4294967295;};
 const rect=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h);};
 function line(c,points,color,width=2){
@@ -102,11 +103,14 @@ function line(c,points,color,width=2){
  points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();
 }
 function toast(message){
- // Narrow screens: drop the notice below the location card instead of covering it.
- const label=document.querySelector('.zone-label'),below=!JOURNEY_MODE&&label?.parentElement===stage&&stage.clientWidth<=560;
- $('toast').style.top=below?(label.offsetTop+label.offsetHeight+8)+'px':'';
- $('toast').textContent=message;$('toast').classList.add('show');
- clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>$('toast').classList.remove('show'),2300);
+ const notice=$('toast'),label=document.querySelector('.zone-label');
+ notice.textContent=message;notice.style.top='';
+ // Drop the notice below the location card whenever the centred notice would cover it.
+ const covers=!JOURNEY_MODE&&label?.parentElement===stage&&
+  (stage.clientWidth-notice.offsetWidth)/2<label.offsetLeft+label.offsetWidth+8;
+ if(covers)notice.style.top=(label.offsetTop+label.offsetHeight+8)+'px';
+ notice.classList.add('show');
+ clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>notice.classList.remove('show'),2300);
 }
 function resize(){
  const r=stage.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1);
