@@ -5,6 +5,7 @@ import {spawn} from 'node:child_process';
 import {mkdirSync} from 'node:fs';
 import {chromium} from 'playwright';
 import {checkJourney} from './journey-browser.mjs';
+import {checkCameraInput} from './camera-browser.mjs';
 
 const origin='http://127.0.0.1:4173';
 const server=spawn('python3',['-m','http.server','4173','--bind','127.0.0.1'],{
@@ -22,7 +23,7 @@ async function awaitServer(){
 }
 async function main(){
  await awaitServer();
- browser=await chromium.launch({headless:true});
+ browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE,args:['--no-sandbox','--disable-dev-shm-usage']}: {})});
  page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,
   isMobile:true,hasTouch:true});
  page.on('pageerror',e=>errors.push(e.message));
@@ -73,6 +74,7 @@ async function main(){
  await page.locator('#helpBtn').click();
  assert.ok(await page.getByRole('link',{name:'広い世界を遊ぶ（通常版）'}).isVisible());
  await page.locator('#helpPanel [data-close]').click();
+ await checkCameraInput(page,origin);
  await checkJourney(page,origin);
  if(errors.length)throw new Error('JavaScript browser errors: '+errors.join(' | '));
  console.log('Browser smoke passed: default mobile exploration, 68 tracks, mainland bridge, compact two-zone walk.');

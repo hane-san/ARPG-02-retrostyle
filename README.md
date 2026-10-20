@@ -51,7 +51,7 @@ Node.js 22+。GitHub ActionsはPRとmain更新時に、地形・各地区の到�
 
 ## 構成
 
-新しい独立試遊版：`npm run dev` の後、**http://localhost:4173/?journey=1**。112×88の地図に円形草原、大湖、塩原、巨大な石、夕景、少数の暮らしを再構成しています。通常版・台場ミニ版は維持。未マージの間は公開Pagesへ反映されません。仕様・試遊ルート・検証範囲は [JOURNEY](docs/JOURNEY.md)。
+独立試遊版：[草原と湖の旅を遊ぶ](https://hane-san.github.io/ARPG-02-retrostyle/?journey=1)。PR #15はmainへ統合済み（`14ea85b3fdceb6a730e1da462816f10d0e96275d`）。112×88の地図に円形草原、大湖、塩原、巨大な石、夕景、少数の暮らしを再構成しています。通常版・台場ミニ版は維持。ローカルは `npm run dev` の後 `http://localhost:4173/?journey=1`。仕様・試遊ルート・検証範囲は [JOURNEY](docs/JOURNEY.md)、最新の受渡しは [CLAUDE-HANDOFF](docs/CLAUDE-HANDOFF.md)。
 
 - `index.html` / `style.css`: UI
 - `world.js`: ４地区の地形、橋、施設、NPC、A*経路探索
