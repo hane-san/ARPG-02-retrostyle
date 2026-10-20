@@ -1,0 +1,68 @@
+/* A quiet field above, a small traveller's desk below. Opt-in mode only. */
+.journey-mode{--journey-paper:#eee9da;--journey-ink:#3d5c64;--journey-line:#bac4b6;--journey-dock-height:104px;background:var(--journey-paper);color:var(--journey-ink)}
+.journey-mode .topbar,.journey-mode .compass,.journey-mode .map-hint,.journey-mode .discover,.journey-mode .dock-tools{display:none}
+.journey-mode .dock{position:relative;z-index:12;min-height:0;flex-direction:column;gap:3px;padding:7px max(12px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));background:var(--journey-paper);border-top:1px solid var(--journey-line);box-shadow:0 -4px 18px #4b655b12}
+.journey-placebar{display:flex;align-items:center;justify-content:space-between;gap:8px;width:min(100%,540px);min-height:28px}
+.journey-mode .zone-label{position:static;max-width:65%;padding:0 4px;background:none;border:0;box-shadow:none;backdrop-filter:none;border-radius:0;overflow:hidden}
+.journey-mode .zone-label .tiny,.journey-mode .zone-label small{display:none}
+.journey-mode .zone-label strong{font-size:14px;line-height:1.4;letter-spacing:.09em;font-weight:500;margin:0;color:var(--journey-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.journey-menu{display:grid;grid-template-columns:1fr 1fr 1fr 44px 44px 1fr;gap:4px;align-items:stretch;width:min(100%,540px)}
+.journey-mode .dock .journey-tool{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;min-height:46px;height:auto;padding:3px 2px;border:0;border-radius:8px;background:transparent;color:var(--journey-ink);font-size:21px;line-height:1.2;cursor:pointer}
+.journey-tool span{font-size:10px;letter-spacing:.07em;font-weight:500;white-space:nowrap}
+.journey-mode .dock .journey-tool:hover,.journey-mode .dock .journey-tool[aria-expanded=true]{background:#d9e0d3}
+.journey-mode .dock .journey-tool:disabled{opacity:.32;cursor:default}
+.journey-mode button:focus-visible,.journey-mode a:focus-visible,.journey-mode select:focus-visible{outline:2px solid #789d94;outline-offset:2px}
+.journey-mode .overlay{inset:0 0 var(--journey-dock-height) 0;padding:12px 12px 8px;align-items:end;justify-items:center;background:#234e581a;backdrop-filter:none}
+.journey-mode .sheet{width:min(100%,520px);max-height:min(76dvh,calc(100dvh - var(--journey-dock-height) - 20px));padding:17px 18px 15px;border:1px solid var(--journey-line);border-radius:17px;background:var(--journey-paper);box-shadow:0 8px 32px #34565033;scrollbar-color:#b3c3b2 transparent}
+.journey-mode .sheet-head{align-items:center;gap:8px;margin-bottom:12px}
+.journey-mode .sheet-head small{display:none}
+.journey-mode .sheet-head h2{font-size:20px;font-weight:500;color:var(--journey-ink);margin:0;letter-spacing:.05em}
+.journey-mode .close{color:#57756e;background:#e2e5d7;border:0;min-width:38px;min-height:38px;border-radius:50%}
+.journey-mode .sheet p{color:#526c6a;font-size:13px;line-height:1.85}
+.journey-mode .sheet p.secondary{color:#70827a;font-size:11px;line-height:1.75}
+.journey-mode #miniMap{border-color:#c2ccbe;border-radius:9px}
+.journey-mode .zone-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px 0}
+.journey-mode .zone-grid button{padding:8px 3px;min-height:35px;background:#e0e4d6;border:1px solid #cad1bf;color:#48666b;font-size:11px;text-align:center}
+.journey-mode .zone-grid button small{display:none}
+.journey-mode .line-btn{margin-top:4px;min-height:38px;background:#dce3d7;border-color:#bdccbb;color:#48666b;font-size:12px}
+.journey-mode .toggle-row{padding:10px 12px;background:#e4e6d9;border-color:#d2d8c8;margin:12px 0}
+.journey-mode .toggle-row span{font-size:13px}
+.journey-mode .toggle-row small{font-size:10px;color:#7a8b7e}
+.journey-mode .pill-toggle{color:#75867d;background:#d7ddcf;border-color:#becbb9;font-size:12px}
+.journey-mode .pill-toggle.on{color:#fff7e5;background:#77998c;border-color:#77998c}
+.journey-mode .field-label{color:#536f69;font-size:12px}
+.journey-mode #trackSelect{padding:10px;font-size:13px;color:#3d6165;background:#f4f0e4;border-color:#b7c6b6}
+.journey-mode #volumeRange{accent-color:#8eaa91}
+.journey-mode .now-playing{color:#597568!important;background:#e1e7d7;border-left:2px solid #99ad8e;font-size:11px!important}
+.journey-mode .mode-nav{display:flex;flex-direction:column;gap:6px;margin-bottom:0}
+.journey-mode .mode-nav br{display:none}
+.journey-mode .mode-nav a{color:#527a7a!important;min-height:38px;display:flex;align-items:center;text-decoration:none;border-bottom:1px solid #ccd4c2}
+.journey-mode .dialogue{bottom:calc(var(--journey-dock-height) + 9px);width:min(calc(100vw - 24px),520px);padding:12px 15px 10px;border:1px solid #bec8b8;border-radius:13px;background:#f0ecddf5;box-shadow:0 8px 28px #3457472b;max-height:min(34dvh,270px);overflow:auto}
+.journey-mode .dialogue.journey-dialogue-above{top:max(12px,env(safe-area-inset-top));bottom:auto}
+.journey-mode .dialogue-top{align-items:center;gap:10px}
+.journey-mode .dialogue-top small{color:#8d9b8a;font-size:9px;letter-spacing:.05em}
+.journey-mode .dialogue-top h2{font-size:15px;font-weight:500;color:var(--journey-ink);margin:2px 0 0}
+.journey-mode .dialogue-top button{color:#668078;min-width:35px;min-height:35px;border-radius:50%}
+.journey-mode .dialogue p{color:#425e60;font-size:13px;line-height:1.85;margin:9px 0;min-height:0}
+.journey-mode .dialogue>button{font-size:11px;min-height:31px;padding:4px 11px;background:#e0e6d7;color:#56766c;border:0}
+.journey-mode .dialogue>button span{color:#8b9f87;font-size:13px}
+.journey-mode .toast{top:auto;bottom:16px;padding:9px 14px;border-color:#c6ceb7;border-radius:10px;background:#eee9d9ed;color:#47676a;font-size:12px;box-shadow:0 4px 18px #425c4e20}
+.journey-mode .dock .vista-button{position:static;margin-left:auto;min-height:28px;padding:3px 4px;border:0;border-bottom:1px solid #a8bca7;border-radius:0;background:transparent;color:#587d75;font-family:serif;font-size:12px;letter-spacing:.03em;cursor:pointer;white-space:nowrap}
+.journey-mode .dock .vista-button:hover{background:#d9e0d3}
+.vista-button[hidden],.vista-card[hidden]{display:none}
+.vista-card{position:absolute;z-index:4;left:50%;bottom:12px;transform:translateX(-50%);width:min(calc(100% - 24px),560px);border:1px solid #c6cbb6;background:#eee9da;border-radius:12px;overflow:hidden;box-shadow:0 8px 26px #304b502b}
+.vista-heading{display:flex;justify-content:space-between;align-items:center;padding:7px 9px 7px 14px;gap:8px}
+.vista-heading strong{font-family:serif;font-size:15px;font-weight:500;color:#46666c;letter-spacing:.05em}
+.vista-heading button{min-width:35px;min-height:35px;background:transparent;border:0;border-radius:50%;font-size:22px;color:#668078;cursor:pointer}
+.vista-card canvas{width:100%;height:auto;aspect-ratio:480/252;display:block;image-rendering:pixelated}
+.vista-card p{margin:0;padding:8px 14px;font-size:11px;color:#738779;line-height:1.65}
+@media(max-width:350px){.journey-menu{gap:2px}.journey-mode .sheet{padding:14px}.journey-mode .sheet-head h2{font-size:18px}.journey-mode .zone-grid button{font-size:10px}.journey-mode .zone-label strong{font-size:13px}.journey-mode .dock .vista-button{font-size:11px}}
+@media(max-height:560px){.journey-mode .dock{padding-top:3px;padding-bottom:max(3px,env(safe-area-inset-bottom));gap:0}.journey-placebar{min-height:23px}.journey-mode .dock .journey-tool{min-height:40px}.vista-card{width:min(calc(100% - 24px),460px);bottom:8px}.vista-card canvas{max-height:38dvh;object-fit:cover}.vista-card p{padding:5px 12px}.journey-mode .dialogue{max-height:52dvh}}
+@media(max-height:560px) and (min-width:600px){
+ .journey-mode .map-sheet{width:min(100%,720px);display:grid;grid-template-columns:1.2fr 1fr;gap:8px 14px;padding:12px 16px}
+ .journey-mode .map-sheet .sheet-head{grid-column:1/-1;margin:0}
+ .journey-mode #miniMap{grid-column:1;grid-row:2/span 2;width:min(100%,calc((100dvh - var(--journey-dock-height) - 95px)*112/88));justify-self:center;align-self:center}
+ .journey-mode .map-sheet p.secondary{display:none}
+ .journey-mode .map-sheet .zone-grid{grid-column:2;gap:4px;margin:0}
+ .journey-mode .map-sheet .line-btn{grid-column:2;margin:0}
+}

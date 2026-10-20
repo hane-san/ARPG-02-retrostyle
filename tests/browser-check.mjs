@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
 import {mkdirSync} from 'node:fs';
 import {chromium} from 'playwright';
+import {checkJourney} from './journey-browser.mjs';
 
 const origin='http://127.0.0.1:4173';
 const server=spawn('python3',['-m','http.server','4173','--bind','127.0.0.1'],{
@@ -25,6 +26,8 @@ async function main(){
  page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,
   isMobile:true,hasTouch:true});
  page.on('pageerror',e=>errors.push(e.message));
+ page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status()+' '+r.url());});
+ page.on('requestfailed',r=>{if(r.failure()?.errorText!=='net::ERR_ABORTED')errors.push('Request '+r.url()+': '+r.failure()?.errorText);});
  const response=await page.goto(origin+'/',{waitUntil:'load'});
  assert.ok(response?.ok(),'static entry point must serve');
  await page.waitForSelector('#worldCanvas');
@@ -49,7 +52,13 @@ async function main(){
  // Show the world atlas and ensure all nine new regions are selectable.
  await page.locator('#mapBtn').click();
  assert.equal(await page.locator('#zoneList button').count(),9);
- await page.locator('#mapPanel [data-close]').click();
+ // Return through the mainland gate, then use the distant archipelago bridge.
+ const atlas=await page.locator('#miniMap').boundingBox();
+ await page.mouse.click(atlas.x+(13.5/430)*atlas.width,atlas.y+(146.5/270)*atlas.height);
+ await page.waitForFunction(()=>document.querySelector('#worldTitle')?.textContent==='潮環群島',null,{timeout:15000});
+ const backField=await page.locator('#worldCanvas').boundingBox();
+ await page.mouse.click(backField.x+backField.width/2+4*32*1.25,backField.y+backField.height/2);
+ await page.waitForFunction(()=>document.querySelector('#worldTitle')?.textContent==='星風回廊',null,{timeout:12000});
  // Opt-in Small Journey retains the same controls while using a two-zone map.
  const miniResponse=await page.goto(origin+'/?prototype=1',{waitUntil:'load'});
  assert.ok(miniResponse?.ok(),'compact mode must load');
@@ -64,6 +73,7 @@ async function main(){
  await page.locator('#helpBtn').click();
  assert.ok(await page.getByRole('link',{name:'広い世界を遊ぶ（通常版）'}).isVisible());
  await page.locator('#helpPanel [data-close]').click();
+ await checkJourney(page,origin);
  if(errors.length)throw new Error('JavaScript browser errors: '+errors.join(' | '));
  console.log('Browser smoke passed: default mobile exploration, 68 tracks, mainland bridge, compact two-zone walk.');
 }

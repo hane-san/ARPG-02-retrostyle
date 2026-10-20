@@ -9,21 +9,31 @@ import {limitCamera,easeEdgeCamera,smoothPanCamera,PAN_SENSITIVITY} from './came
 import {pickZoneTrack} from './zone-music.js';
 import {TALK,SITE_ASIDES} from './dialogue-data.js';
 import {makePrototypeWorld} from './prototype-world.js';
+import {makeJourneyWorld,routeJourneyWalk} from './journey-world.js';
+import {drawJourneyTile,drawJourneySite,drawJourneyAtmosphere,JOURNEY_PALETTE} from './journey-art.js';
+import {createJourneyMusicDirector,pickJourneyTrack} from './journey-music.js';
+import {createJourneyView} from './journey-view.js';
+import {installJourneyUI} from './journey-ui.js';
 
 const $=id=>document.getElementById(id);
 const stage=$('stage'),canvas=$('worldCanvas'),ctx=canvas.getContext('2d',{alpha:false});
-const PROTOTYPE_MODE=new URLSearchParams(window.location.search).get('prototype')==='1';
-const worlds={tidal:PROTOTYPE_MODE?makePrototypeWorld():makeWorld(),silk:null};
-const DISCOVERY_TOTAL=PROTOTYPE_MODE?worlds.tidal.sites.length:TIDAL_SITES.length+SILK_SITES.length;
-let currentWorldId='tidal',world=worlds.tidal;
+const modeParams=new URLSearchParams(window.location.search);
+const JOURNEY_MODE=modeParams.get('journey')==='1';
+const PROTOTYPE_MODE=!JOURNEY_MODE&&modeParams.get('prototype')==='1';
+const worlds={tidal:JOURNEY_MODE?null:PROTOTYPE_MODE?makePrototypeWorld():makeWorld(),silk:null,journey:JOURNEY_MODE?makeJourneyWorld():null};
+let currentWorldId=JOURNEY_MODE?'journey':'tidal',world=worlds[currentWorldId];
+const DISCOVERY_TOTAL=JOURNEY_MODE||PROTOTYPE_MODE?world.sites.length:TIDAL_SITES.length+SILK_SITES.length;
 let W=world.w,H=world.h,ZONES=world.zones,SITES=world.sites,NPCS=world.npcs,BRIDGES=world.bridges;
 const storage={
  getItem(k){try{return localStorage.getItem('tidal-atlas:'+k);}catch{return null;}},
  setItem(k,v){try{localStorage.setItem('tidal-atlas:'+k,v);}catch{}}
 };
 const music=createMusic(storage),sfx=createAudio(storage);
-const hero={x:START.x,y:START.y,px:START.x,py:START.y,face:'down',path:[],arrival:null,stride:0,moving:false};
-const camera={x:(START.x+.5)*TILE,y:(START.y+.5)*TILE,zoom:1.25};
+const spawn=world.start||START;
+const hero={x:spawn.x,y:spawn.y,px:spawn.x,py:spawn.y,face:'down',path:[],arrival:null,stride:0,moving:false};
+const camera={x:(spawn.x+.5)*TILE,y:(spawn.y+.5)*TILE,zoom:1.25};
+const journeyMusic=JOURNEY_MODE?createJourneyMusicDirector():null;
+const journeyView=JOURNEY_MODE?createJourneyView(stage,world):null;
 let panTarget=null;
 let screen={w:1,h:1,dpr:1},last=0,zoneId='',noticeTimer=0,dialogue=null;
 const discovered=new Set(),cache=new Map(),CHUNK=16,MAX_CHUNKS=42;
@@ -41,13 +51,38 @@ if(PROTOTYPE_MODE){
  $('helpPanel').querySelector('.sheet p').textContent=
   'これは潮環群島の小さな探索プロトタイプです。森と港を歩き、気になる4つの建物を訪ねてみましょう。目的地のタップ・地図・ドラッグ・ズーム・NPCとの会話は通常版と同じです。';
 }
+if(JOURNEY_MODE){
+ document.body.classList.add('journey-mode');
+ const style=document.createElement('link');style.rel='stylesheet';style.href='./journey.css';document.head.append(style);
+ $('worldTitle').textContent='小さく壮大な旅';
+ $('atlasTitle').textContent='風と湖をめぐる地図';
+ document.querySelector('.brand small').textContent='TIDAL ATLAS · A SMALL, VAST JOURNEY';
+ document.querySelector('.discover small').textContent='PLACES ALONG THE WAY';
+ document.querySelector('.map-hint').textContent='';
+ $('worldCanvas').setAttribute('aria-label','中央アジアの地形に着想した、草原と湖を歩く試遊マップ');
+ $('mapPanel').querySelector('p.secondary').textContent=
+  '岸の向こうへも、歩いて行けます。';
+ $('helpPanel').querySelector('.sheet p').textContent=
+  '白い橋から円い草原へ。湖岸から塩原や石の峠へ。道を選ぶ順番は自由です。遠くを眺めたくなったら、岸や高台のそばで少し立ち止まってみてください。';
+ const helpParagraphs=$('helpPanel').querySelectorAll('.sheet > p');
+ helpParagraphs[1].textContent='地面や地図で行き先を選ぶと、主人公が道を探して歩きます。途中でも行き先を変えられます。建物や人を選ぶと、そのそばまで歩いて向かいます。';
+ helpParagraphs[2].textContent='指で景色を見回せます。＋／−で近くや遠くを眺め、「自分へ」で主人公のところに戻ります。歩いている間は拡大縮小を休みます。会話は続きを読んでも、景色を選んでそのまま歩き出しても大丈夫です。';
+ helpParagraphs[3].textContent='訪れた場所の記録は、この画面を開いているあいだだけ残ります。';
+ $('musicPanel').querySelector('p.secondary').textContent=
+  '土地ごとの曲が流れます。ここでは68曲から、好きな一曲を選ぶこともできます。';
+ installJourneyUI();
+}
 const modeNav=document.createElement('p');
-modeNav.className='secondary';
-const modeLink=document.createElement('a');
-modeLink.href=PROTOTYPE_MODE?'./':'./?prototype=1';
-modeLink.textContent=PROTOTYPE_MODE?'広い世界を遊ぶ（通常版）':'小さな旅を試す（台場ミニ版）';
-modeLink.style.color='#fff0b1';
-modeNav.append(modeLink);
+modeNav.className='secondary mode-nav';
+for(const [mode,href,label] of [
+ ['normal','./','広い世界を遊ぶ（通常版）'],
+ ['prototype','./?prototype=1','小さな旅を試す（台場ミニ版）'],
+ ['journey','./?journey=1','草原と湖の旅を試す（新マップ）']
+]){
+ if(mode===(JOURNEY_MODE?'journey':PROTOTYPE_MODE?'prototype':'normal'))continue;
+ if(modeNav.children.length)modeNav.append(document.createElement('br'));
+ const link=document.createElement('a');link.href=href;link.textContent=label;link.style.color='#fff0b1';modeNav.append(link);
+}
 $('helpPanel').querySelector('.sheet').append(modeNav);
 const clamp=(a,b,c)=>Math.max(b,Math.min(c,a));
 function confineCamera(x=camera.x,y=camera.y){
@@ -71,11 +106,13 @@ function resize(){
  screen={w:r.width,h:r.height,dpr};
  canvas.width=Math.max(1,Math.round(r.width*dpr));canvas.height=Math.max(1,Math.round(r.height*dpr));
  confineCamera();
+ if(JOURNEY_MODE&&dialogue)placeJourneyDialogue();
 }
 const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):null;
 observer?.observe(stage);window.addEventListener('resize',resize);resize();
 
 function paintTile(c,x,y,t){
+ if(currentWorldId==='journey'){drawJourneyTile(c,x,y,t,world);return;}
  if(currentWorldId==='silk'){drawSilkTile(c,x,y,t);return;}
  const px=x*TILE,py=y*TILE,n=hash(x,y),n2=hash(y,x);
  rect(c,px,py,32,32,palette[t]||'#7b8c79');
@@ -224,6 +261,7 @@ function bridgeArt(c,b,time){
  c.restore();
 }
 function drawSite(c,s,t){
+ if(currentWorldId==='journey'){drawJourneySite(c,s,t);return;}
  if(currentWorldId==='silk'){drawSilkSite(c,s,t);return;}
  const x=s.x*TILE,y=s.y*TILE,w=s.w*TILE,h=s.h*TILE,mid=x+w/2;
  const night=s.kind==='arcology'||s.kind==='observatory'||s.kind==='wheel';
@@ -383,6 +421,7 @@ function paint(t){
    ctx.drawImage(chunk(cx,cy),cx*CHUNK*TILE,cy*CHUNK*TILE);
  for(const b of BRIDGES)
   if(b.x1<=right&&b.x2>=left&&b.y1<=bottom&&b.y2>=top)bridgeArt(ctx,b,t);
+ if(JOURNEY_MODE)drawJourneyAtmosphere(ctx,{left,right,top,bottom},t);
  // Landmarks marking the portals at the far end of each bridge.
  for(const portal of world.transitions||[]){
   if(portal.x<left||portal.x>right||portal.y<top||portal.y>bottom)continue;
@@ -422,15 +461,22 @@ function updateZone(){
  if(z.id===zoneId)return;
  zoneId=z.id;$('zoneName').textContent=z.name;$('zoneSub').textContent=z.sub;
  // Randomly pick among songs matching the atmosphere; never immediately repeat.
- const nextSong=pickZoneTrack(z.id,$('trackSelect').value);
- $('trackSelect').value=nextSong;
- applyTrack();
- toast(z.name+' — '+z.sub);
+ if(!JOURNEY_MODE){
+  const nextSong=pickZoneTrack(z.id,$('trackSelect').value);
+  $('trackSelect').value=nextSong;applyTrack();
+ }
+ if(!JOURNEY_MODE)toast(z.name+' — '+z.sub);
 }
 function updateDiscoveries(){
  $('discovered').textContent=discovered.size+' / '+DISCOVERY_TOTAL;
 }
+function updateJourneyMusic(now){
+ if(!journeyMusic)return;
+ const accepted=journeyMusic.update(world.zoneAt(hero.x,hero.y).id,now);
+ if(accepted){$('trackSelect').value=pickJourneyTrack(accepted,$('trackSelect').value);applyTrack();}
+}
 function switchWorld(id,spawn){
+ if(JOURNEY_MODE||PROTOTYPE_MODE)return;
  if(id===currentWorldId)return;
  if(id!=='tidal'&&id!=='silk')return;
  if(id==='silk'&&!worlds.silk)worlds.silk=makeSilkWorld();
@@ -449,9 +495,10 @@ function switchWorld(id,spawn){
 function startWalk(target,arrival=null){
  if(!world.walkable(target.x,target.y)){toast('ここには歩いて行けません。道や橋を選んでください。');return;}
  // Start from the next occupied grid cell instead of instantly teleporting away.
- const from={x:hero.x,y:hero.y},path=currentWorldId==='silk'?silkPath(world,from,target):findPath(world,from,target);
- if(!path||!path.length){toast('この場所へ続く道が見つかりません。');return;}
- hero.path=path.slice(1);hero.arrival=arrival;
+ const from={x:hero.x,y:hero.y},path=JOURNEY_MODE?routeJourneyWalk(world,hero,target):
+  currentWorldId==='silk'?silkPath(world,from,target):findPath(world,from,target);
+ if(!path){toast('この場所へ続く道が見つかりません。');return;}
+ hero.path=JOURNEY_MODE?path:path.slice(1);hero.arrival=arrival;
  panTarget=null;syncZoomControls();
  if(hero.path.length===0){hero.px=hero.x;hero.py=hero.y;onArrive();return;}
  // Walking does not display distances or step counts: explore visually.
@@ -460,13 +507,14 @@ function startWalk(target,arrival=null){
 function onArrive(){
  const obj=hero.arrival;hero.arrival=null;
  if(!obj)return;
- if(obj.kind==='npc'){openDialogue(obj.item.name,obj.item.role,(currentWorldId==='silk'?SILK_TALK:TALK)[obj.item.id]||obj.item.lines);return;}
+ if(obj.kind==='npc'){openDialogue(obj.item.name,obj.item.role,JOURNEY_MODE?obj.item.lines:(currentWorldId==='silk'?SILK_TALK:TALK)[obj.item.id]||obj.item.lines);return;}
  if(obj.kind==='site'){
   const fresh=!discovered.has(obj.item.id);discovered.add(obj.item.id);
   updateDiscoveries();if(fresh)sfx.play('heal');
+  if(JOURNEY_MODE){openDialogue(obj.item.name,'この場所で',[obj.item.desc,obj.item.aside]);return;}
   openDialogue(obj.item.name,'DISCOVERED PLACE',[
    obj.item.desc,
-   (currentWorldId==='silk'?SILK_ASIDES:SITE_ASIDES)[obj.item.id]||'',
+   JOURNEY_MODE?obj.item.aside:(currentWorldId==='silk'?SILK_ASIDES:SITE_ASIDES)[obj.item.id]||'',
    fresh?'新しい場所を見つけました。発見した建物：'+discovered.size+' / '+DISCOVERY_TOTAL:
     'この場所は、すでに訪れたことがあります。',
    PROTOTYPE_MODE&&fresh&&discovered.size===DISCOVERY_TOTAL?
@@ -485,7 +533,7 @@ function walkToNpc(n){
  if(best)startWalk(best,{kind:'npc',item:n});
 }
 function handleTap(e){
- if(dialogue)return;
+ if(dialogue){if(!JOURNEY_MODE)return;closeDialogue();}
  music.unlock();sfx.unlock();
  const p=screenToWorld(e.clientX,e.clientY);
  if(p.x<0||p.y<0||p.x>=W||p.y>=H)return;
@@ -511,8 +559,18 @@ function openDialogue(name,role,lines){
  dialogue={name,role,lines:lines.filter(Boolean),index:0,openedAt:performance.now()};
  $('dialogueName').textContent=name;$('dialogueRole').textContent=role;
  $('dialogueText').textContent=dialogue.lines[0];
- $('dialogueNext').innerHTML='タップしてつづく <span>›</span>';
- $('dialogue').classList.remove('hidden');sfx.play('select');
+ $('dialogueNext').innerHTML=JOURNEY_MODE?'つづき <span>›</span>':'タップしてつづく <span>›</span>';
+ $('dialogue').classList.remove('hidden');
+ if(JOURNEY_MODE)placeJourneyDialogue();
+ sfx.play('select');
+}
+function placeJourneyDialogue(){
+ const card=$('dialogue');
+ // Keep the people visible without moving the camera when conversation starts.
+ // A traveller near the lower edge needs the reading card on the opposite side.
+ const heroY=screen.h/2+((hero.py+.5)*TILE-camera.y)*camera.zoom;
+ const cardHeight=card.getBoundingClientRect().height;
+ card.classList.toggle('journey-dialogue-above',heroY>screen.h-cardHeight-42&&heroY>cardHeight+50);
 }
 function closeDialogue(){dialogue=null;$('dialogue').classList.add('hidden');}
 function advanceDialogue(){
@@ -520,13 +578,23 @@ function advanceDialogue(){
  dialogue.index++;
  if(dialogue.index>=dialogue.lines.length){closeDialogue();return;}
  $('dialogueText').textContent=dialogue.lines[dialogue.index];
- $('dialogueNext').innerHTML=dialogue.index===dialogue.lines.length-1?'どこでもタップして閉じる <span>×</span>':'タップしてつづく <span>›</span>';
+ $('dialogueNext').innerHTML=JOURNEY_MODE?
+  (dialogue.index===dialogue.lines.length-1?'とじる <span>×</span>':'つづき <span>›</span>'):
+  (dialogue.index===dialogue.lines.length-1?'どこでもタップして閉じる <span>×</span>':'タップしてつづく <span>›</span>');
  sfx.play('select');
 }
 // Capture the click before the underlying map/menu can receive it. A dialogue
 // opened by a pointer-up must not advance on that same gesture's subsequent click.
 document.addEventListener('click',e=>{
  if(!dialogue)return;
+ // This journey's quiet reading card never captures the rest of the interface.
+ // Field taps already resume walking in handleTap; menus can dismiss it too.
+ if(JOURNEY_MODE&&!e.target.closest('#dialogue')){
+  // An adjacent NPC opens on pointerup; its following click belongs to the
+  // same gesture and must not immediately dismiss the newly opened card.
+  if(e.target===canvas&&performance.now()-dialogue.openedAt<180)return;
+  closeDialogue();return;
+ }
  e.preventDefault();e.stopImmediatePropagation();
  if(e.target.closest('#dialogueClose')){closeDialogue();return;}
  if(performance.now()-dialogue.openedAt<180)return;
@@ -559,6 +627,8 @@ let lastPaint=-Infinity,lastPaintCamera={x:camera.x,y:camera.y};
 function animate(time){
  const dt=last?Math.min(.07,(time-last)/1000):0;last=time;
  updateMove(dt);
+ updateJourneyMusic(time);
+ journeyView?.update(hero,!!dialogue||isPanelOpen());
  // Time-based smoothing makes both fingertip panning and edge-following fluid.
  const viewport={width:screen.w,height:screen.h,zoom:camera.zoom};
  const bounds={width:W*TILE,height:H*TILE,tile:TILE};
@@ -641,8 +711,12 @@ canvas.addEventListener('lostpointercapture',e=>{pointerMap.delete(e.pointerId);
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 canvas.addEventListener('dragstart',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
- if(e.key==='Escape'){closeDialogue();closePanels();return;}
- if(dialogue){if(e.key==='Enter'||e.key===' '){e.preventDefault();advanceDialogue();}return;}
+ if(e.key==='Escape'){closeDialogue();closePanels();journeyView?.close(true);return;}
+ if(dialogue){
+  if(e.key==='Enter'||e.key===' '){e.preventDefault();advanceDialogue();return;}
+  if(JOURNEY_MODE&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d'].includes(e.key))closeDialogue();
+  else return;
+ }
  if(isPanelOpen())return;
  const dirs={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]};
  const d=dirs[e.key];if(!d)return;
@@ -651,12 +725,22 @@ window.addEventListener('keydown',e=>{
  if(world.walkable(next.x,next.y))startWalk(next);
 });
 
-function closePanels(){
+function closePanels(restoreFocus=true){
+ const active=JOURNEY_MODE&&restoreFocus?document.activeElement?.closest('.overlay'):null;
  for(const id of ['mapPanel','musicPanel','helpPanel'])$(id).classList.add('hidden');
+ if(JOURNEY_MODE)for(const id of ['mapBtn','soundBtn','helpBtn'])$(id).setAttribute('aria-expanded','false');
+ if(active)$({mapPanel:'mapBtn',musicPanel:'soundBtn',helpPanel:'helpBtn'}[active.id]).focus();
 }
 function isPanelOpen(){return ['mapPanel','musicPanel','helpPanel'].some(id=>!$(id).classList.contains('hidden'));}
 function showPanel(id){
- closePanels();$(id).classList.remove('hidden');music.unlock();sfx.unlock();
+ journeyView?.close();
+ const wasOpen=!$(id).classList.contains('hidden');
+ closePanels(false);if(JOURNEY_MODE&&wasOpen)return;
+ $(id).classList.remove('hidden');music.unlock();sfx.unlock();
+ if(JOURNEY_MODE){
+  $({mapPanel:'mapBtn',musicPanel:'soundBtn',helpPanel:'helpBtn'}[id]).setAttribute('aria-expanded','true');
+  $(id).querySelector('[data-close]').focus({preventScroll:true});
+ }
  if(id==='mapPanel'){rebuildZoneList();drawMinimap();}
 }
 $('mapBtn').addEventListener('click',()=>showPanel('mapPanel'));
@@ -671,21 +755,29 @@ function drawMinimap(){
  const c=mini.getContext('2d'),sx=mini.width/W,sy=mini.height/H;
  c.clearRect(0,0,mini.width,mini.height);
  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
-  c.fillStyle=(currentWorldId==='silk'?SILK_PALETTE:palette)[world.tileAt(x,y)]||'#91a49a';c.fillRect(x*sx,y*sy,sx+1,sy+1);
+  c.fillStyle=(JOURNEY_MODE?JOURNEY_PALETTE:currentWorldId==='silk'?SILK_PALETTE:palette)[world.tileAt(x,y)]||'#91a49a';c.fillRect(x*sx,y*sy,sx+1,sy+1);
  }
  c.strokeStyle='#f3e5c8';c.lineWidth=2;
  for(const z of ZONES){
   if(z.rx&&z.ry)c.strokeRect((z.cx-z.rx)*sx,(z.cy-z.ry)*sy,z.rx*2*sx,z.ry*2*sy);
   c.textAlign='center';c.fillStyle='#fff6db';c.font='bold 12px system-ui';
-  c.strokeStyle='#17374a';c.lineWidth=3;c.strokeText(z.name,z.cx*sx,(z.cy-13)*sy);
-  c.fillText(z.name,z.cx*sx,(z.cy-13)*sy);
+  const lx=JOURNEY_MODE?z.label.x:z.cx,ly=JOURNEY_MODE?z.label.y:z.cy-13;
+  c.strokeStyle='#17374a';c.lineWidth=3;c.strokeText(z.name,lx*sx,ly*sy);
+  c.fillText(z.name,lx*sx,ly*sy);
  }
- for(const s of SITES){c.fillStyle=discovered.has(s.id)?'#fff0a1':'#f8d5b0';c.fillRect(s.entrance.x*sx-3,s.entrance.y*sy-3,6,6);}
+ for(const s of SITES){
+  if(JOURNEY_MODE&&!discovered.has(s.id)&&s.kind!=='terminal')continue;
+  c.fillStyle=discovered.has(s.id)?'#fff0a1':'#f8d5b0';c.fillRect(s.entrance.x*sx-3,s.entrance.y*sy-3,6,6);
+ }
  c.fillStyle='#fae5a1';c.beginPath();c.arc((hero.px+.5)*sx,(hero.py+.5)*sy,6,0,Math.PI*2);c.fill();
  c.strokeStyle='#244658';c.lineWidth=2;c.stroke();
 }
 mini.addEventListener('click',e=>{
  const r=mini.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
+ if(JOURNEY_MODE){
+  const site=world.siteAt(Math.floor(x),Math.floor(y));
+  if(site){closePanels();startWalk(site.entrance,{kind:'site',item:site});return;}
+ }
  const target=nearestWalkable(world,Math.max(0,Math.min(W-1,Math.floor(x))),Math.max(0,Math.min(H-1,Math.floor(y))),14);
  closePanels();
  if(target){
@@ -750,4 +842,4 @@ $('volumeRange').addEventListener('input',e=>{
 });
 $('sfxToggle').addEventListener('click',()=>{sfx.toggle();syncMusic();});
 syncMusic();
-updateDiscoveries();updateZone();requestAnimationFrame(animate);
+updateDiscoveries();updateZone();updateJourneyMusic(performance.now());requestAnimationFrame(animate);

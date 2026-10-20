@@ -51,9 +51,12 @@ Node.js 22+。GitHub ActionsはPRとmain更新時に、地形・各地区の到�
 
 ## 構成
 
+新しい独立試遊版：`npm run dev` の後、**http://localhost:4173/?journey=1**。112×88の地図に円形草原、大湖、塩原、巨大な石、夕景、少数の暮らしを再構成しています。通常版・台場ミニ版は維持。未マージの間は公開Pagesへ反映されません。仕様・試遊ルート・検証範囲は [JOURNEY](docs/JOURNEY.md)。
+
 - `index.html` / `style.css`: UI
 - `world.js`: ４地区の地形、橋、施設、NPC、A*経路探索
 - `prototype-world.js`: 通常版の座標系を保持した小さな旅の切り出し
+- `journey-world.js` / `journey-art.js` / `journey-view.js` / `journey-music.js` / `journey-ui.js` / `journey.css`: 独立した草原と湖の旅、任意の遠望、地域選曲、景色を広く見せる下部メニュー
 - `game.js`: Canvas描画、カメラ、移動、会話、発見、音楽画面
 - `sprite-srpg.js`: SRPGのドット絵ユニット描画から移植した主人公
 - `music.js`, `audio.js`: 元のSRPGから移植した合成エンジン・26曲
