@@ -10,7 +10,7 @@ export const JOURNEY_CAMERA_PROFILES=Object.freeze({
  'journey-steppe':.6,'journey-lake':.6,'journey-salt':.6,'journey-sunset':.6
 });
 export function journeyCameraScene(world,hero){
- for(const [id,radius] of [['journey-hut',7],['journey-chaikhana',8]]){
+ for(const [id,radius] of [['journey-hut',7],['journey-chaikhana',7]]){
   const site=world.sites.find(site=>site.id===id);
   if(site&&Math.hypot(hero.px-site.entrance.x,hero.py-site.entrance.y)<=radius)
    return id==='journey-hut'?'journey-hut':'journey-tea';
