@@ -237,13 +237,13 @@ JOURNEY_SITES.push(...[
   "name": "塩採りの共同井戸",
   "kind": "relic",
   "form": "well",
-  "x": 97,
-  "y": 15,
+  "x": 95,
+  "y": 22,
   "w": 5,
   "h": 4,
   "entrance": {
-   "x": 100,
-   "y": 21
+   "x": 96,
+   "y": 27
   },
   "blocking": false,
   "desc": "白い塩地の共同井戸。水は乏しいが、旅人にも一杯だけ分ける約束がある。",
