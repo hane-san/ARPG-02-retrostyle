@@ -1,5 +1,7 @@
 # 小さく壮大な旅 — 中央アジア風の独立試遊版
 
+入口・5段階の画角・音の連続性については、後から採用した [Issue #28の仕様](JOURNEY-PRESENTATION.md) を優先する。以下は初回の地形・経路・UIの設計と検証を含む記録。
+
 2026-10-19のユーザー添付「中央アジア旅マップ再構成.md」と起動用プロンプトによる明示採用。[Issue #14](https://github.com/hane-san/ARPG-02-retrostyle/issues/14)。Issue #11は探索UXの検討として残し、アイコンPR #13・開発運用PR #10は取り込まない。開始mainは `60bad7edbab4b0e490d18ae47ddb46b652fd81ac`。
 
 ## 試す
