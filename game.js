@@ -98,6 +98,9 @@ function line(c,points,color,width=2){
  points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();
 }
 function toast(message){
+ // Narrow screens: drop the notice below the location card instead of covering it.
+ const label=document.querySelector('.zone-label'),below=!JOURNEY_MODE&&label?.parentElement===stage&&stage.clientWidth<=560;
+ $('toast').style.top=below?(label.offsetTop+label.offsetHeight+8)+'px':'';
  $('toast').textContent=message;$('toast').classList.add('show');
  clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>$('toast').classList.remove('show'),2300);
 }

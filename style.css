@@ -2,3 +2,5 @@
 /* Original low-resolution journey icon; keep crisp when scaled down in the header. */
 .brand-mark{overflow:hidden;padding:0}
 .brand-mark img{display:block;width:100%;height:100%;object-fit:cover;image-rendering:pixelated}
+/* Phone comfort: keep header/dock controls at least 44px and labels on one line. */
+@media(max-width:560px){.nav-btn{min-height:44px;min-width:44px;white-space:nowrap}.brand-mark{flex:none}.brand>div{min-width:0}.brand small{overflow:hidden;text-overflow:ellipsis}.dock button{min-width:44px;min-height:44px}}

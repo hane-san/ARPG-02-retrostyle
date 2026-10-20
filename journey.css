@@ -66,3 +66,6 @@
  .journey-mode .map-sheet .zone-grid{grid-column:2;gap:4px;margin:0}
  .journey-mode .map-sheet .line-btn{grid-column:2;margin:0}
 }
+/* Enlarge the vista link's touch area without changing its quiet underline look. */
+.journey-mode .dock .vista-button{position:relative}
+.journey-mode .dock .vista-button::after{content:"";position:absolute;inset:-8px -6px -6px}
