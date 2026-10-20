@@ -99,12 +99,15 @@ export async function checkJourney(page,origin){
    const ctx=new OfflineAudioContext(1,Math.ceil(sampleRate*.39),sampleRate);
    const tone=ctx.createOscillator(),bus=ctx.createGain();
    tone.type='sine';tone.frequency.value=1000;tone.connect(bus);bus.connect(ctx.destination);
-   bus.gain.setValueAtTime(0,0);bus.gain.linearRampToValueAtTime(1,fade);
-   const param=fallback?{
-    cancelScheduledValues:at=>bus.gain.cancelScheduledValues(at),
-    setValueAtTime:(v,at)=>bus.gain.setValueAtTime(v,at)
-   }:bus.gain;
-   holdFadeAt(param,transition,0,fade);
+   // Offline contexts render only after all automation is scheduled.
+   // Build the *result* of the mid-fade hold, so cancelling a future
+   // ramp before rendering cannot erase its earlier waveform.
+   const held=holdFadeAt(fallback?{
+    cancelScheduledValues:()=>{},
+    setValueAtTime:()=>{}
+   }:{cancelAndHoldAtTime:()=>{}},transition,0,fade);
+   bus.gain.setValueAtTime(0,0);
+   bus.gain.linearRampToValueAtTime(held,transition);
    bus.gain.linearRampToValueAtTime(0,transition+fade);
    tone.start(0);tone.stop(.38);
    return (await ctx.startRendering()).getChannelData(0);
