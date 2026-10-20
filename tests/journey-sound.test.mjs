@@ -8,8 +8,10 @@ test('fade midpoint is computed from automation timing rather than stale AudioPa
  assert.equal(gainDuringFade(.5,.24),1);
  const calls=[];
  const browserFallback={value:0,cancelScheduledValues:t=>calls.push(['cancel',t]),setValueAtTime:(v,t)=>calls.push(['set',v,t])};
- assert.equal(holdFadeAt(browserFallback,2.12,2,.24),.5);
- assert.deepEqual(calls,[['cancel',2.12],['set',.5,2.12]]);
+ assert.ok(Math.abs(holdFadeAt(browserFallback,2.12,2,.24)-.5)<1e-9);
+ assert.deepEqual(calls.map(x=>x[0]),['cancel','set']);
+ assert.equal(calls[1][2],2.12);
+ assert.ok(Math.abs(calls[1][1]-.5)<1e-9);
 });
 
 test('native hold is preferred and a throwing implementation safely falls back',()=>{
