@@ -7,7 +7,7 @@ export async function checkMusicUnderLoad(browser,origin){
  try{
   await page.goto(origin+'/music.js');
   await page.evaluate(async()=>{
-   const {createMusic}=await import('./music.js');
+   const {createMusic}=await import('./music.js');window.createTestMusic=createMusic;
    const Native=window.AudioContext;
    window.AudioContext=class{
     constructor(){
@@ -24,8 +24,10 @@ export async function checkMusicUnderLoad(browser,origin){
     window.testMusic.setScene(0,1);window.testMusic.setEnabled(true);
    };
   });
+  const preparingAt=Date.now();
   await page.locator('#start').click();
   await page.waitForFunction(()=>window.testMusic.snapshot().scene&&window.recordContext.state==='running',null,{timeout:60000});
+  const preparationMs=Date.now()-preparingAt;
   await page.waitForTimeout(200);
   const result=await page.evaluate(async()=>{
    const chunks=[],recorder=new MediaRecorder(window.recordSink.stream,{mimeType:'audio/webm;codecs=opus'});
@@ -48,7 +50,7 @@ export async function checkMusicUnderLoad(browser,origin){
    for(let i=1;i<480;i++)adjacent=Math.max(adjacent,Math.abs(loop[i]-loop[i-1]),Math.abs(loop.at(-i)-loop.at(-i-1)));
    return {longestQuiet,minRms,duration:decoded.duration,renderer:snapshot.renderer,seam,adjacent};
   });
-  console.log('Recorded load probe:',result);
+  console.log('Recorded load probe:',{...result,preparationMs});
   assert.ok(result.longestQuiet<.1,'BGM must remain audible during a 4.2s main-thread stall: '+JSON.stringify(result));
   assert.equal(result.renderer,'buffer','supported browsers must play pre-rendered loops');
   assert.ok(result.seam<=result.adjacent*1.5+.0001,'loop seam must not introduce a sharp sample jump: '+JSON.stringify(result));
@@ -69,6 +71,14 @@ export async function checkMusicUnderLoad(browser,origin){
   await page.waitForTimeout(450);
   assert.equal(await page.evaluate(()=>window.testMusic.snapshot().scene),null);
   assert.equal(await page.evaluate(()=>window.recordContext.state),'closed');
+  await page.evaluate(()=>{
+   window.OfflineAudioContext=class{constructor(){throw new Error('test: offline unavailable');}};
+   window.fallbackMusic=window.createTestMusic({getItem:()=>null,setItem(){}});
+   window.fallbackMusic.setScene(0,1);window.fallbackMusic.setEnabled(true);
+  });
+  await page.waitForFunction(()=>window.fallbackMusic.snapshot().scene==='0:ally'&&window.fallbackMusic.snapshot().renderer==='synth');
+  assert.ok(await page.evaluate(()=>window.fallbackMusic.snapshot().voices>0),'failed offline preparation must retain basic playback');
+  await page.evaluate(()=>window.fallbackMusic.destroy());
   console.log('BGM OFF/preparation, rapid selection, bounded cache, hidden/resume and destroy passed.');
   console.log('Real-time BGM recording passed: 4.2s main-thread stall, no sustained silent gap.');
   return result;

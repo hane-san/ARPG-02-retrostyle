@@ -1364,7 +1364,7 @@ export function scheduleNote(context,destination,event,time,secondsPerBeat){
   if(at>=releaseAt)return;
   releaseAt=at;
   try{holdEnvelopeAt(gain.gain,envelope,at);gain.gain.linearRampToValueAtTime(0,at+.04);osc.stop(at+.045);}catch{}
- },clean,osc};
+ },clean,osc,end:end+.01};
 }
 // Short overlap and scheduled lookahead avoid audible gaps on busy mobile render frames.
 export const MUSIC_TRANSITION={fade:.24,silence:0};
@@ -1375,7 +1375,7 @@ export function createMusic(storage){
  const voices=new Set(),retired=new Set();
  const Offline=globalThis.OfflineAudioContext||globalThis.webkitOfflineAudioContext;
  const loops=createMusicLoopCache((score,alive)=>renderMusicLoop(score,scheduleNote,Offline,alive));
- let bufferSource=null,pending=null,destroyed=false,renderer=Offline?'buffer':'synth';
+ let bufferSource=null,pending=null,destroyed=false,bufferRendering=!!Offline,renderer=Offline?'buffer':'synth';
  try{enabled=storage?.getItem('field-command-music')==='true';const saved=storage?.getItem('field-command-music-volume');if(saved!==null&&saved!==undefined&&Number.isFinite(Number(saved)))volume=Math.max(0,Math.min(1,Number(saved)));}catch{}
  function stop(){
   serial++;pending=null;loops.cancel();if(timer!==null){clearInterval(timer);timer=null;}const now=context?.currentTime||0;
@@ -1427,14 +1427,17 @@ export function createMusic(storage){
    if(pending){serial++;pending=null;loops.cancel();}return;
   }
   if(pending===request)return;
-  if(!Offline){begin(target,next,source,null);return;}
+  if(!bufferRendering){begin(target,next,source,null);return;}
   // Leave the current music playing until the requested loop is ready.
   // A stale completion after OFF / hidden / another selection cannot restart it.
   pending=request;const token=++serial;
   loops.get(next,buildTrack(target.mapId,target.phase)).then(buffer=>{
    if(!buffer||destroyed||token!==serial||globalThis.document?.hidden||context?.state!=='running')return;
    begin(target,next,source,buffer);
-  }).catch(()=>{if(token===serial&&!destroyed){pending=null;stop();}});
+  }).catch(()=>{
+   // Preserve basic playback if a browser exposes OfflineAudioContext but cannot render.
+   if(token===serial&&!destroyed){bufferRendering=false;begin(target,next,source,null);}
+  });
  }
  function unlock(){
   if(destroyed||(!enabled&&!preview)||globalThis.document?.hidden)return;

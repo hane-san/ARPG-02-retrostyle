@@ -3,18 +3,51 @@
 export async function renderMusicLoop(track, note, Offline=globalThis.OfflineAudioContext||globalThis.webkitOfflineAudioContext, alive=()=>true){
  const rate=24000,frames=Math.round(track.seconds*rate),period=frames/rate;
  const context=new Offline(2,frames*2,rate),beat=60/track.bpm;
- let count=0;
- // The first cycle supplies the preceding release tails. Crop the second cycle
- // so the loop seam contains the same overlapping voices as normal playback.
- for(let cycle=0;cycle<2;cycle++)for(const event of track.events){
+ const events=[];
+ // The first cycle supplies preceding release tails; crop the second cycle.
+ for(let cycle=0;cycle<2;cycle++)for(const event of track.events)
+  events.push({event,time:cycle*period+event.beat*beat});
+ events.sort((a,b)=>a.time-b.time);
+ let index=0,count=0,voices=[];
+ async function prepare(until){
+  while(index<events.length&&events[index].time<until){
+   const {event,time}=events[index++],voice=note(context,context.destination,event,time,beat);
+   voice.osc.onended=null;voices.push(voice);
+   if(++count%32===0)await new Promise(resolve=>setTimeout(resolve,0));
+  }
+ }
+ let rendered;
+ if(typeof context.suspend==='function'){
+  // A whole score's connected filters are expensive even before their note
+  // starts. Render in short slices so only nearby voices stay in the graph.
+  const total=frames*2/rate,slice=4;
+  await prepare(slice);
   if(!alive())return null;
-  const voice=note(context,context.destination,event,cycle*period+event.beat*beat,beat);
-  voice.osc.onended=null; // no thousands of cleanup callbacks on the UI thread
-  if(++count%32===0)await new Promise(resolve=>setTimeout(resolve,0));
+  let boundary=Math.min(slice,total),paused=boundary<total?context.suspend(boundary):null;
+  const rendering=context.startRendering();
+  while(paused){
+   await paused;
+   voices=voices.filter(voice=>{if(voice.end<=context.currentTime){voice.clean();return false;}return true;});
+   if(!alive()){
+    for(const voice of voices)voice.clean();
+    await context.resume();await rendering;return null;
+   }
+   boundary=Math.min(boundary+slice,total);await prepare(boundary);
+   paused=boundary<total?context.suspend(boundary):null;
+   await context.resume();
+  }
+  rendered=await rendering;
+ }else{
+  for(const {event,time} of events){
+   if(!alive())return null;
+   const voice=note(context,context.destination,event,time,beat);voice.osc.onended=null;
+   if(++count%32===0)await new Promise(resolve=>setTimeout(resolve,0));
+  }
+  if(!alive())return null;
+  rendered=await context.startRendering();
  }
  if(!alive())return null;
- const rendered=await context.startRendering();
- if(!alive())return null;
+ for(const voice of voices)voice.clean();
  const loop=context.createBuffer(2,frames,rate);
  for(let channel=0;channel<2;channel++)loop.getChannelData(channel).set(rendered.getChannelData(channel).subarray(frames,frames*2));
  return loop;
