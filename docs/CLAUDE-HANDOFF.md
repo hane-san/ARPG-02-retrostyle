@@ -28,8 +28,8 @@ Claudeの最初の作業は最新main SHAと未処理PRを再取得し、この�
 - 小さな残件：PR #17の回転後クリック抑止はclickの `pointerId` に依存し、Safariでの効き目は未確認。iPhoneの消音スイッチ中はWeb Audioが鳴らない可能性。旧2モードの歩行中の行き先変更で絵が1マス弱斜めに動く既存挙動。
 - `game.js` に入力・カメラ・会話・描画・3モード分岐が集まる。`game.js` を変えるPRは同時に1本とし、並行作業の衝突を避ける。
 
-## 分担と夜間点検
+## 分担と夜間巡回
 
 - 人間：採用・iPhone試遊・main統合。ChatGPT：企画とIssue化。Claude Code：高リスクの修正計画、他担当のPRの独立監査、全体整合。Codex／Claude Code（第二ライン）：実装。作った担当と別の担当・別セッションが監査する。
-- `.claude/settings.json` は読取・検査コマンドだけを許可する。push・削除・設定変更は許可しない。
-- 夜間点検は人間の承認（2026-10-20）による定期タスク。毎晩、PRを作った担当とは別のセッションで未処理PRとCIを読み、対象SHAごとにPASS/WARN/BLOCK・実行テスト・未検証・iPhone試遊項目をPRへ記録する。同じSHAの再監査はしない。マージ・main直接push・force-push・auto-merge・Settings変更・新機能の実装はしない。未処理PRがなければ何もせず終わる。初回の試運転はリポジトリ未接続（HTTP 403）で失敗した。設定手順と指示文は [NIGHTLY-AUDIT](NIGHTLY-AUDIT.md)。
+- PR監督と夜間巡回の手順、`.claude/settings.json` の許可・禁止は Issue #22（PR #23）の steward スキルに一本化する。この文書では別の手順を定めない。
+- 2026-10-20、Claude Codeのセッションから作った定期タスクを試運転した。起動したセッションにリポジトリが付かず、GitHubがHTTP 403を返し、`add_repo` も使えなかった。定期実行は、対象リポジトリを接続した状態で作る必要がある。
