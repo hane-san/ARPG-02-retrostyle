@@ -6,6 +6,7 @@ import {mkdirSync} from 'node:fs';
 import {chromium} from 'playwright';
 import {checkJourney} from './journey-browser.mjs';
 import {checkCameraInput} from './camera-browser.mjs';
+import {checkPortalRoutes} from './portal-browser.mjs';
 
 const origin='http://127.0.0.1:4173';
 const server=spawn('python3',['-m','http.server','4173','--bind','127.0.0.1'],{
@@ -74,6 +75,7 @@ async function main(){
  await page.locator('#helpBtn').click();
  assert.ok(await page.getByRole('link',{name:'広い世界を遊ぶ（通常版）'}).isVisible());
  await page.locator('#helpPanel [data-close]').click();
+ await checkPortalRoutes(page,origin);
  await checkCameraInput(page,origin);
  await checkJourney(page,origin);
  if(errors.length)throw new Error('JavaScript browser errors: '+errors.join(' | '));

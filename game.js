@@ -1,4 +1,4 @@
-import {W as TIDAL_W,H as TIDAL_H,TILE,ZONES as TIDAL_ZONES,SITES as TIDAL_SITES,NPCS as TIDAL_NPCS,BRIDGES as TIDAL_BRIDGES,START,makeWorld,findPath,nearestWalkable} from './world.js';
+import {W as TIDAL_W,H as TIDAL_H,TILE,ZONES as TIDAL_ZONES,SITES as TIDAL_SITES,NPCS as TIDAL_NPCS,BRIDGES as TIDAL_BRIDGES,START,makeWorld,findPath,nearestWalkable,avoidTransitions} from './world.js';
 import {SILK_W,SILK_H,SILK_ZONES,SILK_SITES,SILK_NPCS,SILK_BRIDGES,makeSilkWorld,silkPath} from './silk-world.js';
 import {drawSilkTile,drawSilkSite,SILK_PALETTE} from './silk-art.js';
 import {SILK_TALK,SILK_ASIDES} from './silk-dialogue.js';
@@ -495,8 +495,9 @@ function switchWorld(id,spawn){
 function startWalk(target,arrival=null){
  if(!world.walkable(target.x,target.y)){toast('ここには歩いて行けません。道や橋を選んでください。');return;}
  // Start from the next occupied grid cell instead of instantly teleporting away.
- const from={x:hero.x,y:hero.y},path=JOURNEY_MODE?routeJourneyWalk(world,hero,target):
-  currentWorldId==='silk'?silkPath(world,from,target):findPath(world,from,target);
+ // A portal crosses worlds on arrival, so only a route ending there may use it.
+ const from={x:hero.x,y:hero.y},route=avoidTransitions(world,target),path=JOURNEY_MODE?routeJourneyWalk(world,hero,target):
+  currentWorldId==='silk'?silkPath(route,from,target):findPath(route,from,target);
  if(!path){toast('この場所へ続く道が見つかりません。');return;}
  hero.path=JOURNEY_MODE?path:path.slice(1);hero.arrival=arrival;
  panTarget=null;syncZoomControls();
