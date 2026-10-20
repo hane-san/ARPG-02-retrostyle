@@ -9,6 +9,7 @@ import {chromium} from 'playwright';
 import {checkJourney} from './journey-browser.mjs';
 import {checkCameraInput} from './camera-browser.mjs';
 import {checkPortalRoutes} from './portal-browser.mjs';
+import {checkMusicUnderLoad} from './music-load-browser.mjs';
 import {checkAudioContinuity} from './audio-continuity-browser.mjs';
 
 const origin='http://127.0.0.1:4173';
@@ -92,6 +93,7 @@ async function main(){
  await checkJourney(page,origin);
  await checkJourneyFoley(browser,origin);
  await checkAudioContinuity(browser,origin);
+ await checkMusicUnderLoad(browser,origin);
  if(errors.length)throw new Error('JavaScript browser errors: '+errors.join(' | '));
  // Landscape phone: a separate page so the portrait walk above keeps its own viewport.
  const landscape=await browser.newPage({viewport:{width:844,height:390},isMobile:true,hasTouch:true});

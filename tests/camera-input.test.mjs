@@ -24,11 +24,12 @@ test('pinch lift/capture loss then a new second finger never dereferences a miss
  t.send('pointerdown',3,190);
  assert.doesNotThrow(()=>t.send('pointermove',3,200));
  t.send('pointerup',2);t.send('pointerup',3);assert.equal(t.taps.length,0);
+ assert.equal(t.context.camera.zoom,1.25);assert.equal(t.zoom.length,0);
 });
 
 function animation({pending=null,idleEdge=false}={}){
  const source=readFileSync(new URL('../game.js',import.meta.url),'utf8');
- const block=source.slice(source.indexOf('let lastPaint=-Infinity'),source.indexOf('let lastZoomLocked'));
+ const block=source.slice(source.indexOf('let lastPaint=-Infinity'),source.indexOf('let lastTravelBusy'));
  const hero={x:20,y:20,px:20,py:20,moving:false},screen={w:390,h:640};
  const camera={x:656,y:656,zoom:1.25},world={width:164*32,height:120*32,tile:32};
  if(idleEdge)Object.assign(camera,limitCamera({x:1e6,y:656},hero,{...screen,width:screen.w,height:screen.h,zoom:1.25},world,.08));
@@ -77,4 +78,11 @@ test('cancelled release cannot click the dock, but a fresh pointerdown can',()=>
  t.send('pointerdown',2);t.events.resize();
  t.documentEvents.pointerdown({pointerId:2});
  t.events.click({...click,pointerId:2});assert.equal(blocked,2,'a fresh toolbar gesture is not suppressed');
+});
+
+test('player-facing help never offers the removed manual zoom controls',()=>{
+ for(const file of ['../game.js','../index.html']){
+  const source=readFileSync(new URL(file,import.meta.url),'utf8');
+  assert.doesNotMatch(source,/＋／−|拡大縮小|ズーム/,file+' still mentions manual zoom');
+ }
 });

@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {makeWorld,findPath,START,nearestWalkable,avoidTransitions} from '../world.js';
+import {makeWorld,findPath,START,nearestWalkable,avoidTransitions,routeWalk} from '../world.js';
 import {makeSilkWorld,silkPath,SILK_START} from '../silk-world.js';
 import {makePrototypeWorld} from '../prototype-world.js';
 
@@ -61,6 +61,41 @@ test('worlds without portals are routed unchanged and the game uses the guard',(
  const mini=makePrototypeWorld();
  assert.equal(avoidTransitions(mini,START),mini);
  const game=readFileSync(new URL('../game.js',import.meta.url),'utf8');
- assert.match(game,/route=avoidTransitions\(world,target\)/);
- assert.match(game,/silkPath\(route,from,target\):findPath\(route,from,target\)/);
+ assert.match(game,/routeWalk\(world,hero,target,currentWorldId==='silk'\?silkPath:findPath\)/);
+});
+// Issue #24: a redirect between two cells must keep the walker on that edge.
+const adjacent=(a,b)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y)===1;
+const between=(from,to,path)=>({x:from.x,y:from.y,px:(from.x+to.x)/2,py:(from.y+to.y)/2,path});
+test('a redirect at rest is the same guarded route as before',()=>{
+ for(const [id,world,pathfind,start] of cases){
+  const goal=world.sites[0].entrance,hero={x:start.x,y:start.y,px:start.x,py:start.y,path:[]};
+  assert.deepEqual(routeWalk(world,hero,goal,pathfind),pathfind(avoidTransitions(world,goal),start,goal).slice(1),id);
+  assert.deepEqual(routeWalk(world,hero,start,pathfind),[],id+' redirect to the current cell arrives at once');
+ }
+});
+test('a redirect between two cells continues along that edge, never diagonally',()=>{
+ for(const [id,world,pathfind,start] of cases){
+  const goals=[...world.sites.map(s=>s.entrance),...world.npcs.map(n=>({x:n.x,y:n.y}))].filter((_,i)=>i%3===0);
+  const walk=pathfind(avoidTransitions(world,goals.at(-1)),start,goals.at(-1));
+  for(let i=0;i<walk.length-1;i+=7)for(const goal of goals){
+   const hero=between(walk[i],walk[i+1],walk.slice(i+1)),path=routeWalk(world,hero,goal,pathfind);
+   assert.ok(path?.length,id+' redirect lost the route to '+JSON.stringify(goal));
+   assert.deepEqual(path[0],walk[i+1],id+' first step leaves the current edge');
+   for(let j=1;j<path.length;j++)assert.ok(adjacent(path[j-1],path[j]),id+' diagonal step at '+JSON.stringify(path[j]));
+   assert.deepEqual(path.at(-1),goal);
+   assert.ok(!path.some(p=>world.transitionAt(p.x,p.y)),id+' redirect passes a portal');
+  }
+ }
+});
+test('turning away from a portal mid-step walks back instead of crossing worlds',()=>{
+ for(const [id,world,pathfind,start] of cases)for(const portal of world.transitions){
+  const approach=pathfind(avoidTransitions(world,portal),start,portal),from=approach.at(-2);
+  const hero=between(from,portal,[{x:portal.x,y:portal.y}]),goal=start.x===from.x&&start.y===from.y?world.sites[0].entrance:start;
+  const away=routeWalk(world,hero,goal,pathfind);
+  assert.deepEqual(away[0],{x:from.x,y:from.y},id+' '+portal.name+' must step back along the edge');
+  for(let j=1;j<away.length;j++)assert.ok(adjacent(away[j-1],away[j]),id+' diagonal step after turning back');
+  assert.ok(!away.some(p=>world.transitionAt(p.x,p.y)),id+' turning away still crosses '+portal.name);
+  const at={x:portal.x,y:portal.y};
+  assert.deepEqual(routeWalk(world,hero,at,pathfind),[at],id+' choosing the portal itself still crosses');
+ }
 });
