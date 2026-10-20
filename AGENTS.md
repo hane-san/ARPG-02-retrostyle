@@ -36,7 +36,7 @@ Human instruction on 2026-10-19: defer main protection and prioritize adding and
 - Starting archipelago tile `START` is (41,40), with a nearby portal at (45,40) on Starwind footbridge, and a distant second portal at (160,38). Both reach the same continent spawn (28,146); the return passage on the continent also works.
 - Seamless keyboard and tap-to-path travel uses legal orthogonal steps, building collision and non-traversable water. Paths must not cross water or structures; all 24 facilities and 25 NPCs remain accessible.
 - The Issyk-Kul-inspired huge lake is a traversable-shore / non-traversable-water landscape. Do not shrink it into a whole-screen decoration.
-- Camera is static-first: manual drag eases to a bounded target, edge-follow is gentle, the explorer remains visible, map bounds hold, and manual zoom is disabled while a route is active. Issue #28 additionally authorizes five place-directed framing targets with smooth transitions during travel in the default journey only: open landscapes pull back, settlements come closer, and boundary jitter must not repeatedly change framing. Mobile controls and tap-anywhere conversation must work.
+- Camera is static-first: manual drag eases to a bounded target, edge-follow is gentle, the explorer remains visible, map bounds hold, and manual zoom is disabled in all modes (Issue #30). The default journey uses authored stages 3 (settlement, 1.0), 4 (road, 0.8), 5 (vast, 0.6); stages 1/2 are reserved for closer scenes and actual interiors, which are not implemented. Issue #28 additionally authorizes five place-directed framing targets with smooth transitions during travel in the default journey only: open landscapes pull back, settlements come closer, and boundary jitter must not repeatedly change framing. Mobile controls and tap-anywhere conversation must work.
 - The complete 68-piece original music library and per-zone selection survive; player BGM and SFX preferences persist independently. BGM defaults OFF, SFX ON; audio must never block movement. Avoid abrupt gain discontinuities, timer starvation and click/pop regressions.
 - Maintain independent storage namespace `tidal-atlas:`; no accidental shared data with SRPG or ARPG. A rename of repo/display name must not silently change persistent keys.
 - No combat, quests, savegame, monetization or inherited SRPG 4-phase rules. Those are not implemented and must not be presented as features.
@@ -46,7 +46,7 @@ Human instruction on 2026-10-19: defer main protection and prioritize adding and
 
 ## Working commands and files
 
-`npm run check` verifies JavaScript parsing and deterministic tests on Node 22+ (65 tests on main at 2026-10-20; new checks raise the count).
+`npm run check` verifies JavaScript parsing and deterministic tests on Node 22+ (the exact count grows as checks are added).
 `npm run dev` runs a local static server at http://127.0.0.1:4173.
 `npm run test:browser` checks Chromium interactions (after temporary local Playwright install).
 `game.js` owns input, world switching, Canvas and camera integration. `world.js` and `silk-world.js` own data and pathfinding. `camera-limits.js` owns camera bounds. `music.js`, `zone-music.js`, `audio.js` and `silk-music.js` own audio. `silk-art.js`, `scenic-biomes.js`, `sprite-srpg.js` own visuals. `dialogue-data.js` and `silk-dialogue.js` own conversation. See DESIGN for detailed map.

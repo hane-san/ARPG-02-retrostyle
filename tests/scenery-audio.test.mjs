@@ -28,7 +28,7 @@ test('scenery edits cannot block any existing building entrance or bridge',()=>{
   assert.ok(findPath(world,START,s.entrance)?.length>2);
  }
 });
-test('BGM prepares enough ahead for mobile main-thread stalls without forced silence',()=>{
+test('legacy synth fallback retains its lookahead and transitions have no forced silence',()=>{
  assert.ok(MUSIC_SCHEDULER.lookAheadSeconds>=.6);
  assert.ok(MUSIC_SCHEDULER.lookAheadSeconds<2);
  assert.ok(MUSIC_SCHEDULER.intervalMs<=60);
@@ -41,7 +41,7 @@ test('walking uses quiet footfalls and zoom is locked across all input methods',
  assert.match(game,/6\.15/);
  assert.match(game,/sfx\.play\('soft-step'\)/);
  assert.match(sound,/else if\(kind==='soft-step'\)/);
- assert.match(game,/if\(hero\.path\.length\)return false/);
- assert.match(game,/syncZoomControls\(\)/);
+ assert.doesNotMatch(game,/zoomTo|stepJourneyZoom/);
+ assert.match(game,/syncTravelState\(\)/);
  assert.doesNotMatch(game,/歩先|あと何歩/);
 });
