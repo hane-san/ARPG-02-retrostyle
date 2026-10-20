@@ -632,7 +632,7 @@ function updateMove(dt){
  }
  hero.moving=hero.path.length>0;updateZone();
 }
-let lastPaint=-Infinity,lastPaintCamera={x:camera.x,y:camera.y};
+let lastPaint=-Infinity,lastPaintCamera={x:camera.x,y:camera.y,zoom:camera.zoom};
 function animate(time){
  const dt=last?Math.min(.07,(time-last)/1000):0;last=time;
  updateMove(dt);
@@ -661,10 +661,12 @@ function animate(time){
   camera.x=next.x;camera.y=next.y;
  }else confineCamera(camera.x,camera.y,.08);
  // Prioritize 60fps while the camera moves, but retain low-cost idle frames.
- const scrolling=panTarget!==null||Math.hypot(camera.x-lastPaintCamera.x,camera.y-lastPaintCamera.y)>.05;
+ // A framing transition is camera motion too, even while the traveller stands still.
+ const scrolling=panTarget!==null||Math.hypot(camera.x-lastPaintCamera.x,camera.y-lastPaintCamera.y)>.05||
+  Math.abs(camera.zoom-lastPaintCamera.zoom)>.0005;
  const frameMs=scrolling?1000/60:hero.moving?1000/45:1000/24;
  if(time-lastPaint>=frameMs){
-  paint(time);lastPaint=time;lastPaintCamera={x:camera.x,y:camera.y};
+  paint(time);lastPaint=time;lastPaintCamera={x:camera.x,y:camera.y,zoom:camera.zoom};
  }
  requestAnimationFrame(animate);
 }
