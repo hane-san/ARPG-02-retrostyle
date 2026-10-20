@@ -86,6 +86,12 @@ async function main(){
  await checkCameraInput(page,origin);
  await checkJourney(page,origin);
  if(errors.length)throw new Error('JavaScript browser errors: '+errors.join(' | '));
+ // Landscape phone: a separate page, opened last so it cannot background the main page.
+ const landscape=await browser.newPage({viewport:{width:844,height:390},isMobile:true,hasTouch:true});
+ await landscape.goto(origin+'/',{waitUntil:'load'});
+ assert.equal(await landscape.evaluate(()=>[...document.querySelectorAll('.nav-btn,.dock button')]
+  .filter(b=>{const r=b.getBoundingClientRect();return r.width<44||r.height<44;}).length),0,'landscape controls must keep 44px touch targets');
+ await landscape.close();
  console.log('Browser smoke passed: default mobile exploration, 68 tracks, mainland bridge, compact two-zone walk.');
 }
 try{await main();}
