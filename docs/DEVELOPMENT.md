@@ -73,3 +73,7 @@ Chromium検査は一時的に `npm install --no-save --package-lock=false playwr
 ## 6. 引き継ぎ
 
 次のAIには Issue URL・作業ブランチ・PR・Git SHA・CI URL・実施/未実施・残るリスク・試遊項目を渡す。誰かのローカルトークンやチャット全文は保存しない。
+
+## Claude Codeによる監督・夜間巡回
+
+Codex/GPT等が作ったPRをClaude Codeが受け取るときの手順（競合→CI→差分監査→1件の記録コメント→人間待ち）と、夜間巡回の範囲は `.claude/skills/steward/SKILL.md`。クラウドのセッションでは `.claude/hooks/session-start.sh` がブラウザ検査の依存を用意する。マージ・承認・Settings変更はしない。
