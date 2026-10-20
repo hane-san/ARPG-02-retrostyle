@@ -1,6 +1,6 @@
 # Claude受渡し：ARPG-02（2026-10-20）
 
-正本は現在のorigin/main、CLAUDE.md → AGENTS.md / DEVELOPMENT.md。通常版 `./`、台場ミニ `?prototype=1`、草原湖 `?journey=1` は別モード。既定入口の変更、戦闘・クエスト・進行保存は未採用。
+正本は現在のorigin/main、CLAUDE.md → AGENTS.md / DEVELOPMENT.md。Issue #28により既定 `./` は草原湖（`?journey=1` も互換）。以前の2世界 `?mode=classic` と台場ミニ `?prototype=1` を保持する。戦闘・クエスト・進行保存は未採用。入口・5段階画角・音の新しい受渡しは [JOURNEY-PRESENTATION](JOURNEY-PRESENTATION.md)。
 
 ## 整理した範囲
 
@@ -16,7 +16,7 @@
 ## 残っているもの
 
 - iPhone Safari：実際のpinch・画面回転・背景復帰・歩き終わり・下部UI・スピーカー/イヤホン・描画負荷。
-- Issue #11は企画検討。移動中ズーム解除・遠景モード・新しい速度/倍率/地図公開ルールは未採用。今回の修正を理由に導入しない。
+- Issue #11は企画検討。ただしIssue #28で、草原湖の場所に応じた5段階の自動画角と既定入口への切替を明示採用した。手動の移動中ズーム解除・主人公から離れる遠景カメラ・新しい速度/地図公開ルールは未採用。
 - Issue #5のmain保護は意図的保留。独立した初回Claude接続を試すためにRulesetや新自動化を作らない。
 
 Claudeの最初の作業は最新main SHAと未処理PRを再取得し、この修正の差分と既存JOURNEY-REVIEWの対象を照合すること。既に終わったPRを再実装せず、実機で残った具体的な不具合があれば1つのIssueから扱う。

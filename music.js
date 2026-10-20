@@ -1,6 +1,7 @@
 import {EXTRA_SCORES} from './extra-music.js';
 import {SILK_SCORES} from './silk-music.js';
 import {holdFadeAt} from './journey-sound.js';
+import {holdEnvelopeAt} from './audio-envelope.js';
 // Original map scores. No samples, downloads, quotes or melodies from other games.
 // A score has a composed A/B melody, harmony, bass and countermelody, then a varied reprise.
 const major=[0,2,4,5,7,9,11],minor=[0,2,3,5,7,8,10];
@@ -1346,14 +1347,23 @@ export function scheduleNote(context,destination,event,time,secondsPerBeat){
  osc.frequency.setValueAtTime(drum?95:frequency,time);if(drum)osc.frequency.exponentialRampToValueAtTime(35,time+duration);
  filter.type='lowpass';filter.frequency.value=event.voice==='horn'?1800:isPad?900:plucked?2400:3000;
  const attack=isPad?.075:plucked?.006:.018,release=isPad?.2:.07,end=time+duration+release;
- gain.gain.setValueAtTime(0,time);gain.gain.linearRampToValueAtTime(event.velocity,time+Math.min(attack,duration/3));
- if(plucked||drum)gain.gain.exponentialRampToValueAtTime(.0001,time+duration);
- else{gain.gain.linearRampToValueAtTime(event.velocity*.72,time+duration*.72);gain.gain.linearRampToValueAtTime(0,end);}
+ const envelope=[{time,value:0},{time:time+Math.min(attack,duration/3),value:event.velocity,curve:'linear'}];
+ if(plucked||drum)envelope.push({time:time+duration,value:.0001,curve:'exponential'});
+ else envelope.push({time:time+duration*.72,value:event.velocity*.72,curve:'linear'});
+ envelope.push({time:end,value:0,curve:'linear'});
+ gain.gain.setValueAtTime(0,time);
+ for(const point of envelope.slice(1))gain.gain[point.curve+'RampToValueAtTime'](point.value,point.time);
  osc.connect(filter);filter.connect(gain);let pan=null;
  if(context.createStereoPanner){pan=context.createStereoPanner();pan.pan.value=event.pan||0;gain.connect(pan);pan.connect(destination);}else gain.connect(destination);
  osc.start(time);osc.stop(end+.01);
  const clean=()=>{osc.disconnect();filter.disconnect();gain.disconnect();pan?.disconnect();};osc.onended=clean;
- return {stop(at=context.currentTime){try{gain.gain.cancelScheduledValues(at);gain.gain.setTargetAtTime(0,at,.012);osc.stop(at+.06);}catch{}},clean,osc};
+ let releaseAt=Infinity;
+ return {stop(at=context.currentTime){
+  at=Math.min(at,end);
+  if(at>=releaseAt)return;
+  releaseAt=at;
+  try{holdEnvelopeAt(gain.gain,envelope,at);gain.gain.linearRampToValueAtTime(0,at+.04);osc.stop(at+.045);}catch{}
+ },clean,osc};
 }
 // Short overlap and scheduled lookahead avoid audible gaps on busy mobile render frames.
 export const MUSIC_TRANSITION={fade:.24,silence:0};

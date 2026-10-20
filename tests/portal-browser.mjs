@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 // Reaching a portal switches worlds. A long walk that merely passes the starting
 // footbridge must stay in the archipelago and arrive on foot (Issue #18).
 export async function checkPortalRoutes(page,origin){
- await page.goto(origin+'/');
+ await page.goto(origin+'/?mode=classic');
  await page.waitForFunction(()=>document.querySelector('#zoneName')?.textContent==='風環の庭');
  await page.locator('#mapBtn').click();
  const atlas=await page.locator('#miniMap').boundingBox();
