@@ -86,7 +86,7 @@ async function main(){
  await checkCameraInput(page,origin);
  await checkJourney(page,origin);
  if(errors.length)throw new Error('JavaScript browser errors: '+errors.join(' | '));
- // Landscape phone: a separate page, opened last so it cannot background the main page.
+ // Landscape phone: a separate page so the portrait walk above keeps its own viewport.
  const landscape=await browser.newPage({viewport:{width:844,height:390},isMobile:true,hasTouch:true});
  await landscape.goto(origin+'/',{waitUntil:'load'});
  assert.equal(await landscape.evaluate(()=>[...document.querySelectorAll('.nav-btn,.dock button')]
