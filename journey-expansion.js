@@ -64,7 +64,12 @@ export function paintJourneyExpansion(tiles,set){
   if(x<112&&y<88)continue;
   const dx=Math.abs((x-143)/36),dy=Math.abs((y-73)/61);
   const coast=dx**4+dy**4;
-  if(coast>0.91+Math.sin(y*.19+x*.04)*.02)continue;
+  // Low-frequency bays and headlands keep the new coast from reading as a rounded box.
+  const anchored=EXTENSION_SITES.some(s=>x>=s.x-2&&x<s.x+s.w+2&&y>=s.y-2&&y<=s.entrance.y+1)||EXTENSION_NPCS.some(n=>Math.abs(n.x-x)+Math.abs(n.y-y)<=2);
+  if(!anchored&&coast>0.9+Math.sin(y*.19+x*.04)*.03+Math.sin(x*.13+y*.07+1.7)*.05+Math.sin(y*.31-x*.11)*.03)continue;
+  if(anchored&&coast>1.05)continue;
+  // Keep a little sea between the eastern shore and the map frame.
+  if(!anchored&&x>170.5+1.6*Math.sin(y*.29+.4)+1.1*Math.sin(y*.71))continue;
   const zone=extensionZoneAt(x,y);
   let t=zone==='canyon'?'c':zone==='highland'?'m':zone==='river'?'a':zone==='glass'?'H':zone==='wetlands'?'j':'z';
   if(zone==='canyon'&&Math.sin(x*.25+y*.1)>.72)t='r';
@@ -118,11 +123,16 @@ export function paintJourneyExpansionRoads(tiles,set){
    }
  }
 }
+// Region seams meander a few tiles instead of following ruler lines. The warp
+// stays small enough that every site, villager and vista keeps its region.
+const seamX=y=>147+2.2*Math.sin(y*.23+.7)+1.2*Math.sin(y*.61+2.1);
+const seamY=(x,base)=>base+2*Math.sin(x*.19+base)+1.1*Math.sin(x*.53+1.3);
 export function extensionZoneAt(x,y){
- if(x<147&&y<47)return 'canyon';
- if(y<47&&Math.hypot(x-168,y-25)<=9)return 'sky-edge';
- if(y<47)return 'highland';
- if(x<147&&y<89)return 'river';
- if(y<89)return 'glass';
- return x<147?'wetlands':'whitebasin';
+ const west=x<seamX(y),north=y<seamY(x,47);
+ if(west&&north)return 'canyon';
+ if(north&&Math.hypot(x-168,y-25)<=9)return 'sky-edge';
+ if(north)return 'highland';
+ if(west&&y<seamY(x,89))return 'river';
+ if(y<seamY(x,89))return 'glass';
+ return west?'wetlands':'whitebasin';
 }

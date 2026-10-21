@@ -25,7 +25,9 @@ export function drawExpansionTile(c,x,y,t,world){
  }
  if(t==='c'||t==='r'){
   // Broad ochre seams trace sediment, never a tiled checkerboard.
-  if(y%4===0)rect(c,px,py+15,32,2,t==='r'?'#be8d80':'#d6a08b');
+  // Sediment bands bend with the ground and break up, rather than ruling the map.
+  const band=(y+Math.round(2*Math.sin(x*.27)))%4===0;
+  if(band&&noise(x>>1,y,12)>.3)rect(c,px,py+13+Math.round(3*Math.sin(x*.9)),32,2,t==='r'?'#be8d80':'#d6a08b');
   for(let i=0;i<3;i++){const xx=px+noise(x+i,y,4)*28,yy=py+noise(x,y+i,8)*26;rect(c,xx,yy,10,1,i===0?'#e3c0a9':'#97796f');}
   if(n>.76)rect(c,px+8,py+20,4,8,'#b79786');
  }else if(t==='m'){
@@ -37,8 +39,11 @@ export function drawExpansionTile(c,x,y,t,world){
    rect(c,xx,yy,2,11,shadow);rect(c,xx-2,yy-3,6,4,bright);}
   if(n>.78)rect(c,px+17,py+27,12,1,'#e1dfb5');
  }else if(t==='H'){
-  for(let i=0;i<2;i++){const xx=px+5+i*16;rect(c,xx,py+4,2,23,'#dbe0df');rect(c,xx+4,py+4,1,21,'#829cad');}
-  if(n>.5)rect(c,px+3,py+22,24,2,'#ccd8d0');
+  // Glass frames cluster into small pavilions with open, softly lit ground between.
+  const frame=noise(x>>1,y>>1,21);
+  if(frame>.45){for(let i=0;i<2;i++){const xx=px+5+i*16;rect(c,xx,py+4,2,23,'#dbe0df');rect(c,xx+4,py+4,1,21,'#829cad');}}
+  else if(n>.55)rect(c,px+6+Math.floor(q*14),py+10+Math.floor(n*12),9,1,'#d9e4e6');
+  if(n>.5&&frame>.45)rect(c,px+3,py+22,24,2,'#ccd8d0');
   if(q>.8)rect(c,px+15,py+8,5,9,'#e7e6d2');
  }else if(t==='z'||t==='o'){
   for(let i=0;i<3;i++){const xx=px+i*11,yy=py+7+noise(x+i,y,3)*18;

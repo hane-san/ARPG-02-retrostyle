@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {makeJourneyWorld,JOURNEY_ZONES} from '../journey-world.js';
-import {EXTENSION_ZONES,EXTENSION_SITES,EXTENSION_NPCS,EXTENSION_VISTAS,EXTENSION_PALETTE} from '../journey-expansion.js';
+import {EXTENSION_ZONES,EXTENSION_SITES,EXTENSION_NPCS,EXTENSION_VISTAS,EXTENSION_PALETTE,extensionZoneAt} from '../journey-expansion.js';
 import {JOURNEY_PALETTE} from '../journey-art.js';
 import {JOURNEY_PLAYLISTS} from '../journey-music.js';
 import {JOURNEY_ZOOM_STAGES,JOURNEY_CAMERA_PROFILES,journeyCameraScene} from '../journey-camera.js';
@@ -58,4 +58,17 @@ test('large region sites, villagers and all optional vistas can be reached witho
   assert.ok(path?.length>0,JSON.stringify(item));
   for(const cell of path)assert.ok(w.walkable(cell.x,cell.y),'crossed blocked tile');
  }
+});
+test('region seams meander and every landmark sits in the region it describes',()=>{
+ const seam=y=>{for(let x=112;x<175;x++)if(extensionZoneAt(x,y)!=='river')return x;return null;};
+ const xs=new Set();for(let y=52;y<86;y+=3)xs.add(seam(y));
+ assert.ok(xs.size>=4,'river/glass boundary is not a ruler line');
+ const rows=new Set();for(let x=114;x<145;x+=3){let y=30;while(extensionZoneAt(x,y)==='canyon')y++;rows.add(y);}
+ assert.ok(rows.size>=4,'canyon/river boundary is not a ruler line');
+ const home={'journey-glass-seller':'glass','journey-glass-gardener':'glass','journey-caravan-singer':'whitebasin','journey-canyon-cook':'canyon','journey-ferry-child':'river'};
+ for(const n of EXTENSION_NPCS)if(home[n.id])assert.equal(extensionZoneAt(n.x,n.y),home[n.id],n.id);
+ const w=makeJourneyWorld();
+ for(const s of EXTENSION_SITES)for(let y=s.y;y<s.y+s.h;y++)for(let x=s.x;x<s.x+s.w;x++)
+  assert.notEqual(w.tileAt(x,y),'~',s.id+' stands on land');
+ for(let y=0;y<w.h;y++)assert.equal(w.tileAt(w.w-2,y)==='~'||w.tileAt(w.w-2,y)==='V',true,'a margin of sea separates the shore from the frame');
 });
