@@ -7,9 +7,15 @@ export const JOURNEY_CAMERA_PROFILES=Object.freeze({
  'journey-detail':1.8,'journey-interior':1.35,
  'journey-port':1,'journey-tea':1,'journey-hut':1,
  'journey-road':.8,'journey-pass':.8,
- 'journey-steppe':.6,'journey-lake':.6,'journey-salt':.6,'journey-sunset':.6
+ 'journey-steppe':.6,'journey-lake':.6,'journey-salt':.6,'journey-sunset':.6,
+ // Escarpments stay broad; narrow inhabited streets invite closer inspection.
+ 'journey-canyon':.8,'journey-highland':.6,'journey-sky-edge':.6,'journey-river':1,
+ 'journey-glass':1.35,'journey-wetlands':.8,'journey-whitebasin':.6
 });
 export function journeyCameraScene(world,hero){
+ // The narrow glass arcade is an opt-in-to-approach example of the closest frame.
+ const arcade=world.sites.find(site=>site.id==='journey-glass-promenade');
+ if(arcade&&Math.hypot(hero.px-arcade.entrance.x,hero.py-arcade.entrance.y)<=5)return 'journey-detail';
  for(const [id,radius] of [['journey-hut',7],['journey-chaikhana',7]]){
   const site=world.sites.find(site=>site.id===id);
   if(site&&Math.hypot(hero.px-site.entrance.x,hero.py-site.entrance.y)<=radius)

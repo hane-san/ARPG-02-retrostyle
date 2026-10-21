@@ -65,9 +65,9 @@ if(JOURNEY_MODE){
  document.querySelector('.map-hint').textContent='';
  $('worldCanvas').setAttribute('aria-label','中央アジアの地形に着想した、草原と湖を歩く試遊マップ');
  $('mapPanel').querySelector('p.secondary').textContent=
-  '岸の向こうへも、歩いて行けます。';
+  '湖の東に赤い峡谷、雲上の高地、逆流する川、玻璃の町、雨の湿原、白い旧水底が続きます。好きな道を選んでください。';
  $('helpPanel').querySelector('.sheet p').textContent=
-  '白い橋から円い草原へ。湖岸から塩原や石の峠へ。道を選ぶ順番は自由です。遠くを眺めたくなったら、岸や高台のそばで少し立ち止まってみてください。';
+  '白い橋から円い草原へ。湖の東側へ渡れば、赤い崖、雲上の寺、逆流する川、淡い光の街、葦の湿原、白い旧水底へ。道順は自由です。高台では少し立ち止まって遠景もどうぞ。';
  const helpParagraphs=$('helpPanel').querySelectorAll('.sheet > p');
  helpParagraphs[1].textContent='地面や地図で行き先を選ぶと、主人公が道を探して歩きます。途中でも行き先を変えられます。建物や人を選ぶと、そのそばまで歩いて向かいます。';
  helpParagraphs[2].textContent='村では近くに、草原や湖では遠くへ。場所に合わせて景色がゆっくり広がります。指で見回し、「自分へ」で主人公のところに戻ります。会話は続きを読んでも、景色を選んでそのまま歩き出しても大丈夫です。';
@@ -789,7 +789,9 @@ document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',
 document.querySelectorAll('.overlay').forEach(e=>e.addEventListener('click',ev=>{if(ev.target===e)closePanels();}));
 const mini=$('miniMap');
 function drawMinimap(){
- mini.width=520;mini.height=Math.round(520*H/W);
+ // More atlas pixels per tile reduce raster ambiguity after expansion.
+ // The element still scales down to the same mobile panel footprint.
+ mini.width=JOURNEY_MODE?Math.max(520,W*4):520;mini.height=Math.round(mini.width*H/W);
  mini.style.aspectRatio=`${W}/${H}`;
  const c=mini.getContext('2d'),sx=mini.width/W,sy=mini.height/H;
  c.clearRect(0,0,mini.width,mini.height);

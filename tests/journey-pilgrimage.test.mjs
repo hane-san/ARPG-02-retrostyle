@@ -16,10 +16,10 @@ function reachable(world){
 }
 test('pilgrimage demo is rich but preserves all original journeys',()=>{
  const w=makeJourneyWorld();
- assert.equal(w.w,112);assert.equal(w.h,88);
- assert.equal(JOURNEY_SITES.length,22);
- assert.equal(JOURNEY_NPCS.length,16);
- assert.equal(JOURNEY_VISTAS.length,9);
+ assert.equal(w.w,176);assert.equal(w.h,136);
+ assert.equal(JOURNEY_SITES.length,35);
+ assert.equal(JOURNEY_NPCS.length,27);
+ assert.equal(JOURNEY_VISTAS.length,16);
  for(const items of [JOURNEY_SITES,JOURNEY_NPCS,JOURNEY_VISTAS])
   assert.equal(new Set(items.map(item=>item.id)).size,items.length,'unique landmark ids');
  for(const id of ['journey-terminal','journey-chaikhana','journey-monolith','journey-ship','journey-hut','journey-terrace'])

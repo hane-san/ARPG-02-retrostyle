@@ -10,14 +10,25 @@ The opt-in Small Journey mode and its post-merge review handoff are in [PROTOTYP
 The separately approved Central Asia-inspired journey (`?journey=1`, Issue #14) is in [JOURNEY](docs/JOURNEY.md). It has its own 112×88 coordinates and dimension-aware pathfinding; the two-world and crop invariants below continue to apply to their original modes. Human approval in Issue #28 makes this the default `./` entrance; `?journey=1` remains compatible and `?mode=classic` retains both older worlds.
 Claude Code reads this contract from `CLAUDE.md`. Use checked-in documents, current code, Issues and Git history as source of truth—not private AI chat memory.
 
-## Current phase: rapid prototype iteration
+## Nonstop prototype phase (human instruction 2026-10-21)
+
+The human producer wants ideas thrown in at lunch to be playable on GitHub Pages by the evening. Until the human declares a stabilization phase, this section overrides the merge-approval wording elsewhere in this file, in `CLAUDE.md` and in `docs/DEVELOPMENT.md`.
+
+- **Daily afternoon run**: every day at about 15:00 JST a Claude Code run audits, fixes, implements and **merges** work in `hane-san/ARPG-02-retrostyle` and `hane-san/SRPG-01-FEstyle`. Procedure: `.claude/skills/steward/SKILL.md` (section 「毎日15時の昼ラン」).
+- **Adopted work** = open Issues and PRs created by the owner account (including GPT/Codex acting for the owner), unless the title starts with 「提案」, the body says 未採用/保留/マージ保留, or it carries a `hold`/`proposal` label. Proposals are never implemented on their own initiative.
+- **Merge gate** (all required, checked on the exact head SHA): `rules` and `browser` Actions succeed; no conflict with latest `main`; the run's own audit has no BLOCK; no `hold` label. Merge with a normal merge commit through the PR, then confirm the `main` Actions and the Pages build. If `main` or Pages breaks, open and merge a revert PR in the same run.
+- Human approval, independent audit and iPhone playtests are **batched to the evening play session**. Record them as unverified in the PR; never call them done.
+- Still prohibited: direct push to `main`, force-push or history rewrite, GitHub's auto-merge feature, PR approvals, repository Settings changes, deleting or weakening tests, renaming the repository/display title/storage keys, and touching other repositories. Game invariants below stay binding; a change that breaks them needs an explicit Issue from the human.
+- Only the afternoon run merges. The dawn patrol and other sessions keep reviewing and fixing PR branches without merging.
+
+## Earlier phase: rapid prototype iteration (2026-10-19, still applies where not overridden above)
 
 Human instruction on 2026-10-19: defer main protection and prioritize adding and trying improvements during early development. This phase applies only to ARPG-02 and takes precedence over the per-change review/device steps below.
 
 - Do not make Ruleset setup or old pending review/device records a prerequisite for new development. Leave the current unprotected main setting as it is; retain existing CI as feedback.
 - Related small improvements may share an Issue and PR. Copy the adopted Chat request into a short scope/acceptance summary and continue without repeatedly asking for the same approval. PRs can be concise: purpose, changes, checks and remaining items.
 - For low-risk and reversible medium-risk changes, independent review and iPhone playtests may be batched at a playable milestone instead of blocking every PR. Record what was deferred; do not call it tested or independently approved. Keep targeted design/review for high-risk pathfinding, cross-world or storage-contract changes.
-- Use a work branch and PR, run relevant checks and report failures honestly. Human merge decisions remain; direct main push, force-push and auto-merge are still prohibited. Resume stricter release checks when the human chooses stabilization or wider distribution.
+- Use a work branch and PR, run relevant checks and report failures honestly. Merging follows the nonstop phase above; direct main push, force-push and GitHub auto-merge are still prohibited. Resume stricter release checks when the human chooses stabilization or wider distribution.
 
 ## Shared development contract (same policy as SRPG / ARPG)
 
@@ -36,7 +47,7 @@ Human instruction on 2026-10-19: defer main protection and prioritize adding and
 - Starting archipelago tile `START` is (41,40), with a nearby portal at (45,40) on Starwind footbridge, and a distant second portal at (160,38). Both reach the same continent spawn (28,146); the return passage on the continent also works.
 - Seamless keyboard and tap-to-path travel uses legal orthogonal steps, building collision and non-traversable water. Paths must not cross water or structures; all 24 facilities and 25 NPCs remain accessible.
 - The Issyk-Kul-inspired huge lake is a traversable-shore / non-traversable-water landscape. Do not shrink it into a whole-screen decoration.
-- Camera is static-first: manual drag eases to a bounded target, edge-follow is gentle, the explorer remains visible, map bounds hold, and manual zoom is disabled in all modes (Issue #30). The default journey uses authored stages 3 (settlement, 1.0), 4 (road, 0.8), 5 (vast, 0.6); stages 1/2 are reserved for closer scenes and actual interiors, which are not implemented. Issue #28 additionally authorizes five place-directed framing targets with smooth transitions during travel in the default journey only: open landscapes pull back, settlements come closer, and boundary jitter must not repeatedly change framing. Mobile controls and tap-anywhere conversation must work.
+- Camera is static-first: manual drag eases to a bounded target, edge-follow is gentle, the explorer remains visible, map bounds hold, and manual zoom is disabled in all modes (Issue #30). The default journey uses authored stages 3 (settlement, 1.0), 4 (road, 0.8), 5 (vast, 0.6); stages 1/2 are reserved for closer scenes and actual interiors, which are not implemented. Issue #28 additionally authorizes five place-directed framing targets with smooth transitions during travel in the default journey only: open landscapes pull back, settlements come closer, and boundary jitter must not repeatedly change framing. Issue #39 (expanded journey trial) additionally uses stage 2 (1.35) for the glass city and stage 1 (1.8) beside its arcade; manual zoom remains disabled. Mobile controls and tap-anywhere conversation must work.
 - The complete 68-piece original music library and per-zone selection survive; player BGM and SFX preferences persist independently. BGM defaults OFF, SFX ON; audio must never block movement. Avoid abrupt gain discontinuities, timer starvation and click/pop regressions.
 - Maintain independent storage namespace `tidal-atlas:`; no accidental shared data with SRPG or ARPG. A rename of repo/display name must not silently change persistent keys.
 - No combat, quests, savegame, monetization or inherited SRPG 4-phase rules. Those are not implemented and must not be presented as features.
