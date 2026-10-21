@@ -1,11 +1,57 @@
 // Six deliberate vista compositions, distinct from the existing water-level relics.
-export const EXPANSION_VISTA_KINDS=new Set(['scarlet','cloud','flood','glass-city','reeds','white']);
+export const EXPANSION_VISTA_KINDS=new Set(['scarlet','cloud','flood','glass-city','reeds','white','sky-edge']);
 const rect=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));};
 const polygon=(c,pts,color)=>{c.fillStyle=color;c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();};
 const shade=(n)=>Math.max(0,Math.min(255,Math.round(n))).toString(16).padStart(2,'0');
+
+// This viewpoint intentionally empties the composition instead of adding
+// another landmark. More than four fifths of the image is sky.
+function skyEdge(c,time){
+ const W=480,H=252;
+ const stops=[
+  [0,[108,142,166]],[75,[150,177,188]],[140,[190,197,202]],
+  [196,[221,209,199]],[224,[241,223,197]],[252,[228,213,199]]
+ ];
+ for(let y=0;y<H;y+=3){
+  let s=0;while(s<stops.length-2&&y>stops[s+1][0])s++;
+  const [y0,a]=stops[s],[y1,b]=stops[s+1],t=(y-y0)/(y1-y0);
+  const rgb=a.map((v,i)=>Math.round(v+(b[i]-v)*t));
+  rect(c,0,y,W,3,`rgb(${rgb.join(',')})`);
+ }
+ const drift=Math.round(Math.sin(time/120000)*7);
+ // The few high clouds are almost lost in the distance.
+ for(const [x,y,w] of [[14,71,118],[175,88,89],[350,59,109],[80,123,64]]){
+  rect(c,x+drift,y,w,2,'#e4e4dc38');
+  rect(c,x+21+drift,y-2,Math.floor(w*.64),1,'#f8ece080');
+  rect(c,x+9+drift,y+3,Math.floor(w*.83),1,'#acbdc536');
+ }
+ // A vanishing mountain range occupies only the very bottom of the skyline.
+ polygon(c,[[0,220],[35,219],[78,215],[118,218],[162,212],[207,215],
+ [239,210],[277,215],[318,214],[344,217],[396,215],[445,219],[480,218],
+ [480,238],[0,238]],'#b0babe80');
+ polygon(c,[[0,227],[82,223],[117,228],[180,224],[244,228],[311,223],
+ [370,227],[438,224],[480,226],[480,252],[0,252]],'#bcc2bc');
+ rect(c,0,226,315,2,'#efe0c45b');
+ // A cliff entering from one side, deliberately not a full scenic foreground.
+ polygon(c,[[348,252],[371,240],[387,233],[406,229],[432,230],[448,226],
+ [480,221],[480,252]],'#7b8e94');
+ polygon(c,[[379,239],[408,229],[432,230],[448,226],[480,221],[480,227],
+ [446,232],[413,233],[394,242]],'#a6aca9');
+ polygon(c,[[347,252],[373,242],[391,245],[407,253]],'#5e7884');
+ for(const [x,y] of [[402,230],[429,230],[459,225]]){
+  rect(c,x,y-7,2,8,'#859886');rect(c,x-3,y-8,6,3,'#bbc2a1');
+ }
+ // One person is almost swallowed by the landscape's negative space.
+ rect(c,440,216,3,4,'#e8d0b3');
+ rect(c,439,220,6,10,'#58717d');
+ rect(c,439,229,2,6,'#4e5f66');rect(c,443,229,2,6,'#4e5f66');
+ rect(c,440,221,5,1,'#c3d0c4');
+}
+
 export function drawExpansionVista(canvas,kind,time=0){
  const W=480,H=252;if(canvas.width!==W)canvas.width=W;if(canvas.height!==H)canvas.height=H;
  const c=canvas.getContext('2d');c.save();c.imageSmoothingEnabled=false;
+ if(kind==='sky-edge'){skyEdge(c,Number.isFinite(time)?time:0);c.restore();return;}
  const skies={
   scarlet:['#8d9fad','#d1b6a9','#f4dbb7'],cloud:['#7b9dac','#bed0d0','#e9e7d8'],
   flood:['#789ca9','#c5d7c7','#eee0b9'],'glass-city':['#8193b4','#b9c4d2','#e6dbd2'],
