@@ -610,7 +610,7 @@ export function makeJourneyWorld(){
   id:'journey',w,h,tiles,occupied,start:{...JOURNEY_START},sites:JOURNEY_SITES,npcs:JOURNEY_NPCS,zones:JOURNEY_ZONES,
   bridges:JOURNEY_BRIDGES,vistas:JOURNEY_VISTAS,transitions:[],
   tileAt(x,y){return inside(x,y)?tiles[y][x]:'~';},
-  walkable(x,y){return inside(x,y)&&!['~','L','l','X','W','Y'].includes(tiles[y][x])&&!occupied[y*w+x];},
+  walkable(x,y){return inside(x,y)&&!['~','L','l','X','W','Y','V'].includes(tiles[y][x])&&!occupied[y*w+x];},
   siteAt(x,y){return JOURNEY_SITES.find(s=>x>=s.x&&x<s.x+s.w&&y>=s.y&&y<s.y+s.h);},
   npcAt(x,y){return JOURNEY_NPCS.find(n=>n.x===x&&n.y===y);},
   bridgeAt(x,y){return JOURNEY_BRIDGES.find(b=>x>=b.x1&&x<=b.x2&&y>=b.y1&&y<=b.y2);},
