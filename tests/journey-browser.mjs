@@ -95,7 +95,7 @@ export async function checkJourney(page,origin){
  }
 
  await page.locator('#mapBtn').click();
- assert.equal(await page.locator('#zoneList button').count(),7);
+ assert.equal(await page.locator('#zoneList button').count(),13);
  const start=await mapPosition();assert.ok(Math.hypot(start.x-19,start.y-70)<1,'new-world spawn');
  await page.screenshot({path:'test-results/journey-atlas.png'});
  await page.locator('#mapPanel [data-close]').click();
