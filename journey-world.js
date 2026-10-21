@@ -1,8 +1,9 @@
 // A newly drawn, opt-in walking country. No coordinates are cropped from either
 // original world. The existing mainland A* already indexes by world.w / world.h.
 import {silkPath} from './silk-world.js';
+import {EXTENSION_ZONES,EXTENSION_SITES,EXTENSION_NPCS,EXTENSION_VISTAS,paintJourneyExpansion,paintJourneyExpansionRoads,extensionZoneAt} from './journey-expansion.js';
 
-export const JOURNEY_W=112,JOURNEY_H=88;
+export const JOURNEY_W=176,JOURNEY_H=136;
 export const STEPPE={x:36,y:38,r:24.5,roadRadius:22.2};
 export const JOURNEY_START={x:19,y:70};
 export const JOURNEY_ZONES=[
@@ -17,6 +18,7 @@ export const JOURNEY_ZONES=[
 
 // Working names and independent fragments, deliberately replaceable. No quest,
 // historical truth, or main-story answer is established by these descriptions.
+JOURNEY_ZONES.push(...EXTENSION_ZONES);
 export const JOURNEY_SITES=[
  {id:'journey-terminal',name:'白い連絡舎',kind:'terminal',x:7,y:68,w:9,h:6,entrance:{x:12,y:75},desc:'海辺の連絡舎。白い折屋根の下で、草原を越える荷物と湖から届く籠が同じ台車を待っている。',aside:'帰りの船の時刻は書いていない。軒先の灯りは、誰が戻ってもいいようについている。'},
  {id:'journey-chaikhana',name:'水路の茶屋',kind:'teahouse',x:42,y:63,w:8,h:5,entrance:{x:46,y:69},desc:'湖から引いた小さな水路のそばのチャイハナ。畑の仕事がひと段落すると、誰かが黙って湯を足す。',aside:'片方だけの手袋が窓辺に並んでいる。落とし主は違っても、冬までには組になるらしい。'},
@@ -302,6 +304,7 @@ JOURNEY_SITES.push(...[
  }
 ]);
 
+JOURNEY_SITES.push(...EXTENSION_SITES);
 export const JOURNEY_NPCS=[
  {id:'journey-keeper',name:'灯りをともす人',role:'船着場の番人',x:18,y:76,color:'#d5b995',lines:['草原へ？ 橋を渡ったら、円い道の好きなほうへどうぞ。','遠くの黒い石は、ここからも見えるんです。夕方は湖の南岸がきれいですよ。','帰ってきたら、白い屋根を目印に。灯りは消しませんから。']},
  {id:'journey-host',name:'茶屋の主人',role:'チャイハナの店主',x:50,y:70,color:'#c7a7a4',lines:['この畑の水は湖から。お茶の水は峠の泉から。味が違うって、みんな言うんです。','塩原へは峠を越えても、湖の岸を回っても行けます。','手袋？ 落とし主が戻らない年もあるから、先に洗っておくんですよ。']},
@@ -455,6 +458,7 @@ JOURNEY_NPCS.push(...[
  }
 ]);
 
+JOURNEY_NPCS.push(...EXTENSION_NPCS);
 export const JOURNEY_BRIDGES=[
  {id:'journey-link',name:'白浜の連絡橋',axis:'h',x1:21,x2:32,y1:66,y2:68,center:{x:26,y:67}},
  {id:'journey-watercourse',name:'畑の水路橋',axis:'h',x1:50,x2:54,y1:73,y2:75,center:{x:52,y:74}}
@@ -522,6 +526,8 @@ JOURNEY_VISTAS.push(...[
  }
 ]);
 
+JOURNEY_VISTAS.push(...EXTENSION_VISTAS);
+
 const distance=(x,y,[ax,ay],[bx,by])=>{
  const dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1)));
  return Math.hypot(x-ax-t*dx,y-ay-t*dy);
@@ -567,6 +573,8 @@ export function makeJourneyWorld(){
    tiles[y][x]=t;
   }
  }
+ // Add new eastern land beyond the old coordinate rectangle.
+ paintJourneyExpansion(tiles,set);
  // The circular path is a choice of directions, not a forced tour itinerary.
  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
   if(Math.abs(Math.hypot(x-STEPPE.x,y-STEPPE.y)-STEPPE.roadRadius)<.8)set(x,y,'=');
@@ -581,11 +589,12 @@ export function makeJourneyWorld(){
     set(x,y,type);
    }
  }
+ paintJourneyExpansionRoads(tiles,set);
  for(const b of JOURNEY_BRIDGES)for(let y=b.y1;y<=b.y2;y++)for(let x=b.x1;x<=b.x2;x++)set(x,y,'+');
  for(const s of JOURNEY_SITES){
   for(let y=s.y;y<s.y+s.h;y++)for(let x=s.x;x<s.x+s.w;x++){
    if(s.blocking!==false)occupied[y*w+x]=1;
-   if(s.kind!=='relic'&&['~','L','X'].includes(tiles[y][x]))set(x,y,s.kind==='monolith'?'h':s.kind==='shipwreck'?'S':'p');
+   if(s.kind!=='relic'&&s.kind!=='expansion'&&['~','L','X'].includes(tiles[y][x]))set(x,y,s.kind==='monolith'?'h':s.kind==='shipwreck'?'S':'p');
   }
   occupied[s.entrance.y*w+s.entrance.x]=0;set(s.entrance.x,s.entrance.y,'=');
  }
@@ -601,13 +610,14 @@ export function makeJourneyWorld(){
   id:'journey',w,h,tiles,occupied,start:{...JOURNEY_START},sites:JOURNEY_SITES,npcs:JOURNEY_NPCS,zones:JOURNEY_ZONES,
   bridges:JOURNEY_BRIDGES,vistas:JOURNEY_VISTAS,transitions:[],
   tileAt(x,y){return inside(x,y)?tiles[y][x]:'~';},
-  walkable(x,y){return inside(x,y)&&!['~','L','l','X'].includes(tiles[y][x])&&!occupied[y*w+x];},
+  walkable(x,y){return inside(x,y)&&!['~','L','l','X','W','Y'].includes(tiles[y][x])&&!occupied[y*w+x];},
   siteAt(x,y){return JOURNEY_SITES.find(s=>x>=s.x&&x<s.x+s.w&&y>=s.y&&y<s.y+s.h);},
   npcAt(x,y){return JOURNEY_NPCS.find(n=>n.x===x&&n.y===y);},
   bridgeAt(x,y){return JOURNEY_BRIDGES.find(b=>x>=b.x1&&x<=b.x2&&y>=b.y1&&y<=b.y2);},
   transitionAt(){return undefined;},
   findPath:silkPath,
   zoneAt(x,y){
+   if(x>=112||y>=88)return byId(extensionZoneAt(x,y));
    if(x<30&&y>=64)return byId('port');
    if(x>=70&&y<33)return byId('salt');
    if(x>=49&&y<35)return byId('pass');
