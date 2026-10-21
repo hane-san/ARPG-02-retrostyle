@@ -31,6 +31,13 @@ test('expanded scenery preserves the original walking country and adds six coher
  for(const v of EXTENSION_VISTAS)assert.ok(EXPANSION_VISTA_KINDS.has(v.kind));
  assert.equal(world.tileAt(81,52),'L','original central water remains unwalkable');
  assert.equal(world.walkable(81,52),false);
+ const sky=EXTENSION_VISTAS.find(v=>v.id==='journey-sky-edge-vista');
+ assert.ok(sky&&sky.kind==='sky-edge');
+ assert.equal(world.zoneAt(sky.x,sky.y).id,'journey-sky-edge');
+ assert.equal(journeyCameraScene(world,{px:sky.x,py:sky.y}),'journey-sky-edge');
+ assert.equal(JOURNEY_CAMERA_PROFILES['journey-sky-edge'],.6);
+ assert.ok(world.sites.some(s=>s.id==='journey-sky-seat'));
+ assert.equal(world.walkable(169,15),false,'the open sky is not walkable');
 });
 test('the expanded terrain contains meaningful colour contrasts and true physical water',()=>{
  const w=makeJourneyWorld(),counts={};
