@@ -3,7 +3,8 @@
 // The architecture and dialogue are playtest sketches, not canonical history.
 export const EXTENSION_ZONES=[
  {id:'journey-canyon',name:'朱霞の裂谷',sub:'赤い断崖に刻まれた、雨の戻り道',cx:130,cy:35,label:{x:130,y:19}},
- {id:'journey-highland',name:'雲縁の高地',sub:'風と霧が古い階段を隠す山の国',cx:161,cy:27,label:{x:162,y:11}},
+ {id:'journey-highland',name:'雲縁の高地',sub:'風と霧が古い階段を隠す山の国',cx:156,cy:27,label:{x:155,y:12}},
+ {id:'journey-sky-edge',name:'空の涯',sub:'崖の向こうは、帰る道もないほど大きな空',cx:168,cy:25,label:{x:169,y:5}},
  {id:'journey-river',name:'逆流する河畔',sub:'季節に合わせて船と道が入れ替わる',cx:121,cy:68,label:{x:120,y:53}},
  {id:'journey-glass',name:'玻璃の庭園都',sub:'水に頼る機械と暮らしが隣り合う',cx:161,cy:70,label:{x:160,y:55}},
  {id:'journey-wetlands',name:'蘆雨の浮草郷',sub:'季節にだけ現れる道と水辺の学び舎',cx:122,cy:112,label:{x:120,y:118}},
@@ -17,6 +18,7 @@ const point=(id,name,form,x,y,w,h,ex,ey,desc,aside)=>({
 export const EXTENSION_SITES=[
  point('scarlet-gauge','紅崖の水尺','gauge',116,20,6,4,119,25,'川が赤い岩を削った深さを刻む石尺。昔の舟運びは、この高さまで洪水が来るのを知っていた。','高い目盛りにも子供の筆跡がある。その年、誰がここで水を待っていたのだろう。'),
  point('canyon-temple','峡谷の裏寺','temple',138,37,6,4,141,42,'表の祭壇からは見えない岩陰の小さな祈祷所。赤い壁には水路を直した人の名が彫られる。','大きな神殿より、この小さな日陰へ毎朝来る人が多い。理由はそれぞれ違う。'),
+ point('sky-seat','風待ちの小さな石','bench',164,22,4,3,168,25,'長い山道の終わりに置かれた、座るためだけの石。崖の向こうには、道も建物もない。','ここを知る人は、何かを見に来るのではなく、何も見えない遠さを眺めに来る。'),
  point('cloud-bell','雲際の鐘楼','bell',154,16,7,5,158,22,'谷を見下ろす鐘楼。霞んだ朝は頂上が見えず、鐘の音だけが道の存在を教えてくれる。','下から見たときには塔が雲を支えているようだった。でも中には小さな階段が続いている。'),
  point('snow-spring','雪解けの水庭','spring',163,36,7,4,166,42,'山の冷たい水を細い溝へ分ける庭。湧き水の量を記す帳面は、村の子供でも読める。','古い装置を触る前に、まず水を飲んでいきなさい、と水守は言う。'),
  point('rain-pier','雨季の寄港桟橋','pier',114,54,6,4,118,59,'乾季は青い草地、雨季は舟が着く桟橋。家には船底と車輪の部品が並べて掛けられている。','昨日の道が今日の水路になる。ここでは地図を毎年描き直す。'),
@@ -32,6 +34,7 @@ const person=(id,name,role,x,y,color,a,b)=>({id:'journey-'+id,name,role,x,y,colo
 export const EXTENSION_NPCS=[
  person('red-stonekeeper','赤い岸の石守','水尺の守り手',118,28,'#cda790','洪水は敵じゃない。水に合わせて暮らす方法を教えてくれる。','でも今度の水の減り方だけは、父の帳面にないんだ。'),
  person('canyon-cook','峡谷の釜炊き','旅人に食事を出す人',144,44,'#d9b7a3','山の影が差したら、石窯をあたためるんだ。','遠い古代の壁より、今日の雨雲の方が気になるね。'),
+ person('sky-wanderer','空を知る巡礼者','崖道で休む旅人',157,33,'#bec1b3','向こうに何か見えますか。わたしには空ばかりです。','それでも、ときどきここに来たくなるんです。'),
  person('cloud-guide','霧道の案内人','高地の道案内',161,24,'#b7c6c2','よく見える日は、ここから旧湖の縁まで見える。','見えない日は、代わりに足元の花を数えるといいよ。'),
  person('snow-keeper','湧水を量る少年','水庭の記録係',168,44,'#a3bac5','昨日は十一杯、今日は九杯。だから今日は九杯だけ分ける。','数字が合っても、みんなが納得するとは限らないんだ。'),
  person('ferry-child','渡し舟を待つ子','河畔の子供',115,64,'#b8c7a6','雨季ならここに船が来るよ。乾季には駆けっこする道になるんだ。','遠くの村の子が遊びに来るのは、水が多い時だけ。'),
@@ -42,6 +45,7 @@ export const EXTENSION_NPCS=[
  person('caravan-singer','荷車のうたびと','旧船乗り',169,120,'#cdb4a7','水の上では船が揺れて、ここでは荷車が揺れる。','どちらも遠くに行けるのに、帰り道だけは同じ夢を見るんだ。')
 ];
 export const EXTENSION_VISTAS=[
+ {id:'journey-sky-edge-vista',x:168,y:25,radius:4,title:'空の涯に立つ',sub:'もう少しだけ、ここにいたい。',kind:'sky-edge'},
  {id:'journey-scarlet-vista',x:129,y:36,radius:5,title:'朱い谷が開く',sub:'古い水位の線より下に、新しい通り道が見える。',kind:'scarlet'},
  {id:'journey-cloud-vista',x:163,y:27,radius:5,title:'雲と石階の向こう',sub:'近くの鐘を小さくし、霧の向こうに石の段が重なる。',kind:'cloud'},
  {id:'journey-flood-vista',x:121,y:68,radius:5,title:'水が行ったり来たりする国',sub:'舟と道が入れ替わる季節の川。その向こうに人の暮らしが続く。',kind:'flood'},
@@ -50,7 +54,7 @@ export const EXTENSION_VISTAS=[
  {id:'journey-white-vista',x:158,y:115,radius:5,title:'白い海底の幾何学',sub:'遠くの柱と新しい隊商路が、同じ地平線まで続いている。',kind:'white'}
 ];
 export const EXTENSION_PALETTE={
- c:'#b88779',r:'#a16f66',m:'#a4b8b7',Y:'#738790',
+ c:'#b88779',r:'#a16f66',m:'#a4b8b7',Y:'#738790',V:'#bfd0d0',
  a:'#90b7aa',W:'#78aeb3',H:'#a8b8ca',j:'#9bbd9d',z:'#e2dacd',o:'#ddc0a8'
 };
 // A single broad landform, not a random scattering of mini-biomes.
@@ -76,6 +80,11 @@ export function paintJourneyExpansion(tiles,set){
   }
   set(x,y,t);
  }
+ // Beyond the northern highland, pale empty air replaces the water-coloured
+ // out-of-bounds tiles. This is an impassable precipice, not a shortcut.
+ for(let y=11;y<=42;y++)for(let x=162;x<=174;x++){
+  if(tiles[y][x]==='~')set(x,y,'V');
+ }
 }
 // Deliberate footbridges, paired cross-valley and cross-river routes. All other
 // natural water and sheer rock remain impassable.
@@ -92,6 +101,7 @@ export function paintJourneyExpansionRoads(tiles,set){
   {points:[[120,68],[127,70],[136,70],[154,70],[165,72]],width:1},
   {points:[[122,98],[132,97],[138,97],[158,97],[166,96]],width:1},
   {points:[[146,27],[145,47],[155,58],[154,70]],width:.9},
+  {points:[[163,27],[168,25]],width:.9},
   {points:[[121,79],[128,83],[132,90],[122,98]],width:.85}
  ];
  const w=tiles[0].length,h=tiles.length;
@@ -110,6 +120,7 @@ export function paintJourneyExpansionRoads(tiles,set){
 }
 export function extensionZoneAt(x,y){
  if(x<147&&y<47)return 'canyon';
+ if(y<47&&Math.hypot(x-168,y-25)<=9)return 'sky-edge';
  if(y<47)return 'highland';
  if(x<147&&y<89)return 'river';
  if(y<89)return 'glass';
