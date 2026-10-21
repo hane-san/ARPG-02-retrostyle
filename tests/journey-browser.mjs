@@ -46,6 +46,19 @@ export async function checkJourney(page,origin){
  assert.ok(await page.locator('#vistaBtn').isVisible(),'a distant view is available at departure');
  await page.waitForFunction(()=>Math.abs(window.journeyRenderZoom-1)<.002);
  await page.screenshot({path:'test-results/journey-port.png'});
+ // Directly render the optional distant cliff panorama as well as the original
+ // scene. A scenic view can be geographically reachable yet fail only on open.
+ const skyPixels=await page.evaluate(async()=>{
+  const {drawJourneyPanorama}=await import('./journey-panorama.js');
+  const canvas=document.createElement('canvas');
+  drawJourneyPanorama(canvas,'sky-edge',0);
+  const context=canvas.getContext('2d');
+  const sample=(x,y)=>Array.from(context.getImageData(x,y,1,1).data).slice(0,3);
+  return {w:canvas.width,h:canvas.height,sky:sample(215,70),horizon:sample(215,200)};
+ });
+ assert.deepEqual([skyPixels.w,skyPixels.h],[480,252]);
+ assert.ok(skyPixels.sky[2]>skyPixels.sky[0],'cliff outlook is cool, open sky');
+ assert.ok(skyPixels.horizon[0]>skyPixels.horizon[2],'the horizon has a gentle warm colour');
 
  async function mapPosition(){
   return page.locator('#miniMap').evaluate(canvas=>{
