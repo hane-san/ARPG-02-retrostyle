@@ -7,6 +7,12 @@ function noise(x,y,k=0){let z=Math.imul(x+65,374761393)^Math.imul(y+11,668265263
 export function drawExpansionTile(c,x,y,t,world){
  const px=x*32,py=y*32,n=noise(x,y),q=noise(y,x);
  rect(c,px,py,32,32,EXTENSION_PALETTE[t]||'#c4c8b5');
+ if(t==='V'){
+  // Empty pale sky beyond the cliff is not a traversable body of water.
+  for(let i=0;i<4;i++)rect(c,px,py+i*8,32,8,['#c1d0d0','#bfcdcd','#becbcb','#b9c6c8'][i]);
+  if(n>.75)rect(c,px+2+Math.floor(q*10),py+8,23,1,'#e2e2d84a');
+  return;
+ }
  if(t==='W'){
   if(n>.22)rect(c,px+2+n*15,py+8+q*14,11,1,'#c6ddd0');
   if(q>.53)rect(c,px+4,py+26,19,1,'#8cc4bb');
@@ -47,7 +53,12 @@ export function drawExpansionSite(c,s,x,y,w,h,cx,time){
  const base=()=>{polygon(c,[[x+8,ground],[x+w-8,ground],[x+w-3,ground+10],[x+8,ground+10]],'#c5c8b4');r(x+12,ground,w-24,2,light);};
  const pillar=(px,top,hh,col=stone)=>{r(px,top,9,hh,col);r(px,top,3,hh,light);};
  base();
- if(s.form==='gauge'){
+ if(s.form==='bench'){
+  // A seat, never a shrine: this place is about the empty distance.
+  r(x+14,y+h-46,w-28,9,stone);r(x+21,y+h-37,6,19,line);
+  r(x+w-28,y+h-37,6,19,line);
+  r(x+18,y+h-49,w-36,2,light);
+ }else if(s.form==='gauge'){
   for(let i=0;i<5;i++){const px=x+17+i*(w-35)/5;
    r(px,y+20+(i%2)*13,8,ground-y-30,stone);
    for(let j=0;j<4;j++)r(px+1,y+38+j*19,6,2,j%2?dark:light);}
