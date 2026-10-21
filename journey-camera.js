@@ -9,7 +9,7 @@ export const JOURNEY_CAMERA_PROFILES=Object.freeze({
  'journey-road':.8,'journey-pass':.8,
  'journey-steppe':.6,'journey-lake':.6,'journey-salt':.6,'journey-sunset':.6,
  // Escarpments stay broad; narrow inhabited streets invite closer inspection.
- 'journey-canyon':.8,'journey-highland':.6,'journey-river':1,
+ 'journey-canyon':.8,'journey-highland':.6,'journey-sky-edge':.6,'journey-river':1,
  'journey-glass':1.35,'journey-wetlands':.8,'journey-whitebasin':.6
 });
 export function journeyCameraScene(world,hero){
