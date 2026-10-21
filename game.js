@@ -789,7 +789,9 @@ document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',
 document.querySelectorAll('.overlay').forEach(e=>e.addEventListener('click',ev=>{if(ev.target===e)closePanels();}));
 const mini=$('miniMap');
 function drawMinimap(){
- mini.width=520;mini.height=Math.round(520*H/W);
+ // More atlas pixels per tile reduce raster ambiguity after expansion.
+ // The element still scales down to the same mobile panel footprint.
+ mini.width=JOURNEY_MODE?Math.max(520,W*4):520;mini.height=Math.round(mini.width*H/W);
  mini.style.aspectRatio=`${W}/${H}`;
  const c=mini.getContext('2d'),sx=mini.width/W,sy=mini.height/H;
  c.clearRect(0,0,mini.width,mini.height);
