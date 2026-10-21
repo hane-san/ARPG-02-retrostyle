@@ -6,7 +6,14 @@ export const JOURNEY_PLAYLISTS={
  'journey-lake':['29:1','29:2','23:1'],
  'journey-salt':['27:1','27:2','30:2'],
  'journey-pass':['28:1','33:1','28:2'],
- 'journey-sunset':['31:2','29:1','27:1']
+ 'journey-sunset':['31:2','29:1','27:1'],
+ // Contrasting instrument/tempo pools, drawn only from the unchanged 68 pieces.
+ 'journey-canyon':['19:1','24:1','28:2'],
+ 'journey-highland':['6:1','21:2','33:1'],
+ 'journey-river':['20:1','23:2','29:2'],
+ 'journey-glass':['16:1','18:2','32:1'],
+ 'journey-wetlands':['9:2','12:1','31:2'],
+ 'journey-whitebasin':['27:1','22:2','33:2']
 };
 export function pickJourneyTrack(zone,previous,random=Math.random){
  const pool=JOURNEY_PLAYLISTS[zone];
