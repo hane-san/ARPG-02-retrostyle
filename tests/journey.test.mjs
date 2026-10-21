@@ -21,13 +21,13 @@ function legalRoute(w,from,to){
 }
 
 test('journey uses its own actual dimensions, spawn, and strict coordinate bounds',()=>{
- assert.equal(world.w,112);assert.equal(world.h,88);
+ assert.equal(world.w,176);assert.equal(world.h,136);
  assert.equal(world.w,JOURNEY_W);assert.equal(world.h,JOURNEY_H);
  assert.equal(world.occupied.length,world.w*world.h);
  assert.ok(world.walkable(world.start.x,world.start.y));
  assert.notDeepEqual(world.start,{x:41,y:40});
- assert.ok(world.w*world.h<430*270*.1);
- for(const p of [{x:-1,y:20},{x:112,y:20},{x:0,y:88},{x:2.5,y:3},{x:NaN,y:3}]){
+ assert.ok(world.w*world.h<430*270*.25);
+ for(const p of [{x:-1,y:20},{x:176,y:20},{x:0,y:136},{x:2.5,y:3},{x:NaN,y:3}]){
   assert.equal(world.walkable(p.x,p.y),false);assert.equal(world.tileAt(p.x,p.y),'~');
   assert.equal(world.findPath(world,world.start,p),null);
  }
@@ -118,7 +118,7 @@ test('the three world data contracts coexist without shared occupancy or hidden 
  assert.ok(world.walkable(world.start.x,world.start.y));assert.ok(tidal.walkable(41,40));
 });
 
-test('journey playlists preserve the 68-piece library and distinguish all seven regions',()=>{
+test('journey playlists preserve the 68-piece library and distinguish all thirteen regions',()=>{
  assert.equal(MUSIC_LIBRARY.length*2,68);
  assert.equal(Object.keys(JOURNEY_PLAYLISTS).length,world.zones.length);
  for(const z of world.zones){
