@@ -10,8 +10,8 @@ import {EXPANSION_VISTA_KINDS} from '../journey-expansion-vistas.js';
 test('expanded scenery preserves the original walking country and adds six coherent regions',()=>{
  const world=makeJourneyWorld();
  assert.deepEqual([world.w,world.h],[176,136]);
- assert.deepEqual([EXTENSION_ZONES.length,EXTENSION_SITES.length,EXTENSION_NPCS.length,EXTENSION_VISTAS.length],[6,12,10,6]);
- assert.equal(JOURNEY_ZONES.length,13);
+ assert.deepEqual([EXTENSION_ZONES.length,EXTENSION_SITES.length,EXTENSION_NPCS.length,EXTENSION_VISTAS.length],[7,13,11,7]);
+ assert.equal(JOURNEY_ZONES.length,14);
  assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.8,1.35,1,.8,.6]);
  for(const zone of EXTENSION_ZONES){
   const loc={x:zone.cx,y:zone.cy};
