@@ -36,7 +36,7 @@ export async function checkJourney(page,origin){
  });
  const response=await page.goto(origin+'/',{waitUntil:'load'});
  assert.ok(response?.ok());
- await page.waitForFunction(()=>document.querySelector('#discovered')?.textContent==='0 / 22');
+ await page.waitForFunction(()=>document.querySelector('#discovered')?.textContent==='0 / 34');
  assert.equal(await page.locator('#worldTitle').textContent(),'小さく壮大な旅');
  assert.equal(await page.title(),'潮環群島 × 星風回廊 — TIDAL ATLAS');
  assert.equal(await page.locator('#zoneName').textContent(),'白い船着場');
@@ -58,7 +58,7 @@ export async function checkJourney(page,origin){
     }
    }
    if(maxX<0)throw Error('Visible explorer marker missing from atlas');
-   return {x:(minX+maxX)/2/canvas.width*112-.5,y:(minY+maxY)/2/canvas.height*88-.5};
+   return {x:(minX+maxX)/2/canvas.width*176-.5,y:(minY+maxY)/2/canvas.height*136-.5};
   });
  }
  // 自分へ glides back instead of jumping; taps relative to the centre wait until it rests.
@@ -73,7 +73,7 @@ export async function checkJourney(page,origin){
  async function mapClick(x,y){
   await page.locator('#mapBtn').click();
   const box=await page.locator('#miniMap').boundingBox();
-  await page.mouse.click(box.x+(x+.5)/112*box.width,box.y+(y+.5)/88*box.height);
+  await page.mouse.click(box.x+(x+.5)/176*box.width,box.y+(y+.5)/136*box.height);
  }
  async function walk(x,y,{name=null,arrival=null,shot=null}={}){
   await mapClick(x,y);
@@ -200,7 +200,7 @@ export async function checkJourney(page,origin){
  assert.ok(await page.locator('#dialogue').isHidden(),'walking keys dismiss the reading card');
  await page.waitForFunction(()=>document.querySelector('#worldCanvas').getAttribute('aria-busy')==='false');
  await walk(12,71,{name:'白い連絡舎',arrival:{x:12,y:75}});
- assert.equal(await page.locator('#discovered').textContent(),'1 / 22');
+ assert.equal(await page.locator('#discovered').textContent(),'1 / 34');
 
  // Redirect before arrival; wheel cannot change the authored framing.
  await mapClick(36,38);
@@ -237,7 +237,7 @@ export async function checkJourney(page,origin){
  await walk(14,38);await walk(36,60);
  await walk(46,65,{name:'水路の茶屋',arrival:{x:46,y:69}});
  await page.waitForFunction(()=>Math.abs(window.journeyRenderZoom-1)<.002,null,{timeout:9000});
- assert.equal(await page.locator('#discovered').textContent(),'6 / 22');
+ assert.equal(await page.locator('#discovered').textContent(),'6 / 34');
  await walk(19,70);
  assert.equal(await page.locator('#zoneName').textContent(),'白い船着場');
  assert.ok(await page.evaluate(()=>window.journeyAudioProbe.contexts.length<=2),'music and SFX contexts are reused for the entire loop');
@@ -257,7 +257,7 @@ export async function checkJourney(page,origin){
  assert.ok(keys.length>0&&keys.every(key=>key.startsWith('tidal-atlas:')));
  await page.goto(origin+'/?prototype=1&journey=1');
  await page.waitForFunction(()=>document.querySelector('#worldTitle').textContent==='小さく壮大な旅');
- assert.equal(await page.locator('#discovered').textContent(),'0 / 22','mode flags have explicit precedence, with no game-save added');
+ assert.equal(await page.locator('#discovered').textContent(),'0 / 34','mode flags have explicit precedence, with no game-save added');
  await page.locator('#soundBtn').click();
  assert.equal(await page.locator('#sfxVolumeRange').inputValue(),'27','foley volume persists separately from music');
  await page.locator('#soundBtn').click();
