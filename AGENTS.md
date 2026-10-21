@@ -10,14 +10,25 @@ The opt-in Small Journey mode and its post-merge review handoff are in [PROTOTYP
 The separately approved Central Asia-inspired journey (`?journey=1`, Issue #14) is in [JOURNEY](docs/JOURNEY.md). It has its own 112×88 coordinates and dimension-aware pathfinding; the two-world and crop invariants below continue to apply to their original modes. Human approval in Issue #28 makes this the default `./` entrance; `?journey=1` remains compatible and `?mode=classic` retains both older worlds.
 Claude Code reads this contract from `CLAUDE.md`. Use checked-in documents, current code, Issues and Git history as source of truth—not private AI chat memory.
 
-## Current phase: rapid prototype iteration
+## Nonstop prototype phase (human instruction 2026-10-21)
+
+The human producer wants ideas thrown in at lunch to be playable on GitHub Pages by the evening. Until the human declares a stabilization phase, this section overrides the merge-approval wording elsewhere in this file, in `CLAUDE.md` and in `docs/DEVELOPMENT.md`.
+
+- **Daily afternoon run**: every day at about 15:00 JST a Claude Code run audits, fixes, implements and **merges** work in `hane-san/ARPG-02-retrostyle` and `hane-san/SRPG-01-FEstyle`. Procedure: `.claude/skills/steward/SKILL.md` (section 「毎日15時の昼ラン」).
+- **Adopted work** = open Issues and PRs created by the owner account (including GPT/Codex acting for the owner), unless the title starts with 「提案」, the body says 未採用/保留/マージ保留, or it carries a `hold`/`proposal` label. Proposals are never implemented on their own initiative.
+- **Merge gate** (all required, checked on the exact head SHA): `rules` and `browser` Actions succeed; no conflict with latest `main`; the run's own audit has no BLOCK; no `hold` label. Merge with a normal merge commit through the PR, then confirm the `main` Actions and the Pages build. If `main` or Pages breaks, open and merge a revert PR in the same run.
+- Human approval, independent audit and iPhone playtests are **batched to the evening play session**. Record them as unverified in the PR; never call them done.
+- Still prohibited: direct push to `main`, force-push or history rewrite, GitHub's auto-merge feature, PR approvals, repository Settings changes, deleting or weakening tests, renaming the repository/display title/storage keys, and touching other repositories. Game invariants below stay binding; a change that breaks them needs an explicit Issue from the human.
+- Only the afternoon run merges. The dawn patrol and other sessions keep reviewing and fixing PR branches without merging.
+
+## Earlier phase: rapid prototype iteration (2026-10-19, still applies where not overridden above)
 
 Human instruction on 2026-10-19: defer main protection and prioritize adding and trying improvements during early development. This phase applies only to ARPG-02 and takes precedence over the per-change review/device steps below.
 
 - Do not make Ruleset setup or old pending review/device records a prerequisite for new development. Leave the current unprotected main setting as it is; retain existing CI as feedback.
 - Related small improvements may share an Issue and PR. Copy the adopted Chat request into a short scope/acceptance summary and continue without repeatedly asking for the same approval. PRs can be concise: purpose, changes, checks and remaining items.
 - For low-risk and reversible medium-risk changes, independent review and iPhone playtests may be batched at a playable milestone instead of blocking every PR. Record what was deferred; do not call it tested or independently approved. Keep targeted design/review for high-risk pathfinding, cross-world or storage-contract changes.
-- Use a work branch and PR, run relevant checks and report failures honestly. Human merge decisions remain; direct main push, force-push and auto-merge are still prohibited. Resume stricter release checks when the human chooses stabilization or wider distribution.
+- Use a work branch and PR, run relevant checks and report failures honestly. Merging follows the nonstop phase above; direct main push, force-push and GitHub auto-merge are still prohibited. Resume stricter release checks when the human chooses stabilization or wider distribution.
 
 ## Shared development contract (same policy as SRPG / ARPG)
 
