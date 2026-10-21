@@ -25,7 +25,7 @@ export function createJourneyView(stage,world){
  button.addEventListener('click',()=>{
   if(!nearby)return;
   title.textContent=nearby.title;caption.textContent=nearby.sub;
-  canvas.setAttribute('aria-label',nearby.kind==='sunset'?'大きな夕日と遠い山並み、湖の光、小さな旅人。':nearby.title+'。遠い山と草原、名のない石、小さな旅人。');
+  canvas.setAttribute('aria-label',nearby.kind==='sky-edge'?'崖の向こうにほとんど空だけが広がる。遥か彼方に小さな山並みがあり、崖の端にひとりの旅人が立っている。':nearby.kind==='sunset'?'大きな夕日と遠い山並み、湖の光、小さな旅人。':nearby.title+'。遠い山と草原、名のない石、小さな旅人。');
   viewTime=0;lastFrame=performance.now();card.hidden=false;redraw();
   button.setAttribute('aria-expanded','true');close.focus();
  });
@@ -36,7 +36,7 @@ export function createJourneyView(stage,world){
    const next=!covered&&!hero.path.length?world.vistas.find(v=>Math.hypot(v.x-hero.px,v.y-hero.py)<=v.radius):null;
    if(next!==nearby){nearby=next;hide();}
    button.hidden=!nearby||!card.hidden;
-   if(nearby)button.textContent=nearby.kind==='sunset'?'夕空を眺める':'遠くを眺める';
+   if(nearby)button.textContent=nearby.kind==='sky-edge'?'空を眺める':nearby.kind==='sunset'?'夕空を眺める':'遠くを眺める';
    if(document.hidden){lastFrame=time;return;}
    // Reuse the existing game clock and pause the illustration when not visible.
    if(!card.hidden&&!reducedMotion.matches&&time-lastFrame>=100){
