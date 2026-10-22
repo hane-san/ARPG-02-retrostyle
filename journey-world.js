@@ -587,7 +587,33 @@ export function makeJourneyWorld(){
   }
   occupied[s.entrance.y*w+s.entrance.x]=0;set(s.entrance.x,s.entrance.y,'=');
  }
- for(const n of JOURNEY_NPCS){set(n.x,n.y,'=');occupied[n.y*w+n.x]=0;}
+ const blocked=new Set(['~','L','l','X','W','Y','V','R','M','U']);
+ const free=(x,y)=>inside(x,y)&&!blocked.has(tiles[y][x])&&!occupied[y*w+x];
+ const reach=new Uint8Array(w*h),queue=[{...JOURNEY_START}];
+ reach[JOURNEY_START.y*w+JOURNEY_START.x]=1;
+ for(let i=0;i<queue.length;i++){
+  const {x,y}=queue[i];
+  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const a=x+dx,b=y+dy;if(!free(a,b))continue;
+   const k=b*w+a;if(!reach[k]){reach[k]=1;queue.push({x:a,y:b});}
+  }
+ }
+ const used=new Set(JOURNEY_NPCS.filter(n=>!n.id.startsWith('grok-')).map(n=>n.y*w+n.x));
+ for(const n of JOURNEY_NPCS){
+  if(n.id.startsWith('grok-')&&(!reach[n.y*w+n.x]||used.has(n.y*w+n.x))){
+   let best=null,dist=Infinity;
+   for(const p of queue){
+    const k=p.y*w+p.x,d=Math.abs(p.x-n.x)+Math.abs(p.y-n.y);
+    if(used.has(k)||d>=dist)continue;
+    if(JOURNEY_SITES.some(s=>p.x>=s.x&&p.x<s.x+s.w&&p.y>=s.y&&p.y<s.y+s.h))continue;
+    best=p;dist=d;
+   }
+   if(!best)throw Error('No accessible shore for '+n.id);
+   n.x=best.x;n.y=best.y;
+  }
+  used.add(n.y*w+n.x);
+  set(n.x,n.y,'=');occupied[n.y*w+n.x]=0;
+ }
  // Shallow water still blocks walking. Its light edge joins the land palette.
  const wet=t=>['~','L','l'].includes(t);
  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
