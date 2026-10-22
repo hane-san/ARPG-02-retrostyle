@@ -493,15 +493,144 @@ JOURNEY_VISTAS.push(...[
  {
   "id": "exposed-altar",
   "x": 76,
-  "y": 27,
+  "y": 20,
   "radius": 5,
-  "title": "現れた円環",
-  "sub": "沈んでいた同心円が、いまは祈りの場になっている。",
-  "kind": "altar"
+  "title": "水底に眠っていた全身",
+  "sub": "かつて水面に突き出した柱が、果てしない同心円の一部だった。",
+  "kind": "geometric"
+ },
+ {
+  "id": "new-town",
+  "x": 65,
+  "y": 73,
+  "radius": 5,
+  "title": "巨石の陰に暮らす人",
+  "sub": "幾何学の足元に干し布と屋台がある。暮らしは今日も続く。",
+  "kind": "settlement"
+ },
+ {
+  "id": "wall-horizon",
+  "x": 101,
+  "y": 37,
+  "radius": 5,
+  "title": "壁の先が見えない",
+  "sub": "かつて水面の細い線だったものが、世界を横切る壁になった。",
+  "kind": "wall"
+ },
+ {
+  "id": "salt-horizon",
+  "x": 92,
+  "y": 25,
+  "radius": 5,
+  "title": "海が退いたあと",
+  "sub": "船の航路に風が渡る。新しい祈りと古い船の骨が見える。",
+  "kind": "basin"
  }
 ]);
 
 JOURNEY_VISTAS.push(...EXTENSION_VISTAS);
+
+const distance=(x,y,[ax,ay],[bx,by])=>{
+ const dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1)));
+ return Math.hypot(x-ax-t*dx,y-ay-t*dy);
+};
+const ridge=[[44,5],[53,10],[61,17],[64,26],[59,34]];
+const trails=[
+ {points:[[13,76],[18,73],[20,68],[32,67],[32,61]],type:'=',width:1},
+ {points:[[48,57],[46,61],[46,69],[46,74],[54,74],[64,76],[77,76],[98,74],[105,66],[107,54],[106,42],[101,34],[91,32],[78,32],[70,32],[62,39],[58,39]],type:'=',width:.8},
+ {points:[[53,53],[57,58],[62,64],[65,72],[64,76]],type:'=',width:.85},
+ {points:[[47,19],[49,21],[50,19],[55,19],[60,21],[62,24],[68,24],[71,28],[78,32]],type:'t',width:1},
+ {points:[[72,28],[79,26],[84,24],[90,22],[98,25],[101,34]],type:'=',width:.85},
+ {points:[[32,61],[38,67],[46,69]],type:'=',width:.8},
+ {points:[[98,74],[98,72]],type:'=',width:1}
+];
+
+export function makeJourneyWorld(){
+ const w=JOURNEY_W,h=JOURNEY_H;
+ const tiles=Array.from({length:h},()=>Array(w).fill('~')),occupied=new Uint8Array(w*h);
+ const inside=(x,y)=>Number.isInteger(x)&&Number.isInteger(y)&&x>=0&&y>=0&&x<w&&y<h;
+ const set=(x,y,t)=>{if(inside(x,y))tiles[y][x]=t;};
+ for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+  const radial=Math.hypot(x-STEPPE.x,y-STEPPE.y);
+  const coast=(Math.abs(x-59)/50)**3+(Math.abs(y-45)/37)**3;
+  const island=((x-13)/12)**2+((y-73)/10)**2;
+  if(coast<1+.025*Math.sin(x*.29+y*.14)||island<1||radial<STEPPE.r+1.3){
+   let t='b';
+   if(radial<STEPPE.r)t='g';
+   // Broad, quiet grass tones, not isolated random squares or concentric rings.
+   if(t==='g'&&Math.sin(x*.13)+Math.cos(y*.17)>.8)t='G';
+   if(radial>=STEPPE.r&&radial<STEPPE.r+1.3)t='v';
+   if(x>50&&y<37)t='h';
+   if(x>=37&&x<=49&&y>=72&&y<=78)t='i';
+   if(x<23&&y>65)t='p';
+   const salt=((x-85)/21)**2+((y-21)/11)**2;
+   if(salt<1.12)t=salt<.84?'S':'s';
+   if(ridge.slice(1).some((p,i)=>distance(x,y,ridge[i],p)<3.2))t='X';
+   const lake=((x-81)/23.4)**2+((y-52)/17.5)**2;
+   if(lake<1+.055*Math.sin(y*.5)+.025*Math.cos(x*.45))t='L';
+   // A real inlet separates the familiar white quay from the journey country.
+   if(y===63&&x<31)t='~';
+   if(y>=64&&x>=24+Math.round(Math.sin(y*.2))&&x<=29+Math.round(Math.sin(y*.2)))t='~';
+   if(x===52&&y>=68&&y<=79)t='L';
+   tiles[y][x]=t;
+  }
+ }
+ // Add new eastern land beyond the old coordinate rectangle.
+ paintJourneyExpansion(tiles,set);
+ // The circular path is a choice of directions, not a forced tour itinerary.
+ for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+  if(Math.abs(Math.hypot(x-STEPPE.x,y-STEPPE.y)-STEPPE.roadRadius)<.8)set(x,y,'=');
+ }
+ for(const {points,type,width} of trails)for(let i=1;i<points.length;i++){
+  const a=points[i-1],b=points[i];
+  for(let y=Math.floor(Math.min(a[1],b[1])-width);y<=Math.ceil(Math.max(a[1],b[1])+width);y++)
+   for(let x=Math.floor(Math.min(a[0],b[0])-width);x<=Math.ceil(Math.max(a[0],b[0])+width);x++){
+    if(!inside(x,y)||distance(x,y,a,b)>width)continue;
+    // Only the explicit mountain pass cuts rock. Trails never pave lake water.
+    if(['~','L'].includes(tiles[y][x])||tiles[y][x]==='X'&&type!=='t')continue;
+    set(x,y,type);
+   }
+ }
+ paintJourneyExpansionRoads(tiles,set);
+ for(const b of JOURNEY_BRIDGES)for(let y=b.y1;y<=b.y2;y++)for(let x=b.x1;x<=b.x2;x++)set(x,y,'+');
+ for(const s of JOURNEY_SITES){
+  for(let y=s.y;y<s.y+s.h;y++)for(let x=s.x;x<s.x+s.w;x++){
+   if(s.blocking!==false)occupied[y*w+x]=1;
+   if(s.kind!=='relic'&&s.kind!=='expansion'&&['~','L','X'].includes(tiles[y][x]))set(x,y,s.kind==='monolith'?'h':s.kind==='shipwreck'?'S':'p');
+  }
+  occupied[s.entrance.y*w+s.entrance.x]=0;set(s.entrance.x,s.entrance.y,'=');
+ }
+ for(const n of JOURNEY_NPCS){set(n.x,n.y,'=');occupied[n.y*w+n.x]=0;}
+ // Shallow water still blocks walking. Its light edge joins the land palette.
+ const wet=t=>['~','L','l'].includes(t);
+ for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+  if(tiles[y][x]!=='L')continue;
+  if([[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>!wet(tiles[y+dy][x+dx])))set(x,y,'l');
+ }
+ const byId=id=>JOURNEY_ZONES.find(z=>z.id==='journey-'+id);
+ const world={
+  id:'journey',w,h,tiles,occupied,start:{...JOURNEY_START},sites:JOURNEY_SITES,npcs:JOURNEY_NPCS,zones:JOURNEY_ZONES,
+  bridges:JOURNEY_BRIDGES,vistas:JOURNEY_VISTAS,transitions:[],
+  tileAt(x,y){return inside(x,y)?tiles[y][x]:'~';},
+  walkable(x,y){return inside(x,y)&&!['~','L','l','X','W','Y','V'].includes(tiles[y][x])&&!occupied[y*w+x];},
+  siteAt(x,y){return JOURNEY_SITES.find(s=>x>=s.x&&x<s.x+s.w&&y>=s.y&&y<s.y+s.h);},
+  npcAt(x,y){return JOURNEY_NPCS.find(n=>n.x===x&&n.y===y);},
+  bridgeAt(x,y){return JOURNEY_BRIDGES.find(b=>x>=b.x1&&x<=b.x2&&y>=b.y1&&y<=b.y2);},
+  transitionAt(){return undefined;},
+  findPath:silkPath,
+  zoneAt(x,y){
+   if(x>=112||y>=88)return byId(extensionZoneAt(x,y));
+   if(x<30&&y>=64)return byId('port');
+   if(x>=70&&y<33)return byId('salt');
+   if(x>=49&&y<35)return byId('pass');
+   if(y>=72&&x>=65&&x<=90)return byId('sunset');
+   if(y>=61&&x<58)return byId('tea');
+   if(x>=57&&y>=32||x>=54&&Math.hypot((x-81)/23.4,(y-52)/17.5)<1.2)return byId('lake');
+   return byId('steppe');
+  }
+ };
+ return world;
+}
 
 // Finish the already occupied edge before rerouting. Starting a new path from
 // the previous tile while between cells can otherwise cut an obstacle's corner.

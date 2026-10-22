@@ -43,7 +43,8 @@ test('all sites, people, region buttons, and vistas have safe outward and return
    assert.equal(world.walkable(x,y),s.blocking===false,s.id+' building footprint');
   }
  }
- for(const n of world.npcs)assert.ok(n.lines.length>=2&&n.lines.every(line=>line.length>15));
+ // Authored voices keep two substantial lines; the owner-added grok villagers are deliberate one-liners.
+ for(const n of world.npcs)assert.ok(n.lines.length>=(n.id.startsWith('grok-')?1:2)&&n.lines.every(line=>line.length>15),n.id);
 });
 
 test('every walkable cell belongs to the same country, with no isolated shore destinations',()=>{
