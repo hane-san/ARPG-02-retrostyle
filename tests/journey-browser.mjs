@@ -222,6 +222,10 @@ export async function checkJourney(page,origin){
  await page.locator('#mapBtn').click();
  assert.ok(await page.locator('#dialogue').isHidden(),'reading never captures the bottom menu');
  assert.ok(await page.locator('#mapPanel').isVisible());
+ // Issue #11: walked regions are marked; far regions stay listed but unmarked.
+ assert.ok(await page.locator('#zoneList [data-zone="journey-port"]').evaluate(b=>b.classList.contains('visited')),'the starting port reads as visited');
+ const visitedCount=await page.locator('#zoneList button.visited').count(),zoneCount=await page.locator('#zoneList button').count();
+ assert.ok(visitedCount>=1&&visitedCount<zoneCount,'not every region is marked visited at the start: '+visitedCount+'/'+zoneCount);
  await page.locator('#mapBtn').click();
  assert.ok(await page.locator('#mapPanel').isHidden(),'the same menu button closes its sheet');
  await tapNPC();await page.waitForTimeout(220);

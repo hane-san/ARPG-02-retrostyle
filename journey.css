@@ -75,3 +75,7 @@
 .journey-mode .dock .vista-button{position:relative}
 .journey-mode .dock .vista-button::after{content:"";position:absolute;inset:-13px -6px -3px}
 @media(max-height:560px){.journey-mode .dock .vista-button::after{inset:-16px -6px 0}}
+
+/* Issue #11: regions already walked carry a small quiet mark in the atlas list. */
+.journey-mode #zoneList button.visited span::after{content:' ・訪れた';font-size:10px;color:#8b9f87;font-weight:400}
+.journey-mode #zoneList button:not(.visited){opacity:.82}
