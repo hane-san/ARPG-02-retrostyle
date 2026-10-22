@@ -5,6 +5,7 @@ import {ART_OBJECTS,WEIRD_MOBS} from '../art-objects.js';
 import {UNEASY_MOBS} from '../uneasy.js';
 import {STEPPE_MOBS,STEPPE_OBJECTS} from '../steppe-asia.js';
 import {DISTANT_VISTAS} from '../distant-vistas.js';
+import {JOURNEY_CURIOS,journeySoundSources} from '../journey-curios.js';
 
 // Issue #53: pieces added by several AIs must sit on the current map, not on the
 // lake, inside buildings or on top of one another, and must never make water walkable.
@@ -18,7 +19,7 @@ for(let i=0;i<queue.length;i++)for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])
 }
 const reachable=p=>reach.has(p.y*world.w+p.x);
 const spiceNpcs=new Set([...WEIRD_MOBS,...UNEASY_MOBS,...STEPPE_MOBS].map(n=>n.id));
-const spiceSites=new Set([...ART_OBJECTS,...STEPPE_OBJECTS].map(s=>s.id));
+const spiceSites=new Set([...ART_OBJECTS,...STEPPE_OBJECTS,...JOURNEY_CURIOS].map(s=>s.id));
 
 test('every person stands on reachable dry ground, outside buildings, entrances and bridges',()=>{
  const tiles=new Map();
@@ -65,4 +66,41 @@ test('a person or art piece placed on the lake never turns the water into a walk
   assert.equal(probe.walkable(lake.x,lake.y),false,'a person in the lake made water walkable');
   assert.equal(probe.walkable(lake.x+4,lake.y+1),false,'an art piece in the lake paved the water');
  }finally{JOURNEY_NPCS.pop();JOURNEY_SITES.pop();}
+});
+
+// Issue #51: places that sound when approached. Same rules as people and pieces, plus quiet
+// places stay quiet, uneasy echoes stay in the black-stone corridor and places never blur together.
+test('proximity sounds sit on reachable dry ground, apart, and leave the quiet places quiet',()=>{
+ const sources=journeySoundSources(world.sites),zone=s=>world.zoneAt(s.x,s.y).id;
+ assert.ok(sources.length>=10&&sources.length<=16,'10-16 places make a sound');
+ for(const s of sources){
+  assert.ok(reachable(s),s.id+' sound cannot be approached');
+  assert.ok(!wet(world.tileAt(s.x,s.y)),s.id+' sound stands on water or rock');
+  assert.ok(!world.bridgeAt(s.x,s.y),s.id+' sound on a bridge');
+  assert.ok(!world.sites.some(o=>o.blocking!==false&&inRect(o,s.x,s.y)),s.id+' sound inside a building');
+  for(const o of sources)if(o!==s)assert.ok(Math.hypot(o.x-s.x,o.y-s.y)>=10,s.id+' blurs into '+o.id);
+ }
+ assert.equal(new Set(sources.map(s=>s.id)).size,sources.length);
+ for(const quiet of ['journey-sky-edge','journey-lake'])assert.ok(!sources.some(s=>zone(s)===quiet),quiet+' keeps its silence');
+ assert.ok(sources.filter(s=>s.kind==='echo').every(s=>zone(s)==='journey-void'),'uneasy echoes only in the black-stone corridor');
+ for(const kind of ['kettle','wood','creak','bell','echo'])assert.ok(sources.some(s=>s.kind===kind),kind+' place is audible');
+});
+
+// Issue #53: what is drawn is what is tapped. A field tap within 1.8 tiles of a person talks to
+// that person (game.js handleTap), so every piece keeps tiles of its own, owner-added villagers
+// stand beside pieces rather than on them, and no figure covers a place name (11px label).
+const TAP_PERSON=1.8;
+const nameBox=s=>{const cx=(s.x+s.w/2)*32,base=(s.y+s.h)*32+22,half=[...s.name].length*11/2;return {x0:cx-half,x1:cx+half,y0:base-10,y1:base+3};};
+const figure=n=>({x0:n.x*32+4,x1:n.x*32+29,y0:n.y*32+2,y1:n.y*32+31});
+const meet=(a,b)=>a.x0<b.x1&&b.x0<a.x1&&a.y0<b.y1&&b.y0<a.y1;
+test('every piece can be tapped where it is drawn, and no person stands over a place name',()=>{
+ for(const s of world.sites){
+  let own=0;
+  for(let y=s.y;y<s.y+s.h;y++)for(let x=s.x;x<s.x+s.w;x++)
+   if(world.siteAt(x,y)===s&&!world.npcs.some(n=>Math.hypot(n.x-x,n.y-y)<TAP_PERSON))own++;
+  assert.ok(own>=Math.min(2,s.w*s.h),s.id+' cannot be tapped: people stand over it');
+  for(const n of world.npcs)assert.ok(!meet(figure(n),nameBox(s)),n.id+' covers the name of '+s.id);
+ }
+ for(const n of world.npcs.filter(n=>/^(grok|weird|uneasy|steppe)-/.test(n.id)))
+  assert.ok(!world.sites.some(s=>inRect(s,n.x,n.y)),n.id+' stands on a piece');
 });

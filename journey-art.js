@@ -162,7 +162,11 @@ function drawJourneyArt(c,s,x,y,w,h,cx,time){
   c.fillStyle=glass;c.beginPath();c.ellipse(cx,cy+4,16,6,0,0,Math.PI*2);c.fill();
  }else{
   plinth();
-  if(f==='disc'){c.save();c.lineWidth=5;c.strokeStyle='#b4bfb8';c.beginPath();c.ellipse(cx,cy-8,26,22,0,0,Math.PI*2);c.stroke();rect(c,cx-2,cy-10,4,4,'#f2d6a0');c.restore();}
+  if(f==='kettle'){rect(c,cx-12,cy-8,24,17,rust);rect(c,cx-7,cy-12,14,4,edge);rect(c,cx+12,cy-5,10,4,rust);rect(c,cx-19,cy-7,5,12,edge);rect(c,cx+1,cy-24+Math.sin(time*.002)*2,2,8,pale);}
+  else if(f==='cup'){rect(c,cx-10,cy-6,20,15,pale);rect(c,cx+10,cy-3,7,8,rust);rect(c,cx-8,cy-7,16,3,edge);}
+  else if(f==='boots'){for(const dx of [-14,4]){rect(c,cx+dx,cy-16,9,22,rust);rect(c,cx+dx,cy+3,15,6,edge);}}
+  else if(f==='sign'){rect(c,cx-2,cy-16,4,29,rust);rect(c,cx-22,cy-17,44,10,pale);rect(c,cx-10,cy-14,23,2,edge);}
+  else if(f==='disc'){c.save();c.lineWidth=5;c.strokeStyle='#b4bfb8';c.beginPath();c.ellipse(cx,cy-8,26,22,0,0,Math.PI*2);c.stroke();rect(c,cx-2,cy-10,4,4,'#f2d6a0');c.restore();}
   else if(f==='bell'){rect(c,cx-1,y+10,2,14,edge);poly(c,[[cx-14,cy+2],[cx-9,y+24],[cx+9,y+24],[cx+14,cy+2]],'#b8b39c');rect(c,cx-15,cy+2,30,3,edge);}
   else if(f==='frame'){c.save();c.lineWidth=5;c.strokeStyle=rust;c.strokeRect(cx-22,y+12,44,h-44);c.restore();}
   else if(f==='hourglass'){poly(c,[[cx-12,y+12],[cx+12,y+12],[cx,cy-6]],glass);poly(c,[[cx,cy-6],[cx-12,cy+4],[cx+12,cy+4]],glass);rect(c,cx-14,y+10,28,3,rust);rect(c,cx-14,cy+4,28,3,rust);rect(c,cx-4,cy-2,8,5,'#e3cf9f');}

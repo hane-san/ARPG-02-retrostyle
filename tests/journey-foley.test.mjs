@@ -43,6 +43,23 @@ function audioHarness(run,{state='running',fail=false,saved={}}={}){
  finally{for(const [key,descriptor] of previous){if(descriptor)Object.defineProperty(globalThis,key,descriptor);else delete globalThis[key];}}
 }
 
+test('ambient cues share the gesture context, mute, volume and voice budget',()=>audioHarness(({contexts,storage,document,visibility})=>{
+ const sound=createJourneyFoley(storage),events=Array.from({length:8},(_,i)=>({id:String(i),kind:'bell',gain:1}));
+ sound.ambience([],events);assert.equal(contexts.length,0,'no autoplay');
+ sound.unlock();const c=contexts[0];sound.ambience([{id:'0',gain:1}],events);
+ assert.equal(sound.snapshot().activeVoices,2,'two ambient voices');
+ assert.equal(c.sources.length,4);
+ c.currentTime=.1;sound.ambience([],[]);
+ assert.ok(c.nodes.some(n=>n.gain.events.some(e=>e[0]==='linear'&&e[1]===0&&e[2]===.22)),'departure fades');
+ sound.toggle();const played=sound.snapshot().played;sound.ambience([],events);
+ assert.equal(sound.snapshot().played,played,'SFX OFF');
+ sound.toggle();sound.setVolume(0);sound.ambience([],events);
+ assert.equal(sound.snapshot().played,played,'zero volume');
+ document.hidden=true;visibility();sound.ambience([],events);
+ assert.equal(sound.snapshot().played,played,'background');
+ sound.destroy();assert.equal(sound.snapshot().activeVoices,0);
+}));
+
 test('journey footfall cadence follows two tiles at any frame rate, never idle time',()=>{
  for(const hz of [30,60,90,120]){
   const clock=createFootstepClock();let count=0;
