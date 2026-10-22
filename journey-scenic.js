@@ -74,7 +74,7 @@ export function easeScenicRoadGlide(camera,hero,path,dt,viewport,world){
  const leadX=hx+dx/d*world.tile*.55,leadY=hy+dy/d*world.tile*.55;
  const factor=1-Math.exp(-Math.min(Math.max(0,dt),.12)*1.65);
  const desired={x:camera.x+(leadX-camera.x)*factor,y:camera.y+(leadY-camera.y)*factor};
- return limitScenicCamera(desired,hero,viewport,world);
+ return limitScenicCamera(desired,{x:hero.px,y:hero.py},viewport,world);
 }
 // Dependency stays tiny and pure so Node tests can exercise camera safety.
 import {limitCamera as limitScenicCamera} from './camera-limits.js';
