@@ -6,12 +6,14 @@ import {JOURNEY_PALETTE} from '../journey-art.js';
 import {JOURNEY_PLAYLISTS} from '../journey-music.js';
 import {JOURNEY_ZOOM_STAGES,JOURNEY_CAMERA_PROFILES,journeyCameraScene} from '../journey-camera.js';
 import {EXPANSION_VISTA_KINDS} from '../journey-expansion-vistas.js';
+import {RUINS_ZONES} from '../journey-ruins.js';
 
 test('expanded scenery preserves the original walking country and adds six coherent regions',()=>{
  const world=makeJourneyWorld();
  assert.deepEqual([world.w,world.h],[176,136]);
  assert.deepEqual([EXTENSION_ZONES.length,EXTENSION_SITES.length,EXTENSION_NPCS.length,EXTENSION_VISTAS.length],[7,13,11,7]);
- assert.equal(JOURNEY_ZONES.length,14);
+ assert.equal(JOURNEY_ZONES.filter(z=>!RUINS_ZONES.includes(z)).length,14,'original regions survive intact');
+ assert.equal(JOURNEY_ZONES.length,14+RUINS_ZONES.length,'southwest extension is additive');
  assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.8,1.35,1,.8,.6]);
  for(const zone of EXTENSION_ZONES){
   const loc={x:zone.cx,y:zone.cy};
