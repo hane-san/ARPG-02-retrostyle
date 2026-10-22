@@ -3,7 +3,9 @@
 import {drawSilkTile} from './silk-art.js';
 import {drawExpansionTile,drawExpansionSite,EXPANSION_TILES} from './journey-expansion-art.js';
 import {EXTENSION_PALETTE} from './journey-expansion.js';
-export const JOURNEY_PALETTE={...EXTENSION_PALETTE,
+import {drawRuinsTile,drawRuinsSite,RUINS_TILES} from './journey-ruins-art.js';
+import {RUINS_PALETTE} from './journey-ruins.js';
+export const JOURNEY_PALETTE={...EXTENSION_PALETTE,...RUINS_PALETTE,
  '~':'#6b9fae',L:'#619cac',l:'#93bdbb',g:'#acbf9d',G:'#b5c5a2',v:'#c9c7a6',
  b:'#c2c2a9',h:'#babbb0',X:'#899397',S:'#e9e3d4',s:'#d9d5c3',
  i:'#aabc93',p:'#d6ded4','=':'#d4cbb0',t:'#c7c5b6','+':'#b9bcae'
@@ -13,6 +15,7 @@ const rect=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x),Math.round
 function poly(c,points,col){c.fillStyle=col;c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(Math.round(x),Math.round(y)):c.moveTo(Math.round(x),Math.round(y)));c.closePath();c.fill();}
 
 export function drawJourneyTile(c,x,y,t,world){
+ if(RUINS_TILES.has(t)){drawRuinsTile(c,x,y,t,world);return;}
  if(EXPANSION_TILES.has(t)){drawExpansionTile(c,x,y,t,world);return;}
  const px=x*32,py=y*32,q=n(x,y),r=n(y,x,17);
  rect(c,px,py,32,32,JOURNEY_PALETTE[t]||JOURNEY_PALETTE.b);
@@ -193,6 +196,8 @@ export function drawJourneySite(c,s,time){
   for(let i=0;i<4;i++)rect(c,x+20+i*20,y+h-18,14,2,'#8b9b8a');
  }else if(s.kind==='expansion'){
   drawExpansionSite(c,s,x,y,w,h,cx,time);
+ }else if(s.kind==='ruins'){
+  drawRuinsSite(c,s,x,y,w,h,cx,time);
  }else if(s.kind==='relic'){
   drawJourneyRelic(c,s,x,y,w,h,cx,time);
  }else if(s.kind==='terrace'){

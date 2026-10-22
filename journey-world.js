@@ -3,6 +3,7 @@
 import {silkPath} from './silk-world.js';
 import {EXTENSION_ZONES,EXTENSION_SITES,EXTENSION_NPCS,EXTENSION_VISTAS,paintJourneyExpansion,paintJourneyExpansionRoads,extensionZoneAt} from './journey-expansion.js';
 import {GROK_VILLAGERS} from './grok-villagers.js';
+import {RUINS_ZONES,RUINS_SITES,RUINS_NPCS,RUINS_VISTAS,paintJourneyRuins,paintJourneyRuinsRoads,ruinsZoneAt} from './journey-ruins.js';
 
 export const JOURNEY_W=176,JOURNEY_H=136;
 export const STEPPE={x:36,y:38,r:24.5,roadRadius:22.2};
@@ -460,7 +461,13 @@ JOURNEY_NPCS.push(...[
 ]);
 
 JOURNEY_NPCS.push(...EXTENSION_NPCS);
-JOURNEY_NPCS.push(...GROK_VILLAGERS);
+const EXTRA_VOICE=[
+ '遠いところへ行った人も、帰る人も、この風のなかでは同じ旅人ですね。',
+ 'わたしは昨日と今日の道の違いを見つけると、少し嬉しくなるんです。',
+ 'あそこに小さな灯りがあると、何故だか帰り道を覚えていられます。',
+ '何年も経ってから、今のこの景色を思い出すのかもしれません。'
+];
+JOURNEY_NPCS.push(...GROK_VILLAGERS.map((n,i)=>({...n,lines:[...n.lines,EXTRA_VOICE[i%EXTRA_VOICE.length]]})));
 export const JOURNEY_BRIDGES=[
  {id:'journey-link',name:'白浜の連絡橋',axis:'h',x1:21,x2:32,y1:66,y2:68,center:{x:26,y:67}},
  {id:'journey-watercourse',name:'畑の水路橋',axis:'h',x1:50,x2:54,y1:73,y2:75,center:{x:52,y:74}}
@@ -529,6 +536,10 @@ JOURNEY_VISTAS.push(...[
 ]);
 
 JOURNEY_VISTAS.push(...EXTENSION_VISTAS);
+JOURNEY_ZONES.push(...RUINS_ZONES);
+JOURNEY_SITES.push(...RUINS_SITES);
+JOURNEY_NPCS.push(...RUINS_NPCS);
+JOURNEY_VISTAS.push(...RUINS_VISTAS);
 
 const distance=(x,y,[ax,ay],[bx,by])=>{
  const dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1)));
@@ -577,6 +588,7 @@ export function makeJourneyWorld(){
  }
  // Add new eastern land beyond the old coordinate rectangle.
  paintJourneyExpansion(tiles,set);
+  paintJourneyRuins(tiles,set);
  // The circular path is a choice of directions, not a forced tour itinerary.
  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
   if(Math.abs(Math.hypot(x-STEPPE.x,y-STEPPE.y)-STEPPE.roadRadius)<.8)set(x,y,'=');
@@ -592,15 +604,43 @@ export function makeJourneyWorld(){
    }
  }
  paintJourneyExpansionRoads(tiles,set);
+  paintJourneyRuinsRoads(tiles,set);
  for(const b of JOURNEY_BRIDGES)for(let y=b.y1;y<=b.y2;y++)for(let x=b.x1;x<=b.x2;x++)set(x,y,'+');
  for(const s of JOURNEY_SITES){
   for(let y=s.y;y<s.y+s.h;y++)for(let x=s.x;x<s.x+s.w;x++){
    if(s.blocking!==false)occupied[y*w+x]=1;
+    if(s.kind==='ruins')set(x,y,ruinsZoneAt(x,y)==='drowned'?'C':'F');
    if(s.kind!=='relic'&&s.kind!=='expansion'&&['~','L','X'].includes(tiles[y][x]))set(x,y,s.kind==='monolith'?'h':s.kind==='shipwreck'?'S':'p');
   }
   occupied[s.entrance.y*w+s.entrance.x]=0;set(s.entrance.x,s.entrance.y,'=');
  }
- for(const n of JOURNEY_NPCS){set(n.x,n.y,'=');occupied[n.y*w+n.x]=0;}
+ const blocked=new Set(['~','L','l','X','W','Y','V','R','M','U']);
+ const free=(x,y)=>inside(x,y)&&!blocked.has(tiles[y][x])&&!occupied[y*w+x];
+ const reach=new Uint8Array(w*h),queue=[{...JOURNEY_START}];
+ reach[JOURNEY_START.y*w+JOURNEY_START.x]=1;
+ for(let i=0;i<queue.length;i++){
+  const {x,y}=queue[i];
+  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const a=x+dx,b=y+dy;if(!free(a,b))continue;
+   const k=b*w+a;if(!reach[k]){reach[k]=1;queue.push({x:a,y:b});}
+  }
+ }
+ const used=new Set(JOURNEY_NPCS.filter(n=>!n.id.startsWith('grok-')).map(n=>n.y*w+n.x));
+ for(const n of JOURNEY_NPCS){
+  if(n.id.startsWith('grok-')&&(!reach[n.y*w+n.x]||used.has(n.y*w+n.x))){
+   let best=null,dist=Infinity;
+   for(const p of queue){
+    const k=p.y*w+p.x,d=Math.abs(p.x-n.x)+Math.abs(p.y-n.y);
+    if(used.has(k)||d>=dist)continue;
+    if(JOURNEY_SITES.some(s=>p.x>=s.x&&p.x<s.x+s.w&&p.y>=s.y&&p.y<s.y+s.h))continue;
+    best=p;dist=d;
+   }
+   if(!best)throw Error('No accessible shore for '+n.id);
+   n.x=best.x;n.y=best.y;
+  }
+  used.add(n.y*w+n.x);
+  set(n.x,n.y,'=');occupied[n.y*w+n.x]=0;
+ }
  // Shallow water still blocks walking. Its light edge joins the land palette.
  const wet=t=>['~','L','l'].includes(t);
  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
@@ -612,14 +652,15 @@ export function makeJourneyWorld(){
   id:'journey',w,h,tiles,occupied,start:{...JOURNEY_START},sites:JOURNEY_SITES,npcs:JOURNEY_NPCS,zones:JOURNEY_ZONES,
   bridges:JOURNEY_BRIDGES,vistas:JOURNEY_VISTAS,transitions:[],
   tileAt(x,y){return inside(x,y)?tiles[y][x]:'~';},
-  walkable(x,y){return inside(x,y)&&!['~','L','l','X','W','Y','V'].includes(tiles[y][x])&&!occupied[y*w+x];},
+  walkable(x,y){return inside(x,y)&&!['~','L','l','X','W','Y','V','R','M','U'].includes(tiles[y][x])&&!occupied[y*w+x];},
   siteAt(x,y){return JOURNEY_SITES.find(s=>x>=s.x&&x<s.x+s.w&&y>=s.y&&y<s.y+s.h);},
   npcAt(x,y){return JOURNEY_NPCS.find(n=>n.x===x&&n.y===y);},
   bridgeAt(x,y){return JOURNEY_BRIDGES.find(b=>x>=b.x1&&x<=b.x2&&y>=b.y1&&y<=b.y2);},
   transitionAt(){return undefined;},
   findPath:silkPath,
   zoneAt(x,y){
-   if(x>=112||y>=88)return byId(extensionZoneAt(x,y));
+   if(y>=88&&x<112)return byId(ruinsZoneAt(x,y));
+    if(x>=112||y>=88)return byId(extensionZoneAt(x,y));
    if(x<30&&y>=64)return byId('port');
    if(x>=70&&y<33)return byId('salt');
    if(x>=49&&y<35)return byId('pass');

@@ -14,7 +14,12 @@ export const JOURNEY_PLAYLISTS={
  'journey-river':['20:1','23:2','29:2'],
  'journey-glass':['16:1','18:2','32:1'],
  'journey-wetlands':['9:2','12:1','31:2'],
- 'journey-whitebasin':['27:1','22:2','33:2']
+ 'journey-whitebasin':['27:1','22:2','33:2'],
+ // Ruins reuse the existing 68 scores; silence and harmonic contrast are intentional.
+ 'journey-ancient':['22:2','27:2','33:1'],
+ 'journey-void':['7:2','19:2','28:2'],
+ 'journey-drowned':['9:2','23:2','29:2'],
+ 'journey-sky-ruins':['6:1','21:2','31:2']
 };
 export function pickJourneyTrack(zone,previous,random=Math.random){
  const pool=JOURNEY_PLAYLISTS[zone];
