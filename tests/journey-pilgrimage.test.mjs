@@ -23,8 +23,8 @@ test('pilgrimage demo is rich but preserves all original journeys',()=>{
  assert.equal(JOURNEY_SITES.length,35+RUINS_SITES.length,'ruins sites are additive');
  assert.equal(JOURNEY_NPCS.length,27+GROK_VILLAGERS.length+RUINS_NPCS.length,'retain 27 former NPCs and all 90 new villagers');
  assert.equal(GROK_VILLAGERS.length,90);
- assert.equal(JOURNEY_VISTAS.filter(v=>!RUINS_VISTAS.includes(v)).length,16,'all 16 earlier vistas survive');
- assert.equal(JOURNEY_VISTAS.length,16+RUINS_VISTAS.length,'ruins vistas are additive');
+ assert.ok(JOURNEY_VISTAS.filter(v=>!RUINS_VISTAS.includes(v)).length>=16,'all 16 earlier vistas survive');
+ assert.equal(JOURNEY_VISTAS.length,16+RUINS_VISTAS.length+6,'scenic viewpoints are additive');
  for(const items of [JOURNEY_SITES,JOURNEY_NPCS,JOURNEY_VISTAS])
   assert.equal(new Set(items.map(item=>item.id)).size,items.length,'unique landmark ids');
  for(const id of ['journey-terminal','journey-chaikhana','journey-monolith','journey-ship','journey-hut','journey-terrace'])
