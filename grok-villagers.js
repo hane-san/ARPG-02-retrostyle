@@ -1,7 +1,7 @@
-// Grok-inspired witty one-liners for extra villagers.
-// Fit the contemplative walking world; lightly echo attention, metrics, identity,
-// climate, planning, nostalgia, and technology without breaking immersion.
+// Grok-inspired witty one-liners for extra villagers in the wind-and-lake journey map only.
+// Positions kept within the core circular grassland, lake shores, salt flats, teahouse, and port areas.
 export const GROK_VILLAGERS = [
+  // Original 50 (kept, positions already in map)
   {id:'grok-v01', name:'足跡を数える人', role:'草原の観察者', x:28, y:32, color:'#d5b995', lines:['草原は広いのに、みんな同じ足跡を踏んでいく。おすすめ道ってやつ？']},
   {id:'grok-v02', name:'遠くを撮る人', role:'旅人', x:42, y:28, color:'#c7a7a4', lines:['遠くの石を写真に撮る人が増えた。足元の草を数える人は、相変わらず少ない。']},
   {id:'grok-v03', name:'帳面を持つ測り手', role:'水位の記録係', x:88, y:22, color:'#a6b9bc', lines:['水位が下がったのは誰かのせいだと言う。帳面を見ると、ずっと前から少しずつだった。']},
@@ -51,5 +51,45 @@ export const GROK_VILLAGERS = [
   {id:'grok-v47', name:'はみ出しの強さ', role:'道の職人', x:31, y:46, color:'#d5b5a1', lines:['きれいに設計された道より、人が勝手に踏み固めた道の方が強い。']},
   {id:'grok-v48', name:'作らないでほしいもの', role:'庭の近く', x:58, y:64, color:'#c0b8b4', lines:['便利なものは作っていい。でも蚊だけは、人工にしないでほしい。']},
   {id:'grok-v49', name:'片方だけ', role:'湖の岸', x:93, y:58, color:'#d5b995', lines:['片方の岸しか知らないと、湖全体の大きさを間違える。']},
-  {id:'grok-v50', name:'測れないもの', role:'草原の旅人', x:39, y:34, color:'#c7a7a4', lines:['測れるものばかり見ていると、測れない美しさを見逃す。']}
+  {id:'grok-v50', name:'測れないもの', role:'草原の旅人', x:39, y:34, color:'#c7a7a4', lines:['測れるものばかり見ていると、測れない美しさを見逃す。']},
+  {id:'grok-v51', name:'風の音を聞く町民', role:'草原の住人', x:30, y:36, color:'#d5b995', lines:['風の音が変わると、誰かが新しい道を歩き始めたのが分かる。']},
+  {id:'grok-v52', name:'湖を眺める町民', role:'湖岸の人', x:90, y:55, color:'#c7a7a4', lines:['対岸の灯りが増えた。でも誰の家かまでは、まだ分からない。']},
+  {id:'grok-v53', name:'茶屋で待つ人', role:'常連客', x:44, y:70, color:'#a6b9bc', lines:['おすすめの茶を聞かれても、今日の気分で答える。']},
+  {id:'grok-v54', name:'塩を拾う町民', role:'塩原の住人', x:86, y:25, color:'#c2b88d', lines:['白い塩は、昔の波の形をまだ覚えている。']},
+  {id:'grok-v55', name:'円い道を歩く人', role:'草原の旅人', x:40, y:32, color:'#c9b5a1', lines:['右回りでも左回りでも、同じ風に出会う。']},
+  {id:'grok-v56', name:'石段に座る町民', role:'夕景の人', x:74, y:74, color:'#d9c4a3', lines:['座っていると、急いでいる人の足音がよく聞こえる。']},
+  {id:'grok-v57', name:'水路のそばの人', role:'茶屋の近く', x:50, y:66, color:'#b8b2a2', lines:['この水は湖から来ている。味は、誰が淹れるかで決まる。']},
+  {id:'grok-v58', name:'港の灯りを見る人', role:'船着場の近く', x:18, y:72, color:'#cdbca8', lines:['灯りは消さない。誰がいつ帰ってきてもいいように。']},
+  {id:'grok-v59', name:'草の密度を見る人', role:'草原の観察者', x:27, y:42, color:'#b7bbc9', lines:['足跡が多い道は草が薄い。人気のない道の方が、緑が濃い。']},
+  {id:'grok-v60', name:'水位の話をする町民', role:'測り手の近く', x:84, y:20, color:'#d7bca7', lines:['急に下がったように見える水も、帳面を見れば少しずつだ。']},
+  {id:'grok-v61', name:'モノリスの影を見る人', role:'石の近く', x:58, y:20, color:'#a4bfa4', lines:['石は何も言わない。人が勝手に意味を足していく。']},
+  {id:'grok-v62', name:'同じ色の服の町民', role:'通りすがり', x:42, y:40, color:'#d2a795', lines:['外見が同じでも、今日受けている風は違う。']},
+  {id:'grok-v63', name:'遠景を撮る人', role:'湖岸の旅人', x:96, y:52, color:'#c7c0a9', lines:['遠くの景色を撮ると、足元のさざ波を見逃しやすい。']},
+  {id:'grok-v64', name:'茶の湯を足す人', role:'茶屋の手伝い', x:46, y:68, color:'#a8afb5', lines:['客の好みを覚えても、無理に勧めないのが一番難しい。']},
+  {id:'grok-v65', name:'昔話を聞く町民', role:'港の近く', x:22, y:76, color:'#d5b5a1', lines:['実際に住んだことのない時代を、いちばん懐かしがる人がいる。']},
+  {id:'grok-v66', name:'道の分岐を見る人', role:'草原の職人', x:32, y:46, color:'#c0b8b4', lines:['誰も設計していない分岐が、結局一番人が通る。']},
+  {id:'grok-v67', name:'夕空の色を比べる人', role:'石段の人', x:80, y:76, color:'#d5b995', lines:['同じ夕空でも、座る場所で色が違って見える。']},
+  {id:'grok-v68', name:'湖の大きさを測る町民', role:'対岸を見る人', x:94, y:60, color:'#c7a7a4', lines:['片方の岸しか知らないと、湖の本当の大きさを間違える。']},
+  {id:'grok-v69', name:'風向きを覚える人', role:'草原の住人', x:36, y:36, color:'#a6b9bc', lines:['昨日と同じ場所でも、今日の風は違う方向から来る。']},
+  {id:'grok-v70', name:'塩の白さを見る人', role:'塩原の町民', x:82, y:16, color:'#c2b88d', lines:['白い塩は、昔の海の形をまだ保っている。']},
+  {id:'grok-v71', name:'円周道の人', role:'草原の歩き手', x:38, y:30, color:'#c9b5a1', lines:['みんなが勧める側を歩くと、足跡で草が死んでいる。']},
+  {id:'grok-v72', name:'茶屋の外で待つ人', role:'常連', x:48, y:66, color:'#d9c4a3', lines:['遠くからの知らせを待っている間に、目の前の風が通り過ぎる。']},
+  {id:'grok-v73', name:'石に意味を聞く町民', role:'モノリス近く', x:54, y:14, color:'#b8b2a2', lines:['石は黙っている。それでも人は物語を足したがる。']},
+  {id:'grok-v74', name:'帰路の灯りを見る人', role:'船着場', x:14, y:76, color:'#cdbca8', lines:['帰りたいのは場所そのものより、そこにいたときの自分かもしれない。']},
+  {id:'grok-v75', name:'景色を飛ばさない人', role:'近道を避ける人', x:28, y:44, color:'#b7bbc9', lines:['近道を選ぶたび、途中の景色をひとつ減らしている。']},
+  {id:'grok-v76', name:'測れないものを見る町民', role:'草原の観察者', x:34, y:38, color:'#d7bca7', lines:['数字で測れるものばかり見ていると、測れない美しさを見逃す。']},
+  {id:'grok-v77', name:'湖岸を往復する人', role:'湖畔の住人', x:100, y:58, color:'#a4bfa4', lines:['近づいても遠さは消えない。ただ別の遠さに変わるだけ。']},
+  {id:'grok-v78', name:'茶の味を比べる町民', role:'茶屋の客', x:50, y:70, color:'#d2a795', lines:['同じ水でも、淹れる人によって味が違う。それが面白い。']},
+  {id:'grok-v79', name:'船の部品の話をする人', role:'塩原近く', x:88, y:22, color:'#c7c0a9', lines:['船の部品は新しい暮らしに使われた。船そのものはもうない。']},
+  {id:'grok-v80', name:'ゆっくり夕景を見る人', role:'石段', x:72, y:76, color:'#a8afb5', lines:['写真を撮ってすぐ行く人より、座って見ていく人の方が少ない。']},
+  {id:'grok-v81', name:'地図を疑う町民', role:'旅人', x:26, y:30, color:'#d5b5a1', lines:['地図を信じすぎると、実際の道に気づけなくなる。']},
+  {id:'grok-v82', name:'毎日新しい花', role:'草原の住人', x:40, y:42, color:'#c0b8b4', lines:['花は毎日新しい。人は昨日の自分を引きずりやすい。']},
+  {id:'grok-v83', name:'人気の道を避ける人', role:'草原', x:22, y:38, color:'#d5b995', lines:['人気の道は足跡で草が死んでいる。誰も行かない道の方が緑が濃い。']},
+  {id:'grok-v84', name:'風の通知を待つ人', role:'茶屋外', x:52, y:68, color:'#c7a7a4', lines:['遠くからの音を待っている間に、目の前の風が通り過ぎてしまう。']},
+  {id:'grok-v85', name:'少しずつの変化', role:'測り手近く', x:86, y:28, color:'#a6b9bc', lines:['急に変わったように見えるものも、帳面を見れば少しずつの積み重ねだ。']},
+  {id:'grok-v86', name:'違う風を受ける町民', role:'同じ服', x:44, y:36, color:'#c2b88d', lines:['外見が同じでも、今日受けている風は違う。']},
+  {id:'grok-v87', name:'勧めない技術', role:'茶屋', x:46, y:70, color:'#c9b5a1', lines:['客の好みを覚えて、なお勧めない。それが一番難しい技術だ。']},
+  {id:'grok-v88', name:'住んだことのない昔', role:'港の老人近く', x:20, y:74, color:'#d9c4a3', lines:['実際に住んだことのない時代を、いちばん懐かしがる人がいる。']},
+  {id:'grok-v89', name:'踏み固められた道', role:'草原の職人', x:30, y:48, color:'#b8b2a2', lines:['きれいに設計された道より、人が勝手に踏み固めた道の方が強い。']},
+  {id:'grok-v90', name:'人工にしないでほしいもの', role:'庭近く', x:60, y:66, color:'#cdbca8', lines:['便利なものは作っていい。でも蚊だけは、人工にしないでほしい。']}
 ];
