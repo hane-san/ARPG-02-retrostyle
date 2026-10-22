@@ -1,5 +1,6 @@
 // A small original landscape painting, revealed only when the traveller stops.
 import {drawExpansionVista,EXPANSION_VISTA_KINDS} from './journey-expansion-vistas.js';
+import {drawRuinsVista,RUINS_VISTA_KINDS} from './journey-ruins-vistas.js';
 // Two fixed-size cached layers per scene keep animation cheap and bounded.
 const WIDTH=480,HEIGHT=252;
 const scenes=new Map();
@@ -256,6 +257,7 @@ function waterLight(c,kind,time){
 }
 
 export function drawJourneyPanorama(canvas,kind,time=0){
+ if(RUINS_VISTA_KINDS.has(kind)){drawRuinsVista(canvas,kind,time);return;}
  if(EXPANSION_VISTA_KINDS.has(kind)){drawExpansionVista(canvas,kind,time);return;}
  kind=Object.hasOwn(palettes,kind)?kind:'steppe';
  if(canvas.width!==WIDTH)canvas.width=WIDTH;
