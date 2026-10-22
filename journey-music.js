@@ -1,12 +1,13 @@
 // Existing scores only. Each region has a small, intentional set of colours.
+// Southeast zones (sunset, salt, lake) have higher weight on newer melancholic drive tracks.
 export const JOURNEY_PLAYLISTS={
  'journey-port':['13:1','14:1','20:1'],
  'journey-steppe':['25:1','31:1','26:1'],
  'journey-tea':['30:1','30:2','31:1'],
- 'journey-lake':['29:1','29:2','23:1'],
- 'journey-salt':['27:1','27:2','30:2'],
+ 'journey-lake':['29:1','29:2','23:1','34:1','35:1'], // higher new track weight
+ 'journey-salt':['27:1','27:2','30:2','34:2','36:1'], // higher new track weight
  'journey-pass':['28:1','33:1','28:2'],
- 'journey-sunset':['31:2','29:1','27:1'],
+ 'journey-sunset':['31:2','29:1','27:1','35:2','36:2'], // higher new track weight
  // Contrasting instrument/tempo pools, drawn only from the unchanged 68 pieces.
  'journey-canyon':['19:1','24:1','28:2'],
  'journey-highland':['6:1','21:2','33:1'],
