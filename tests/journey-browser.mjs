@@ -12,10 +12,14 @@ export async function checkJourney(page,origin){
  // and crossing regions must not create a new audio context each time.
  await page.addInitScript(()=>{
   const Native=window.AudioContext;
-  const probe=window.journeyAudioProbe={contexts:[],notes:0,footfalls:0};
+  const probe=window.journeyAudioProbe={contexts:[],notes:0,footfalls:0,tones:[]};
   window.AudioContext=class extends Native{
    constructor(...args){super(...args);probe.contexts.push(this);}
-   createOscillator(){const oscillator=super.createOscillator();const start=oscillator.start.bind(oscillator);oscillator.start=(...args)=>{probe.notes++;return start(...args);};return oscillator;}
+   createOscillator(){const oscillator=super.createOscillator();const start=oscillator.start.bind(oscillator);oscillator.start=(...args)=>{probe.notes++;return start(...args);};
+    // The first scheduled pitch tells a place's tone apart from footsteps and cues.
+    const pitch=oscillator.frequency,set=pitch.setValueAtTime.bind(pitch);let first=true;
+    pitch.setValueAtTime=(value,time)=>{if(first){first=false;probe.tones.push(value);}return set(value,time);};
+    return oscillator;}
    createBufferSource(){const source=super.createBufferSource();const start=source.start.bind(source);source.start=(...args)=>{probe.footfalls++;return start(...args);};return source;}
   };
   window.journeyVistaDraws=0;
@@ -368,6 +372,13 @@ export async function checkJourney(page,origin){
  if(await page.locator('#sfxToggle').textContent()==='OFF')await page.locator('#sfxToggle').click();
  if(await page.locator('#musicToggle').textContent()==='ON')await page.locator('#musicToggle').click();
  await page.keyboard.press('Escape');
+ // Walking past the teahouse kettle without stopping is heard once, and never stops the walk.
+ const kettle=()=>page.evaluate(()=>window.journeyAudioProbe.tones.filter(f=>f===185).length);
+ await walk(38,73);
+ const kettleBefore=await kettle();
+ await walk(58,73);
+ assert.ok(await kettle()>kettleBefore,'walking past the teahouse kettle is heard without stopping there');
+ assert.ok(await page.locator('#dialogue').isHidden(),'passing a place never opens a dialogue');
  await walk(5,75,{name:'見送りの練習札',arrival:{x:6,y:77},shot:'journey-curio-port'});
  await page.waitForTimeout(3300);
  const nearNotes=await page.evaluate(()=>window.journeyAudioProbe.notes);

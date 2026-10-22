@@ -42,3 +42,26 @@ test('12 new curios and all 13 sound approaches are reachable without water or o
  for(const s of sources)assert.ok(w.findPath(w,w.start,s),s.id+' sound approach');
  assert.ok(!sources.some(s=>s.id==='curio-bench'),'sky retains silence');
 });
+test('walking past a place is heard once, near enough to hear, without stopping there',()=>{
+ // Travel speeds of Issue #44: field 5.7 and atlas 7.35 tiles per second, at 60 frames.
+ for(const speed of [5.7,7.35])for(const offset of [0,1,2.5]){
+  const d=createAmbienceDirector([source]),heard=[];
+  for(let t=0,x=-9;x<=9;t+=1000/60,x+=speed/60)heard.push(...d.update({x,y:offset},t).events);
+  assert.equal(heard.length,1,`one cue passing at ${speed} tiles/s, ${offset} tiles aside`);
+  assert.ok(heard[0].gain>=.25,'the cue is not spent at the silent rim');
+ }
+ // Lingering at the barely audible rim keeps the cue for a closer step.
+ const d=createAmbienceDirector([source]);
+ for(let t=0;t<10000;t+=100)assert.equal(d.update({x:4.6,y:0},t).events.length,0);
+ assert.equal(d.update({x:2,y:0},10100).events.length,1);
+ // An atlas walk starts as its panel closes: a place reached within a second is still heard.
+ const f=createAmbienceDirector([source]);
+ for(let t=0;t<2000;t+=100)f.update({x:-8,y:1},t,false);
+ const atlasWalk=[];
+ for(let t=2000,x=-8;x<=8;t+=1000/60,x+=7.35/60)atlasWalk.push(...f.update({x,y:1},t).events);
+ assert.equal(atlasWalk.length,1,'menus leave only a short quiet, not a silent first stretch');
+ // Walking back and forth across the place: one cue per cooldown, never a burst.
+ const e=createAmbienceDirector([source]);let cues=0;
+ for(let t=0,i=0;t<9000;t+=1000/60,i++)cues+=e.update({x:Math.sin(i/30)*6,y:0},t).events.length;
+ assert.ok(cues>=1&&cues<=2,'back-and-forth walking makes '+cues+' cues in 9 s');
+});
