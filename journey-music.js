@@ -1,12 +1,12 @@
 // Existing scores only. Each region has a small, intentional set of colours.
-// Southeast and empty-feeling zones have higher weight on newer melancholic / uneasy tracks.
+// Steppe / pass areas lean toward gentle rolling travel tracks.
 export const JOURNEY_PLAYLISTS={
  'journey-port':['13:1','14:1','20:1'],
- 'journey-steppe':['25:1','31:1','26:1'],
+ 'journey-steppe':['25:1','31:1','26:1','39:1','40:1'],
  'journey-tea':['30:1','30:2','31:1'],
  'journey-lake':['29:1','29:2','23:1','34:1','35:1','37:1'],
  'journey-salt':['27:1','27:2','30:2','34:2','36:1','37:2','38:1'],
- 'journey-pass':['28:1','33:1','28:2','38:2'],
+ 'journey-pass':['28:1','33:1','28:2','38:2','39:2','40:2'],
  'journey-sunset':['31:2','29:1','27:1','35:2','36:2'],
  'journey-canyon':['19:1','24:1','28:2'],
  'journey-highland':['6:1','21:2','33:1'],
