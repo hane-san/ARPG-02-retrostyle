@@ -45,7 +45,7 @@ const journeyMusic=JOURNEY_MODE?createJourneyMusicDirector():null;
 const journeyView=JOURNEY_MODE?createJourneyView(stage,world):null;
 let panTarget=null;
 let screen={w:1,h:1,dpr:1},last=0,zoneId='',noticeTimer=0,dialogue=null,readingPress=null;
-const discovered=new Set(),cache=new Map(),CHUNK=16,MAX_CHUNKS=42;
+const discovered=new Set(),visitedZones=new Set(),cache=new Map(),CHUNK=16,MAX_CHUNKS=42;
 const palette={'~':'#497d93','.':'#8d9f7c',',':'#cbbc96',f:'#567864','=':'#baa986','+':'#ae987a',s:'#98b0b0',n:'#576d88',p:'#b7a993','#':'#58605d',M:'#9eb88a',A:'#aa986e',R:'#7f9188',F:'#3e6559',G:'#73a49e',P:'#d1d4c5',C:'#77adb7',D:'#d2b78e',T:'#bc856d',Q:'#789e9f',B:'#496d78',K:'#424563',E:'#528eae'};
 // The previous two worlds remain explicitly available; the grassland journey is the current entrance.
 if(PROTOTYPE_MODE){
@@ -476,6 +476,8 @@ function updateZone(){
  const z=world.zoneAt(hero.x,hero.y);
  if(z.id===zoneId)return;
  zoneId=z.id;$('zoneName').textContent=z.name;$('zoneSub').textContent=z.sub;
+ // Issue #11: the atlas tells walked regions from ones only heard of.
+ if(!visitedZones.has(z.id)){visitedZones.add(z.id);$('zoneList').querySelector(`[data-zone="${z.id}"]`)?.classList.add('visited');}
  // Randomly pick among songs matching the atmosphere; never immediately repeat.
  if(!JOURNEY_MODE){
   const nextSong=pickZoneTrack(z.id,$('trackSelect').value);
@@ -840,8 +842,11 @@ function drawMinimap(){
   if(z.rx&&z.ry)c.strokeRect((z.cx-z.rx)*sx,(z.cy-z.ry)*sy,z.rx*2*sx,z.ry*2*sy);
   c.textAlign='center';c.fillStyle='#fff6db';c.font='bold 12px system-ui';
   const lx=JOURNEY_MODE?z.label.x:z.cx,ly=JOURNEY_MODE?z.label.y:z.cy-13;
+  // Unvisited regions keep their names (they are reachable) but read as rumours.
+  const known=!JOURNEY_MODE||visitedZones.has(z.id);
+  c.globalAlpha=known?1:.55;
   c.strokeStyle='#17374a';c.lineWidth=3;c.strokeText(z.name,lx*sx,ly*sy);
-  c.fillText(z.name,lx*sx,ly*sy);
+  c.fillText(z.name,lx*sx,ly*sy);c.globalAlpha=1;
  }
  for(const s of SITES){
   if(JOURNEY_MODE&&!discovered.has(s.id)&&s.kind!=='terminal')continue;
@@ -870,7 +875,8 @@ $('mapHome').addEventListener('click',()=>{
 function rebuildZoneList(){
  $('zoneList').replaceChildren();
  for(const z of ZONES){
- const btn=document.createElement('button');
+ const btn=document.createElement('button');btn.dataset.zone=z.id;
+ if(JOURNEY_MODE&&visitedZones.has(z.id))btn.classList.add('visited');
  const title=document.createElement('span');title.textContent=z.name;
  const sub=document.createElement('small');sub.textContent=z.sub;
  btn.append(title,sub);
