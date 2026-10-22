@@ -372,7 +372,7 @@ JOURNEY_NPCS.push(...[
   "id": "journey-map-maker",
   "name": "線を引く絵師",
   "role": "地図を描く旅人",
-  "x": 43,
+  "x": 45,
   "y": 32,
   "color": "#b7bbc9",
   "lines": [

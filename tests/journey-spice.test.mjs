@@ -85,3 +85,22 @@ test('proximity sounds sit on reachable dry ground, apart, and leave the quiet p
  assert.ok(sources.filter(s=>s.kind==='echo').every(s=>zone(s)==='journey-void'),'uneasy echoes only in the black-stone corridor');
  for(const kind of ['kettle','wood','creak','bell','echo'])assert.ok(sources.some(s=>s.kind===kind),kind+' place is audible');
 });
+
+// Issue #53: what is drawn is what is tapped. A field tap within 1.8 tiles of a person talks to
+// that person (game.js handleTap), so every piece keeps tiles of its own, owner-added villagers
+// stand beside pieces rather than on them, and no figure covers a place name (11px label).
+const TAP_PERSON=1.8;
+const nameBox=s=>{const cx=(s.x+s.w/2)*32,base=(s.y+s.h)*32+22,half=[...s.name].length*11/2;return {x0:cx-half,x1:cx+half,y0:base-10,y1:base+3};};
+const figure=n=>({x0:n.x*32+4,x1:n.x*32+29,y0:n.y*32+2,y1:n.y*32+31});
+const meet=(a,b)=>a.x0<b.x1&&b.x0<a.x1&&a.y0<b.y1&&b.y0<a.y1;
+test('every piece can be tapped where it is drawn, and no person stands over a place name',()=>{
+ for(const s of world.sites){
+  let own=0;
+  for(let y=s.y;y<s.y+s.h;y++)for(let x=s.x;x<s.x+s.w;x++)
+   if(world.siteAt(x,y)===s&&!world.npcs.some(n=>Math.hypot(n.x-x,n.y-y)<TAP_PERSON))own++;
+  assert.ok(own>=Math.min(2,s.w*s.h),s.id+' cannot be tapped: people stand over it');
+  for(const n of world.npcs)assert.ok(!meet(figure(n),nameBox(s)),n.id+' covers the name of '+s.id);
+ }
+ for(const n of world.npcs.filter(n=>/^(grok|weird|uneasy|steppe)-/.test(n.id)))
+  assert.ok(!world.sites.some(s=>inRect(s,n.x,n.y)),n.id+' stands on a piece');
+});
