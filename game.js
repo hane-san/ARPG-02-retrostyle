@@ -10,6 +10,7 @@ import {pickZoneTrack} from './zone-music.js';
 import {TALK,SITE_ASIDES} from './dialogue-data.js';
 import {makePrototypeWorld} from './prototype-world.js';
 import {makeJourneyWorld,routeJourneyWalk} from './journey-world.js';
+import {activateRuinsDevice} from './journey-ruins.js';
 import {drawJourneyTile,drawJourneySite,drawJourneyAtmosphere,JOURNEY_PALETTE} from './journey-art.js';
 import {createJourneyMusicDirector,pickJourneyTrack} from './journey-music.js';
 import {createJourneyView} from './journey-view.js';
@@ -523,7 +524,10 @@ function onArrive(){
  if(obj.kind==='site'){
   const fresh=!discovered.has(obj.item.id);discovered.add(obj.item.id);
   updateDiscoveries();if(fresh)sfx.play('heal');
-  if(JOURNEY_MODE){openDialogue(obj.item.name,'この場所で',[obj.item.desc,obj.item.aside]);return;}
+  if(JOURNEY_MODE){
+   const response=activateRuinsDevice(obj.item);
+   openDialogue(obj.item.name,'この場所で',[obj.item.desc,response,obj.item.aside]);return;
+  }
   openDialogue(obj.item.name,'DISCOVERED PLACE',[
    obj.item.desc,
    JOURNEY_MODE?obj.item.aside:(currentWorldId==='silk'?SILK_ASIDES:SITE_ASIDES)[obj.item.id]||'',
