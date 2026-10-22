@@ -175,7 +175,18 @@ export function createJourneyFoley(storage){
   }))return false;
   steps++;return true;
  }
+ let lastTalk=-Infinity;
+ // Issue #44: a soft rounded "po" for typed conversation. Its own short gap keeps
+ // it from piling up, and it never consumes the menu-cue spacing.
+ function talk(){
+  if(!ready())return false;
+  const now=context.currentTime;
+  if(now-lastTalk<.055)return false;
+  if(!voice(item=>tone(item,610+random()*50,.0075,.075,560)))return false;
+  lastTalk=now;cues++;return true;
+ }
  function play(kind){
+  if(kind==='talk')return talk();
   // All footsteps enter through travelled distance; old per-cell calls do not
   // double the cadence. Arrival's heal + select becomes one quiet acknowledgement.
   if(!['select','cursor','cancel','confirm','heal','phase'].includes(kind)||!ready())return false;

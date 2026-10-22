@@ -38,7 +38,10 @@ test('legacy synth fallback retains its lookahead and transitions have no forced
 test('walking uses quiet footfalls and zoom is locked across all input methods',()=>{
  const game=readFileSync(new URL('../game.js',import.meta.url),'utf8');
  const sound=readFileSync(new URL('../audio.js',import.meta.url),'utf8');
- assert.match(game,/6\.15/);
+ // Issue #44: walking speed comes from the input source (walk-speed.js), not one constant.
+ assert.match(game,/Math\.min\(dt,0\.08\)\*hero\.speed/);
+ assert.match(game,/hero\.speed=JOURNEY_MODE\?walkSpeed\(source\):CLASSIC_WALK_SPEED/);
+ assert.match(game,/CLASSIC_WALK_SPEED=6\.15/);
  assert.match(game,/sfx\.play\('soft-step'\)/);
  assert.match(sound,/else if\(kind==='soft-step'\)/);
  assert.doesNotMatch(game,/zoomTo|stepJourneyZoom/);

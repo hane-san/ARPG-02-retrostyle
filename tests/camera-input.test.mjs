@@ -12,7 +12,7 @@ function input(){
  const listeners={},events={},documentEvents={},taps=[],zoom=[];
  const canvas={addEventListener:(id,fn)=>listeners[id]=fn,setPointerCapture(){},hasPointerCapture(){return false;},releasePointerCapture(){}};
  const context=vm.createContext({canvas,camera:{x:100,y:100,zoom:1.25},hero:{px:3,py:3},screen:{w:390,h:640},W:164,H:120,TILE:32,PAN_SENSITIVITY:.72,panTarget:null,
-  limitCamera:p=>p,zoomTo:z=>zoom.push(z),handleTap:e=>taps.push(e),
+  limitCamera:p=>p,zoomTo:z=>zoom.push(z),handleTap:e=>taps.push(e),readingPress:null,dialogue:null,JOURNEY_MODE:false,
   window:{addEventListener:(id,fn)=>events[id]=fn},document:{hidden:false,addEventListener:(id,fn)=>documentEvents[id]=fn}});
  vm.runInContext(block,context);
  const send=(type,id,x=100,y=100)=>listeners[type]({pointerId:id,button:0,clientX:x,clientY:y,preventDefault(){}});
@@ -34,7 +34,7 @@ function animation({pending=null,idleEdge=false}={}){
  const camera={x:656,y:656,zoom:1.25},world={width:164*32,height:120*32,tile:32};
  if(idleEdge)Object.assign(camera,limitCamera({x:1e6,y:656},hero,{...screen,width:screen.w,height:screen.h,zoom:1.25},world,.08));
  const context=vm.createContext({camera,hero,screen,W:164,H:120,TILE:32,panTarget:pending,gesture:null,last:0,
-  updateMove(){},updateJourneyMusic(){},journeyView:null,journeyCamera:null,dialogue:null,isPanelOpen:()=>false,
+  updateMove(){},updateDialogue(){},updateJourneyMusic(){},journeyView:null,journeyCamera:null,dialogue:null,isPanelOpen:()=>false,
   limitCamera,easeEdgeCamera,smoothPanCamera,paint(){},requestAnimationFrame(){},
   confineCamera(x=camera.x,y=camera.y,margin=.65){Object.assign(camera,limitCamera({x,y},hero,{width:screen.w,height:screen.h,zoom:camera.zoom},world,margin));}});
  vm.runInContext(block,context);return {camera,context};

@@ -89,7 +89,7 @@ test('browser runtime switches full world metadata, routes and renders art',()=>
  assert.match(game,/drawSilkTile/);
  assert.match(game,/drawSilkSite/);
  assert.match(game,/world\.transitionAt\?\./);
- assert.match(game,/Math\.min\(dt,0\.08\)\*6\.15/);
+ assert.match(game,/Math\.min\(dt,0\.08\)\*hero\.speed/);
  assert.match(game,/easeEdgeCamera/);
  assert.match(game,/PAN_SENSITIVITY/);
 });
