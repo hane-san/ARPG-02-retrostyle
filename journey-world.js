@@ -3,6 +3,7 @@
 import {silkPath} from './silk-world.js';
 import {EXTENSION_ZONES,EXTENSION_SITES,EXTENSION_NPCS,EXTENSION_VISTAS,paintJourneyExpansion,paintJourneyExpansionRoads,extensionZoneAt} from './journey-expansion.js';
 import {GROK_VILLAGERS} from './grok-villagers.js';
+import {JOURNEY_SCENIC_VISTAS} from './journey-scenic.js';
 import {RUINS_ZONES,RUINS_SITES,RUINS_NPCS,RUINS_VISTAS,paintJourneyRuins,paintJourneyRuinsRoads,ruinsZoneAt} from './journey-ruins.js';
 
 export const JOURNEY_W=176,JOURNEY_H=136;
@@ -540,6 +541,7 @@ JOURNEY_ZONES.push(...RUINS_ZONES);
 JOURNEY_SITES.push(...RUINS_SITES);
 JOURNEY_NPCS.push(...RUINS_NPCS);
 JOURNEY_VISTAS.push(...RUINS_VISTAS);
+JOURNEY_VISTAS.push(...JOURNEY_SCENIC_VISTAS);
 
 const distance=(x,y,[ax,ay],[bx,by])=>{
  const dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1)));
