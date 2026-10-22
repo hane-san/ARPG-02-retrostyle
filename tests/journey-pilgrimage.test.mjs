@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {makeJourneyWorld,JOURNEY_SITES,JOURNEY_NPCS,JOURNEY_VISTAS} from '../journey-world.js';
+import {RUINS_SITES,RUINS_NPCS,RUINS_VISTAS} from '../journey-ruins.js';
+import {GROK_VILLAGERS} from '../grok-villagers.js';
 
 function reachable(world){
  const seen=new Set(),queue=[world.start],key=(x,y)=>y*world.w+x;
@@ -17,9 +19,11 @@ function reachable(world){
 test('pilgrimage demo is rich but preserves all original journeys',()=>{
  const w=makeJourneyWorld();
  assert.equal(w.w,176);assert.equal(w.h,136);
- assert.equal(JOURNEY_SITES.length,35);
- assert.equal(JOURNEY_NPCS.length,27);
- assert.equal(JOURNEY_VISTAS.length,16);
+ assert.equal(JOURNEY_SITES.filter(s=>!RUINS_SITES.includes(s)).length,35,'original 35 sites survive');
+ assert.equal(JOURNEY_SITES.length,35+RUINS_SITES.length,'ruins sites are additive');
+ assert.equal(JOURNEY_NPCS.length,27+GROK_VILLAGERS.length+RUINS_NPCS.length,'retain 27 former NPCs and all 90 new villagers');
+ assert.equal(JOURNEY_VISTAS.filter(v=>!RUINS_VISTAS.includes(v)).length,16,'original 16 vistas survive');
+ assert.equal(JOURNEY_VISTAS.length,16+RUINS_VISTAS.length,'ruins vistas are additive');
  for(const items of [JOURNEY_SITES,JOURNEY_NPCS,JOURNEY_VISTAS])
   assert.equal(new Set(items.map(item=>item.id)).size,items.length,'unique landmark ids');
  for(const id of ['journey-terminal','journey-chaikhana','journey-monolith','journey-ship','journey-hut','journey-terrace'])
