@@ -21,6 +21,33 @@ test('dense scenery decorates the existing country without changing tiles or col
  assert.equal(world.walkable(81,52),false);
  assert.ok(world.walkable(19,70));
 });
+test('scenery is rooted on dry ground or on the structure it decorates, never on walls or open water',()=>{
+ const inSite=(x,y)=>world.sites.some(s=>x>=s.x&&x<s.x+s.w&&y>=s.y&&y<s.y+s.h);
+ // Only water glints and a flying kite may hover above water tiles.
+ const overWater=new Set(['spray','kite']);
+ for(const p of JOURNEY_SCENIC_PROPS){
+  const t=world.tileAt(p.x,p.y);
+  const water=t==='~'||t==='L';
+  assert.ok(world.walkable(p.x,p.y)||inSite(p.x,p.y)||(water&&overWater.has(p.kind)),
+   `${p.id} at (${p.x},${p.y}) sits on ${t}`);
+ }
+});
+test('every new outlook is actually offered somewhere on reachable ground',()=>{
+ const seen=new Set([world.start.y*world.w+world.start.x]),queue=[world.start];
+ for(let i=0;i<queue.length;i++)for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+  const x=queue[i].x+dx,y=queue[i].y+dy,k=y*world.w+x;
+  if(x<0||y<0||x>=world.w||y>=world.h||seen.has(k)||!world.walkable(x,y))continue;
+  seen.add(k);queue.push({x,y});
+ }
+ const offered=new Set();
+ for(const k of seen){
+  const x=k%world.w,y=Math.floor(k/world.w);
+  // Same first-match rule as the 遠くを眺める button.
+  const shown=world.vistas.find(v=>Math.hypot(v.x-x,v.y-y)<=v.radius);
+  if(shown)offered.add(shown.id);
+ }
+ for(const v of JOURNEY_SCENIC_VISTAS)assert.ok(offered.has(v.id),v.id+' is not hidden behind an older outlook');
+});
 test('new outlooks are optional, unique and reachable from the original quay',()=>{
  assert.equal(JOURNEY_SCENIC_VISTAS.length,6);
  for(const v of JOURNEY_SCENIC_VISTAS){
