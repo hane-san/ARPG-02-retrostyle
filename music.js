@@ -1,6 +1,7 @@
 import {EXTRA_SCORES} from './extra-music.js';
 import {SILK_SCORES} from './silk-music.js';
 import {GROK_SCORES} from './grok-music.js';
+import {UNEASY_SCORES} from './uneasy.js';
 import {holdFadeAt} from './journey-sound.js';
 import {holdEnvelopeAt} from './audio-envelope.js';
 import {renderMusicLoop,createMusicLoopCache} from './music-loop.js';
@@ -15,12 +16,9 @@ export const SCORES=[
  {name:'雨森',root:62,meter:3,lead:'harp',arp:'flute',ally:{title:'木洩れ雨の回廊',bpm:88,scale:minor,chords:[0,3,5,2,0,5,3,4],melody:[[4,2,3,0,1,3,2,0],[5,3,4,2,0,2,1,-1],[3,5,6,4,2,3,1,2],[4,3,1,2,0,-1,1,0]]},hostile:{title:'雨幕の追跡',bpm:102,scale:minor,chords:[0,5,0,4,3,1,4,0],melody:[[0,2,1,3,2,4,3,1],[2,4,3,5,4,2,1,0],[3,2,5,4,6,3,2,1],[4,3,2,0,1,-1,1,0]]}},
  {name:'暁城',root:60,meter:4,lead:'horn',arp:'harp',ally:{title:'暁の城塞へ',bpm:122,scale:major,chords:[0,5,3,4,0,2,3,4],melody:[[0,4,3,5,7,6,4,2],[3,5,4,6,7,5,4,3],[5,7,9,7,6,4,5,3],[4,6,7,5,4,2,1,0]]},hostile:{title:'最後の防壁',bpm:130,scale:minor,chords:[0,4,5,3,0,1,4,0],melody:[[7,4,5,3,4,2,3,0],[5,3,4,2,3,1,2,-1],[3,6,5,7,4,5,2,3],[4,3,1,2,0,-1,1,0]]}}
 ];
-// Seven independent sound-room-only theme pairs. They are not assigned to campaign maps.
-// Same synth voices as the original scores; optional articulation, pulse and density vary by scene.
 export const BONUS_SCORES=[
- // (existing bonus scores kept)
 ];
-export const MUSIC_LIBRARY=[...SCORES,...BONUS_SCORES,...EXTRA_SCORES,...SILK_SCORES,...GROK_SCORES];
+export const MUSIC_LIBRARY=[...SCORES,...BONUS_SCORES,...EXTRA_SCORES,...SILK_SCORES,...GROK_SCORES,...UNEASY_SCORES];
 const degree=(root,scale,n)=>root+12*Math.floor(n/7)+scale[((n%7)+7)%7];
 export function buildTrack(mapId,phase=1){
  const score=MUSIC_LIBRARY[mapId]||SCORES[0],side=phase===1?'ally':'hostile',part=score[side],bar=score.meter,length=bar*32;
@@ -40,4 +38,3 @@ export function buildTrack(mapId,phase=1){
  events.sort((a,b)=>a.beat-b.beat);
  return {mapId,side,title:part.title,bpm:part.bpm,beats:length,seconds:length*60/part.bpm,events};
 }
-// (rest of the file continues with scheduleNote etc.)
