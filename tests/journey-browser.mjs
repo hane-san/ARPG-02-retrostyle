@@ -204,6 +204,21 @@ export async function checkJourney(page,origin){
  const tapNPC=()=>page.touchscreen.tap(quay.x+quay.width/2,quay.y+quay.height/2+32);
  await tapNPC();await page.waitForTimeout(220);
  assert.ok(await page.locator('#dialogue').isVisible(),'revisiting an adjacent NPC must survive its opening click');
+ // Issue #44: the page types out, and field taps while reading only turn pages.
+ const full=await page.locator('#dialogueText').getAttribute('aria-label');
+ assert.ok(full&&full.length>10,'the whole line is available to assistive technology');
+ const typed=(await page.locator('#dialogueText').textContent()).length;
+ assert.ok(typed<full.length,'the opening page types out instead of appearing at once: '+typed+'/'+full.length);
+ const cameraBefore=await page.evaluate(()=>({...window.journeyRenderCamera}));
+ await page.touchscreen.tap(quay.x+quay.width/2-120,quay.y+quay.height/2-140);
+ assert.equal(await page.locator('#dialogueText').textContent(),full,'the first field tap completes the page');
+ await page.touchscreen.tap(quay.x+quay.width/2-120,quay.y+quay.height/2-140);
+ await page.touchscreen.tap(quay.x+quay.width/2+90,quay.y+quay.height/2-160);
+ await page.waitForTimeout(400);
+ assert.equal(await page.locator('#worldCanvas').getAttribute('aria-busy'),'false','taps while reading never start a walk');
+ const cameraAfter=await page.evaluate(()=>({...window.journeyRenderCamera}));
+ assert.ok(Math.hypot(cameraAfter.x-cameraBefore.x,cameraAfter.y-cameraBefore.y)<1,'taps while reading never pan the field');
+ if(await page.locator('#dialogue').isHidden()){await tapNPC();await page.waitForTimeout(220);}
  await page.locator('#mapBtn').click();
  assert.ok(await page.locator('#dialogue').isHidden(),'reading never captures the bottom menu');
  assert.ok(await page.locator('#mapPanel').isVisible());

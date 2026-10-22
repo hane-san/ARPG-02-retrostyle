@@ -18,6 +18,8 @@ import {installJourneyUI} from './journey-ui.js';
 import {createJourneyFoley} from './journey-foley.js';
 import {resolveGameMode} from './game-mode.js';
 import {createJourneyCamera,journeyCameraScene,easeJourneyCamera} from './journey-camera.js';
+import {createTyper} from './dialogue-typer.js';
+import {walkSpeed} from './walk-speed.js';
 
 const $=id=>document.getElementById(id);
 const stage=$('stage'),canvas=$('worldCanvas'),ctx=canvas.getContext('2d',{alpha:false});
@@ -34,13 +36,15 @@ const storage={
 };
 const music=createMusic(storage),sfx=JOURNEY_MODE?createJourneyFoley(storage):createAudio(storage);
 const spawn=world.start||START;
-const hero={x:spawn.x,y:spawn.y,px:spawn.x,py:spawn.y,face:'down',path:[],arrival:null,stride:0,moving:false};
+const hero={x:spawn.x,y:spawn.y,px:spawn.x,py:spawn.y,face:'down',path:[],arrival:null,stride:0,moving:false,speed:6.15};
+// The older worlds keep their original single pace; Issue #44 tunes the journey.
+const CLASSIC_WALK_SPEED=6.15;
 const journeyCamera=JOURNEY_MODE?createJourneyCamera():null;
 const camera={x:(spawn.x+.5)*TILE,y:(spawn.y+.5)*TILE,zoom:journeyCamera?.target||1.25};
 const journeyMusic=JOURNEY_MODE?createJourneyMusicDirector():null;
 const journeyView=JOURNEY_MODE?createJourneyView(stage,world):null;
 let panTarget=null;
-let screen={w:1,h:1,dpr:1},last=0,zoneId='',noticeTimer=0,dialogue=null;
+let screen={w:1,h:1,dpr:1},last=0,zoneId='',noticeTimer=0,dialogue=null,readingPress=null;
 const discovered=new Set(),cache=new Map(),CHUNK=16,MAX_CHUNKS=42;
 const palette={'~':'#497d93','.':'#8d9f7c',',':'#cbbc96',f:'#567864','=':'#baa986','+':'#ae987a',s:'#98b0b0',n:'#576d88',p:'#b7a993','#':'#58605d',M:'#9eb88a',A:'#aa986e',R:'#7f9188',F:'#3e6559',G:'#73a49e',P:'#d1d4c5',C:'#77adb7',D:'#d2b78e',T:'#bc856d',Q:'#789e9f',B:'#496d78',K:'#424563',E:'#528eae'};
 // The previous two worlds remain explicitly available; the grassland journey is the current entrance.
@@ -504,14 +508,14 @@ function switchWorld(id,spawn){
  toast(id==='silk'?'星風回廊へようこそ。遠い湖と草原を歩いてみましょう。':'潮環群島に帰ってきました。');
 }
 
-function startWalk(target,arrival=null){
+function startWalk(target,arrival=null,source='field'){
  if(!world.walkable(target.x,target.y)){toast('ここには歩いて行けません。道や橋を選んでください。');return;}
  // Start from the next occupied grid cell instead of instantly teleporting away.
  // A portal crosses worlds on arrival, so only a route ending there may use it.
  const path=JOURNEY_MODE?routeJourneyWalk(world,hero,target):
   routeWalk(world,hero,target,currentWorldId==='silk'?silkPath:findPath);
  if(!path){toast('この場所へ続く道が見つかりません。');return;}
- hero.path=path;hero.arrival=arrival;
+ hero.path=path;hero.arrival=arrival;hero.speed=JOURNEY_MODE?walkSpeed(source):CLASSIC_WALK_SPEED;
  panTarget=null;syncTravelState();
  if(hero.path.length===0){hero.px=hero.x;hero.py=hero.y;onArrive();return;}
  // Walking does not display distances or step counts: explore visually.
@@ -549,7 +553,8 @@ function walkToNpc(n){
  if(best)startWalk(best,{kind:'npc',item:n});
 }
 function handleTap(e){
- if(dialogue){if(!JOURNEY_MODE)return;closeDialogue();}
+ // Issue #44: while reading, a field tap only turns the page; it never walks.
+ if(dialogue){if(JOURNEY_MODE&&performance.now()-dialogue.openedAt>=180)dialogueInput();return;}
  music.unlock();sfx.unlock();
  const p=screenToWorld(e.clientX,e.clientY);
  if(p.x<0||p.y<0||p.x>=W||p.y>=H)return;
@@ -571,11 +576,30 @@ function handleTap(e){
  startWalk(t);
  if(bridge)toast(bridge.name+'へ歩いて向かいます。');
 }
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
+function showDialoguePage(){
+ dialogue.typer=createTyper(dialogue.lines[dialogue.index]);
+ if(reduceMotion.matches)dialogue.typer.finish();
+ $('dialogueText').textContent=dialogue.typer.text;
+ $('dialogueText').setAttribute('aria-label',dialogue.lines[dialogue.index]);
+}
+function updateDialogue(dt){
+ if(!dialogue?.typer||dialogue.typer.done)return;
+ const blip=dialogue.typer.step(dt);
+ $('dialogueText').textContent=dialogue.typer.text;
+ if(blip)sfx.play('talk');
+}
+// One input for the reading card: finish the page, then turn it, then close.
+function dialogueInput(){
+ if(!dialogue)return;
+ if(dialogue.typer&&!dialogue.typer.done){dialogue.typer.finish();$('dialogueText').textContent=dialogue.typer.text;return;}
+ advanceDialogue();
+}
 function openDialogue(name,role,lines){
  dialogue={name,role,lines:lines.filter(Boolean),index:0,openedAt:performance.now()};
  $('dialogueName').textContent=name;$('dialogueRole').textContent=role;
- $('dialogueText').textContent=dialogue.lines[0];
- $('dialogueNext').innerHTML=JOURNEY_MODE?'つづき <span>›</span>':'タップしてつづく <span>›</span>';
+ showDialoguePage();
+ $('dialogueNext').innerHTML=JOURNEY_MODE?(dialogue.lines.length===1?'とじる <span>×</span>':'つづき <span>›</span>'):'タップしてつづく <span>›</span>';
  $('dialogue').classList.remove('hidden');
  if(JOURNEY_MODE)placeJourneyDialogue();
  sfx.play('select');
@@ -593,7 +617,7 @@ function advanceDialogue(){
  if(!dialogue)return;
  dialogue.index++;
  if(dialogue.index>=dialogue.lines.length){closeDialogue();return;}
- $('dialogueText').textContent=dialogue.lines[dialogue.index];
+ showDialoguePage();
  $('dialogueNext').innerHTML=JOURNEY_MODE?
   (dialogue.index===dialogue.lines.length-1?'とじる <span>×</span>':'つづき <span>›</span>'):
   (dialogue.index===dialogue.lines.length-1?'どこでもタップして閉じる <span>×</span>':'タップしてつづく <span>›</span>');
@@ -608,18 +632,19 @@ document.addEventListener('click',e=>{
  if(JOURNEY_MODE&&!e.target.closest('#dialogue')){
   // An adjacent NPC opens on pointerup; its following click belongs to the
   // same gesture and must not immediately dismiss the newly opened card.
-  if(e.target===canvas&&performance.now()-dialogue.openedAt<180)return;
+  // Field taps arrive through the canvas pointerup instead; ignore their click.
+  if(e.target===canvas)return;
   closeDialogue();return;
  }
  e.preventDefault();e.stopImmediatePropagation();
  if(e.target.closest('#dialogueClose')){closeDialogue();return;}
  if(performance.now()-dialogue.openedAt<180)return;
- advanceDialogue();
+ dialogueInput();
 },true);
 
 function updateMove(dt){
  if(dialogue||!hero.path.length){hero.moving=false;return;}
- let remaining=Math.min(dt,0.08)*6.15;
+ let remaining=Math.min(dt,0.08)*hero.speed;
  while(remaining>0&&hero.path.length){
   const step=hero.path[0];
   const dx=step.x-hero.px,dy=step.y-hero.py,distance=Math.hypot(dx,dy);
@@ -643,7 +668,7 @@ function updateMove(dt){
 let lastPaint=-Infinity,lastPaintCamera={x:camera.x,y:camera.y,zoom:camera.zoom};
 function animate(time){
  const dt=last?Math.min(.07,(time-last)/1000):0;last=time;
- updateMove(dt);
+ updateMove(dt);updateDialogue(dt);
  updateJourneyMusic(time);
  journeyView?.update(hero,!!dialogue||isPanelOpen(),time);
  if(journeyCamera){
@@ -718,6 +743,9 @@ window.addEventListener('blur',cancelCameraGesture);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)cancelCameraGesture();});
 canvas.addEventListener('pointerdown',e=>{
  if(e.button!==0)return;e.preventDefault();canvas.setPointerCapture(e.pointerId);
+ // A second finger while reading cancels the page turn; nothing pans.
+ if(readingPress){readingPress=null;return;}
+ if(JOURNEY_MODE&&dialogue&&!pointerMap.size){readingPress={id:e.pointerId,x:e.clientX,y:e.clientY};return;}
  panTarget=null;
  pointerMap.set(e.pointerId,{x:e.clientX,y:e.clientY});
  if(pointerMap.size===1)gesture={id:e.pointerId,x:e.clientX,y:e.clientY,cx:camera.x,cy:camera.y,drag:false,pinch:false};
@@ -741,11 +769,16 @@ canvas.addEventListener('pointermove',e=>{
  }
 });
 canvas.addEventListener('pointerup',e=>{
+ if(readingPress){
+  const press=readingPress;readingPress=null;
+  if(press.id===e.pointerId&&Math.hypot(e.clientX-press.x,e.clientY-press.y)<=9)handleTap(e);
+  return;
+ }
  const g=gesture;const tapped=g&&g.id===e.pointerId&&!g.drag&&!g.pinch;
  finishCameraPointer(e.pointerId);
  if(tapped)handleTap(e);
 });
-canvas.addEventListener('pointercancel',e=>{if(pointerMap.has(e.pointerId))cancelCameraGesture();});
+canvas.addEventListener('pointercancel',e=>{readingPress=null;if(pointerMap.has(e.pointerId))cancelCameraGesture();});
 canvas.addEventListener('lostpointercapture',e=>{
  // Implicit capture loss follows normal pointerup. Only an unexpected loss
  // of a still-active pointer cancels the group and any pending camera motion.
@@ -756,7 +789,7 @@ canvas.addEventListener('dragstart',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
  if(e.key==='Escape'){closeDialogue();closePanels();journeyView?.close(true);return;}
  if(dialogue){
-  if(e.key==='Enter'||e.key===' '){e.preventDefault();advanceDialogue();return;}
+  if(e.key==='Enter'||e.key===' '){e.preventDefault();dialogueInput();return;}
   if(JOURNEY_MODE&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d'].includes(e.key))closeDialogue();
   else return;
  }
@@ -821,14 +854,14 @@ mini.addEventListener('click',e=>{
  const r=mini.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
  if(JOURNEY_MODE){
   const site=world.siteAt(Math.floor(x),Math.floor(y));
-  if(site){closePanels();startWalk(site.entrance,{kind:'site',item:site});return;}
+  if(site){closePanels();startWalk(site.entrance,{kind:'site',item:site},'map');return;}
  }
  const target=nearestWalkable(world,Math.max(0,Math.min(W-1,Math.floor(x))),Math.max(0,Math.min(H-1,Math.floor(y))),14);
  closePanels();
  if(target){
   const bridge=world.bridgeAt(target.x,target.y);
   const exit=bridge&&world.transitions?.find(p=>p.x>=bridge.x1&&p.x<=bridge.x2&&p.y>=bridge.y1&&p.y<=bridge.y2);
-  startWalk(exit?{x:exit.x,y:exit.y}:target);
+  startWalk(exit?{x:exit.x,y:exit.y}:target,null,'map');
  }else toast('水域は歩けません。陸か橋を選んでください。');
 });
 $('mapHome').addEventListener('click',()=>{
@@ -843,7 +876,7 @@ function rebuildZoneList(){
  btn.append(title,sub);
  btn.addEventListener('click',()=>{
   const target=nearestWalkable(world,z.cx,z.cy,12);
-  closePanels();if(target)startWalk(target);
+  closePanels();if(target)startWalk(target,null,'map');
  });
  $('zoneList').append(btn);
  }
