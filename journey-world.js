@@ -5,6 +5,7 @@ import {EXTENSION_ZONES,EXTENSION_SITES,EXTENSION_NPCS,EXTENSION_VISTAS,paintJou
 import {GROK_VILLAGERS} from './grok-villagers.js';
 import {ART_OBJECTS, WEIRD_MOBS} from './art-objects.js';
 import {DISTANT_VISTAS} from './distant-vistas.js';
+import {UNEASY_MOBS} from './uneasy.js';
 import {RUINS_ZONES,RUINS_SITES,RUINS_NPCS,RUINS_VISTAS,paintJourneyRuins,paintJourneyRuinsRoads,ruinsZoneAt} from './journey-ruins.js';
 
 export const JOURNEY_W=176,JOURNEY_H=136;
@@ -20,8 +21,6 @@ export const JOURNEY_ZONES=[
  {id:'journey-sunset',name:'残照の岸',sub:'夕空が、旅人よりもずっと大きい',cx:77,cy:76,label:{x:79,y:81}}
 ];
 
-// Working names and independent fragments, deliberately replaceable. No quest,
-// historical truth, or main-story answer is established by these descriptions.
 JOURNEY_ZONES.push(...EXTENSION_ZONES);
 export const JOURNEY_SITES=[
  {id:'journey-terminal',name:'白い連絡舎',kind:'terminal',x:7,y:68,w:9,h:6,entrance:{x:12,y:75},desc:'海辺の連絡舎。白い折屋根の下で、草原を越える荷物と湖から届く籠が同じ台車を待っている。',aside:'帰りの船の時刻は書いていない。軒先の灯りは、誰が戻ってもいいようについている。'},
@@ -31,14 +30,12 @@ export const JOURNEY_SITES=[
  {id:'journey-hut',name:'青い岸の小屋',kind:'lakehut',x:95,y:67,w:6,h:4,entrance:{x:98,y:72},desc:'水位を測る棒と、干してある網。対岸の畑へ渡す種を、小屋の人が毎春預かっている。',aside:'空箱には「壊れ物ではないが、急がないこと」とだけ書いてある。'},
  {id:'journey-terrace',name:'夕空の石段',kind:'terrace',x:75,y:73,w:5,h:2,entrance:{x:77,y:76},blocking:false,desc:'湖へ向いた低い石段。座るためか、かつて水へ降りるためだったのか。今は夕焼けを見る人がときどき立ち寄る。',aside:'少し北へ戻れば湖岸、遠回りすれば茶屋。同じ水辺に、別の帰り道がある。'}
 ];
-// ... (existing sites and relics kept)
 JOURNEY_SITES.push(...EXTENSION_SITES);
 JOURNEY_SITES.push(...ART_OBJECTS);
 export const JOURNEY_NPCS=[
- // (existing NPCs kept)
 ];
-// (existing NPC pushes kept)
 JOURNEY_NPCS.push(...WEIRD_MOBS);
+JOURNEY_NPCS.push(...UNEASY_MOBS);
 export const JOURNEY_BRIDGES=[
  {id:'journey-link',name:'白浜の連絡橋',axis:'h',x1:21,x2:32,y1:66,y2:68,center:{x:26,y:67}},
  {id:'journey-watercourse',name:'畑の水路橋',axis:'h',x1:50,x2:54,y1:73,y2:75,center:{x:52,y:74}}
@@ -51,8 +48,6 @@ export const JOURNEY_VISTAS=[
 JOURNEY_VISTAS.push(...DISTANT_VISTAS);
 JOURNEY_VISTAS.push(...EXTENSION_VISTAS);
 
-// Finish the already occupied edge before rerouting. Starting a new path from
-// the previous tile while between cells can otherwise cut an obstacle's corner.
 export function routeJourneyWalk(world,hero,target){
  const inTransit=Math.hypot(hero.px-hero.x,hero.py-hero.y)>.0001;
  const next=inTransit&&hero.path.length?hero.path[0]:null;
