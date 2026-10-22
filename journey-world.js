@@ -280,7 +280,7 @@ JOURNEY_SITES.push(...[
   "h": 4,
   "entrance": {
    "x": 71,
-  "y": 23
+   "y": 23
   },
   "blocking": false,
   "desc": "山と塩原の境に立つ二本の柱。左右に釣り合う溝があるが、同じ量を載せた形跡はない。",
