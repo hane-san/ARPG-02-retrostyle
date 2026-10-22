@@ -61,6 +61,20 @@ export async function checkJourney(page,origin){
  assert.ok(skyPixels.sky[2]>skyPixels.sky[0],'cliff outlook is cool, open sky');
  assert.ok(skyPixels.horizon[0]>skyPixels.horizon[2],'the horizon has a gentle warm colour');
 
+ // Scenic details must actually paint on canvas, not just exist as data.
+ const scenicPixels=await page.evaluate(async()=>{
+  const {drawJourneyScenicDetails}=await import('./journey-scenic.js');
+  const c=document.createElement('canvas');c.width=128;c.height=128;
+  const ctx=c.getContext('2d');ctx.translate(-14*32,-75*32);
+  drawJourneyScenicDetails(ctx,{left:12,right:16,top:74,bottom:79},1400);
+  const data=ctx.getImageData(0,0,c.width,c.height).data;
+  let painted=0;
+  for(let i=3;i<data.length;i+=4)if(data[i]>0)painted++;
+  return painted;
+ });
+ assert.ok(scenicPixels>20,'port lanterns visibly render as the player approaches');
+
+
  async function mapPosition(){
   return page.locator('#miniMap').evaluate(canvas=>{
    const c=canvas.getContext('2d'),{data}=c.getImageData(0,0,canvas.width,canvas.height);
