@@ -8,7 +8,8 @@ import {ART_OBJECTS,WEIRD_MOBS} from '../art-objects.js';
 import {UNEASY_MOBS} from '../uneasy.js';
 import {STEPPE_MOBS,STEPPE_OBJECTS} from '../steppe-asia.js';
 import {DISTANT_VISTAS} from '../distant-vistas.js';
-const SPICE_SITES=[...ART_OBJECTS,...STEPPE_OBJECTS],SPICE_NPCS=[...WEIRD_MOBS,...UNEASY_MOBS,...STEPPE_MOBS];
+import {JOURNEY_CURIOS} from '../journey-curios.js';
+const SPICE_SITES=[...ART_OBJECTS,...STEPPE_OBJECTS,...JOURNEY_CURIOS],SPICE_NPCS=[...WEIRD_MOBS,...UNEASY_MOBS,...STEPPE_MOBS];
 
 function reachable(world){
  const seen=new Set(),queue=[world.start],key=(x,y)=>y*world.w+x;

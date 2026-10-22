@@ -5,6 +5,7 @@ import {EXTENSION_ZONES,EXTENSION_SITES,EXTENSION_NPCS,EXTENSION_VISTAS,paintJou
 import {GROK_VILLAGERS} from './grok-villagers.js';
 import {JOURNEY_SCENIC_VISTAS} from './journey-scenic.js';
 import {ART_OBJECTS,WEIRD_MOBS} from './art-objects.js';
+import {JOURNEY_CURIOS} from './journey-curios.js';
 import {DISTANT_VISTAS} from './distant-vistas.js';
 import {UNEASY_MOBS} from './uneasy.js';
 import {STEPPE_MOBS,STEPPE_OBJECTS} from './steppe-asia.js';
@@ -548,6 +549,7 @@ JOURNEY_VISTAS.push(...RUINS_VISTAS);
 // Owner-added spice from several AIs (2026-10-22): art pieces, odd and uneasy passers-by,
 // steppe life and distant vistas. Placement follows Issue #53 (dry, reachable, uncrowded).
 JOURNEY_SITES.push(...ART_OBJECTS,...STEPPE_OBJECTS);
+JOURNEY_SITES.push(...JOURNEY_CURIOS);
 JOURNEY_NPCS.push(...WEIRD_MOBS,...UNEASY_MOBS,...STEPPE_MOBS);
 JOURNEY_VISTAS.push(...DISTANT_VISTAS);
 JOURNEY_VISTAS.push(...JOURNEY_SCENIC_VISTAS);

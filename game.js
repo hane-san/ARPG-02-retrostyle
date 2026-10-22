@@ -16,6 +16,8 @@ import {createJourneyMusicDirector,pickJourneyTrack} from './journey-music.js';
 import {createJourneyView} from './journey-view.js';
 import {installJourneyUI} from './journey-ui.js';
 import {createJourneyFoley} from './journey-foley.js';
+import {journeySoundSources} from './journey-curios.js';
+import {createAmbienceDirector} from './journey-ambience.js';
 import {resolveGameMode} from './game-mode.js';
 import {createJourneyCamera,journeyCameraScene,easeJourneyCamera} from './journey-camera.js';
 import {easeScenicRoadGlide} from './journey-scenic.js';
@@ -38,6 +40,7 @@ const storage={
  setItem(k,v){try{localStorage.setItem('tidal-atlas:'+k,v);}catch{}}
 };
 const music=createMusic(storage),sfx=JOURNEY_MODE?createJourneyFoley(storage):createAudio(storage);
+const ambience=JOURNEY_MODE?createAmbienceDirector(journeySoundSources(SITES)):null;
 const spawn=world.start||START;
 const hero={x:spawn.x,y:spawn.y,px:spawn.x,py:spawn.y,face:'down',path:[],arrival:null,stride:0,moving:false,speed:6.15};
 // The older worlds keep their original single pace; Issue #44 tunes the journey.
@@ -674,6 +677,11 @@ let lastPaint=-Infinity,lastPaintCamera={x:camera.x,y:camera.y,zoom:camera.zoom}
 function animate(time){
  const dt=last?Math.min(.07,(time-last)/1000):0;last=time;
  updateMove(dt);updateDialogue(dt);
+ if(ambience){
+  const active=!dialogue&&!isPanelOpen()&&$('vistaCard').hidden&&!document.hidden&&sfx.enabled&&sfx.volume>0;
+  const sound=ambience.update({x:hero.px,y:hero.py},time,active);
+  sfx.ambience(sound.levels,sound.events);
+ }
  updateJourneyMusic(time);
  journeyView?.update(hero,!!dialogue||isPanelOpen(),time);
  if(journeyCamera){

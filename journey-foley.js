@@ -125,7 +125,7 @@ export function createJourneyFoley(storage){
   node.gain.linearRampToValueAtTime(peak,start+attack);
   node.gain.exponentialRampToValueAtTime(.00001,data.tail);
   node.gain.linearRampToValueAtTime(0,data.end);
-  node.connect(master);voice.nodes.push(node);voice.envelopes.push(data);
+  node.connect(voice.output||master);voice.nodes.push(node);voice.envelopes.push(data);
   return data;
  }
  function source(voice,node,envelope){
@@ -216,8 +216,36 @@ export function createJourneyFoley(storage){
   clock.reset();lastCue=-Infinity;
   if(hidden())retireAll(context?.state!=='running');
  };
+ const timbres={kettle:[185,233],wood:[310,190],creak:[105,73],wind:[148,222],
+  bell:[880,1320],glass:[1040,1560],drip:[740,390],clock:[610,430],stone:[260,173],echo:[72,108]};
+ function ambience(levels,events){
+  if(!ready())return;
+  try{
+  const gains=new Map(levels.map(s=>[s.id,clamp(s.gain)])),now=context.currentTime;
+  for(const v of voices)if(v.ambientId){
+   const target=gains.get(v.ambientId)||0,param=v.output.gain;
+   const ramp=v.distanceRamp,held=ramp.from+(ramp.to-ramp.from)*Math.min(1,Math.max(0,(now-ramp.start)/.12));
+   let nativeHeld=false;
+   if(param.cancelAndHoldAtTime)try{param.cancelAndHoldAtTime(now);nativeHeld=true;}catch{}
+   if(!nativeHeld){param.cancelScheduledValues(now);param.setValueAtTime(held,now);}
+   param.linearRampToValueAtTime(target,now+.12);
+   v.distanceRamp={from:held,to:target,start:now};
+  }
+  for(const event of events){
+   if(!timbres[event.kind]||[...voices].filter(v=>v.ambientId).length>=2)continue;
+   voice(v=>{
+    v.ambientId=event.id;const gain=clamp(event.gain);
+    v.distanceRamp={from:gain,to:gain,start:now};
+    v.output=context.createGain();v.nodes.push(v.output);v.output.gain.setValueAtTime(gain,now);v.output.connect(master);
+    const [a,b]=timbres[event.kind];
+    tone(v,a,.012,event.kind==='echo'?.7:.32,a*.98);
+    tone(v,b,.005,event.kind==='echo'?.95:.25,b*.99);
+   });
+  }
+  }catch{/* A failing audio device must never interrupt exploration. */}
+ }
  globalThis.document?.addEventListener?.('visibilitychange',visibility);
- return {unlock,play,step,toggle,setVolume,get enabled(){return enabled;},get volume(){return volume;},
+ return {unlock,play,step,ambience,toggle,setVolume,get enabled(){return enabled;},get volume(){return volume;},
   destroy(){
    destroyed=true;clock.reset();retireAll(true);disconnect(master);
    globalThis.document?.removeEventListener?.('visibilitychange',visibility);

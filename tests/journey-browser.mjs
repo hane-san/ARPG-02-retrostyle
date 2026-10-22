@@ -362,5 +362,28 @@ export async function checkJourney(page,origin){
   await page.keyboard.press('Escape');
   assert.equal(await page.evaluate(()=>document.activeElement.id),'soundBtn','closing a sheet restores focus to its tool');
  }
- console.log('Journey browser passed: real-time loop, six original sites plus sixteen optional relic sites, NPC, redirection, music, three vistas, mode links and persistent settings.');
+ // Issue #51: use the normal atlas and arrival dialogue, with no teleport hook.
+ await page.setViewportSize({width:390,height:844});
+ await page.locator('#soundBtn').click();
+ if(await page.locator('#sfxToggle').textContent()==='OFF')await page.locator('#sfxToggle').click();
+ if(await page.locator('#musicToggle').textContent()==='ON')await page.locator('#musicToggle').click();
+ await page.keyboard.press('Escape');
+ await walk(5,75,{name:'見送りの練習札',arrival:{x:6,y:77},shot:'journey-curio-port'});
+ await page.waitForTimeout(3300);
+ const nearNotes=await page.evaluate(()=>window.journeyAudioProbe.notes);
+ await page.waitForTimeout(4700);
+ assert.ok(await page.evaluate(()=>window.journeyAudioProbe.notes)>nearNotes,'nearby place schedules original ambient tones');
+ await walk(19,70);
+ const farNotes=await page.evaluate(()=>window.journeyAudioProbe.notes);
+ await page.waitForTimeout(4700);
+ assert.equal(await page.evaluate(()=>window.journeyAudioProbe.notes),farNotes,'leaving the source stops ambient cues');
+ await walk(5,75,{name:'見送りの練習札',arrival:{x:6,y:77}});
+ await page.locator('#soundBtn').click();
+ if(await page.locator('#sfxToggle').textContent()==='ON')await page.locator('#sfxToggle').click();
+ await page.keyboard.press('Escape');
+ const mutedNotes=await page.evaluate(()=>window.journeyAudioProbe.notes);
+ await page.waitForTimeout(4700);
+ assert.equal(await page.evaluate(()=>window.journeyAudioProbe.notes),mutedNotes,'SFX OFF suppresses nearby sound');
+ assert.ok(await page.locator('#dialogue').isHidden(),'proximity never opens a dialogue');
+ console.log('Journey browser passed: real-time loop, modes, camera, curios, proximity approach/departure/re-entry, SFX OFF and persistent settings.');
 }
