@@ -6,6 +6,7 @@ import {GROK_VILLAGERS} from './grok-villagers.js';
 import {ART_OBJECTS, WEIRD_MOBS} from './art-objects.js';
 import {DISTANT_VISTAS} from './distant-vistas.js';
 import {UNEASY_MOBS} from './uneasy.js';
+import {STEPPE_MOBS, STEPPE_OBJECTS} from './steppe-asia.js';
 import {RUINS_ZONES,RUINS_SITES,RUINS_NPCS,RUINS_VISTAS,paintJourneyRuins,paintJourneyRuinsRoads,ruinsZoneAt} from './journey-ruins.js';
 
 export const JOURNEY_W=176,JOURNEY_H=136;
@@ -32,10 +33,12 @@ export const JOURNEY_SITES=[
 ];
 JOURNEY_SITES.push(...EXTENSION_SITES);
 JOURNEY_SITES.push(...ART_OBJECTS);
+JOURNEY_SITES.push(...STEPPE_OBJECTS);
 export const JOURNEY_NPCS=[
 ];
 JOURNEY_NPCS.push(...WEIRD_MOBS);
 JOURNEY_NPCS.push(...UNEASY_MOBS);
+JOURNEY_NPCS.push(...STEPPE_MOBS);
 export const JOURNEY_BRIDGES=[
  {id:'journey-link',name:'白浜の連絡橋',axis:'h',x1:21,x2:32,y1:66,y2:68,center:{x:26,y:67}},
  {id:'journey-watercourse',name:'畑の水路橋',axis:'h',x1:50,x2:54,y1:73,y2:75,center:{x:52,y:74}}
