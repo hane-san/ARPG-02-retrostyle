@@ -2,6 +2,7 @@ import {EXTRA_SCORES} from './extra-music.js';
 import {SILK_SCORES} from './silk-music.js';
 import {GROK_SCORES} from './grok-music.js';
 import {UNEASY_SCORES} from './uneasy.js';
+import {STEPPE_SCORES} from './steppe-asia.js';
 import {holdFadeAt} from './journey-sound.js';
 import {holdEnvelopeAt} from './audio-envelope.js';
 import {renderMusicLoop,createMusicLoopCache} from './music-loop.js';
@@ -18,7 +19,7 @@ export const SCORES=[
 ];
 export const BONUS_SCORES=[
 ];
-export const MUSIC_LIBRARY=[...SCORES,...BONUS_SCORES,...EXTRA_SCORES,...SILK_SCORES,...GROK_SCORES,...UNEASY_SCORES];
+export const MUSIC_LIBRARY=[...SCORES,...BONUS_SCORES,...EXTRA_SCORES,...SILK_SCORES,...GROK_SCORES,...UNEASY_SCORES,...STEPPE_SCORES];
 const degree=(root,scale,n)=>root+12*Math.floor(n/7)+scale[((n%7)+7)%7];
 export function buildTrack(mapId,phase=1){
  const score=MUSIC_LIBRARY[mapId]||SCORES[0],side=phase===1?'ally':'hostile',part=score[side],bar=score.meter,length=bar*32;
