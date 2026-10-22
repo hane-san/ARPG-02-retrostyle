@@ -461,7 +461,13 @@ JOURNEY_NPCS.push(...[
 ]);
 
 JOURNEY_NPCS.push(...EXTENSION_NPCS);
-JOURNEY_NPCS.push(...GROK_VILLAGERS);
+const EXTRA_VOICE=[
+ '遠いところへ行った人も、帰る人も、この風のなかでは同じ旅人ですね。',
+ 'わたしは昨日と今日の道の違いを見つけると、少し嬉しくなるんです。',
+ 'あそこに小さな灯りがあると、何故だか帰り道を覚えていられます。',
+ '何年も経ってから、今のこの景色を思い出すのかもしれません。'
+];
+JOURNEY_NPCS.push(...GROK_VILLAGERS.map((n,i)=>({...n,lines:[...n.lines,EXTRA_VOICE[i%EXTRA_VOICE.length]]})));
 export const JOURNEY_BRIDGES=[
  {id:'journey-link',name:'白浜の連絡橋',axis:'h',x1:21,x2:32,y1:66,y2:68,center:{x:26,y:67}},
  {id:'journey-watercourse',name:'畑の水路橋',axis:'h',x1:50,x2:54,y1:73,y2:75,center:{x:52,y:74}}
