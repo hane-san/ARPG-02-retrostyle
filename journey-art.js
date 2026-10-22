@@ -148,6 +148,33 @@ function drawJourneyRelic(c,s,x,y,w,h,cx,time){
  }
 }
 
+// Small art pieces left in the landscape (2026-10-22). Quiet silhouettes on a low base,
+// so they read as something to inspect without competing with buildings.
+function drawJourneyArt(c,s,x,y,w,h,cx,time){
+ const base='#c9c6b2',edge='#5f7680',pale='#e6e2cc',rust='#a98d76',glass='#9fbfc0',cy=y+h*.55;
+ const plinth=()=>{rect(c,cx-30,y+h-26,60,10,base);rect(c,cx-30,y+h-26,60,2,pale);};
+ const f=s.form;
+ if(f==='boat'){
+  poly(c,[[x+10,y+h*.42],[x+w-12,y+h*.42],[x+w-34,y+h*.74],[x+30,y+h*.74]],'#8c7b70');
+  rect(c,x+32,y+h*.42,w-68,5,'#cdb59f');rect(c,cx-2,y+h*.1,4,h*.33,'#7f7a6e');
+ }else if(f==='well'){
+  plinth();c.fillStyle=edge;c.beginPath();c.ellipse(cx,cy+6,24,11,0,0,Math.PI*2);c.fill();
+  c.fillStyle=glass;c.beginPath();c.ellipse(cx,cy+4,16,6,0,0,Math.PI*2);c.fill();
+ }else{
+  plinth();
+  if(f==='disc'){c.save();c.lineWidth=5;c.strokeStyle='#b4bfb8';c.beginPath();c.ellipse(cx,cy-8,26,22,0,0,Math.PI*2);c.stroke();rect(c,cx-2,cy-10,4,4,'#f2d6a0');c.restore();}
+  else if(f==='bell'){rect(c,cx-1,y+10,2,14,edge);poly(c,[[cx-14,cy+2],[cx-9,y+24],[cx+9,y+24],[cx+14,cy+2]],'#b8b39c');rect(c,cx-15,cy+2,30,3,edge);}
+  else if(f==='frame'){c.save();c.lineWidth=5;c.strokeStyle=rust;c.strokeRect(cx-22,y+12,44,h-44);c.restore();}
+  else if(f==='hourglass'){poly(c,[[cx-12,y+12],[cx+12,y+12],[cx,cy-6]],glass);poly(c,[[cx,cy-6],[cx-12,cy+4],[cx+12,cy+4]],glass);rect(c,cx-14,y+10,28,3,rust);rect(c,cx-14,cy+4,28,3,rust);rect(c,cx-4,cy-2,8,5,'#e3cf9f');}
+  else if(f==='lantern'){rect(c,cx-2,y+14,4,h-40,edge);rect(c,cx-9,y+12,18,16,'#f0dca6');rect(c,cx-10,y+10,20,3,edge);}
+  else if(f==='chair'){rect(c,cx-12,cy-4,24,4,rust);rect(c,cx-12,cy-26,4,26,rust);rect(c,cx-12,cy,3,14,edge);rect(c,cx+9,cy,3,14,edge);}
+  else if(f==='flower'){rect(c,cx-1,cy-16,2,24,'#7f9a83');for(let i=0;i<5;i++){const a=i*Math.PI*2/5+time*.0002;rect(c,cx+Math.cos(a)*8-3,cy-22+Math.sin(a)*8-3,6,6,pale);}}
+  else if(f==='thread'||f==='paper'||f==='cloth'){rect(c,cx-24,y+14,2,h-38,edge);rect(c,cx+22,y+14,2,h-38,edge);rect(c,cx-22,y+16,44,1,'#8e8f86');poly(c,[[cx-16,y+17],[cx+12,y+17],[cx+10,cy-2+Math.sin(time*.002)*2],[cx-14,cy-4]],f==='cloth'?'#d9c9b0':pale);}
+  else if(f==='path'){for(let i=0;i<5;i++)rect(c,x+12+i*(w-30)/5,cy+((i%2)*4)-4,14,6,glass);}
+  else{rect(c,cx-14,cy-12,28,16,'#a9ada3');rect(c,cx-12,cy-12,24,3,pale);rect(c,cx-6,cy-4,12,2,edge);}
+ }
+}
+
 export function drawJourneySite(c,s,time){
  const x=s.x*32,y=s.y*32,w=s.w*32,h=s.h*32,cx=x+w/2;
  c.save();
@@ -201,6 +228,8 @@ export function drawJourneySite(c,s,time){
   drawRuinsSite(c,s,x,y,w,h,cx,time);
  }else if(s.kind==='relic'){
   drawJourneyRelic(c,s,x,y,w,h,cx,time);
+ }else if(s.kind==='art'){
+  drawJourneyArt(c,s,x,y,w,h,cx,time);
  }else if(s.kind==='terrace'){
   for(let i=0;i<3;i++)rect(c,x+i*7,y+i*15,w-i*14,13,'#d5d4bf');
   rect(c,x+12,y+9,w-24,2,'#f4e5c5');

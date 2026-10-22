@@ -4,6 +4,10 @@ import {silkPath} from './silk-world.js';
 import {EXTENSION_ZONES,EXTENSION_SITES,EXTENSION_NPCS,EXTENSION_VISTAS,paintJourneyExpansion,paintJourneyExpansionRoads,extensionZoneAt} from './journey-expansion.js';
 import {GROK_VILLAGERS} from './grok-villagers.js';
 import {JOURNEY_SCENIC_VISTAS} from './journey-scenic.js';
+import {ART_OBJECTS,WEIRD_MOBS} from './art-objects.js';
+import {DISTANT_VISTAS} from './distant-vistas.js';
+import {UNEASY_MOBS} from './uneasy.js';
+import {STEPPE_MOBS,STEPPE_OBJECTS} from './steppe-asia.js';
 import {RUINS_ZONES,RUINS_SITES,RUINS_NPCS,RUINS_VISTAS,paintJourneyRuins,paintJourneyRuinsRoads,ruinsZoneAt} from './journey-ruins.js';
 
 export const JOURNEY_W=176,JOURNEY_H=136;
@@ -281,8 +285,8 @@ JOURNEY_SITES.push(...[
   "w": 5,
   "h": 4,
   "entrance": {
-   "x": 71,
-   "y": 23
+   "x": 68,
+   "y": 19
   },
   "blocking": false,
   "desc": "山と塩原の境に立つ二本の柱。左右に釣り合う溝があるが、同じ量を載せた形跡はない。",
@@ -541,6 +545,11 @@ JOURNEY_ZONES.push(...RUINS_ZONES);
 JOURNEY_SITES.push(...RUINS_SITES);
 JOURNEY_NPCS.push(...RUINS_NPCS);
 JOURNEY_VISTAS.push(...RUINS_VISTAS);
+// Owner-added spice from several AIs (2026-10-22): art pieces, odd and uneasy passers-by,
+// steppe life and distant vistas. Placement follows Issue #53 (dry, reachable, uncrowded).
+JOURNEY_SITES.push(...ART_OBJECTS,...STEPPE_OBJECTS);
+JOURNEY_NPCS.push(...WEIRD_MOBS,...UNEASY_MOBS,...STEPPE_MOBS);
+JOURNEY_VISTAS.push(...DISTANT_VISTAS);
 JOURNEY_VISTAS.push(...JOURNEY_SCENIC_VISTAS);
 
 const distance=(x,y,[ax,ay],[bx,by])=>{
@@ -612,7 +621,8 @@ export function makeJourneyWorld(){
   for(let y=s.y;y<s.y+s.h;y++)for(let x=s.x;x<s.x+s.w;x++){
    if(s.blocking!==false)occupied[y*w+x]=1;
     if(s.kind==='ruins')set(x,y,ruinsZoneAt(x,y)==='drowned'?'C':'F');
-   if(s.kind!=='relic'&&s.kind!=='expansion'&&['~','L','X'].includes(tiles[y][x]))set(x,y,s.kind==='monolith'?'h':s.kind==='shipwreck'?'S':'p');
+   // Relics, expansion pieces and art are drawn where they stand; they never pave water or rock.
+   if(s.kind!=='relic'&&s.kind!=='expansion'&&s.kind!=='art'&&['~','L','X'].includes(tiles[y][x]))set(x,y,s.kind==='monolith'?'h':s.kind==='shipwreck'?'S':'p');
   }
   occupied[s.entrance.y*w+s.entrance.x]=0;set(s.entrance.x,s.entrance.y,'=');
  }
@@ -641,7 +651,8 @@ export function makeJourneyWorld(){
    n.x=best.x;n.y=best.y;
   }
   used.add(n.y*w+n.x);
-  set(n.x,n.y,'=');occupied[n.y*w+n.x]=0;
+  // A person only marks dry ground: water and rock are never made walkable for them.
+  if(!['~','L','X'].includes(tiles[n.y][n.x])){set(n.x,n.y,'=');occupied[n.y*w+n.x]=0;}
  }
  // Shallow water still blocks walking. Its light edge joins the land palette.
  const wet=t=>['~','L','l'].includes(t);

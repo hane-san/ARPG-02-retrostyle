@@ -29,7 +29,9 @@ const JOURNEY_MODE=gameMode==='journey';
 const PROTOTYPE_MODE=gameMode==='prototype';
 const worlds={tidal:JOURNEY_MODE?null:PROTOTYPE_MODE?makePrototypeWorld():makeWorld(),silk:null,journey:JOURNEY_MODE?makeJourneyWorld():null};
 let currentWorldId=JOURNEY_MODE?'journey':'tidal',world=worlds[currentWorldId];
-const DISCOVERY_TOTAL=JOURNEY_MODE||PROTOTYPE_MODE?world.sites.length:TIDAL_SITES.length+SILK_SITES.length;
+// Small art pieces are things to inspect, not places: they never inflate the discovery count (Issue #51).
+const isCurio=site=>site.kind==='art';
+const DISCOVERY_TOTAL=JOURNEY_MODE||PROTOTYPE_MODE?world.sites.filter(s=>!isCurio(s)).length:TIDAL_SITES.length+SILK_SITES.length;
 let W=world.w,H=world.h,ZONES=world.zones,SITES=world.sites,NPCS=world.npcs,BRIDGES=world.bridges;
 const storage={
  getItem(k){try{return localStorage.getItem('tidal-atlas:'+k);}catch{return null;}},
@@ -529,8 +531,8 @@ function onArrive(){
  if(!obj)return;
  if(obj.kind==='npc'){openDialogue(obj.item.name,obj.item.role,JOURNEY_MODE?obj.item.lines:(currentWorldId==='silk'?SILK_TALK:TALK)[obj.item.id]||obj.item.lines);return;}
  if(obj.kind==='site'){
-  const fresh=!discovered.has(obj.item.id);discovered.add(obj.item.id);
-  updateDiscoveries();if(fresh)sfx.play('heal');
+  const fresh=!isCurio(obj.item)&&!discovered.has(obj.item.id);
+  if(fresh){discovered.add(obj.item.id);updateDiscoveries();sfx.play('heal');}
   if(JOURNEY_MODE){
    const response=activateRuinsDevice(obj.item);
    openDialogue(obj.item.name,'この場所で',[obj.item.desc,response,obj.item.aside]);return;
