@@ -1,4 +1,5 @@
 import {limitCamera} from './camera-limits.js';
+import {journeyScenicScene} from './journey-scenic.js';
 
 // Stage 1 is closest; stage 5 is the new widest landscape framing.
 // Stages 1/2 are reserved for future close views / actual interiors.
@@ -12,7 +13,8 @@ export const JOURNEY_CAMERA_PROFILES=Object.freeze({
  'journey-canyon':.8,'journey-highland':.6,'journey-sky-edge':.6,'journey-river':1,
  'journey-glass':1.35,'journey-wetlands':.8,'journey-whitebasin':.6,
  // A tight dark corridor opens into the widest sky frame at the lookout.
- 'journey-ancient':.8,'journey-void':1.35,'journey-drowned':.8,'journey-sky-ruins':.6
+ 'journey-ancient':.8,'journey-void':1.35,'journey-drowned':.8,'journey-sky-ruins':.6,
+ 'journey-scenic-detail':1.8,'journey-scenic-near':1.35,'journey-scenic-wide':.6
 });
 export function journeyCameraScene(world,hero){
  // The narrow glass arcade is an opt-in-to-approach example of the closest frame.
@@ -25,6 +27,8 @@ export function journeyCameraScene(world,hero){
   if(site&&Math.hypot(hero.px-site.entrance.x,hero.py-site.entrance.y)<=radius)
    return id==='journey-hut'?'journey-hut':'journey-tea';
  }
+ const scenic=journeyScenicScene(hero);
+ if(scenic)return scenic;
  const scene=world.zoneAt(hero.px,hero.py).id;
  if(scene==='journey-tea')return 'journey-road';
  // Only the open centre is panoramic. Ordinary approach roads retain stage 4.

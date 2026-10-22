@@ -1,6 +1,7 @@
 // Quiet, continuous ground and a few readable silhouettes. The 32px grid is
 // logical only. Existing irrigation art and actor sprites remain in use.
 import {drawSilkTile} from './silk-art.js';
+import {drawJourneyScenicDetails} from './journey-scenic.js';
 import {drawExpansionTile,drawExpansionSite,EXPANSION_TILES} from './journey-expansion-art.js';
 import {EXTENSION_PALETTE} from './journey-expansion.js';
 import {drawRuinsTile,drawRuinsSite,RUINS_TILES} from './journey-ruins-art.js';
@@ -215,6 +216,7 @@ export function drawJourneySite(c,s,time){
 
 // Deliberately small props, not new collision geometry or repeated giant rocks.
 export function drawJourneyAtmosphere(c,{left,right,top,bottom},time){
+ drawJourneyScenicDetails(c,{left,right,top,bottom},time);
  for(const [x,y,kind] of [[25,47,'ribbon'],[42,17,'ribbon'],[16,34,'stone'],[51,44,'stone'],[66,66,'reeds'],[99,38,'reeds'],[59,57,'reeds'],[38,72,'tree'],[40,77,'tree']]){
   if(x<left||x>right||y<top||y>bottom)continue;
   const px=x*32,py=y*32;

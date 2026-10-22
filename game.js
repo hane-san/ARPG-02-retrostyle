@@ -18,6 +18,7 @@ import {installJourneyUI} from './journey-ui.js';
 import {createJourneyFoley} from './journey-foley.js';
 import {resolveGameMode} from './game-mode.js';
 import {createJourneyCamera,journeyCameraScene,easeJourneyCamera} from './journey-camera.js';
+import {easeScenicRoadGlide} from './journey-scenic.js';
 import {createTyper} from './dialogue-typer.js';
 import {walkSpeed} from './walk-speed.js';
 
@@ -693,7 +694,9 @@ function animate(time){
   if(!gesture?.drag&&Math.hypot(next.x-panTarget.x,next.y-panTarget.y)<.6)panTarget=null;
  }else if(hero.moving){
   const next=easeEdgeCamera(camera,{x:hero.px,y:hero.py},viewport,bounds,dt);
-  camera.x=next.x;camera.y=next.y;
+  // Only selected long road sections add gentle forward-leading tracking.
+  const framed=JOURNEY_MODE?easeScenicRoadGlide(next,{px:hero.px,py:hero.py},hero.path,dt,viewport,bounds):next;
+  camera.x=framed.x;camera.y=framed.y;
  }else confineCamera(camera.x,camera.y,.08);
  // Prioritize 60fps while the camera moves, but retain low-cost idle frames.
  // A framing transition is camera motion too, even while the traveller stands still.
