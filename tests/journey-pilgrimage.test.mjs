@@ -4,6 +4,11 @@ import {makeJourneyWorld,JOURNEY_SITES,JOURNEY_NPCS,JOURNEY_VISTAS} from '../jou
 import {RUINS_SITES,RUINS_NPCS,RUINS_VISTAS} from '../journey-ruins.js';
 import {GROK_VILLAGERS} from '../grok-villagers.js';
 import {JOURNEY_SCENIC_VISTAS} from '../journey-scenic.js';
+import {ART_OBJECTS,WEIRD_MOBS} from '../art-objects.js';
+import {UNEASY_MOBS} from '../uneasy.js';
+import {STEPPE_MOBS,STEPPE_OBJECTS} from '../steppe-asia.js';
+import {DISTANT_VISTAS} from '../distant-vistas.js';
+const SPICE_SITES=[...ART_OBJECTS,...STEPPE_OBJECTS],SPICE_NPCS=[...WEIRD_MOBS,...UNEASY_MOBS,...STEPPE_MOBS];
 
 function reachable(world){
  const seen=new Set(),queue=[world.start],key=(x,y)=>y*world.w+x;
@@ -20,12 +25,12 @@ function reachable(world){
 test('pilgrimage demo is rich but preserves all original journeys',()=>{
  const w=makeJourneyWorld();
  assert.equal(w.w,176);assert.equal(w.h,136);
- assert.equal(JOURNEY_SITES.filter(s=>!RUINS_SITES.includes(s)).length,35,'original 35 sites survive');
- assert.equal(JOURNEY_SITES.length,35+RUINS_SITES.length,'ruins sites are additive');
- assert.equal(JOURNEY_NPCS.length,27+GROK_VILLAGERS.length+RUINS_NPCS.length,'retain 27 former NPCs and all 90 new villagers');
+ assert.equal(JOURNEY_SITES.filter(s=>!RUINS_SITES.includes(s)&&!SPICE_SITES.includes(s)).length,35,'original 35 sites survive');
+ assert.equal(JOURNEY_SITES.length,35+RUINS_SITES.length+SPICE_SITES.length,'ruins and owner-added art pieces are additive');
+ assert.equal(JOURNEY_NPCS.length,27+GROK_VILLAGERS.length+RUINS_NPCS.length+SPICE_NPCS.length,'retain 27 former NPCs, all 90 villagers and every added passer-by');
  assert.equal(GROK_VILLAGERS.length,90);
- assert.equal(JOURNEY_VISTAS.filter(v=>!RUINS_VISTAS.includes(v)&&!JOURNEY_SCENIC_VISTAS.includes(v)).length,16,'all 16 earlier vistas survive');
- assert.equal(JOURNEY_VISTAS.length,16+RUINS_VISTAS.length+JOURNEY_SCENIC_VISTAS.length,'ruins and scenic viewpoints are additive');
+ assert.equal(JOURNEY_VISTAS.filter(v=>!RUINS_VISTAS.includes(v)&&!JOURNEY_SCENIC_VISTAS.includes(v)&&!DISTANT_VISTAS.includes(v)).length,16,'all 16 earlier vistas survive');
+ assert.equal(JOURNEY_VISTAS.length,16+RUINS_VISTAS.length+JOURNEY_SCENIC_VISTAS.length+DISTANT_VISTAS.length,'ruins, scenic and distant viewpoints are additive');
  assert.equal(JOURNEY_SCENIC_VISTAS.length,6);
  for(const items of [JOURNEY_SITES,JOURNEY_NPCS,JOURNEY_VISTAS])
   assert.equal(new Set(items.map(item=>item.id)).size,items.length,'unique landmark ids');

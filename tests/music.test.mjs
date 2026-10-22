@@ -1,6 +1,9 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {MUSIC_LIBRARY,buildTrack} from '../music.js';
+import {MUSIC_LIBRARY,ORIGINAL_SCORE_COUNT,buildTrack} from '../music.js';
+import {GROK_SCORES} from '../grok-music.js';
+import {UNEASY_SCORES} from '../uneasy.js';
+import {STEPPE_SCORES} from '../steppe-asia.js';
 import {SCORES,BONUS_SCORES} from '../music.js';
 import {EXTRA_SCORES} from '../extra-music.js';
 import {SILK_SCORES} from '../silk-music.js';
@@ -10,10 +13,13 @@ test('six battle scores, seven legacy bonus scores, 12 new exploration scores',(
  assert.equal(BONUS_SCORES.length,7);
  assert.equal(EXTRA_SCORES.length,12);
  assert.equal(SILK_SCORES.length,9);
- assert.equal(MUSIC_LIBRARY.length,34);
- assert.equal(MUSIC_LIBRARY.length*2,68);
+ assert.equal(ORIGINAL_SCORE_COUNT,34);
+ assert.equal(ORIGINAL_SCORE_COUNT*2,68);
+ // The original 68 pieces keep their numbers; tracks added on 2026-10-22 append after them.
+ assert.deepEqual(MUSIC_LIBRARY.slice(0,ORIGINAL_SCORE_COUNT),[...SCORES,...BONUS_SCORES,...EXTRA_SCORES,...SILK_SCORES]);
+ assert.deepEqual(MUSIC_LIBRARY.slice(ORIGINAL_SCORE_COUNT),[...GROK_SCORES,...UNEASY_SCORES,...STEPPE_SCORES]);
 });
-test('all 68 pieces have unique Japanese titles and valid musical phrase timings',()=>{
+test('the 68 original pieces and every later addition have unique titles and valid timings',()=>{
  const titles=new Set();
  for(let i=0;i<MUSIC_LIBRARY.length;i++){
   const score=MUSIC_LIBRARY[i];
@@ -38,5 +44,6 @@ test('all 68 pieces have unique Japanese titles and valid musical phrase timings
    }
   }
  }
- assert.equal(titles.size,68);
+ assert.equal(titles.size,MUSIC_LIBRARY.length*2);
+ assert.ok(titles.size>=68);
 });

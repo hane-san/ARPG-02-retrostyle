@@ -4,7 +4,7 @@ import {makeJourneyWorld,JOURNEY_W,JOURNEY_H,STEPPE,routeJourneyWalk} from '../j
 import {makeWorld} from '../world.js';
 import {makePrototypeWorld} from '../prototype-world.js';
 import {makeSilkWorld} from '../silk-world.js';
-import {MUSIC_LIBRARY} from '../music.js';
+import {MUSIC_LIBRARY,ORIGINAL_SCORE_COUNT} from '../music.js';
 import {createJourneyMusicDirector,pickJourneyTrack,JOURNEY_PLAYLISTS} from '../journey-music.js';
 
 const world=makeJourneyWorld();
@@ -40,11 +40,15 @@ test('all sites, people, region buttons, and vistas have safe outward and return
  for(const s of world.sites){
   assert.ok(s.desc.length>20&&s.aside.length>20);
   for(let y=s.y;y<s.y+s.h;y++)for(let x=s.x;x<s.x+s.w;x++){
-   assert.equal(world.walkable(x,y),s.blocking===false,s.id+' building footprint');
+   // Pieces drawn afloat on purpose leave the water under them unwalkable.
+   if(s.afloat&&['~','L','l'].includes(world.tileAt(x,y)))assert.equal(world.walkable(x,y),false,s.id+' afloat');
+   else assert.equal(world.walkable(x,y),s.blocking===false,s.id+' building footprint');
   }
  }
- // Authored voices keep two substantial lines; the owner-added grok villagers are deliberate one-liners.
- for(const n of world.npcs)assert.ok(n.lines.length>=(n.id.startsWith('grok-')?1:2)&&n.lines.every(line=>line.length>15),n.id);
+ // Authored voices keep two substantial lines; the owner-added grok villagers are deliberate one-liners,
+ // and the odd, uneasy and steppe passers-by (2026-10-22) speak in two short, deliberately curt beats.
+ const curt=/^(weird|uneasy|steppe)-/;
+ for(const n of world.npcs)assert.ok(n.lines.length>=(n.id.startsWith('grok-')?1:2)&&n.lines.every(line=>line.length>(curt.test(n.id)?5:15)),n.id);
 });
 
 test('every walkable cell belongs to the same country, with no isolated shore destinations',()=>{
@@ -119,8 +123,8 @@ test('the three world data contracts coexist without shared occupancy or hidden 
  assert.ok(world.walkable(world.start.x,world.start.y));assert.ok(tidal.walkable(41,40));
 });
 
-test('journey playlists preserve the 68-piece library and distinguish all thirteen regions',()=>{
- assert.equal(MUSIC_LIBRARY.length*2,68);
+test('journey playlists keep the original 68 pieces first and distinguish every region',()=>{
+ assert.equal(ORIGINAL_SCORE_COUNT*2,68);assert.ok(MUSIC_LIBRARY.length>=ORIGINAL_SCORE_COUNT);
  assert.equal(Object.keys(JOURNEY_PLAYLISTS).length,world.zones.length);
  for(const z of world.zones){
   const pool=JOURNEY_PLAYLISTS[z.id];assert.ok(pool?.length>=3);

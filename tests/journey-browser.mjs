@@ -3,6 +3,7 @@
 import assert from 'node:assert/strict';
 import {mkdirSync} from 'node:fs';
 import {JOURNEY_PLAYLISTS} from '../journey-music.js';
+import {MUSIC_LIBRARY,ORIGINAL_SCORE_COUNT} from '../music.js';
 import {RUINS_ZONES,RUINS_SITES} from '../journey-ruins.js';
 
 export async function checkJourney(page,origin){
@@ -178,7 +179,9 @@ export async function checkJourney(page,origin){
  assert.equal(await page.evaluate(()=>window.journeyVistaDraws),closed,'closed panoramas perform no rendering');
 
  await page.locator('#soundBtn').click();
- assert.equal(await page.locator('#trackSelect option').count(),68);
+ const trackValues=await page.locator('#trackSelect option').evaluateAll(o=>o.map(x=>x.value));
+ assert.equal(trackValues.length,MUSIC_LIBRARY.length*2);
+ assert.ok(trackValues.slice(0,68).every(v=>Number(v.split(':')[0])<ORIGINAL_SCORE_COUNT),'the 68 original pieces come first');
  assert.equal(await page.locator('#musicToggle').textContent(),'OFF');
  assert.equal(await page.locator('#sfxToggle').textContent(),'ON');
  assert.equal(await page.locator('#sfxVolumeRange').inputValue(),'55');

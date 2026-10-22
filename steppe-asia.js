@@ -3,10 +3,10 @@
 // Travel-feeling tracks: gentle but with forward motion (Ansaga-roller style rolling).
 
 export const STEPPE_MOBS = [
-  {id:'steppe-m01', name:'フェルトを編む人', role:'草原の住人', x:32, y:34, color:'#c4b090', lines:['この模様、昔はもっと赤かった。','今は風の色に近づいてる。']},
+  {id:'steppe-m01', name:'フェルトを編む人', role:'草原の住人', x:32, y:32, color:'#c4b090', lines:['この模様、昔はもっと赤かった。','今は風の色に近づいてる。']},
   {id:'steppe-m02', name:'季節を数える人', role:'高地の観察者', x:48, y:24, color:'#b8a888', lines:['羊が動く前に、草が先に動く。','草が動く前に、風が先に知ってる。']},
-  {id:'steppe-m03', name:'馬の蹄を聞く人', role:'峠の近く', x:60, y:20, color:'#a89880', lines:['蹄の音が、遠くで止まらなくなった。','近づくと、もう誰も乗っていない。']},
-  {id:'steppe-m04', name:'茶を運ぶ人', role:'茶屋の手伝い', x:44, y:64, color:'#c0a890', lines:['この茶は、峠を越えてきた。','味は、越えた回数で変わる。']},
+  {id:'steppe-m03', name:'馬の蹄を聞く人', role:'峠の近く', x:59, y:23, color:'#a89880', lines:['蹄の音が、遠くで止まらなくなった。','近づくと、もう誰も乗っていない。']},
+  {id:'steppe-m04', name:'茶を運ぶ人', role:'茶屋の手伝い', x:44, y:62, color:'#c0a890', lines:['この茶は、峠を越えてきた。','味は、越えた回数で変わる。']},
   {id:'steppe-m05', name:'白い布を干す人', role:'塩原の端', x:82, y:26, color:'#d0c0a8', lines:['布は、塩の白さを覚えてる。','でも風が吹くと、また少し灰色になる。']},
   {id:'steppe-m06', name:'円い道を一周する人', role:'草原の歩き手', x:36, y:42, color:'#b0a080', lines:['一周するたびに、同じ風に出会う。','でも、出会う場所が少しずつずれる。']},
   {id:'steppe-m07', name:'石の模様を見る人', role:'モノリス近く', x:50, y:12, color:'#a89070', lines:['この模様、誰かが手で描いたのか。','それとも、風が長い時間をかけて描いたのか。']},
@@ -30,8 +30,8 @@ export const STEPPE_OBJECTS = [
     name: '円い石の跡',
     kind: 'art',
     form: 'disc',
-    x: 40, y: 26, w: 5, h: 4,
-    entrance: {x: 42, y: 31},
+    x: 41, y: 28, w: 5, h: 4,
+    entrance: {x: 43, y: 33},
     blocking: false,
     desc: '草の中に残る、円く並んだ石の跡。誰かがここでしばらく留まった形跡。',
     aside: '円は、移動する人が「今日はここまで」と決めた印だった。次の日には、別の円が作られる。この円だけが、風に残っている。'
@@ -41,8 +41,8 @@ export const STEPPE_OBJECTS = [
     name: '茶を置いた石',
     kind: 'art',
     form: 'stone',
-    x: 46, y: 60, w: 3, h: 3,
-    entrance: {x: 47, y: 64},
+    x: 48, y: 59, w: 3, h: 3,
+    entrance: {x: 49, y: 62},
     blocking: false,
     desc: '茶屋の近くに置かれた、平らな石。誰かが茶の器を置いた跡が、少しだけ残っている。',
     aside: 'この石は、峠を越えてきた茶を、一度だけ休ませた。器はもうない。石だけが、茶の温度を少し覚えている。'
@@ -77,7 +77,8 @@ export const STEPPE_SCORES=[
    '0 3 4 5 4 2 3 1 | 2 4 5 7 6 5 3 2 | 4 5 7 6 4 2 3 4 | 5 4 2 3 4 2 1 0',
    {leadVel:.3,padVel:.08,drumEvery:2})},
 
- {name:'峠を越える風',root:57,meter:3,lead:'strings',arp:'harp',
+ // Its walking phrases fill eight beats, so the bar is 4/4 (it was marked 3/4 and drifted off the chords).
+ {name:'峠を越える風',root:57,meter:4,lead:'strings',arp:'harp',
   ally:a('高い草の上',104,DOR,WALK,[0,3,5,4,0,2,3,0],
    '0 2 4 3 5 4 2 1 | 2 4 5 7 6 4 3 2 | 4 5 7 6 4 2 3 1 | 5 4 2 1 3 2 1 0',
    {padVel:.085,bassVel:.16,drumEvery:4}),

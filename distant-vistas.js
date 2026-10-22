@@ -4,7 +4,7 @@
 export const DISTANT_VISTAS = [
   {
     id: 'distant-fading-shore',
-    x: 68, y: 48, radius: 6,
+    x: 62, y: 41, radius: 6,
     title: '対岸が薄れる',
     sub: '遠くの岸が、今日は少しだけ霞んでいる。近づいても、霞は消えない。',
     kind: 'lake'
@@ -18,7 +18,7 @@ export const DISTANT_VISTAS = [
   },
   {
     id: 'distant-empty-light',
-    x: 92, y: 38, radius: 5,
+    x: 91, y: 36, radius: 5,
     title: '誰もいない灯り',
     sub: '遠くの岸に、小さな灯りがひとつ。誰もいないのに、まだついている。',
     kind: 'salt'
@@ -39,7 +39,7 @@ export const DISTANT_VISTAS = [
   },
   {
     id: 'distant-thin-line',
-    x: 78, y: 62, radius: 5,
+    x: 76, y: 69, radius: 5,
     title: '細い線の向こう',
     sub: '遠くの石が、今日はただの細い線に見える。近づくと、また太くなる。',
     kind: 'sunset'

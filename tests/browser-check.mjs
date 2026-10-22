@@ -5,6 +5,7 @@ import {spawn} from 'node:child_process';
 import {mkdirSync} from 'node:fs';
 import {checkJourneyFoley} from './journey-foley-browser.mjs';
 import {checkLayout} from './layout-browser.mjs';
+import {MUSIC_LIBRARY,ORIGINAL_SCORE_COUNT} from '../music.js';
 import {chromium} from 'playwright';
 import {checkJourney} from './journey-browser.mjs';
 import {checkCameraInput} from './camera-browser.mjs';
@@ -49,9 +50,11 @@ async function main(){
  });
  assert.equal(layout.overlap,false,'arrival notice overlaps the location card');
  assert.equal(layout.small,0,'header/dock controls must keep 44px touch targets');
- // Verify all 68 original pieces are discoverable in the sound room.
+ // Verify all 68 original pieces, then the later additions, are discoverable in the sound room.
  await page.locator('#soundBtn').click();
- assert.equal(await page.locator('#trackSelect option').count(),68);
+ const trackValues=await page.locator('#trackSelect option').evaluateAll(o=>o.map(x=>x.value));
+ assert.equal(trackValues.length,MUSIC_LIBRARY.length*2);
+ assert.ok(trackValues.slice(0,68).every(v=>Number(v.split(':')[0])<ORIGINAL_SCORE_COUNT),'the 68 original pieces come first');
  assert.equal(await page.locator('#musicToggle').textContent(),'OFF');
  await page.locator('#musicPanel [data-close]').click();
  // The new Starwind footbridge is exactly four logical tiles east of START.
@@ -102,7 +105,7 @@ async function main(){
   .filter(b=>{const r=b.getBoundingClientRect();return r.width<44||r.height<44;}).length),0,'landscape controls must keep 44px touch targets');
  await landscape.close();
  await checkLayout(browser,origin);
- console.log('Browser smoke passed: default mobile exploration, 68 tracks, mainland bridge, compact two-zone walk.');
+ console.log('Browser smoke passed: default mobile exploration, 68 original tracks plus additions, mainland bridge, compact two-zone walk.');
 }
 try{await main();}
 catch(err){
