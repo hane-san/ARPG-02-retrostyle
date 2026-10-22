@@ -3,6 +3,7 @@
 import {silkPath} from './silk-world.js';
 import {EXTENSION_ZONES,EXTENSION_SITES,EXTENSION_NPCS,EXTENSION_VISTAS,paintJourneyExpansion,paintJourneyExpansionRoads,extensionZoneAt} from './journey-expansion.js';
 import {GROK_VILLAGERS} from './grok-villagers.js';
+import {ART_OBJECTS, WEIRD_MOBS} from './art-objects.js';
 import {RUINS_ZONES,RUINS_SITES,RUINS_NPCS,RUINS_VISTAS,paintJourneyRuins,paintJourneyRuinsRoads,ruinsZoneAt} from './journey-ruins.js';
 
 export const JOURNEY_W=176,JOURNEY_H=136;
@@ -85,7 +86,7 @@ JOURNEY_SITES.push(...[
  },
  {
   "id": "journey-watchpost",
-  "name": "関守の見張り台",
+  "name": "関守の見张り台",
   "kind": "relic",
   "form": "watch",
   "x": 48,
@@ -131,7 +132,7 @@ JOURNEY_SITES.push(...[
    "y": 54
   },
   "blocking": false,
-  "desc": "草に半分埋もれた環状の礎石。線は不思議なほど真っすぐで、道とは角度が違う。",
+  "desc": "草に半分埋もれた環状の礎石。線は不思議なほど真っ直ぐで、道とは角度が違う。",
   "aside": "巡礼者は祝福の印、測り手は古い座標と呼ぶ。"
  },
  {
@@ -234,7 +235,7 @@ JOURNEY_SITES.push(...[
   },
   "blocking": false,
   "desc": "石段を見に人が集まってできた新しい町。祈る人、商う人、ただ見たい人。",
-  "aside": "鐘と鍛冶の音と荷車のきしみ。古い文明の全身が現れても夕飯の支度は続く。"
+  "aside": "鐘と鍛冶の音と荷車のきしみ。古い文明の全身が現れても夕飯の仕度は続く。"
  },
  {
   "id": "journey-salt-well",
@@ -267,7 +268,7 @@ JOURNEY_SITES.push(...[
    "y": 35
   },
   "blocking": false,
-  "desc": "視界の端まで真っすぐ伸びる壁。昔水面から見えたのは頂上の細い縁だけだった。",
+  "desc": "視界の端まで真っ直ぐ伸びる壁。昔水面から見えたのは頂上の細い縁だけだった。",
   "aside": "等間隔の傷は文字ではない。なのに誰かの選択を数えているように見える。"
  },
  {
@@ -307,6 +308,7 @@ JOURNEY_SITES.push(...[
 ]);
 
 JOURNEY_SITES.push(...EXTENSION_SITES);
+JOURNEY_SITES.push(...ART_OBJECTS);
 export const JOURNEY_NPCS=[
  {id:'journey-keeper',name:'灯りをともす人',role:'船着場の番人',x:18,y:76,color:'#d5b995',lines:['草原へ？ 橋を渡ったら、円い道の好きなほうへどうぞ。','遠くの黒い石は、ここからも見えるんです。夕方は湖の南岸がきれいですよ。','帰ってきたら、白い屋根を目印に。灯りは消しませんから。']},
  {id:'journey-host',name:'茶屋の主人',role:'チャイハナの店主',x:50,y:70,color:'#c7a7a4',lines:['この畑の水は湖から。お茶の水は峠の泉から。味が違うって、みんな言うんです。','塩原へは峠を越えても、湖の岸を回っても行けます。','手袋？ 落とし主が戻らない年もあるから、先に洗っておくんですよ。']},
@@ -468,6 +470,7 @@ const EXTRA_VOICE=[
  '何年も経ってから、今のこの景色を思い出すのかもしれません。'
 ];
 JOURNEY_NPCS.push(...GROK_VILLAGERS.map((n,i)=>({...n,lines:[...n.lines,EXTRA_VOICE[i%EXTRA_VOICE.length]]})));
+JOURNEY_NPCS.push(...WEIRD_MOBS);
 export const JOURNEY_BRIDGES=[
  {id:'journey-link',name:'白浜の連絡橋',axis:'h',x1:21,x2:32,y1:66,y2:68,center:{x:26,y:67}},
  {id:'journey-watercourse',name:'畑の水路橋',axis:'h',x1:50,x2:54,y1:73,y2:75,center:{x:52,y:74}}
@@ -500,178 +503,15 @@ JOURNEY_VISTAS.push(...[
  {
   "id": "exposed-altar",
   "x": 76,
-  "y": 20,
+  "y": 27,
   "radius": 5,
-  "title": "水底に眠っていた全身",
-  "sub": "かつて水面に突き出した柱が、果てしない同心円の一部だった。",
-  "kind": "geometric"
- },
- {
-  "id": "new-town",
-  "x": 65,
-  "y": 73,
-  "radius": 5,
-  "title": "巨石の陰に暮らす人",
-  "sub": "幾何学の足元に干し布と屋台がある。暮らしは今日も続く。",
-  "kind": "settlement"
- },
- {
-  "id": "wall-horizon",
-  "x": 101,
-  "y": 37,
-  "radius": 5,
-  "title": "壁の先が見えない",
-  "sub": "かつて水面の細い線だったものが、世界を横切る壁になった。",
-  "kind": "wall"
- },
- {
-  "id": "salt-horizon",
-  "x": 92,
-  "y": 25,
-  "radius": 5,
-  "title": "海が退いたあと",
-  "sub": "船の航路に風が渡る。新しい祈りと古い船の骨が見える。",
-  "kind": "basin"
+  "title": "現れた円環",
+  "sub": "沈んでいた同心円が、いまは祈りの場になっている。",
+  "kind": "altar"
  }
 ]);
 
 JOURNEY_VISTAS.push(...EXTENSION_VISTAS);
-JOURNEY_ZONES.push(...RUINS_ZONES);
-JOURNEY_SITES.push(...RUINS_SITES);
-JOURNEY_NPCS.push(...RUINS_NPCS);
-JOURNEY_VISTAS.push(...RUINS_VISTAS);
-
-const distance=(x,y,[ax,ay],[bx,by])=>{
- const dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1)));
- return Math.hypot(x-ax-t*dx,y-ay-t*dy);
-};
-const ridge=[[44,5],[53,10],[61,17],[64,26],[59,34]];
-const trails=[
- {points:[[13,76],[18,73],[20,68],[32,67],[32,61]],type:'=',width:1},
- {points:[[48,57],[46,61],[46,69],[46,74],[54,74],[64,76],[77,76],[98,74],[105,66],[107,54],[106,42],[101,34],[91,32],[78,32],[70,32],[62,39],[58,39]],type:'=',width:.8},
- {points:[[53,53],[57,58],[62,64],[65,72],[64,76]],type:'=',width:.85},
- {points:[[47,19],[49,21],[50,19],[55,19],[60,21],[62,24],[68,24],[71,28],[78,32]],type:'t',width:1},
- {points:[[72,28],[79,26],[84,24],[90,22],[98,25],[101,34]],type:'=',width:.85},
- {points:[[32,61],[38,67],[46,69]],type:'=',width:.8},
- {points:[[98,74],[98,72]],type:'=',width:1}
-];
-
-export function makeJourneyWorld(){
- const w=JOURNEY_W,h=JOURNEY_H;
- const tiles=Array.from({length:h},()=>Array(w).fill('~')),occupied=new Uint8Array(w*h);
- const inside=(x,y)=>Number.isInteger(x)&&Number.isInteger(y)&&x>=0&&y>=0&&x<w&&y<h;
- const set=(x,y,t)=>{if(inside(x,y))tiles[y][x]=t;};
- for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
-  const radial=Math.hypot(x-STEPPE.x,y-STEPPE.y);
-  const coast=(Math.abs(x-59)/50)**3+(Math.abs(y-45)/37)**3;
-  const island=((x-13)/12)**2+((y-73)/10)**2;
-  if(coast<1+.025*Math.sin(x*.29+y*.14)||island<1||radial<STEPPE.r+1.3){
-   let t='b';
-   if(radial<STEPPE.r)t='g';
-   // Broad, quiet grass tones, not isolated random squares or concentric rings.
-   if(t==='g'&&Math.sin(x*.13)+Math.cos(y*.17)>.8)t='G';
-   if(radial>=STEPPE.r&&radial<STEPPE.r+1.3)t='v';
-   if(x>50&&y<37)t='h';
-   if(x>=37&&x<=49&&y>=72&&y<=78)t='i';
-   if(x<23&&y>65)t='p';
-   const salt=((x-85)/21)**2+((y-21)/11)**2;
-   if(salt<1.12)t=salt<.84?'S':'s';
-   if(ridge.slice(1).some((p,i)=>distance(x,y,ridge[i],p)<3.2))t='X';
-   const lake=((x-81)/23.4)**2+((y-52)/17.5)**2;
-   if(lake<1+.055*Math.sin(y*.5)+.025*Math.cos(x*.45))t='L';
-   // A real inlet separates the familiar white quay from the journey country.
-   if(y===63&&x<31)t='~';
-   if(y>=64&&x>=24+Math.round(Math.sin(y*.2))&&x<=29+Math.round(Math.sin(y*.2)))t='~';
-   if(x===52&&y>=68&&y<=79)t='L';
-   tiles[y][x]=t;
-  }
- }
- // Add new eastern land beyond the old coordinate rectangle.
- paintJourneyExpansion(tiles,set);
-  paintJourneyRuins(tiles,set);
- // The circular path is a choice of directions, not a forced tour itinerary.
- for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
-  if(Math.abs(Math.hypot(x-STEPPE.x,y-STEPPE.y)-STEPPE.roadRadius)<.8)set(x,y,'=');
- }
- for(const {points,type,width} of trails)for(let i=1;i<points.length;i++){
-  const a=points[i-1],b=points[i];
-  for(let y=Math.floor(Math.min(a[1],b[1])-width);y<=Math.ceil(Math.max(a[1],b[1])+width);y++)
-   for(let x=Math.floor(Math.min(a[0],b[0])-width);x<=Math.ceil(Math.max(a[0],b[0])+width);x++){
-    if(!inside(x,y)||distance(x,y,a,b)>width)continue;
-    // Only the explicit mountain pass cuts rock. Trails never pave lake water.
-    if(['~','L'].includes(tiles[y][x])||tiles[y][x]==='X'&&type!=='t')continue;
-    set(x,y,type);
-   }
- }
- paintJourneyExpansionRoads(tiles,set);
-  paintJourneyRuinsRoads(tiles,set);
- for(const b of JOURNEY_BRIDGES)for(let y=b.y1;y<=b.y2;y++)for(let x=b.x1;x<=b.x2;x++)set(x,y,'+');
- for(const s of JOURNEY_SITES){
-  for(let y=s.y;y<s.y+s.h;y++)for(let x=s.x;x<s.x+s.w;x++){
-   if(s.blocking!==false)occupied[y*w+x]=1;
-    if(s.kind==='ruins')set(x,y,ruinsZoneAt(x,y)==='drowned'?'C':'F');
-   if(s.kind!=='relic'&&s.kind!=='expansion'&&['~','L','X'].includes(tiles[y][x]))set(x,y,s.kind==='monolith'?'h':s.kind==='shipwreck'?'S':'p');
-  }
-  occupied[s.entrance.y*w+s.entrance.x]=0;set(s.entrance.x,s.entrance.y,'=');
- }
- const blocked=new Set(['~','L','l','X','W','Y','V','R','M','U']);
- const free=(x,y)=>inside(x,y)&&!blocked.has(tiles[y][x])&&!occupied[y*w+x];
- const reach=new Uint8Array(w*h),queue=[{...JOURNEY_START}];
- reach[JOURNEY_START.y*w+JOURNEY_START.x]=1;
- for(let i=0;i<queue.length;i++){
-  const {x,y}=queue[i];
-  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
-   const a=x+dx,b=y+dy;if(!free(a,b))continue;
-   const k=b*w+a;if(!reach[k]){reach[k]=1;queue.push({x:a,y:b});}
-  }
- }
- const used=new Set(JOURNEY_NPCS.filter(n=>!n.id.startsWith('grok-')).map(n=>n.y*w+n.x));
- for(const n of JOURNEY_NPCS){
-  if(n.id.startsWith('grok-')&&(!reach[n.y*w+n.x]||used.has(n.y*w+n.x))){
-   let best=null,dist=Infinity;
-   for(const p of queue){
-    const k=p.y*w+p.x,d=Math.abs(p.x-n.x)+Math.abs(p.y-n.y);
-    if(used.has(k)||d>=dist)continue;
-    if(JOURNEY_SITES.some(s=>p.x>=s.x&&p.x<s.x+s.w&&p.y>=s.y&&p.y<s.y+s.h))continue;
-    best=p;dist=d;
-   }
-   if(!best)throw Error('No accessible shore for '+n.id);
-   n.x=best.x;n.y=best.y;
-  }
-  used.add(n.y*w+n.x);
-  set(n.x,n.y,'=');occupied[n.y*w+n.x]=0;
- }
- // Shallow water still blocks walking. Its light edge joins the land palette.
- const wet=t=>['~','L','l'].includes(t);
- for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
-  if(tiles[y][x]!=='L')continue;
-  if([[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>!wet(tiles[y+dy][x+dx])))set(x,y,'l');
- }
- const byId=id=>JOURNEY_ZONES.find(z=>z.id==='journey-'+id);
- const world={
-  id:'journey',w,h,tiles,occupied,start:{...JOURNEY_START},sites:JOURNEY_SITES,npcs:JOURNEY_NPCS,zones:JOURNEY_ZONES,
-  bridges:JOURNEY_BRIDGES,vistas:JOURNEY_VISTAS,transitions:[],
-  tileAt(x,y){return inside(x,y)?tiles[y][x]:'~';},
-  walkable(x,y){return inside(x,y)&&!['~','L','l','X','W','Y','V','R','M','U'].includes(tiles[y][x])&&!occupied[y*w+x];},
-  siteAt(x,y){return JOURNEY_SITES.find(s=>x>=s.x&&x<s.x+s.w&&y>=s.y&&y<s.y+s.h);},
-  npcAt(x,y){return JOURNEY_NPCS.find(n=>n.x===x&&n.y===y);},
-  bridgeAt(x,y){return JOURNEY_BRIDGES.find(b=>x>=b.x1&&x<=b.x2&&y>=b.y1&&y<=b.y2);},
-  transitionAt(){return undefined;},
-  findPath:silkPath,
-  zoneAt(x,y){
-   if(y>=88&&x<112)return byId(ruinsZoneAt(x,y));
-    if(x>=112||y>=88)return byId(extensionZoneAt(x,y));
-   if(x<30&&y>=64)return byId('port');
-   if(x>=70&&y<33)return byId('salt');
-   if(x>=49&&y<35)return byId('pass');
-   if(y>=72&&x>=65&&x<=90)return byId('sunset');
-   if(y>=61&&x<58)return byId('tea');
-   if(x>=57&&y>=32||x>=54&&Math.hypot((x-81)/23.4,(y-52)/17.5)<1.2)return byId('lake');
-   return byId('steppe');
-  }
- };
- return world;
-}
 
 // Finish the already occupied edge before rerouting. Starting a new path from
 // the previous tile while between cells can otherwise cut an obstacle's corner.
