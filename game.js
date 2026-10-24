@@ -5,6 +5,7 @@ import {SILK_TALK,SILK_ASIDES} from './silk-dialogue.js';
 import {MUSIC_LIBRARY,createMusic} from './music.js';
 import {createAudio} from './audio.js';
 import {drawSrpgUnit} from './sprite-srpg.js';
+import {drawVillager} from './sprite-villager.js';
 import {limitCamera,easeEdgeCamera,smoothPanCamera,PAN_SENSITIVITY} from './camera-limits.js';
 import {pickZoneTrack} from './zone-music.js';
 import {TALK,SITE_ASIDES} from './dialogue-data.js';
@@ -395,21 +396,11 @@ function drawSite(c,s,t){
  c.restore();
 }
 function drawNpc(c,n,t){
- // Draw an approximately full 32×32 tile actor, like the SRPG unit sprite.
- // NPCs are visibly distinct through costume colour and silhouette.
+ // Same body scale and footing as the explorer (Issue #59); costume colour tells NPCs apart.
  const x=n.x*TILE,y=n.y*TILE;
  const bob=Math.sin(t*.002+(n.x%6))*.65;
  c.save();c.translate(x,y-bob);
- rect(c,4,28,25,3,'#173a4860');
- rect(c,8,24,7,6,'#2b3944');rect(c,19,24,7,6,'#2b3944');
- rect(c,6,13,22,14,'#273944');
- rect(c,8,14,18,11,n.color);
- rect(c,11,3,13,12,'#344349');
- rect(c,12,7,11,8,'#f0d5a9');
- rect(c,10,2,17,6,'#51494b');
- rect(c,6,14,4,12,'#baaa91');rect(c,25,14,4,12,'#baaa91');
- rect(c,14,11,2,2,'#2e3a41');rect(c,21,11,2,2,'#2e3a41');
- rect(c,9,16,3,8,'#ffffff50');
+ drawVillager(c,0,0,n.color);
  c.font='bold 17px system-ui';c.textAlign='center';c.lineWidth=3;
  c.strokeStyle='#203747';c.strokeText('…',x*0+16,-4+Math.sin(t*.002)*2);
  c.fillStyle='#ffecb6';c.fillText('…',16,-4+Math.sin(t*.002)*2);

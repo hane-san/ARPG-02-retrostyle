@@ -11,6 +11,8 @@ import {UNEASY_MOBS} from './uneasy.js';
 import {STEPPE_MOBS,STEPPE_OBJECTS} from './steppe-asia.js';
 import {RUINS_ZONES,RUINS_SITES,RUINS_NPCS,RUINS_VISTAS,paintJourneyRuins,paintJourneyRuinsRoads,ruinsZoneAt} from './journey-ruins.js';
 
+// Tiles nobody walks on: sea, lake, shallows, rock, river, sky edge and ruin walls.
+export const JOURNEY_BLOCKED=new Set(['~','L','l','X','W','Y','V','R','M','U']);
 export const JOURNEY_W=176,JOURNEY_H=136;
 export const STEPPE={x:36,y:38,r:24.5,roadRadius:22.2};
 export const JOURNEY_START={x:19,y:70};
@@ -626,9 +628,11 @@ export function makeJourneyWorld(){
    // Relics, expansion pieces and art are drawn where they stand; they never pave water or rock.
    if(s.kind!=='relic'&&s.kind!=='expansion'&&s.kind!=='art'&&['~','L','X'].includes(tiles[y][x]))set(x,y,s.kind==='monolith'?'h':s.kind==='shipwreck'?'S':'p');
   }
-  occupied[s.entrance.y*w+s.entrance.x]=0;set(s.entrance.x,s.entrance.y,'=');
+  // Issue #59: an entrance is a doorstep, never a way to pave water, cliffs or ruin walls.
+  occupied[s.entrance.y*w+s.entrance.x]=0;
+  if(!JOURNEY_BLOCKED.has(tiles[s.entrance.y][s.entrance.x]))set(s.entrance.x,s.entrance.y,'=');
  }
- const blocked=new Set(['~','L','l','X','W','Y','V','R','M','U']);
+ const blocked=JOURNEY_BLOCKED;
  const free=(x,y)=>inside(x,y)&&!blocked.has(tiles[y][x])&&!occupied[y*w+x];
  const reach=new Uint8Array(w*h),queue=[{...JOURNEY_START}];
  reach[JOURNEY_START.y*w+JOURNEY_START.x]=1;
@@ -639,9 +643,11 @@ export function makeJourneyWorld(){
    const k=b*w+a;if(!reach[k]){reach[k]=1;queue.push({x:a,y:b});}
   }
  }
- const used=new Set(JOURNEY_NPCS.filter(n=>!n.id.startsWith('grok-')).map(n=>n.y*w+n.x));
+ // Every speaker stands on reachable dry ground and never shares a tile. Authored data
+ // is checked by tests to need no move; this only guards later additions.
+ const used=new Set();
  for(const n of JOURNEY_NPCS){
-  if(n.id.startsWith('grok-')&&(!reach[n.y*w+n.x]||used.has(n.y*w+n.x))){
+  if(!reach[n.y*w+n.x]||used.has(n.y*w+n.x)){
    let best=null,dist=Infinity;
    for(const p of queue){
     const k=p.y*w+p.x,d=Math.abs(p.x-n.x)+Math.abs(p.y-n.y);
@@ -654,7 +660,8 @@ export function makeJourneyWorld(){
   }
   used.add(n.y*w+n.x);
   // A person only marks dry ground: water and rock are never made walkable for them.
-  if(!['~','L','X'].includes(tiles[n.y][n.x])){set(n.x,n.y,'=');occupied[n.y*w+n.x]=0;}
+  // They stand on the ground already there; no road patch is painted under their feet.
+  if(!blocked.has(tiles[n.y][n.x]))occupied[n.y*w+n.x]=0;
  }
  // Shallow water still blocks walking. Its light edge joins the land palette.
  const wet=t=>['~','L','l'].includes(t);
@@ -667,7 +674,7 @@ export function makeJourneyWorld(){
   id:'journey',w,h,tiles,occupied,start:{...JOURNEY_START},sites:JOURNEY_SITES,npcs:JOURNEY_NPCS,zones:JOURNEY_ZONES,
   bridges:JOURNEY_BRIDGES,vistas:JOURNEY_VISTAS,transitions:[],
   tileAt(x,y){return inside(x,y)?tiles[y][x]:'~';},
-  walkable(x,y){return inside(x,y)&&!['~','L','l','X','W','Y','V','R','M','U'].includes(tiles[y][x])&&!occupied[y*w+x];},
+  walkable(x,y){return inside(x,y)&&!JOURNEY_BLOCKED.has(tiles[y][x])&&!occupied[y*w+x];},
   siteAt(x,y){return JOURNEY_SITES.find(s=>x>=s.x&&x<s.x+s.w&&y>=s.y&&y<s.y+s.h);},
   npcAt(x,y){return JOURNEY_NPCS.find(n=>n.x===x&&n.y===y);},
   bridgeAt(x,y){return JOURNEY_BRIDGES.find(b=>x>=b.x1&&x<=b.x2&&y>=b.y1&&y<=b.y2);},
