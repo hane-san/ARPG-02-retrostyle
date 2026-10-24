@@ -19,8 +19,7 @@ import {createJourneyFoley} from './journey-foley.js';
 import {journeySoundSources} from './journey-curios.js';
 import {createAmbienceDirector} from './journey-ambience.js';
 import {resolveGameMode} from './game-mode.js';
-import {createJourneyCamera,journeyCameraScene,easeJourneyCamera} from './journey-camera.js';
-import {easeScenicRoadGlide} from './journey-scenic.js';
+import {createJourneyCamera,journeyCameraScene,easeJourneyCamera,easeJourneyFollowCamera} from './journey-camera.js';
 import {createTyper} from './dialogue-typer.js';
 import {walkSpeed} from './walk-speed.js';
 
@@ -81,7 +80,7 @@ if(JOURNEY_MODE){
   '白い橋から円い草原へ。湖の東側へ渡れば、赤い崖、雲上の寺、逆流する川、淡い光の街、葦の湿原、白い旧水底へ。道順は自由です。高台では少し立ち止まって遠景もどうぞ。';
  const helpParagraphs=$('helpPanel').querySelectorAll('.sheet > p');
  helpParagraphs[1].textContent='地面や地図で行き先を選ぶと、主人公が道を探して歩きます。途中でも行き先を変えられます。建物や人を選ぶと、そのそばまで歩いて向かいます。';
- helpParagraphs[2].textContent='村では近くに、草原や湖では遠くへ。場所に合わせて景色がゆっくり広がります。指で見回し、「自分へ」で主人公のところに戻ります。会話は続きを読んでも、景色を選んでそのまま歩き出しても大丈夫です。';
+ helpParagraphs[2].textContent='歩いているあいだはカメラが道の先を追い、地面や広域地図をタップして行き先を変えられます。立ち止まったときは指でなめらかに見回せます。「自分へ」で戻ることもできます。場所に合わせて画角も変わります。';
  helpParagraphs[3].textContent='訪れた場所の記録は、この画面を開いているあいだだけ残ります。';
  $('musicPanel').querySelector('p.secondary').textContent=
   '土地ごとの曲が流れます。ここでは68曲から、好きな一曲を選ぶこともできます。';
@@ -106,7 +105,11 @@ function confineCamera(x=camera.x,y=camera.y,margin=.65){
  camera.x=bounded.x;camera.y=bounded.y;
 }
 // Glide back with the drag easing; a one-frame jump of a whole screen loses the traveller.
-function centerCamera(){panTarget={x:(hero.px+.5)*TILE,y:(hero.py+.5)*TILE};}
+function centerCamera(){
+ // Travel is always guided by the route camera, including from the atlas.
+ if(hero.path.length){panTarget=null;return;}
+ panTarget={x:(hero.px+.5)*TILE,y:(hero.py+.5)*TILE};
+}
 const hash=(x,y)=>{let n=Math.imul(x+23,374761393)+Math.imul(y+51,668265263);n=Math.imul(n^(n>>>13),1274126177);return ((n^(n>>>16))>>>0)/4294967295;};
 const rect=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h);};
 function line(c,points,color,width=2){
@@ -704,8 +707,9 @@ function animate(time){
   if(!gesture?.drag&&Math.hypot(next.x-panTarget.x,next.y-panTarget.y)<.6)panTarget=null;
  }else if(hero.moving){
   const next=easeEdgeCamera(camera,{x:hero.px,y:hero.py},viewport,bounds,dt);
-  // Only selected long road sections add gentle forward-leading tracking.
-  const framed=JOURNEY_MODE?easeScenicRoadGlide(next,{px:hero.px,py:hero.py},hero.path,dt,viewport,bounds):next;
+  // Every journey path, short or long, receives a forward-looking composition.
+  // Older world modes retain their established edge-following behaviour.
+  const framed=JOURNEY_MODE?easeJourneyFollowCamera(camera,{x:hero.px,y:hero.py},hero.path,dt,viewport,bounds):next;
   camera.x=framed.x;camera.y=framed.y;
  }else confineCamera(camera.x,camera.y,.08);
  // Prioritize 60fps while the camera moves, but retain low-cost idle frames.
@@ -777,6 +781,9 @@ canvas.addEventListener('pointermove',e=>{
  if(gesture.pinch||gesture.id!==e.pointerId)return;
  const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;
  if(Math.hypot(dx,dy)>9)gesture.drag=true;
+ // A moving route owns the camera: a drag must not steal its composition.
+ // A simple tap still reaches handleTap on release and may reroute immediately.
+ if(hero.path?.length)return;
  if(gesture.drag){
   panTarget=limitCamera({x:gesture.cx-dx*PAN_SENSITIVITY/camera.zoom,y:gesture.cy-dy*PAN_SENSITIVITY/camera.zoom},
    {x:hero.px,y:hero.py},{width:screen.w,height:screen.h,zoom:camera.zoom},

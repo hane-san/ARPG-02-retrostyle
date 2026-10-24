@@ -1,5 +1,5 @@
 import {limitCamera} from './camera-limits.js';
-import {journeyScenicScene} from './journey-scenic.js';
+import {journeyScenicScene,JOURNEY_SCENIC_BEATS} from './journey-scenic.js';
 
 // Stage 1 is closest; stage 5 is the new widest landscape framing.
 // Stages 1/2 are reserved for future close views / actual interiors.
@@ -57,4 +57,38 @@ export function easeJourneyCamera(current,hero,target,dt,viewport,world){
  // Keep the traveller at the same screen position as the field expands.
  const anchor={x:hx-(hx-current.x)*current.zoom/zoom,y:hy-(hy-current.y)*current.zoom/zoom};
  return {...limitCamera(anchor,hero,{...viewport,zoom},world,.08),zoom};
+}
+
+// Keep the next reachable part of the path visible rather than waiting for the
+// traveller to approach the screen edge. The camera never changes the route.
+export function easeJourneyFollowCamera(current,hero,path,dt,viewport,world){
+ if(!path?.length)return {x:current.x,y:current.y};
+ const tile=world.tile,hx=(hero.x+.5)*tile,hy=(hero.y+.5)*tile;
+ // A few upcoming path cells predict bends, for both field and atlas travel.
+ const ahead=path[Math.min(path.length-1,4)];
+ const vx=ahead.x-hero.x,vy=ahead.y-hero.y,length=Math.hypot(vx,vy);
+ if(length<.0001)return {x:current.x,y:current.y};
+ const zoom=viewport.zoom||1;
+ const halfX=viewport.width/(2*zoom*tile),halfY=viewport.height/(2*zoom*tile);
+ const distance=Math.min(2.8,1.15+.32*Math.min(path.length,5));
+ // The traveller stays well inside the viewport even in close 1.8x scenes.
+ const maxX=Math.min(distance,Math.max(0,(halfX-1.2)*.7));
+ const maxY=Math.min(distance,Math.max(0,(halfY-1.2)*.7));
+ let leadX=vx/length*maxX,leadY=vy/length*maxY;
+ // Existing authored scenic thresholds lightly draw the eye forward.
+ // Behind-the-traveller landmarks must never pull the view backwards.
+ for(const beat of JOURNEY_SCENIC_BEATS){
+  const bx=beat.x-hero.x,by=beat.y-hero.y,proximity=Math.hypot(bx,by);
+  if(proximity<.25||proximity>beat.r+5||bx*vx+by*vy<=0)continue;
+  const influence=.24*Math.min(1,(beat.r+5-proximity)/3);
+  leadX=leadX*(1-influence)+bx/proximity*maxX*influence;
+  leadY=leadY*(1-influence)+by/proximity*maxY*influence;
+  break;
+ }
+ const target={x:hx+leadX*tile,y:hy+leadY*tile};
+ const factor=1-Math.exp(-Math.min(.12,Math.max(0,dt))*7);
+ return limitCamera({
+  x:current.x+(target.x-current.x)*factor,
+  y:current.y+(target.y-current.y)*factor
+ },hero,viewport,world,.6);
 }
