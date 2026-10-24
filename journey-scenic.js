@@ -58,9 +58,14 @@ export const JOURNEY_SCENIC_VISTAS=[
  {id:'scenic-reed-school',x:118,y:105,radius:4,title:'葦原の学び舎から',sub:'水に揺れた道も、子供たちの地図の中ではずっと続いている。',kind:'reeds'},
  {id:'scenic-basin-pillars',x:155,y:108,radius:4,title:'白い柱列の終わり',sub:'昔は見えなかった石の足元を、荷車と旅人が横切る。',kind:'white'}
 ];
-export function journeyScenicScene(hero){
- for(const b of JOURNEY_SCENIC_BEATS)
-  if(Math.hypot(hero.px-b.x,hero.py-b.y)<=b.r)return b.scene;
+// Landmarks are authored regions, not one-frame positional triggers.
+// Enter before the exact focal tile, and allow extra space on exit so walking
+// backwards over the border cannot repeatedly flip the camera.
+export function journeyScenicScene(hero,acceptedScene=null){
+ for(const b of JOURNEY_SCENIC_BEATS){
+  const radius=b.r+(acceptedScene===b.scene?4:2);
+  if(Math.hypot(hero.px-b.x,hero.py-b.y)<=radius)return b.scene;
+ }
  return null;
 }
 export function scenicLaneAt(hero){
