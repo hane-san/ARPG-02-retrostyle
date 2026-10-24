@@ -58,9 +58,9 @@ test('new outlooks are optional, unique and reachable from the original quay',()
   assert.ok(v.title.length>5&&v.sub.length>12);
  }
 });
-test('cinematic threshold beats are optional and constrained to approved five zoom stages',()=>{
+test('cinematic thresholds fit the six approved geographic zoom targets',()=>{
  assert.ok(JOURNEY_SCENIC_BEATS.length>=10);
- assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.8,1.35,1,.8,.6]);
+ assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.8,1.35,1.15,1,.8,.6]);
  for(const b of JOURNEY_SCENIC_BEATS){
   assert.ok(b.r>=3&&b.r<=5,b.id);
   assert.ok(world.walkable(b.x,b.y),b.id+' scene must be reachable');
@@ -76,7 +76,7 @@ test('cinematic threshold beats are optional and constrained to approved five zo
  director.update('journey-scenic-near',10000);
  assert.equal(director.update('journey-scenic-near',11200),1.35);
  director.update('journey-scenic-wide',11300);
- assert.equal(director.update('journey-scenic-wide',13900),1.35,'rapid oscillations stay blocked');
+ assert.equal(director.update('journey-scenic-wide',13900),.6,'the intended new vista opens after the cinematic hold');
  assert.equal(director.update('journey-scenic-wide',16300),.6,'eventually opens after hold');
 });
 test('gentle tracking activates only in selected paths and remains inside visible camera bounds',()=>{
@@ -105,4 +105,16 @@ test('scenic sprites honor viewport culling and do not require a browser audio/c
  assert.equal(fills,0,'empty clipped view costs nothing');
  drawJourneyScenicDetails(ctx,{left:9,right:30,top:70,bottom:85},650);
  assert.ok(fills>0,'scenic markers render around the quay');
+});
+
+test('authored vista has a larger approach and exit hysteresis footprint',()=>{
+ const beat=JOURNEY_SCENIC_BEATS.find(b=>b.id==='canyon-release');
+ assert.ok(beat);
+ // Point 5 tiles before a four-tile core: approach is visible, not a single tile.
+ assert.equal(journeyScenicScene({px:beat.x+beat.r+1,py:beat.y}),beat.scene);
+ assert.equal(journeyScenicScene({px:beat.x+beat.r+3,py:beat.y}),null,'not triggered so far outside the entrance');
+ assert.equal(journeyScenicScene({px:beat.x+beat.r+3,py:beat.y},beat.scene),beat.scene,
+  'an accepted vista lingers briefly on departure');
+ assert.equal(journeyScenicScene({px:beat.x+beat.r+5,py:beat.y},beat.scene),null,
+  'the vista eventually exits rather than clinging to the camera indefinitely');
 });
