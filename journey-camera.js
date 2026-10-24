@@ -1,22 +1,22 @@
 import {limitCamera} from './camera-limits.js';
 import {journeyScenicScene,JOURNEY_SCENIC_BEATS} from './journey-scenic.js';
 
-// Stage 1 is closest; stage 5 is the new widest landscape framing.
-// Stages 1/2 are reserved for future close views / actual interiors.
-export const JOURNEY_ZOOM_STAGES=Object.freeze([1.8,1.35,1,.8,.6]);
+// Six authored targets, close to wide. Intermediate zoom during easing is continuous.
+// 1.0 is the reference city/port view; 1.15 brings small settlements closer.
+export const JOURNEY_ZOOM_STAGES=Object.freeze([1.8,1.35,1.15,1,.8,.6]);
 export const JOURNEY_CAMERA_PROFILES=Object.freeze({
  'journey-detail':1.8,'journey-interior':1.35,
- 'journey-port':1,'journey-tea':1,'journey-hut':1,
+ 'journey-port':1,'journey-tea':1.15,'journey-hut':1.15,
  'journey-road':.8,'journey-pass':.8,
  'journey-steppe':.6,'journey-lake':.6,'journey-salt':.6,'journey-sunset':.6,
  // Escarpments stay broad; narrow inhabited streets invite closer inspection.
  'journey-canyon':.8,'journey-highland':.6,'journey-sky-edge':.6,'journey-river':1,
- 'journey-glass':1.35,'journey-wetlands':.8,'journey-whitebasin':.6,
+ 'journey-glass':1,'journey-wetlands':.8,'journey-whitebasin':.6,
  // A tight dark corridor opens into the widest sky frame at the lookout.
  'journey-ancient':.8,'journey-void':1.35,'journey-drowned':.8,'journey-sky-ruins':.6,
  'journey-scenic-detail':1.8,'journey-scenic-near':1.35,'journey-scenic-wide':.6
 });
-export function journeyCameraScene(world,hero){
+export function journeyCameraScene(world,hero,acceptedScene=null){
  // The narrow glass arcade is an opt-in-to-approach example of the closest frame.
  const ruinCore=world.sites.find(site=>site.id==='journey-ruins-monolith-core');
  if(ruinCore&&Math.hypot(hero.px-ruinCore.entrance.x,hero.py-ruinCore.entrance.y)<=3)return 'journey-detail';
@@ -27,7 +27,7 @@ export function journeyCameraScene(world,hero){
   if(site&&Math.hypot(hero.px-site.entrance.x,hero.py-site.entrance.y)<=radius)
    return id==='journey-hut'?'journey-hut':'journey-tea';
  }
- const scenic=journeyScenicScene(hero);
+ const scenic=journeyScenicScene(hero,acceptedScene);
  if(scenic)return scenic;
  const scene=world.zoneAt(hero.px,hero.py).id;
  if(scene==='journey-tea')return 'journey-road';
@@ -35,6 +35,9 @@ export function journeyCameraScene(world,hero){
  if(scene==='journey-steppe'&&Math.hypot(hero.px-36,hero.py-38)>18)return 'journey-road';
  return scene;
 }
+// Normal region edges need strong anti-jitter. Deliberate cinematic approaches
+// need shorter holds so a momentary landmark does not follow the player for 30 tiles.
+const isCinematic=scene=>scene==='journey-detail'||scene.startsWith('journey-scenic-');
 export function createJourneyCamera(){
  let scene='journey-port',target=JOURNEY_CAMERA_PROFILES[scene],candidate=null,since=0,acceptedAt=0;
  return {
@@ -42,7 +45,10 @@ export function createJourneyCamera(){
    if(!Number.isFinite(now)||!Object.hasOwn(JOURNEY_CAMERA_PROFILES,next))return target;
    if(next===scene){candidate=null;return target;}
    if(candidate!==next){candidate=next;since=now;}
-   if(now-since>=1200&&now-acceptedAt>=5000){
+   const cinematicIn=isCinematic(next),cinematicOut=isCinematic(scene);
+   const dwell=cinematicIn?800:1200;
+   const hold=cinematicOut?2400:cinematicIn?1600:5000;
+   if(now-since>=dwell&&now-acceptedAt>=hold){
     scene=next;target=JOURNEY_CAMERA_PROFILES[scene];candidate=null;acceptedAt=now;
    }
    return target;
