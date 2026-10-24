@@ -38,10 +38,13 @@ export function easeEdgeCamera(current,hero,viewport,world,dt){
 // A separate animated target for manual dragging: each pointer event only
 // adjusts the desired position, and RAF does the time-based interpolation.
 export const PAN_SENSITIVITY=.72;
-export function smoothPanCamera(current,target,hero,viewport,world,dt){
+// Journey-only quick pan; classic/prototype pointer response stays unchanged.
+export const JOURNEY_PAN_SENSITIVITY=.95;
+export function smoothPanCamera(current,target,hero,viewport,world,dt,response=9.5){
  const bounded=limitCamera(target,hero,viewport,world,.65);
- // A gentler spring follows the finger without instantly chasing every tiny twitch.
- const factor=1-Math.exp(-Math.max(0,Math.min(dt,.12))*9.5);
+ // Faster response for journey mode is selected by the caller, with a
+ // frame-independent low-pass to prevent a finger move from snapping the view.
+ const factor=1-Math.exp(-Math.max(0,Math.min(dt,.12))*response);
  const next={x:current.x+(bounded.x-current.x)*factor,
              y:current.y+(bounded.y-current.y)*factor};
  return limitCamera(next,hero,viewport,world,.08);

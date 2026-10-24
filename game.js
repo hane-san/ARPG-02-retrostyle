@@ -6,7 +6,7 @@ import {MUSIC_LIBRARY,createMusic} from './music.js';
 import {createAudio} from './audio.js';
 import {drawSrpgUnit} from './sprite-srpg.js';
 import {drawVillager} from './sprite-villager.js';
-import {limitCamera,easeEdgeCamera,smoothPanCamera,PAN_SENSITIVITY} from './camera-limits.js';
+import {limitCamera,easeEdgeCamera,smoothPanCamera,PAN_SENSITIVITY,JOURNEY_PAN_SENSITIVITY} from './camera-limits.js';
 import {pickZoneTrack} from './zone-music.js';
 import {TALK,SITE_ASIDES} from './dialogue-data.js';
 import {makePrototypeWorld} from './prototype-world.js';
@@ -81,7 +81,7 @@ if(JOURNEY_MODE){
   '白い橋から円い草原へ。湖の東側へ渡れば、赤い崖、雲上の寺、逆流する川、淡い光の街、葦の湿原、白い旧水底へ。道順は自由です。高台では少し立ち止まって遠景もどうぞ。';
  const helpParagraphs=$('helpPanel').querySelectorAll('.sheet > p');
  helpParagraphs[1].textContent='地面や地図で行き先を選ぶと、主人公が道を探して歩きます。途中でも行き先を変えられます。建物や人を選ぶと、そのそばまで歩いて向かいます。';
- helpParagraphs[2].textContent='歩いているあいだはカメラが道の先を追い、地面や広域地図をタップして行き先を変えられます。立ち止まったときは指でなめらかに見回せます。「自分へ」で戻ることもできます。場所に合わせて画角も変わります。';
+ helpParagraphs[2].textContent='歩行中はカメラが道の先へ追従し、地面や地図のタップで行き先を変えられます。止まっている間は指で軽快になめらかに見回せます。港や街は標準、村は少し近く、街道は広く、絶景は遠くへ。演出のある場所では特別な画角になります。';
  helpParagraphs[3].textContent='訪れた場所の記録は、この画面を開いているあいだだけ残ります。';
  $('musicPanel').querySelector('p.secondary').textContent=
   '土地ごとの曲が流れます。ここでは68曲から、好きな一曲を選ぶこともできます。';
@@ -679,7 +679,7 @@ function animate(time){
  updateJourneyMusic(time);
  journeyView?.update(hero,!!dialogue||isPanelOpen(),time);
  if(journeyCamera){
-  const target=journeyCamera.update(journeyCameraScene(world,hero),time);
+  const target=journeyCamera.update(journeyCameraScene(world,hero,journeyCamera.scene),time);
   if(!dialogue&&!isPanelOpen()&&!gesture&&!panTarget&&$('vistaCard').hidden){
    Object.assign(camera,easeJourneyCamera(camera,{x:hero.px,y:hero.py},target,dt,
     {width:screen.w,height:screen.h},{width:W*TILE,height:H*TILE,tile:TILE}));
@@ -693,7 +693,7 @@ function animate(time){
   // The hero or viewport can change after a drag; settle against the current
   // reachable target instead of keeping an impossible target alive forever.
   panTarget=limitCamera(panTarget,{x:hero.px,y:hero.py},viewport,bounds);
-  const next=smoothPanCamera(camera,panTarget,{x:hero.px,y:hero.py},viewport,bounds,dt);
+  const next=smoothPanCamera(camera,panTarget,{x:hero.px,y:hero.py},viewport,bounds,dt,journeyCamera?11.5:9.5);
   camera.x=next.x;camera.y=next.y;
   if(!gesture?.drag&&Math.hypot(next.x-panTarget.x,next.y-panTarget.y)<.6)panTarget=null;
  }else if(hero.moving){
@@ -776,7 +776,8 @@ canvas.addEventListener('pointermove',e=>{
  // A simple tap still reaches handleTap on release and may reroute immediately.
  if(hero.path?.length)return;
  if(gesture.drag){
-  panTarget=limitCamera({x:gesture.cx-dx*PAN_SENSITIVITY/camera.zoom,y:gesture.cy-dy*PAN_SENSITIVITY/camera.zoom},
+  const sensitivity=JOURNEY_MODE?JOURNEY_PAN_SENSITIVITY:PAN_SENSITIVITY;
+  panTarget=limitCamera({x:gesture.cx-dx*sensitivity/camera.zoom,y:gesture.cy-dy*sensitivity/camera.zoom},
    {x:hero.px,y:hero.py},{width:screen.w,height:screen.h,zoom:camera.zoom},
    {width:W*TILE,height:H*TILE,tile:TILE});
  }

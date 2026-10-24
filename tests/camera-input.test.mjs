@@ -2,22 +2,43 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
-import {limitCamera,easeEdgeCamera,smoothPanCamera} from '../camera-limits.js';
+import {limitCamera,easeEdgeCamera,smoothPanCamera,PAN_SENSITIVITY,JOURNEY_PAN_SENSITIVITY} from '../camera-limits.js';
 
 // Exercise the actual field listeners with DOM event/capture stubs, not a
 // second implementation or a production debug hook. Browser QA also uses CDP.
-function input(){
+function input({journey=false}={}){
  const source=readFileSync(new URL('../game.js',import.meta.url),'utf8');
  const block=source.slice(source.indexOf('const pointerMap=new Map()'),source.indexOf("window.addEventListener('keydown'"));
  const listeners={},events={},documentEvents={},taps=[],zoom=[];
  const canvas={addEventListener:(id,fn)=>listeners[id]=fn,setPointerCapture(){},hasPointerCapture(){return false;},releasePointerCapture(){}};
- const context=vm.createContext({canvas,camera:{x:100,y:100,zoom:1.25},hero:{px:3,py:3},screen:{w:390,h:640},W:164,H:120,TILE:32,PAN_SENSITIVITY:.72,panTarget:null,
-  limitCamera:p=>p,zoomTo:z=>zoom.push(z),handleTap:e=>taps.push(e),readingPress:null,dialogue:null,JOURNEY_MODE:false,
+ const context=vm.createContext({canvas,camera:{x:100,y:100,zoom:1.25},hero:{px:3,py:3},screen:{w:390,h:640},W:164,H:120,TILE:32,PAN_SENSITIVITY,JOURNEY_PAN_SENSITIVITY,panTarget:null,
+  limitCamera:p=>p,zoomTo:z=>zoom.push(z),handleTap:e=>taps.push(e),readingPress:null,dialogue:null,JOURNEY_MODE:journey,
   window:{addEventListener:(id,fn)=>events[id]=fn},document:{hidden:false,addEventListener:(id,fn)=>documentEvents[id]=fn}});
  vm.runInContext(block,context);
  const send=(type,id,x=100,y=100)=>listeners[type]({pointerId:id,button:0,clientX:x,clientY:y,preventDefault(){}});
  return {send,taps,zoom,context,events,documentEvents};
 }
+test('stopped journey dragging pans farther and converges faster without a position snap',()=>{
+ assert.equal(PAN_SENSITIVITY,.72);
+ assert.equal(JOURNEY_PAN_SENSITIVITY,.95);
+ const classic=input(),journey=input({journey:true});
+ for(const trial of [classic,journey]){
+  trial.send('pointerdown',1,100,100);
+  trial.send('pointermove',1,150,100);
+ }
+ const oldDistance=Math.abs(classic.context.panTarget.x-100);
+ const newDistance=Math.abs(journey.context.panTarget.x-100);
+ assert.ok(newDistance>oldDistance*1.25,'same finger drag moves journey farther');
+ assert.ok(newDistance<50,'not a teleport to the dragged coordinate');
+ const hero={x:80,y:60},w={width:176*32,height:136*32,tile:32};
+ const view={width:390,height:740,zoom:1};
+ const c={x:(hero.x+.5)*32,y:(hero.y+.5)*32};
+ const destination={x:c.x+100,y:c.y};
+ const gentle=smoothPanCamera(c,destination,hero,view,w,1/60,9.5);
+ const brisk=smoothPanCamera(c,destination,hero,view,w,1/60,11.5);
+ assert.ok(brisk.x>gentle.x&&brisk.x<destination.x,'fast response remains smooth and bounded');
+});
+
 test('walking accepts a new tap destination but ignores manual camera dragging',()=>{
  const t=input();
  t.context.hero.path=[{x:4,y:3},{x:5,y:3}];
