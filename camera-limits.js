@@ -40,7 +40,8 @@ export function easeEdgeCamera(current,hero,viewport,world,dt){
 export const PAN_SENSITIVITY=.72;
 export function smoothPanCamera(current,target,hero,viewport,world,dt){
  const bounded=limitCamera(target,hero,viewport,world,.65);
- const factor=1-Math.exp(-Math.max(0,Math.min(dt,.12))*13.5);
+ // A gentler spring follows the finger without instantly chasing every tiny twitch.
+ const factor=1-Math.exp(-Math.max(0,Math.min(dt,.12))*9.5);
  const next={x:current.x+(bounded.x-current.x)*factor,
              y:current.y+(bounded.y-current.y)*factor};
  return limitCamera(next,hero,viewport,world,.08);
