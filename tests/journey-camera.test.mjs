@@ -26,12 +26,15 @@ function replayTargets(world,target){
  return targets;
 }
 
-test('five framing stages run from close to wide, with the former widest view at 4',()=>{
- assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.8,1.35,1,.8,.6]);
- assert.equal(JOURNEY_CAMERA_PROFILES['journey-road'],JOURNEY_ZOOM_STAGES[3]);
- assert.equal(JOURNEY_CAMERA_PROFILES['journey-port'],JOURNEY_ZOOM_STAGES[2]);
+test('six place-defined framing targets run from close to wide',()=>{
+ assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.8,1.35,1.15,1,.8,.6]);
+ assert.equal(JOURNEY_CAMERA_PROFILES['journey-road'],JOURNEY_ZOOM_STAGES[4]);
+ assert.equal(JOURNEY_CAMERA_PROFILES['journey-port'],JOURNEY_ZOOM_STAGES[3]);
+ assert.equal(JOURNEY_CAMERA_PROFILES['journey-tea'],JOURNEY_ZOOM_STAGES[2]);
+ assert.equal(JOURNEY_CAMERA_PROFILES['journey-hut'],JOURNEY_ZOOM_STAGES[2]);
+ assert.equal(JOURNEY_CAMERA_PROFILES['journey-glass'],JOURNEY_ZOOM_STAGES[3]);
  assert.equal(JOURNEY_CAMERA_PROFILES['journey-interior'],JOURNEY_ZOOM_STAGES[1]);
- assert.equal(JOURNEY_CAMERA_PROFILES['journey-steppe'],JOURNEY_ZOOM_STAGES[4]);
+ assert.equal(JOURNEY_CAMERA_PROFILES['journey-steppe'],JOURNEY_ZOOM_STAGES[5]);
  assert.equal(typeof createJourneyCamera().manual,'undefined');
 });
 test('boundary jitter cannot change framing, and accepted scenes hold for five seconds',()=>{
@@ -61,7 +64,7 @@ test('the first walk from the quay opens out over the steppe without the teahous
  assert.equal(journeyCameraScene(world,{px:46,py:69}),'journey-tea');
  assert.deepEqual(replayTargets(world,{x:36,y:38}),[1,.8,.6]);
  assert.deepEqual(replayTargets(world,{x:33,y:60}),[1,.8]);
- assert.equal(replayTargets(world,{x:46,y:69}).at(-1),1,'the teahouse itself still comes close');
+ assert.equal(replayTargets(world,{x:46,y:69}).at(-1),1.15,'the teahouse itself comes a little closer than town');
 });
 test('framing transitions keep the traveller anchored, frame independent and in bounds',()=>{
  const world={width:112*32,height:88*32,tile:32},viewport={width:390,height:740},hero={x:36,y:38};
@@ -80,4 +83,33 @@ test('framing transitions keep the traveller anchored, frame independent and in 
   const camera=easeJourneyCamera({x:0,y:0,zoom:1.5},position,.8,.07,viewport,world);
   assert.ok(heroVisible(camera,position,{...viewport,zoom:camera.zoom},world));
  }
+});
+
+test('town, village, road, open country and special architecture keep distinct authored sizes',()=>{
+ const world=makeJourneyWorld();
+ for(const [x,y,expected] of [
+  [19,70,1],     // original port / screenshot reference
+  [46,69,1.15],  // chaikhana village
+  [98,72,1.15],  // little lakeside hut
+  [32,64,.8],    // road running through the tea music zone
+  [36,38,.6],    // exceptional wide meadow
+  [159,69,1],    // glass city is still a city, not always a close-up
+ ]){
+  const scene=journeyCameraScene(world,{px:x,py:y});
+  assert.equal(JOURNEY_CAMERA_PROFILES[scene],expected,`tile ${x},${y}: ${scene}`);
+ }
+ assert.equal(JOURNEY_CAMERA_PROFILES['journey-void'],1.35);
+ assert.equal(JOURNEY_CAMERA_PROFILES['journey-detail'],1.8);
+});
+
+test('cinematic targets have shorter holds than regions, but region jitter stays blocked',()=>{
+ const c=createJourneyCamera();
+ assert.equal(c.update('journey-scenic-near',1000),1);
+ assert.equal(c.update('journey-scenic-near',1800),1.35,'a landmark appears in time');
+ assert.equal(c.update('journey-scenic-wide',2100),1.35);
+ assert.equal(c.update('journey-scenic-wide',3400),1.35,'brief scenic excursions do not flicker');
+ assert.equal(c.update('journey-scenic-wide',4200),.6,'a deliberate next vista eventually opens');
+ c.update('journey-road',4400);
+ assert.equal(c.update('journey-road',5500),.6,'scene lingers through the exit');
+ assert.equal(c.update('journey-road',6700),.8,'landmark does not follow the traveller for five seconds');
 });
