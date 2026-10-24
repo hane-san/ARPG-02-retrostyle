@@ -18,6 +18,24 @@ function input(){
  const send=(type,id,x=100,y=100)=>listeners[type]({pointerId:id,button:0,clientX:x,clientY:y,preventDefault(){}});
  return {send,taps,zoom,context,events,documentEvents};
 }
+test('walking accepts a new tap destination but ignores manual camera dragging',()=>{
+ const t=input();
+ t.context.hero.path=[{x:4,y:3},{x:5,y:3}];
+ t.send('pointerdown',11,100,100);
+ t.send('pointermove',11,150,100);
+ assert.equal(t.context.panTarget,null,'moving drag must not own the camera');
+ t.send('pointerup',11,150,100);
+ assert.equal(t.taps.length,0,'drag release is not an accidental destination tap');
+ t.send('pointerdown',12,110,110);
+ t.send('pointerup',12,110,110);
+ assert.equal(t.taps.length,1,'simple taps continue to reroute');
+ t.context.hero.path=[];
+ t.send('pointerdown',13,100,100);
+ t.send('pointermove',13,160,100);
+ assert.ok(t.context.panTarget,'after stopping a drag again pans manually');
+ t.send('pointerup',13,160,100);
+});
+
 test('pinch lift/capture loss then a new second finger never dereferences a missing gesture',()=>{
  const t=input();t.send('pointerdown',1);t.send('pointerdown',2,150);
  t.send('pointermove',2,160);t.send('pointerup',1);t.send('lostpointercapture',1);
