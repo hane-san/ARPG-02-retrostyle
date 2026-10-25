@@ -22,9 +22,9 @@
 .journey-mode .sheet p.secondary{color:#70827a;font-size:11px;line-height:1.75}
 .journey-mode #miniMap{border-color:#c2ccbe;border-radius:9px}
 .journey-mode .zone-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px 0}
-.journey-mode .zone-grid button{padding:8px 3px;min-height:35px;background:#e0e4d6;border:1px solid #cad1bf;color:#48666b;font-size:11px;text-align:center}
+.journey-mode .zone-grid button{padding:8px 3px;min-height:44px;background:#e0e4d6;border:1px solid #cad1bf;color:#48666b;font-size:11px;text-align:center}
 .journey-mode .zone-grid button small{display:none}
-.journey-mode .line-btn{margin-top:4px;min-height:38px;background:#dce3d7;border-color:#bdccbb;color:#48666b;font-size:12px}
+.journey-mode .line-btn{margin-top:4px;min-height:44px;background:#dce3d7;border-color:#bdccbb;color:#48666b;font-size:12px}
 .journey-mode .toggle-row{padding:10px 12px;background:#e4e6d9;border-color:#d2d8c8;margin:12px 0}
 .journey-mode .toggle-row span{font-size:13px}
 .journey-mode .toggle-row small{font-size:10px;color:#7a8b7e}
@@ -32,11 +32,12 @@
 .journey-mode .pill-toggle.on{color:#fff7e5;background:#77998c;border-color:#77998c}
 .journey-mode .field-label{color:#536f69;font-size:12px}
 .journey-mode #trackSelect{padding:10px;font-size:13px;color:#3d6165;background:#f4f0e4;border-color:#b7c6b6}
-.journey-mode #volumeRange,.journey-mode #sfxVolumeRange{width:100%;accent-color:#8eaa91;min-height:24px}
+.journey-mode #volumeRange,.journey-mode #sfxVolumeRange{width:100%;accent-color:#8eaa91;min-height:44px}
 .journey-mode .now-playing{color:#597568!important;background:#e1e7d7;border-left:2px solid #99ad8e;font-size:11px!important}
 .journey-mode .mode-nav{display:flex;flex-direction:column;gap:6px;margin-bottom:0}
 .journey-mode .mode-nav br{display:none}
-.journey-mode .mode-nav a{color:#527a7a!important;min-height:38px;display:flex;align-items:center;text-decoration:none;border-bottom:1px solid #ccd4c2}
+.journey-mode .mode-nav a,.journey-mode .maze-trial-links a{color:#527a7a!important;min-height:44px;display:flex;align-items:center;text-decoration:none;border-bottom:1px solid #ccd4c2}
+.journey-mode .maze-trial-links{display:flex;flex-direction:column;gap:6px}
 .journey-mode .dialogue{bottom:calc(var(--journey-dock-height) + 16px);width:min(calc(100vw - 24px),520px);padding:12px 15px 10px;border:1px solid #c7cfbfcc;border-radius:15px;background:#f3efe2d9;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);box-shadow:0 6px 22px #34574724;max-height:min(34dvh,270px);overflow:visible}
 /* Issue #44: a translucent speech bubble whose short tail points toward the traveller. */
 .journey-mode .dialogue::after{content:"";position:absolute;left:50%;top:-8px;width:14px;height:14px;margin-left:-7px;background:inherit;border-left:1px solid #c7cfbfcc;border-top:1px solid #c7cfbfcc;transform:rotate(45deg);border-radius:3px 0 0 0}
