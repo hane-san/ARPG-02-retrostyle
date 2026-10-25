@@ -15,7 +15,8 @@ export function createMazeTrial(search=''){
     const dx=b.x-a.x,dy=b.y-a.y,nx=c.x-b.x,ny=c.y-b.y;
     // Authored ancient floor only: roads, bridges, other ruins and open fields
     // keep their existing behaviour. Never stop midway through a tile edge.
-    if((dx||dy)&&(dx!==nx||dy!==ny)&&inside(b)&&world.tileAt(b.x,b.y)==='A'&&!walked.has(key(b)))
+    // A deliberate reversal while finishing an edge is not a new corner.
+    if(dx*ny!==dy*nx&&inside(b)&&world.tileAt(b.x,b.y)==='A'&&!walked.has(key(b)))
      return {path:path.slice(0,i+1),limited:true};
    }
    return {path,limited:false};

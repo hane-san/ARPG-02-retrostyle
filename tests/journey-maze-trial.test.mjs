@@ -51,3 +51,10 @@ test('rerouting while between tiles retains the already committed edge',()=>{
  assert.deepEqual(choice.path[0],hero.path[0]);
  assert.deepEqual(choice.path,route.slice(0,choice.path.length));
 });
+test('turning back mid-edge does not mistake a deliberate reversal for an unknown corner',()=>{
+ const world=makeJourneyWorld(),hero={x:20,y:103,px:20.4,py:103,path:[{x:21,y:103}]};
+ const route=routeJourneyWalk(world,hero,{x:20,y:103});
+ assert.deepEqual(route,[{x:21,y:103},{x:20,y:103}]);
+ const choice=createMazeTrial('?maze=turns').plan(route,hero,world);
+ assert.equal(choice.limited,false);assert.deepEqual(choice.path,route);
+});
