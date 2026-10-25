@@ -90,7 +90,7 @@ if(JOURNEY_MODE){
  const mazeHelp=document.createElement('p');mazeHelp.className='secondary';
  mazeHelp.innerHTML='<strong>迷路の歩き方を比べる</strong><br>'+
   (mazeTrial.enabled?'Bを試遊中。南西の風蝕迷路では、まだ歩いていない曲がり角で止まります。先へはもう一度行き先を選んでください。地図からの徒歩はいつもどおり。覚えた道はこの画面を開いているあいだだけ残ります。':'Aでは今までどおり、選んだ場所まで道を探して歩きます。Bでは南西迷路の曲がり角で、先を選び直す歩き方を試せます。')+
-  '<br><a href="./">A：今までの歩き方</a> · <a href="./?maze=turns">B：迷路の角で立ち止まる</a>';
+  '<span class="maze-trial-links"><a href="./">A：今までの歩き方</a><a href="./?maze=turns">B：迷路の角で立ち止まる</a></span>';
  $('helpPanel').querySelector('.sheet').append(mazeHelp);
  $('musicPanel').querySelector('p.secondary').textContent=
   '土地ごとの曲が流れます。ここでは68曲から、好きな一曲を選ぶこともできます。';
