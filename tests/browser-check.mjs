@@ -8,6 +8,7 @@ import {checkLayout} from './layout-browser.mjs';
 import {MUSIC_LIBRARY,ORIGINAL_SCORE_COUNT} from '../music.js';
 import {chromium} from 'playwright';
 import {checkJourney} from './journey-browser.mjs';
+import {checkJourneyTaps} from './journey-tap-browser.mjs';
 import {checkCameraInput} from './camera-browser.mjs';
 import {checkPortalRoutes} from './portal-browser.mjs';
 import {checkMusicUnderLoad} from './music-load-browser.mjs';
@@ -94,6 +95,7 @@ async function main(){
  await checkPortalRoutes(page,origin);
  await checkCameraInput(page,origin);
  await checkJourney(page,origin);
+ await checkJourneyTaps(browser,origin);
  await checkJourneyFoley(browser,origin);
  await checkAudioContinuity(browser,origin);
  await checkMusicUnderLoad(browser,origin);

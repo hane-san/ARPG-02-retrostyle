@@ -23,6 +23,7 @@ import {resolveGameMode} from './game-mode.js';
 import {createJourneyCamera,journeyCameraScene,easeJourneyCamera,easeJourneyFollowCamera} from './journey-camera.js';
 import {createTyper} from './dialogue-typer.js';
 import {walkSpeed} from './walk-speed.js';
+import {pickJourneyTap} from './journey-tap.js';
 
 const $=id=>document.getElementById(id);
 const stage=$('stage'),canvas=$('worldCanvas'),ctx=canvas.getContext('2d',{alpha:false});
@@ -563,8 +564,19 @@ function handleTap(e){
  // A tap on the small glowing portal always means crossing the bridge.
  const directGate=world.transitionAt?.(p.x,p.y);
  if(directGate){startWalk({x:directGate.x,y:directGate.y});return;}
- const npc=NPCS.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<1.8);
- if(npc){walkToNpc(npc);return;}
+ if(JOURNEY_MODE){
+  const r=canvas.getBoundingClientRect();
+  const toScreen=(x,y)=>({x:r.left+screen.w/2+((x+.5)*TILE-camera.x)*camera.zoom,
+   y:r.top+screen.h/2+((y+.5)*TILE-camera.y)*camera.zoom});
+  const pick=pickJourneyTap({tap:{x:e.clientX,y:e.clientY},toScreen,npcs:NPCS,zoom:camera.zoom,tile:TILE,
+   hero:{px:hero.px,py:hero.py,walking:hero.path.length>0}});
+  // Stop on the next tile: the explorer never snaps back or halts between tiles.
+  if(pick?.kind==='stop'){hero.path=hero.path.slice(0,1);hero.arrival=null;syncTravelState();return;}
+  if(pick?.kind==='npc'){walkToNpc(pick.item);return;}
+ }else{
+  const npc=NPCS.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<1.8);
+  if(npc){walkToNpc(npc);return;}
+ }
  const site=world.siteAt(p.x,p.y);
  if(site){startWalk(site.entrance,{kind:'site',item:site});return;}
  const bridge=world.bridgeAt(p.x,p.y);
@@ -576,7 +588,8 @@ function handleTap(e){
  const t=world.walkable(p.x,p.y)?p:nearestWalkable(world,p.x,p.y,4);
  if(!t){toast('海の上は歩けません。橋をタップしてください。');return;}
  startWalk(t);
- if(bridge)toast(bridge.name+'へ歩いて向かいます。');
+ // Issue #64: in the journey the explorer simply sets off; success needs no notice.
+ if(bridge&&!JOURNEY_MODE)toast(bridge.name+'へ歩いて向かいます。');
 }
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
 function showDialoguePage(){
