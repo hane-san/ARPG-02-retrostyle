@@ -1,0 +1,177 @@
+{
+  "sourceMain": "68b8f84f40e3d0f31cdb577473d1c459da316f29",
+  "command": "node tests/maze-trial-report.mjs --save",
+  "area": {
+    "x0": 14,
+    "x1": 44,
+    "y0": 98,
+    "y1": 123
+  },
+  "geometrySha256": "fed8c00fd8ab5733334c99573dddfb70b8391ec28b143582339a01bbad867dfb",
+  "results": [
+    {
+      "start": {
+        "x": 17,
+        "y": 102
+      },
+      "target": {
+        "x": 33,
+        "y": 118
+      },
+      "A": {
+        "choices": 1,
+        "steps": 32
+      },
+      "B": {
+        "choices": 7,
+        "steps": 32,
+        "stops": [
+          {
+            "stop": {
+              "x": 21,
+              "y": 103
+            },
+            "steps": 5,
+            "limited": true
+          },
+          {
+            "stop": {
+              "x": 22,
+              "y": 103
+            },
+            "steps": 1,
+            "limited": true
+          },
+          {
+            "stop": {
+              "x": 24,
+              "y": 103
+            },
+            "steps": 2,
+            "limited": true
+          },
+          {
+            "stop": {
+              "x": 26,
+              "y": 103
+            },
+            "steps": 2,
+            "limited": true
+          },
+          {
+            "stop": {
+              "x": 28,
+              "y": 103
+            },
+            "steps": 2,
+            "limited": true
+          },
+          {
+            "stop": {
+              "x": 29,
+              "y": 112
+            },
+            "steps": 10,
+            "limited": true
+          },
+          {
+            "stop": {
+              "x": 33,
+              "y": 118
+            },
+            "steps": 10,
+            "limited": false
+          }
+        ]
+      }
+    },
+    {
+      "start": {
+        "x": 33,
+        "y": 118
+      },
+      "target": {
+        "x": 22,
+        "y": 103
+      },
+      "A": {
+        "choices": 1,
+        "steps": 26
+      },
+      "B": {
+        "choices": 7,
+        "steps": 26,
+        "stops": [
+          {
+            "stop": {
+              "x": 33,
+              "y": 113
+            },
+            "steps": 5,
+            "limited": true
+          },
+          {
+            "stop": {
+              "x": 31,
+              "y": 113
+            },
+            "steps": 2,
+            "limited": true
+          },
+          {
+            "stop": {
+              "x": 30,
+              "y": 112
+            },
+            "steps": 2,
+            "limited": true
+          },
+          {
+            "stop": {
+              "x": 29,
+              "y": 112
+            },
+            "steps": 1,
+            "limited": true
+          },
+          {
+            "stop": {
+              "x": 24,
+              "y": 107
+            },
+            "steps": 10,
+            "limited": true
+          },
+          {
+            "stop": {
+              "x": 22,
+              "y": 107
+            },
+            "steps": 2,
+            "limited": true
+          },
+          {
+            "stop": {
+              "x": 22,
+              "y": 103
+            },
+            "steps": 4,
+            "limited": false
+          }
+        ]
+      }
+    }
+  ],
+  "unverified": [
+    "iPhone",
+    "human enjoyment",
+    "touch burden outside the scripted route",
+    "independent audit"
+  ],
+  "limits": [
+    "Map travel bypasses B by design",
+    "Only authored ancient floor A within the rectangle",
+    "Walking a corner learns it for this page only",
+    "No default pathfinding change"
+  ]
+}
