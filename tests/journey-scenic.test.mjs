@@ -58,9 +58,9 @@ test('new outlooks are optional, unique and reachable from the original quay',()
   assert.ok(v.title.length>5&&v.sub.length>12);
  }
 });
-test('cinematic thresholds fit the six approved geographic zoom targets',()=>{
+test('scenic landmarks keep a calm outdoor zoom, apart from authored wide vistas',()=>{
  assert.ok(JOURNEY_SCENIC_BEATS.length>=10);
- assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.8,1.35,1.15,1,.8,.6]);
+ assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.35,.8,.6]);
  for(const b of JOURNEY_SCENIC_BEATS){
   assert.ok(b.r>=3&&b.r<=5,b.id);
   assert.ok(world.walkable(b.x,b.y),b.id+' scene must be reachable');
@@ -74,7 +74,7 @@ test('cinematic thresholds fit the six approved geographic zoom targets',()=>{
  assert.equal(journeyCameraScene(world,{px:155,py:108}),'journey-scenic-near','column feet become visible');
  const director=createJourneyCamera();
  director.update('journey-scenic-near',10000);
- assert.equal(director.update('journey-scenic-near',11200),1.35);
+ assert.equal(director.update('journey-scenic-near',11200),.8,'ordinary scenic approach must not zoom in');
  director.update('journey-scenic-wide',11300);
  assert.equal(director.update('journey-scenic-wide',13900),.6,'the intended new vista opens after the cinematic hold');
  assert.equal(director.update('journey-scenic-wide',16300),.6,'eventually opens after hold');
