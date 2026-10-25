@@ -14,7 +14,7 @@ test('expanded scenery preserves the original walking country and adds six coher
  assert.deepEqual([EXTENSION_ZONES.length,EXTENSION_SITES.length,EXTENSION_NPCS.length,EXTENSION_VISTAS.length],[7,13,11,7]);
  assert.equal(JOURNEY_ZONES.filter(z=>!RUINS_ZONES.includes(z)).length,14,'original regions survive intact');
  assert.equal(JOURNEY_ZONES.length,14+RUINS_ZONES.length,'southwest extension is additive');
- assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.8,1.35,1.15,1,.8,.6]);
+ assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.35,.8,.6]);
  for(const zone of EXTENSION_ZONES){
   const loc={x:zone.cx,y:zone.cy};
   assert.equal(world.zoneAt(loc.x,loc.y).id,zone.id,zone.id+' centre has intended biome');
@@ -26,9 +26,9 @@ test('expanded scenery preserves the original walking country and adds six coher
   assert.ok(world.findPath(world,loc,world.start)?.length>20,'return from '+zone.id);
  }
  assert.equal(journeyCameraScene(world,{px:156,py:60}),'journey-detail');
- assert.equal(JOURNEY_CAMERA_PROFILES['journey-glass'],1,'the ordinary city stays standard; the arcade is a separate close-up');
- assert.equal(JOURNEY_CAMERA_PROFILES['journey-highland'],.6);
- assert.equal(JOURNEY_CAMERA_PROFILES['journey-river'],1);
+ assert.equal(JOURNEY_CAMERA_PROFILES['journey-glass'],.8,'the ordinary city and outdoor arcade share the fixed field view');
+ assert.equal(JOURNEY_CAMERA_PROFILES['journey-highland'],.8);
+ assert.equal(JOURNEY_CAMERA_PROFILES['journey-river'],.8);
  for(const [tile,color] of Object.entries(EXTENSION_PALETTE))assert.equal(JOURNEY_PALETTE[tile],color);
  for(const v of EXTENSION_VISTAS)assert.ok(EXPANSION_VISTA_KINDS.has(v.kind));
  assert.equal(world.tileAt(81,52),'L','original central water remains unwalkable');
@@ -37,7 +37,7 @@ test('expanded scenery preserves the original walking country and adds six coher
  assert.ok(sky&&sky.kind==='sky-edge');
  assert.equal(world.zoneAt(sky.x,sky.y).id,'journey-sky-edge');
  assert.equal(journeyCameraScene(world,{px:sky.x,py:sky.y}),'journey-sky-edge');
- assert.equal(JOURNEY_CAMERA_PROFILES['journey-sky-edge'],.6);
+ assert.equal(JOURNEY_CAMERA_PROFILES['journey-sky-edge'],.8,'a whole region never triggers special panorama zoom');
  assert.ok(world.sites.some(s=>s.id==='journey-sky-seat'));
  assert.equal(world.walkable(169,15),false,'the open sky is not walkable');
 });
