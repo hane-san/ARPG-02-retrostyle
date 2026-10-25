@@ -24,11 +24,13 @@ import {createJourneyCamera,journeyCameraScene,easeJourneyCamera,easeJourneyFoll
 import {createTyper} from './dialogue-typer.js';
 import {walkSpeed} from './walk-speed.js';
 import {pickJourneyTap} from './journey-tap.js';
+import {createMazeTrial} from './journey-maze-trial.js';
 
 const $=id=>document.getElementById(id);
 const stage=$('stage'),canvas=$('worldCanvas'),ctx=canvas.getContext('2d',{alpha:false});
 const gameMode=resolveGameMode(window.location.search);
 const JOURNEY_MODE=gameMode==='journey';
+const mazeTrial=JOURNEY_MODE?createMazeTrial(window.location.search):null;
 const PROTOTYPE_MODE=gameMode==='prototype';
 const worlds={tidal:JOURNEY_MODE?null:PROTOTYPE_MODE?makePrototypeWorld():makeWorld(),silk:null,journey:JOURNEY_MODE?makeJourneyWorld():null};
 let currentWorldId=JOURNEY_MODE?'journey':'tidal',world=worlds[currentWorldId];
@@ -44,6 +46,7 @@ const music=createMusic(storage),sfx=JOURNEY_MODE?createJourneyFoley(storage):cr
 const ambience=JOURNEY_MODE?createAmbienceDirector(journeySoundSources(SITES)):null;
 const spawn=world.start||START;
 const hero={x:spawn.x,y:spawn.y,px:spawn.x,py:spawn.y,face:'down',path:[],arrival:null,stride:0,moving:false,speed:6.15};
+mazeTrial?.arrive(spawn);
 // The older worlds keep their original single pace; Issue #44 tunes the journey.
 const CLASSIC_WALK_SPEED=6.15;
 const journeyCamera=JOURNEY_MODE?createJourneyCamera():null;
@@ -84,6 +87,11 @@ if(JOURNEY_MODE){
  helpParagraphs[1].textContent='地面や地図で行き先を選ぶと、主人公が道を探して歩きます。途中でも行き先を変えられます。建物や人を選ぶと、そのそばまで歩いて向かいます。';
  helpParagraphs[2].textContent='歩行中はカメラが道の先へ追従し、地面や地図のタップで行き先を変えられます。止まっている間は指で軽快になめらかに見回せます。屋外は少し引いた同じ画角で歩けます。特別な展望地点だけ遠くへ広がり、将来の屋内では近い画角になります。';
  helpParagraphs[3].textContent='訪れた場所の記録は、この画面を開いているあいだだけ残ります。';
+ const mazeHelp=document.createElement('p');mazeHelp.className='secondary';
+ mazeHelp.innerHTML='<strong>迷路の歩き方を比べる</strong><br>'+
+  (mazeTrial.enabled?'Bを試遊中。南西の風蝕迷路では、まだ歩いていない曲がり角で止まります。先へはもう一度行き先を選んでください。地図からの徒歩はいつもどおり。覚えた道はこの画面を開いているあいだだけ残ります。':'Aでは今までどおり、選んだ場所まで道を探して歩きます。Bでは南西迷路の曲がり角で、先を選び直す歩き方を試せます。')+
+  '<br><a href="./">A：今までの歩き方</a> · <a href="./?maze=turns">B：迷路の角で立ち止まる</a>';
+ $('helpPanel').querySelector('.sheet').append(mazeHelp);
  $('musicPanel').querySelector('p.secondary').textContent=
   '土地ごとの曲が流れます。ここでは68曲から、好きな一曲を選ぶこともできます。';
  installJourneyUI();
@@ -518,7 +526,8 @@ function startWalk(target,arrival=null,source='field'){
  const path=JOURNEY_MODE?routeJourneyWalk(world,hero,target):
   routeWalk(world,hero,target,currentWorldId==='silk'?silkPath:findPath);
  if(!path){toast('この場所へ続く道が見つかりません。');return;}
- hero.path=path;hero.arrival=arrival;hero.speed=JOURNEY_MODE?walkSpeed(source):CLASSIC_WALK_SPEED;
+ const trial=mazeTrial?.plan(path,{x:hero.x,y:hero.y},world,source);
+ hero.path=trial?.path||path;hero.arrival=trial?.limited?null:arrival;hero.speed=JOURNEY_MODE?walkSpeed(source):CLASSIC_WALK_SPEED;
  panTarget=null;syncTravelState();
  if(hero.path.length===0){hero.px=hero.x;hero.py=hero.y;onArrive();return;}
  // Walking does not display distances or step counts: explore visually.
@@ -666,6 +675,7 @@ function updateMove(dt){
   if(JOURNEY_MODE)sfx.step(Math.min(distance,remaining),world.tileAt(step.x,step.y));
   if(distance<=remaining+.0001){
    hero.px=step.x;hero.py=step.y;hero.x=step.x;hero.y=step.y;
+   mazeTrial?.arrive(step);
    hero.path.shift();remaining-=distance;
    if(!JOURNEY_MODE&&distance>.001)sfx.play('soft-step');
    const passage=world.transitionAt?.(hero.x,hero.y);
