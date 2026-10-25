@@ -26,25 +26,26 @@ function replayTargets(world,target){
  return targets;
 }
 
-test('six place-defined framing targets run from close to wide',()=>{
- assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.8,1.35,1.15,1,.8,.6]);
- assert.equal(JOURNEY_CAMERA_PROFILES['journey-road'],JOURNEY_ZOOM_STAGES[4]);
- assert.equal(JOURNEY_CAMERA_PROFILES['journey-port'],JOURNEY_ZOOM_STAGES[3]);
- assert.equal(JOURNEY_CAMERA_PROFILES['journey-tea'],JOURNEY_ZOOM_STAGES[2]);
- assert.equal(JOURNEY_CAMERA_PROFILES['journey-hut'],JOURNEY_ZOOM_STAGES[2]);
- assert.equal(JOURNEY_CAMERA_PROFILES['journey-glass'],JOURNEY_ZOOM_STAGES[3]);
- assert.equal(JOURNEY_CAMERA_PROFILES['journey-interior'],JOURNEY_ZOOM_STAGES[1]);
- assert.equal(JOURNEY_CAMERA_PROFILES['journey-steppe'],JOURNEY_ZOOM_STAGES[5]);
+test('long walks use one outdoor zoom, with only interior and exceptional vista overrides',()=>{
+ assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.35,.8,.6]);
+ assert.equal(createJourneyCamera().target,.8,'the first rendered frame starts outdoors');
+ for(const [name,zoom] of Object.entries(JOURNEY_CAMERA_PROFILES)){
+  assert.equal(zoom,name==='journey-interior'?1.35:name==='journey-scenic-wide'?.6:.8,name);
+ }
  assert.equal(typeof createJourneyCamera().manual,'undefined');
 });
-test('boundary jitter cannot change framing, and accepted scenes hold for five seconds',()=>{
+test('ordinary region boundaries do not change zoom; special vantage has dwell and exit hold',()=>{
  const camera=createJourneyCamera();
- camera.update('journey-steppe',5000);camera.update('journey-port',5900);
- assert.equal(camera.target,1);
- camera.update('journey-steppe',6000);assert.equal(camera.update('journey-steppe',7200),.6);
- camera.update('journey-pass',7300);assert.equal(camera.update('journey-pass',10000),.6);
- assert.equal(camera.update('journey-pass',12200),.8);
- assert.equal(camera.update('unknown',15000),.8);
+ for(const [scene,now] of [['journey-port',1000],['journey-tea',1500],['journey-steppe',2000],['journey-void',2500],['journey-detail',3000]]){
+  assert.equal(camera.update(scene,now),.8,scene+' cannot magnify an outdoor walk');
+ }
+ assert.equal(camera.update('journey-scenic-wide',4000),.8);
+ assert.equal(camera.update('journey-scenic-wide',4700),.8,'brief outlook cannot flicker');
+ assert.equal(camera.update('journey-scenic-wide',4800),.6);
+ assert.equal(camera.update('journey-road',4900),.6);
+ assert.equal(camera.update('journey-road',6500),.6,'outlook lingers briefly on exit');
+ assert.equal(camera.update('journey-road',7300),.8,'ordinary road restores the default view');
+ assert.equal(camera.update('unknown',7500),.8);
 });
 test('village framing stays local while approach roads and vast centres differ',()=>{
  const world=makeJourneyWorld();
@@ -56,15 +57,14 @@ test('a small lakeside house is framed locally without zooming the whole lake li
  assert.equal(journeyCameraScene(world,{px:98,py:72}),'journey-hut');
  assert.notEqual(journeyCameraScene(world,{px:106,py:52}),'journey-hut');
 });
-test('the first walk from the quay opens out over the steppe without the teahouse close-up',()=>{
+test('walking from the quay to meadow and tea house stays at one outdoor scale',()=>{
  const world=makeJourneyWorld();
- // The path north from the white bridge belongs to the tea region but is open country.
  assert.equal(journeyCameraScene(world,{px:32,py:64}),'journey-road');
- assert.equal(world.zoneAt(32,64).id,'journey-tea','place name and music regions stay unchanged');
+ assert.equal(world.zoneAt(32,64).id,'journey-tea','geographic names and music remain untouched');
  assert.equal(journeyCameraScene(world,{px:46,py:69}),'journey-tea');
- assert.deepEqual(replayTargets(world,{x:36,y:38}),[1,.8,.6]);
- assert.deepEqual(replayTargets(world,{x:33,y:60}),[1,.8]);
- assert.equal(replayTargets(world,{x:46,y:69}).at(-1),1.15,'the teahouse itself comes a little closer than town');
+ assert.deepEqual(replayTargets(world,{x:36,y:38}),[.8]);
+ assert.deepEqual(replayTargets(world,{x:33,y:60}),[.8]);
+ assert.deepEqual(replayTargets(world,{x:46,y:69}),[.8]);
 });
 test('framing transitions keep the traveller anchored, frame independent and in bounds',()=>{
  const world={width:112*32,height:88*32,tile:32},viewport={width:390,height:740},hero={x:36,y:38};
@@ -85,31 +85,24 @@ test('framing transitions keep the traveller anchored, frame independent and in 
  }
 });
 
-test('town, village, road, open country and special architecture keep distinct authored sizes',()=>{
+test('town, village, grassland, glass city and outdoor ruin share the same view',()=>{
  const world=makeJourneyWorld();
- for(const [x,y,expected] of [
-  [19,70,1],     // original port / screenshot reference
-  [46,69,1.15],  // chaikhana village
-  [98,72,1.15],  // little lakeside hut
-  [32,64,.8],    // road running through the tea music zone
-  [36,38,.6],    // exceptional wide meadow
-  [159,69,1],    // glass city is still a city, not always a close-up
- ]){
+ for(const [x,y] of [[19,70],[46,69],[98,72],[32,64],[36,38],[159,69],[55,19]]){
   const scene=journeyCameraScene(world,{px:x,py:y});
-  assert.equal(JOURNEY_CAMERA_PROFILES[scene],expected,`tile ${x},${y}: ${scene}`);
+  assert.equal(JOURNEY_CAMERA_PROFILES[scene],.8,`outdoor tile ${x},${y}: ${scene}`);
  }
- assert.equal(JOURNEY_CAMERA_PROFILES['journey-void'],1.35);
- assert.equal(JOURNEY_CAMERA_PROFILES['journey-detail'],1.8);
+ assert.equal(JOURNEY_CAMERA_PROFILES['journey-void'],.8);
+ assert.equal(JOURNEY_CAMERA_PROFILES['journey-detail'],.8);
+ assert.equal(JOURNEY_CAMERA_PROFILES['journey-scenic-wide'],.6);
 });
-
-test('cinematic targets have shorter holds than regions, but region jitter stays blocked',()=>{
+test('ordinary scenic approaches stay fixed; actual interior is the only close-up',()=>{
  const c=createJourneyCamera();
- assert.equal(c.update('journey-scenic-near',1000),1);
- assert.equal(c.update('journey-scenic-near',1800),1.35,'a landmark appears in time');
- assert.equal(c.update('journey-scenic-wide',2100),1.35);
- assert.equal(c.update('journey-scenic-wide',3400),1.35,'brief scenic excursions do not flicker');
- assert.equal(c.update('journey-scenic-wide',4200),.6,'a deliberate next vista eventually opens');
- c.update('journey-road',4400);
- assert.equal(c.update('journey-road',5500),.6,'scene lingers through the exit');
- assert.equal(c.update('journey-road',6700),.8,'landmark does not follow the traveller for five seconds');
+ assert.equal(c.update('journey-scenic-near',1000),.8);
+ assert.equal(c.update('journey-scenic-near',2500),.8);
+ assert.equal(c.update('journey-scenic-detail',3000),.8);
+ assert.equal(c.update('journey-detail',3500),.8,'outdoor monolith/arcade is not an interior');
+ assert.equal(c.update('journey-interior',5000),.8);
+ assert.equal(c.update('journey-interior',5800),1.35,'only explicitly tagged interiors may zoom in');
+ assert.equal(c.update('journey-road',6000),1.35);
+ assert.equal(c.update('journey-road',8300),.8,'leaving an interior restores the journey view');
 });
