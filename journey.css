@@ -80,3 +80,5 @@
 /* Issue #11: regions already walked carry a small quiet mark in the atlas list. */
 .journey-mode #zoneList button.visited span::after{content:' ・訪れた';font-size:10px;color:#8b9f87;font-weight:400}
 .journey-mode #zoneList button:not(.visited){opacity:.82}
+/* Issue #76: retain the notice, but omit its slide and fade under Reduced Motion. */
+@media(prefers-reduced-motion:reduce){.journey-mode .toast{transition:none;transform:translate(-50%,0)}}

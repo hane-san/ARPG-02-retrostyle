@@ -10,6 +10,7 @@ import {chromium} from 'playwright';
 import {checkJourney} from './journey-browser.mjs';
 import {checkJourneyTaps} from './journey-tap-browser.mjs';
 import {checkJourneyTargets} from './journey-targets-browser.mjs';
+import {checkJourneyMotion} from './journey-motion-browser.mjs';
 import {checkMazeTrial} from './journey-maze-browser.mjs';
 import {checkCameraInput} from './camera-browser.mjs';
 import {checkPortalRoutes} from './portal-browser.mjs';
@@ -99,6 +100,7 @@ async function main(){
  await checkJourney(page,origin);
  await checkJourneyTaps(browser,origin);
  await checkJourneyTargets(browser,origin);
+ await checkJourneyMotion(browser,origin);
  await checkMazeTrial(browser,origin);
  await checkJourneyFoley(browser,origin);
  await checkAudioContinuity(browser,origin);
