@@ -25,8 +25,8 @@ export async function checkMazeTrial(browser,origin){
   // Use the unmodified atlas walk to reach the same authored maze entry.
   await page.locator('#mapBtn').click();
   const map=page.locator('#miniMap'),size=await map.boundingBox();
-  // Raw mouse coordinates retain fractional CSS pixels on the expanded atlas.
-  // Locator.click rounds its offset, which can select an adjacent tile at 320px.
+  // Choose a representable CSS pixel in the requested tile, allowing for
+  // narrow-atlas pixel centres. Locator.click also scrolls the point into view.
   const pixel=(origin,extent,cells,tile)=>extent<cells?Math.round(origin+(tile+.5)/cells*extent-.5):Math.ceil(origin+tile/cells*extent+.01);
   const border=await map.evaluate(c=>({x:parseFloat(getComputedStyle(c).borderLeftWidth)||0,y:parseFloat(getComputedStyle(c).borderTopWidth)||0}));
   await map.click({position:{x:pixel(size.x,size.width,JOURNEY_W,17)-size.x-border.x,y:pixel(size.y,size.height,JOURNEY_H,102)-size.y-border.y}});
