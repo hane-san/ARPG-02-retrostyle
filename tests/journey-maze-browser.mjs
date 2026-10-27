@@ -27,7 +27,8 @@ export async function checkMazeTrial(browser,origin){
   const map=page.locator('#miniMap'),size=await map.boundingBox();
   // Raw mouse coordinates retain fractional CSS pixels on the expanded atlas.
   // Locator.click rounds its offset, which can select an adjacent tile at 320px.
-  await page.mouse.click(size.x+17.5/JOURNEY_W*size.width,size.y+102.5/JOURNEY_H*size.height);
+  const pixel=(origin,extent,cells,tile)=>extent<cells?Math.round(origin+(tile+.5)/cells*extent-.5):Math.ceil(origin+tile/cells*extent+.01);
+  await page.mouse.click(pixel(size.x,size.width,JOURNEY_W,17),pixel(size.y,size.height,JOURNEY_H,102));
   await page.waitForFunction(()=>document.querySelector('#worldCanvas').getAttribute('aria-busy')==='true');
   const settle=()=>page.waitForFunction(()=>document.querySelector('#worldCanvas').getAttribute('aria-busy')==='false',null,{timeout:40000});
   await settle();
@@ -35,7 +36,7 @@ export async function checkMazeTrial(browser,origin){
    await page.locator('#mapBtn').click();const p=await page.evaluate(()=>window.mazeMarker);
    await page.locator('#mapPanel [data-close]').click();return p;
   }
-  assert.deepEqual(await position(),{x:17,y:102});
+  assert.deepEqual(await position(),{x:17,y:102},`atlas entry ${width}x${height} ${mode}`);
   async function fieldTap(target){
    await page.locator('#homeBtn').click();
    await page.waitForFunction(()=>{
