@@ -21,13 +21,13 @@ function legalRoute(w,from,to){
 }
 
 test('journey uses its own actual dimensions, spawn, and strict coordinate bounds',()=>{
- assert.equal(world.w,176);assert.equal(world.h,136);
+ assert.equal(world.w,320);assert.equal(world.h,192);
  assert.equal(world.w,JOURNEY_W);assert.equal(world.h,JOURNEY_H);
  assert.equal(world.occupied.length,world.w*world.h);
  assert.ok(world.walkable(world.start.x,world.start.y));
  assert.notDeepEqual(world.start,{x:41,y:40});
- assert.ok(world.w*world.h<430*270*.25);
- for(const p of [{x:-1,y:20},{x:176,y:20},{x:0,y:136},{x:2.5,y:3},{x:NaN,y:3}]){
+ assert.ok(world.w*world.h<=65536);
+ for(const p of [{x:-1,y:20},{x:JOURNEY_W,y:20},{x:0,y:JOURNEY_H},{x:2.5,y:3},{x:NaN,y:3}]){
   assert.equal(world.walkable(p.x,p.y),false);assert.equal(world.tileAt(p.x,p.y),'~');
   assert.equal(world.findPath(world,world.start,p),null);
  }
@@ -41,8 +41,8 @@ test('all sites, people, region buttons, and vistas have safe outward and return
   assert.ok(s.desc.length>20&&s.aside.length>20);
   for(let y=s.y;y<s.y+s.h;y++)for(let x=s.x;x<s.x+s.w;x++){
    // Pieces drawn afloat on purpose leave the water under them unwalkable.
-   if(s.afloat&&['~','L','l'].includes(world.tileAt(x,y)))assert.equal(world.walkable(x,y),false,s.id+' afloat');
-   else assert.equal(world.walkable(x,y),s.blocking===false,s.id+' building footprint');
+   if(s.afloat&&['~','L','l','study-water'].includes(world.tileAt(x,y)))assert.equal(world.walkable(x,y),false,s.id+' afloat');
+   else {const solid=s.blocking!==false||!!s.solid?.some(r=>x>=s.x+r.x&&x<s.x+r.x+r.w&&y>=s.y+r.y&&y<s.y+r.y+r.h);assert.equal(world.walkable(x,y),!solid,s.id+' building footprint');}
   }
  }
  // Authored voices keep two substantial lines; the owner-added grok villagers are deliberate one-liners,

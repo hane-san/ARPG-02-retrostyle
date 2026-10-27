@@ -1,3 +1,4 @@
+import {IMPERIAL_ZONES} from './journey-imperial.js';
 import {limitCamera} from './camera-limits.js';
 import {journeyScenicScene,JOURNEY_SCENIC_BEATS} from './journey-scenic.js';
 
@@ -9,6 +10,7 @@ export const JOURNEY_INTERIOR_ZOOM=1.35;
 export const JOURNEY_SPECIAL_WIDE_ZOOM=.6;
 export const JOURNEY_ZOOM_STAGES=Object.freeze([JOURNEY_INTERIOR_ZOOM,JOURNEY_DEFAULT_ZOOM,JOURNEY_SPECIAL_WIDE_ZOOM]);
 export const JOURNEY_CAMERA_PROFILES=Object.freeze({
+ ...Object.fromEntries(IMPERIAL_ZONES.map(z=>[z.id,JOURNEY_DEFAULT_ZOOM])),
  'journey-interior':JOURNEY_INTERIOR_ZOOM,
  'journey-scenic-wide':JOURNEY_SPECIAL_WIDE_ZOOM,
  // All outdoor regions, buildings, ruins and ordinary scenic beats are steady.

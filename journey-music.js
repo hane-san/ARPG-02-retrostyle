@@ -1,7 +1,15 @@
+import {IMPERIAL_SCORE_START as I} from './music.js';
 // Each region has a small, intentional set of colours. Scores 0-33 are the original 68 pieces;
 // 34-37 are the melancholic drive tracks, 38-39 the uneasy ones and 40-41 the steppe travel
 // tracks added on 2026-10-22 for the open, empty-feeling regions.
 export const JOURNEY_PLAYLISTS={
+ 'journey-confluence':[`${I}:1`,'23:2','29:2'],
+ 'journey-blackreach':[`${I+1}:1`,`${I+1}:2`,'7:2'],
+ 'journey-empty-ridge':[`${I+2}:2`,'27:2','37:1'],
+ 'journey-imperial-remains':[`${I+2}:1`,`${I+2}:2`,'22:2'],
+ 'journey-living-water':[`${I}:1`,'23:1','9:1'],
+ 'journey-dry-water':[`${I}:2`,'27:1','38:2'],
+ 'journey-return-causeway':[`${I+2}:2`,'35:2','36:2'],
  'journey-port':['13:1','14:1','20:1'],
  'journey-steppe':['25:1','31:1','26:1','40:1','41:1'],
  'journey-tea':['30:1','30:2','31:1'],
@@ -26,6 +34,10 @@ export const JOURNEY_PLAYLISTS={
 export function pickJourneyTrack(zone,previous,random=Math.random){
  const pool=JOURNEY_PLAYLISTS[zone];
  if(!pool)throw new Error('Unknown journey music region '+zone);
+ // These seven studies have an authored first colour: the paired water melody,
+ // stone, distant return motif, then the city in full. Later choices still vary.
+ if(['journey-confluence','journey-blackreach','journey-empty-ridge','journey-imperial-remains',
+  'journey-living-water','journey-dry-water','journey-return-causeway'].includes(zone)&&previous!==pool[0])return pool[0];
  const choices=pool.filter(key=>key!==previous);
  return choices[Math.floor(Math.max(0,Math.min(.999999,random()))*choices.length)];
 }

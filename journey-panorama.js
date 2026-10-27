@@ -1,3 +1,4 @@
+import {drawImperialVista,IMPERIAL_VISTA_KINDS} from './journey-imperial-art.js';
 // A small original landscape painting, revealed only when the traveller stops.
 import {drawExpansionVista,EXPANSION_VISTA_KINDS} from './journey-expansion-vistas.js';
 import {drawRuinsVista,RUINS_VISTA_KINDS} from './journey-ruins-vistas.js';
@@ -257,6 +258,7 @@ function waterLight(c,kind,time){
 }
 
 export function drawJourneyPanorama(canvas,kind,time=0){
+ if(IMPERIAL_VISTA_KINDS.has(kind)){drawImperialVista(canvas,kind,time);return;}
  if(RUINS_VISTA_KINDS.has(kind)){drawRuinsVista(canvas,kind,time);return;}
  if(EXPANSION_VISTA_KINDS.has(kind)){drawExpansionVista(canvas,kind,time);return;}
  kind=Object.hasOwn(palettes,kind)?kind:'steppe';

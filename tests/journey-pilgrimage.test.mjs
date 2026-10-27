@@ -1,3 +1,4 @@
+import {IMPERIAL_SITES,IMPERIAL_NPCS,IMPERIAL_VISTAS} from '../journey-imperial.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {makeJourneyWorld,JOURNEY_SITES,JOURNEY_NPCS,JOURNEY_VISTAS} from '../journey-world.js';
@@ -25,13 +26,13 @@ function reachable(world){
 }
 test('pilgrimage demo is rich but preserves all original journeys',()=>{
  const w=makeJourneyWorld();
- assert.equal(w.w,176);assert.equal(w.h,136);
- assert.equal(JOURNEY_SITES.filter(s=>!RUINS_SITES.includes(s)&&!SPICE_SITES.includes(s)).length,35,'original 35 sites survive');
- assert.equal(JOURNEY_SITES.length,35+RUINS_SITES.length+SPICE_SITES.length,'ruins and owner-added art pieces are additive');
- assert.equal(JOURNEY_NPCS.length,27+GROK_VILLAGERS.length+RUINS_NPCS.length+SPICE_NPCS.length,'retain 27 former NPCs, all 90 villagers and every added passer-by');
+ assert.equal(w.w,320);assert.equal(w.h,192);
+ assert.equal(JOURNEY_SITES.filter(s=>!RUINS_SITES.includes(s)&&!SPICE_SITES.includes(s)&&!IMPERIAL_SITES.includes(s)).length,35,'original 35 sites survive');
+ assert.equal(JOURNEY_SITES.length,35+RUINS_SITES.length+SPICE_SITES.length+IMPERIAL_SITES.length,'ruins and owner-added art pieces are additive');
+ assert.equal(JOURNEY_NPCS.length,27+GROK_VILLAGERS.length+RUINS_NPCS.length+SPICE_NPCS.length+IMPERIAL_NPCS.length,'retain 27 former NPCs, all 90 villagers and every added passer-by');
  assert.equal(GROK_VILLAGERS.length,90);
- assert.equal(JOURNEY_VISTAS.filter(v=>!RUINS_VISTAS.includes(v)&&!JOURNEY_SCENIC_VISTAS.includes(v)&&!DISTANT_VISTAS.includes(v)).length,16,'all 16 earlier vistas survive');
- assert.equal(JOURNEY_VISTAS.length,16+RUINS_VISTAS.length+JOURNEY_SCENIC_VISTAS.length+DISTANT_VISTAS.length,'ruins, scenic and distant viewpoints are additive');
+ assert.equal(JOURNEY_VISTAS.filter(v=>!RUINS_VISTAS.includes(v)&&!JOURNEY_SCENIC_VISTAS.includes(v)&&!DISTANT_VISTAS.includes(v)&&!IMPERIAL_VISTAS.includes(v)).length,16,'all 16 earlier vistas survive');
+ assert.equal(JOURNEY_VISTAS.length,16+RUINS_VISTAS.length+JOURNEY_SCENIC_VISTAS.length+DISTANT_VISTAS.length+IMPERIAL_VISTAS.length,'ruins, scenic and distant viewpoints are additive');
  assert.equal(JOURNEY_SCENIC_VISTAS.length,6);
  for(const items of [JOURNEY_SITES,JOURNEY_NPCS,JOURNEY_VISTAS])
   assert.equal(new Set(items.map(item=>item.id)).size,items.length,'unique landmark ids');

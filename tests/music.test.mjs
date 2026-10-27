@@ -1,3 +1,4 @@
+import {IMPERIAL_SCORES} from '../imperial-music.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {MUSIC_LIBRARY,ORIGINAL_SCORE_COUNT,buildTrack} from '../music.js';
@@ -17,7 +18,7 @@ test('six battle scores, seven legacy bonus scores, 12 new exploration scores',(
  assert.equal(ORIGINAL_SCORE_COUNT*2,68);
  // The original 68 pieces keep their numbers; tracks added on 2026-10-22 append after them.
  assert.deepEqual(MUSIC_LIBRARY.slice(0,ORIGINAL_SCORE_COUNT),[...SCORES,...BONUS_SCORES,...EXTRA_SCORES,...SILK_SCORES]);
- assert.deepEqual(MUSIC_LIBRARY.slice(ORIGINAL_SCORE_COUNT),[...GROK_SCORES,...UNEASY_SCORES,...STEPPE_SCORES]);
+ assert.deepEqual(MUSIC_LIBRARY.slice(ORIGINAL_SCORE_COUNT),[...GROK_SCORES,...UNEASY_SCORES,...STEPPE_SCORES,...IMPERIAL_SCORES]);
 });
 test('the 68 original pieces and every later addition have unique titles and valid timings',()=>{
  const titles=new Set();

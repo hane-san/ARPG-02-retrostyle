@@ -16,7 +16,7 @@ test('dense scenery decorates the existing country without changing tiles or col
   assert.ok(p.x>=0&&p.x<world.w&&p.y>=0&&p.y<world.h,p.id);
   assert.ok(['number','undefined'].includes(typeof p.variant),p.id);
  }
- assert.equal(world.w,176);assert.equal(world.h,136);
+ assert.equal(world.w,320);assert.equal(world.h,192);
  assert.equal(world.tileAt(81,52),'L');
  assert.equal(world.walkable(81,52),false);
  assert.ok(world.walkable(19,70));

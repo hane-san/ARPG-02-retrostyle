@@ -1,3 +1,5 @@
+import {imperialResponse,imperialPhase,createImperialListening,imperialWalkableFloor} from './journey-imperial.js';
+import {drawImperialOutlook} from './journey-imperial-art.js';
 import {W as TIDAL_W,H as TIDAL_H,TILE,ZONES as TIDAL_ZONES,SITES as TIDAL_SITES,NPCS as TIDAL_NPCS,BRIDGES as TIDAL_BRIDGES,START,makeWorld,findPath,nearestWalkable,routeWalk} from './world.js';
 import {SILK_W,SILK_H,SILK_ZONES,SILK_SITES,SILK_NPCS,SILK_BRIDGES,makeSilkWorld,silkPath} from './silk-world.js';
 import {drawSilkTile,drawSilkSite,SILK_PALETTE} from './silk-art.js';
@@ -52,6 +54,8 @@ const CLASSIC_WALK_SPEED=6.15;
 const journeyCamera=JOURNEY_MODE?createJourneyCamera():null;
 const camera={x:(spawn.x+.5)*TILE,y:(spawn.y+.5)*TILE,zoom:journeyCamera?.target||1.25};
 const journeyMusic=JOURNEY_MODE?createJourneyMusicDirector():null;
+const imperialListening=JOURNEY_MODE?createImperialListening():null;
+let imperialQuiet=false;
 const journeyView=JOURNEY_MODE?createJourneyView(stage,world):null;
 let panTarget=null;
 let screen={w:1,h:1,dpr:1},last=0,zoneId='',noticeTimer=0,dialogue=null,readingPress=null;
@@ -465,8 +469,8 @@ function paint(t){
   rect(ctx,px,py+Math.sin(t*.0008+x)*3,24,2,'#98c2c3a0');
  }
  const objects=[];
- for(const s of SITES)if(s.x<=right+3&&s.x+s.w>=left-3&&s.y<=bottom+3&&s.y+s.h>=top-3)
-  objects.push({y:s.y+s.h,render:()=>drawSite(ctx,s,t)});
+ for(const s of SITES)if(s.x<=right+3&&s.x+s.w>=left-3&&s.y-(s.artTop||0)<=bottom+3&&s.y+s.h>=top-3)
+  objects.push({y:imperialWalkableFloor(world,s,{x:hero.x,y:hero.y})?hero.py-.1:s.y+s.h,render:()=>drawSite(ctx,s,t)});
  for(const n of NPCS)if(n.x>=left-1&&n.x<=right+1&&n.y>=top-1&&n.y<=bottom+1)
   objects.push({y:n.y+.5,render:()=>drawNpc(ctx,n,t)});
  objects.push({y:hero.py+.7,render:()=>drawHero(ctx,t)});
@@ -476,6 +480,7 @@ function paint(t){
  const vignette=ctx.createRadialGradient(screen.w*.5,screen.h*.48,screen.h*.2,screen.w*.5,screen.h*.5,Math.max(screen.w,screen.h)*.75);
  vignette.addColorStop(0,'#0c233000');vignette.addColorStop(1,'#10203355');
  ctx.fillStyle=vignette;ctx.fillRect(0,0,screen.w,screen.h);
+ if(JOURNEY_MODE)drawImperialOutlook(ctx,{x:hero.px,y:hero.py},screen.w,screen.h);
 }
 function screenToWorld(clientX,clientY){
  const r=canvas.getBoundingClientRect(),sx=clientX-r.left,sy=clientY-r.top;
@@ -500,8 +505,11 @@ function updateDiscoveries(){
 }
 function updateJourneyMusic(now){
  if(!journeyMusic)return;
+ const quiet=imperialListening.update(hero.px,hero.py),quietChanged=quiet!==imperialQuiet;
+ imperialQuiet=quiet;
  const accepted=journeyMusic.update(world.zoneAt(hero.x,hero.y).id,now);
  if(accepted){$('trackSelect').value=pickJourneyTrack(accepted,$('trackSelect').value);applyTrack();}
+ else if(quietChanged)applyTrack();
 }
 function switchWorld(id,spawn){
  if(JOURNEY_MODE||PROTOTYPE_MODE)return;
@@ -542,7 +550,8 @@ function onArrive(){
   const fresh=!isCurio(obj.item)&&!discovered.has(obj.item.id);
   if(fresh){discovered.add(obj.item.id);updateDiscoveries();sfx.play('heal');}
   if(JOURNEY_MODE){
-   const response=activateRuinsDevice(obj.item);
+   const response=imperialResponse(obj.item)||activateRuinsDevice(obj.item);
+   if(response&&obj.item.kind==='imperial'&&!(obj.item.form==='sealed'&&imperialPhase(obj.item.id)%2===0))sfx.respond(obj.item.form);
    openDialogue(obj.item.name,'この場所で',[obj.item.desc,response,obj.item.aside]);return;
   }
   openDialogue(obj.item.name,'DISCOVERED PLACE',[
@@ -588,6 +597,7 @@ function handleTap(e){
   if(npc){walkToNpc(npc);return;}
  }
  const site=world.siteAt(p.x,p.y);
+ if(imperialWalkableFloor(world,site,p)){startWalk(p);return;}
  if(site){startWalk(site.entrance,{kind:'site',item:site});return;}
  const bridge=world.bridgeAt(p.x,p.y);
  // Either Starwind bridge, including the one beside the spawn, leads across.
@@ -892,7 +902,12 @@ function drawMinimap(){
  c.strokeStyle='#244658';c.lineWidth=2;c.stroke();
 }
 mini.addEventListener('click',e=>{
- const r=mini.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
+ const r=mini.getBoundingClientRect();
+ // At subpixel tile sizes, integer mouse coordinates denote a whole CSS pixel.
+ // Use its centre rather than systematically choosing the upper-left neighbour.
+ const ox=JOURNEY_MODE&&r.width<W&&Number.isInteger(e.clientX)?.5:0;
+ const oy=JOURNEY_MODE&&r.height<H&&Number.isInteger(e.clientY)?.5:0;
+ const x=(e.clientX+ox-r.left)/r.width*W,y=(e.clientY+oy-r.top)/r.height*H;
  if(JOURNEY_MODE){
   const site=world.siteAt(Math.floor(x),Math.floor(y));
   if(site){closePanels();startWalk(site.entrance,{kind:'site',item:site},'map');return;}
@@ -939,8 +954,8 @@ trackSelect.value=chosen;
 function chosenTrack(){const parts=trackSelect.value.split(':').map(Number);return {id:parts[0],phase:parts[1]};}
 function applyTrack(){
  const p=chosenTrack();saveTrack();
- if(music.enabled){music.setScene(p.id,p.phase);music.unlock();}
- $('nowPlaying').textContent=music.enabled?'再生中：'+MUSIC_LIBRARY[p.id][p.phase===1?'ally':'hostile'].title:'音楽は停止中';
+ if(music.enabled){music.setScene(p.id,p.phase,imperialQuiet?'quiet':'playing');music.unlock();}
+ $('nowPlaying').textContent=music.enabled?(imperialQuiet?'この場所では、音楽が静まります':'再生中：'+MUSIC_LIBRARY[p.id][p.phase===1?'ally':'hostile'].title):'音楽は停止中';
 }
 function syncMusic(){
  $('musicToggle').textContent=music.enabled?'ON':'OFF';
