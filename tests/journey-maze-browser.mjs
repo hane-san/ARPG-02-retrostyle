@@ -25,10 +25,9 @@ export async function checkMazeTrial(browser,origin){
   // Use the unmodified atlas walk to reach the same authored maze entry.
   await page.locator('#mapBtn').click();
   const map=page.locator('#miniMap'),size=await map.boundingBox();
-  // Locator positions start at the padding box; game's conversion includes
-  // the border box, so account for the visible atlas border at small widths.
-  const border=await map.evaluate(c=>({x:parseFloat(getComputedStyle(c).borderLeftWidth)||0,y:parseFloat(getComputedStyle(c).borderTopWidth)||0}));
-  await map.click({position:{x:17.5/JOURNEY_W*size.width-border.x,y:102.5/JOURNEY_H*size.height-border.y}});
+  // Raw mouse coordinates retain fractional CSS pixels on the expanded atlas.
+  // Locator.click rounds its offset, which can select an adjacent tile at 320px.
+  await page.mouse.click(size.x+17.5/JOURNEY_W*size.width,size.y+102.5/JOURNEY_H*size.height);
   await page.waitForFunction(()=>document.querySelector('#worldCanvas').getAttribute('aria-busy')==='true');
   const settle=()=>page.waitForFunction(()=>document.querySelector('#worldCanvas').getAttribute('aria-busy')==='false',null,{timeout:40000});
   await settle();
