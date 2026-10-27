@@ -25,7 +25,7 @@ export function createJourneyView(stage,world){
  button.addEventListener('click',()=>{
   if(!nearby)return;
   title.textContent=nearby.title;caption.textContent=nearby.sub;
-  canvas.setAttribute('aria-label',nearby.kind==='sky-edge'?'崖の向こうにほとんど空だけが広がる。遥か彼方に小さな山並みがあり、崖の端にひとりの旅人が立っている。':nearby.kind==='sunset'?'大きな夕日と遠い山並み、湖の光、小さな旅人。':nearby.title+'。遠い山と草原、名のない石、小さな旅人。');
+  canvas.setAttribute('aria-label',nearby.kind==='sky-edge'?'崖の向こうにほとんど空だけが広がる。遥か彼方に小さな山並みがあり、崖の端にひとりの旅人が立っている。':nearby.kind==='sunset'?'大きな夕日と遠い山並み、湖の光、小さな旅人。':nearby.kind.startsWith('imperial-')?nearby.title+'。'+nearby.sub:nearby.title+'。遠い山と草原、名のない石、小さな旅人。');
   viewTime=0;lastFrame=performance.now();card.hidden=false;redraw();
   button.setAttribute('aria-expanded','true');close.focus();
  });

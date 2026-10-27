@@ -1,3 +1,4 @@
+import {JOURNEY_W,JOURNEY_H,JOURNEY_ZONES} from '../journey-world.js';
 // Real-time UI walks, with no teleport, frame acceleration, or production debug
 // hook. The visible atlas marker provides the final position for assertions.
 import assert from 'node:assert/strict';
@@ -108,7 +109,7 @@ export async function checkJourney(page,origin){
 
 
  async function mapPosition(){
-  return page.locator('#miniMap').evaluate(canvas=>{
+  return page.locator('#miniMap').evaluate((canvas,{w,h})=>{
    const c=canvas.getContext('2d'),{data}=c.getImageData(0,0,canvas.width,canvas.height);
    let minX=Infinity,minY=Infinity,maxX=-1,maxY=-1;
    for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++){
@@ -118,8 +119,8 @@ export async function checkJourney(page,origin){
     }
    }
    if(maxX<0)throw Error('Visible explorer marker missing from atlas');
-   return {x:(minX+maxX)/2/canvas.width*176-.5,y:(minY+maxY)/2/canvas.height*136-.5};
-  });
+   return {x:(minX+maxX)/2/canvas.width*w-.5,y:(minY+maxY)/2/canvas.height*h-.5};
+  },{w:JOURNEY_W,h:JOURNEY_H});
  }
  // 自分へ glides back instead of jumping; taps relative to the centre wait until it rests.
  async function returnHome(){
@@ -133,7 +134,7 @@ export async function checkJourney(page,origin){
  async function mapClick(x,y){
   await page.locator('#mapBtn').click();
   const box=await page.locator('#miniMap').boundingBox();
-  await page.mouse.click(box.x+(x+.72)/176*box.width,box.y+(y+.72)/136*box.height);
+  await page.mouse.click(box.x+(x+.72)/JOURNEY_W*box.width,box.y+(y+.72)/JOURNEY_H*box.height);
  }
  async function walk(x,y,{name=null,arrival=null,shot=null}={}){
   await mapClick(x,y);
@@ -155,7 +156,7 @@ export async function checkJourney(page,origin){
  }
 
  await page.locator('#mapBtn').click();
- assert.equal(await page.locator('#zoneList button').count(),14+RUINS_ZONES.length);
+ assert.equal(await page.locator('#zoneList button').count(),JOURNEY_ZONES.length);
  const start=await mapPosition();assert.ok(Math.hypot(start.x-19,start.y-70)<1,'new-world spawn');
  await page.screenshot({path:'test-results/journey-atlas.png'});
  await page.locator('#mapPanel [data-close]').click();

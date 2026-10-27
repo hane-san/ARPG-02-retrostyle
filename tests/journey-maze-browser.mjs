@@ -1,3 +1,4 @@
+import {JOURNEY_W,JOURNEY_H} from '../journey-world.js';
 import assert from 'node:assert/strict';
 
 // Observe the existing atlas marker and painted camera; no production debug API.
@@ -6,16 +7,16 @@ export async function checkMazeTrial(browser,origin){
  for(const [width,height] of [[320,568],[390,844],[844,390]])for(const mode of ['A','B']){
   const context=await browser.newContext({viewport:{width,height},isMobile:true,hasTouch:true});
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.addInitScript(()=>{
+  await page.addInitScript(({w,h})=>{
    const arc=CanvasRenderingContext2D.prototype.arc,scale=CanvasRenderingContext2D.prototype.scale,translate=CanvasRenderingContext2D.prototype.translate;
    let cameraNext=false;
    CanvasRenderingContext2D.prototype.arc=function(x,y,r,...rest){
-    if(this.canvas.id==='miniMap'&&r===6&&this.fillStyle==='#fae5a1')window.mazeMarker={x:x/this.canvas.width*176-.5,y:y/this.canvas.height*136-.5};
+    if(this.canvas.id==='miniMap'&&r===6&&this.fillStyle==='#fae5a1')window.mazeMarker={x:x/this.canvas.width*w-.5,y:y/this.canvas.height*h-.5};
     return arc.call(this,x,y,r,...rest);
    };
    CanvasRenderingContext2D.prototype.scale=function(x,y){if(this.canvas.id==='worldCanvas'){window.mazeZoom=x;cameraNext=true;}return scale.call(this,x,y);};
    CanvasRenderingContext2D.prototype.translate=function(x,y){if(cameraNext&&this.canvas.id==='worldCanvas'){window.mazeCamera={x:-x,y:-y};cameraNext=false;}return translate.call(this,x,y);};
-  });
+  },{w:JOURNEY_W,h:JOURNEY_H});
   await page.goto(origin+(mode==='B'?'/?maze=turns':'/'));
   await page.waitForFunction(()=>document.querySelector('#zoneName')?.textContent==='白い船着場');
   await page.locator('#helpBtn').click();
@@ -27,7 +28,7 @@ export async function checkMazeTrial(browser,origin){
   // Locator positions start at the padding box; game's conversion includes
   // the border box, so account for the visible atlas border at small widths.
   const border=await map.evaluate(c=>({x:parseFloat(getComputedStyle(c).borderLeftWidth)||0,y:parseFloat(getComputedStyle(c).borderTopWidth)||0}));
-  await map.click({position:{x:17.5/176*size.width-border.x,y:102.5/136*size.height-border.y}});
+  await map.click({position:{x:17.5/JOURNEY_W*size.width-border.x,y:102.5/JOURNEY_H*size.height-border.y}});
   await page.waitForFunction(()=>document.querySelector('#worldCanvas').getAttribute('aria-busy')==='true');
   const settle=()=>page.waitForFunction(()=>document.querySelector('#worldCanvas').getAttribute('aria-busy')==='false',null,{timeout:40000});
   await settle();

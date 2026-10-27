@@ -27,7 +27,7 @@ test('overlapping places share two sources and a bounded total gain',()=>{
 });
 test('12 new curios and all 13 sound approaches are reachable without water or overlaps',()=>{
  const w=makeJourneyWorld(),sources=journeySoundSources(w.sites);
- assert.equal(JOURNEY_CURIOS.length,12);assert.equal(sources.length,13);
+ assert.equal(JOURNEY_CURIOS.length,12);assert.equal(sources.filter(s=>!s.id.startsWith('journey-imperial-')).length,13);
  assert.equal(new Set(JOURNEY_CURIOS.map(s=>w.zoneAt(s.entrance.x,s.entrance.y).id)).size,12);
  const inside=(s,p)=>p.x>=s.x&&p.x<s.x+s.w&&p.y>=s.y&&p.y<s.y+s.h;
  for(const s of JOURNEY_CURIOS){

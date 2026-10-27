@@ -1,3 +1,4 @@
+import {imperialResponse} from './journey-imperial.js';
 import {W as TIDAL_W,H as TIDAL_H,TILE,ZONES as TIDAL_ZONES,SITES as TIDAL_SITES,NPCS as TIDAL_NPCS,BRIDGES as TIDAL_BRIDGES,START,makeWorld,findPath,nearestWalkable,routeWalk} from './world.js';
 import {SILK_W,SILK_H,SILK_ZONES,SILK_SITES,SILK_NPCS,SILK_BRIDGES,makeSilkWorld,silkPath} from './silk-world.js';
 import {drawSilkTile,drawSilkSite,SILK_PALETTE} from './silk-art.js';
@@ -541,7 +542,7 @@ function onArrive(){
   const fresh=!isCurio(obj.item)&&!discovered.has(obj.item.id);
   if(fresh){discovered.add(obj.item.id);updateDiscoveries();sfx.play('heal');}
   if(JOURNEY_MODE){
-   const response=activateRuinsDevice(obj.item);
+   const response=imperialResponse(obj.item)||activateRuinsDevice(obj.item);
    openDialogue(obj.item.name,'この場所で',[obj.item.desc,response,obj.item.aside]);return;
   }
   openDialogue(obj.item.name,'DISCOVERED PLACE',[

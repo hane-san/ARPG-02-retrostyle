@@ -1,3 +1,4 @@
+import {IMPERIAL_W,IMPERIAL_H,IMPERIAL_ZONES,IMPERIAL_SITES,IMPERIAL_NPCS,IMPERIAL_VISTAS,IMPERIAL_BLOCKED,paintImperialLand,paintImperialRoads,imperialZoneAt} from './journey-imperial.js';
 // A newly drawn, opt-in walking country. No coordinates are cropped from either
 // original world. The existing mainland A* already indexes by world.w / world.h.
 import {silkPath} from './silk-world.js';
@@ -12,8 +13,8 @@ import {STEPPE_MOBS,STEPPE_OBJECTS} from './steppe-asia.js';
 import {RUINS_ZONES,RUINS_SITES,RUINS_NPCS,RUINS_VISTAS,paintJourneyRuins,paintJourneyRuinsRoads,ruinsZoneAt} from './journey-ruins.js';
 
 // Tiles nobody walks on: sea, lake, shallows, rock, river, sky edge and ruin walls.
-export const JOURNEY_BLOCKED=new Set(['~','L','l','X','W','Y','V','R','M','U']);
-export const JOURNEY_W=176,JOURNEY_H=136;
+export const JOURNEY_BLOCKED=new Set(['~','L','l','X','W','Y','V','R','M','U',...IMPERIAL_BLOCKED]);
+export const JOURNEY_W=IMPERIAL_W,JOURNEY_H=IMPERIAL_H;
 export const STEPPE={x:36,y:38,r:24.5,roadRadius:22.2};
 export const JOURNEY_START={x:19,y:70};
 export const JOURNEY_ZONES=[
@@ -555,6 +556,10 @@ JOURNEY_SITES.push(...JOURNEY_CURIOS);
 JOURNEY_NPCS.push(...WEIRD_MOBS,...UNEASY_MOBS,...STEPPE_MOBS);
 JOURNEY_VISTAS.push(...DISTANT_VISTAS);
 JOURNEY_VISTAS.push(...JOURNEY_SCENIC_VISTAS);
+JOURNEY_ZONES.push(...IMPERIAL_ZONES);
+JOURNEY_SITES.push(...IMPERIAL_SITES);
+JOURNEY_NPCS.push(...IMPERIAL_NPCS);
+JOURNEY_VISTAS.push(...IMPERIAL_VISTAS);
 
 const distance=(x,y,[ax,ay],[bx,by])=>{
  const dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1)));
@@ -604,6 +609,7 @@ export function makeJourneyWorld(){
  // Add new eastern land beyond the old coordinate rectangle.
  paintJourneyExpansion(tiles,set);
   paintJourneyRuins(tiles,set);
+ paintImperialLand(tiles,set);
  // The circular path is a choice of directions, not a forced tour itinerary.
  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
   if(Math.abs(Math.hypot(x-STEPPE.x,y-STEPPE.y)-STEPPE.roadRadius)<.8)set(x,y,'=');
@@ -620,13 +626,14 @@ export function makeJourneyWorld(){
  }
  paintJourneyExpansionRoads(tiles,set);
   paintJourneyRuinsRoads(tiles,set);
+ paintImperialRoads(tiles,set);
  for(const b of JOURNEY_BRIDGES)for(let y=b.y1;y<=b.y2;y++)for(let x=b.x1;x<=b.x2;x++)set(x,y,'+');
  for(const s of JOURNEY_SITES){
   for(let y=s.y;y<s.y+s.h;y++)for(let x=s.x;x<s.x+s.w;x++){
-   if(s.blocking!==false)occupied[y*w+x]=1;
+   if(s.blocking!==false||s.solid?.some(r=>x>=s.x+r.x&&x<s.x+r.x+r.w&&y>=s.y+r.y&&y<s.y+r.y+r.h))occupied[y*w+x]=1;
     if(s.kind==='ruins')set(x,y,ruinsZoneAt(x,y)==='drowned'?'C':'F');
    // Relics, expansion pieces and art are drawn where they stand; they never pave water or rock.
-   if(s.kind!=='relic'&&s.kind!=='expansion'&&s.kind!=='art'&&['~','L','X'].includes(tiles[y][x]))set(x,y,s.kind==='monolith'?'h':s.kind==='shipwreck'?'S':'p');
+   if(s.kind!=='imperial'&&s.kind!=='relic'&&s.kind!=='expansion'&&s.kind!=='art'&&['~','L','X'].includes(tiles[y][x]))set(x,y,s.kind==='monolith'?'h':s.kind==='shipwreck'?'S':'p');
   }
   // Issue #59: an entrance is a doorstep, never a way to pave water, cliffs or ruin walls.
   occupied[s.entrance.y*w+s.entrance.x]=0;
@@ -681,6 +688,7 @@ export function makeJourneyWorld(){
   transitionAt(){return undefined;},
   findPath:silkPath,
   zoneAt(x,y){
+   const imperial=imperialZoneAt(x,y);if(imperial)return byId(imperial);
    if(y>=88&&x<112)return byId(ruinsZoneAt(x,y));
     if(x>=112||y>=88)return byId(extensionZoneAt(x,y));
    if(x<30&&y>=64)return byId('port');

@@ -72,7 +72,7 @@ test('a person or art piece placed on the lake never turns the water into a walk
 // places stay quiet, uneasy echoes stay in the black-stone corridor and places never blur together.
 test('proximity sounds sit on reachable dry ground, apart, and leave the quiet places quiet',()=>{
  const sources=journeySoundSources(world.sites),zone=s=>world.zoneAt(s.x,s.y).id;
- assert.ok(sources.length>=10&&sources.length<=16,'10-16 places make a sound');
+ assert.ok(sources.filter(s=>!s.id.startsWith('journey-imperial-')).length===13,'the original 13 sound sources are preserved');
  for(const s of sources){
   assert.ok(reachable(s),s.id+' sound cannot be approached');
   assert.ok(!wet(world.tileAt(s.x,s.y)),s.id+' sound stands on water or rock');
@@ -82,7 +82,7 @@ test('proximity sounds sit on reachable dry ground, apart, and leave the quiet p
  }
  assert.equal(new Set(sources.map(s=>s.id)).size,sources.length);
  for(const quiet of ['journey-sky-edge','journey-lake'])assert.ok(!sources.some(s=>zone(s)===quiet),quiet+' keeps its silence');
- assert.ok(sources.filter(s=>s.kind==='echo').every(s=>zone(s)==='journey-void'),'uneasy echoes only in the black-stone corridor');
+ assert.ok(sources.filter(s=>s.kind==='echo').every(s=>['journey-void','journey-blackreach'].includes(zone(s))),'uneasy echoes stay in the black-stone regions');
  for(const kind of ['kettle','wood','creak','bell','echo'])assert.ok(sources.some(s=>s.kind===kind),kind+' place is audible');
 });
 
