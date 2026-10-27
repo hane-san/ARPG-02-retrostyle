@@ -200,5 +200,5 @@ export function createImperialListening(){
 }
 
 export function imperialWalkableFloor(world,site,point){
- return site?.kind==='imperial'&&site.blocking===false&&['confluence','receiving-wet','receiving-dry'].includes(site.form)&&world.walkable(point.x,point.y);
+ return site?.kind==='imperial'&&point.x>=site.x&&point.x<site.x+site.w&&point.y>=site.y&&point.y<site.y+site.h&&site.blocking===false&&['confluence','receiving-wet','receiving-dry'].includes(site.form)&&world.walkable(point.x,point.y);
 }

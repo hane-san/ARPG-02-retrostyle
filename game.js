@@ -469,7 +469,7 @@ function paint(t){
  }
  const objects=[];
  for(const s of SITES)if(s.x<=right+3&&s.x+s.w>=left-3&&s.y-(s.artTop||0)<=bottom+3&&s.y+s.h>=top-3)
-  objects.push({y:s.y+s.h,render:()=>drawSite(ctx,s,t)});
+  objects.push({y:imperialWalkableFloor(world,s,{x:hero.x,y:hero.y})?hero.py-.1:s.y+s.h,render:()=>drawSite(ctx,s,t)});
  for(const n of NPCS)if(n.x>=left-1&&n.x<=right+1&&n.y>=top-1&&n.y<=bottom+1)
   objects.push({y:n.y+.5,render:()=>drawNpc(ctx,n,t)});
  objects.push({y:hero.py+.7,render:()=>drawHero(ctx,t)});

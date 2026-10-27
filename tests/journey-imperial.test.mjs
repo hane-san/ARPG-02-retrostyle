@@ -123,5 +123,6 @@ test('touching an open temple floor means walking, while pillars and sealed wall
  const w=makeJourneyWorld(),wet=IMPERIAL_SITES.find(s=>s.form==='receiving-wet');
  assert.equal(imperialWalkableFloor(w,wet,{x:222,y:129}),true);
  assert.equal(imperialWalkableFloor(w,wet,{x:218,y:129}),false);
+ assert.equal(imperialWalkableFloor(w,wet,{x:19,y:70}),false,'unrelated ground is outside this floor');
  assert.equal(imperialWalkableFloor(w,IMPERIAL_SITES.find(s=>s.form==='sealed'),{x:253,y:65}),false);
 });
