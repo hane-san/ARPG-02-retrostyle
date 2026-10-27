@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {makeJourneyWorld} from '../journey-world.js';
-import {IMPERIAL_SITES,IMPERIAL_NPCS,IMPERIAL_VISTAS,IMPERIAL_ZONES,IMPERIAL_BLOCKED,imperialResponse,imperialPhase,basinChannel} from '../journey-imperial.js';
+import {IMPERIAL_SITES,IMPERIAL_NPCS,IMPERIAL_VISTAS,IMPERIAL_ZONES,IMPERIAL_BLOCKED,imperialResponse,imperialPhase,basinChannel,imperialWalkableFloor,imperialOutlook,createImperialListening} from '../journey-imperial.js';
 import {IMPERIAL_VISTA_KINDS} from '../journey-imperial-art.js';
-import {JOURNEY_PLAYLISTS} from '../journey-music.js';
+import {JOURNEY_PLAYLISTS,pickJourneyTrack,createJourneyMusicDirector} from '../journey-music.js';
 import {journeySoundSources} from '../journey-curios.js';
 import {MUSIC_LIBRARY,buildTrack} from '../music.js';
 import {journeyCameraScene,JOURNEY_CAMERA_PROFILES} from '../journey-camera.js';
@@ -36,7 +36,7 @@ test('paired temple plans preserve corresponding shapes while water hides only o
  for(let dy=-16;dy<=15;dy++)for(let dx=-10;dx<=10;dx++)if(basinChannel(dx,dy)){
   const a=w.tileAt(222+dx,127+dy),b=w.tileAt(262+dx,127+dy);
   if(a==='study-water'){visibleWater++;assert.equal(w.walkable(222+dx,127+dy),false);}
-  if(b==='study-silt')dryBed++;
+  if(b==='study-channel'){dryBed++;assert.ok(w.walkable(262+dx,127+dy),'the exposed channel floor can be explored');};
  }
  assert.ok(visibleWater>120&&dryBed>120);
  for(const s of IMPERIAL_SITES)for(let y=s.y;y<s.y+s.h;y++)for(let x=s.x;x<s.x+s.w;x++)assert.notEqual(w.tileAt(x,y),'~',s.id+' offshore');
@@ -68,4 +68,60 @@ test('small investigative responses change only local art state, never terrain o
  const first=imperialResponse(s),next=imperialResponse(s);assert.notEqual(first,next);assert.ok(imperialPhase(s.id)>=2);
  assert.equal(imperialResponse(IMPERIAL_SITES.find(s=>s.form==='acropolis')),null);
  assert.equal(JSON.stringify(w.tiles),before);
+});
+
+test('temple walks enter open courts, cross water on bridges, and stop at the sealed wall',()=>{
+ const w=makeJourneyWorld();
+ for(const [x,y] of [[196,79],[222,129],[262,129]]){
+  assert.ok(w.walkable(x,y),'open interior '+[x,y]);
+  assert.ok(w.findPath(w,w.start,{x,y}));
+ }
+ assert.equal(w.walkable(253,65),false,'the closed building stays physically closed');
+ for(const cx of [222,262]){
+  assert.equal(w.walkable(cx-4,127),false,'a column row is not traversable');
+  const path=w.findPath(w,{x:cx,y:145},{x:cx,y:129});assert.ok(path);
+  if(cx===222)assert.ok(path.some(p=>w.tileAt(p.x,p.y)==='+'),'wet approach crosses a bridge');
+ }
+ assert.equal(w.walkable(252,115),true,'the exposed stair landing remains usable');
+});
+
+test('the ridge has a real folded pass and two distinct legal approaches to the city',()=>{
+ const w=makeJourneyWorld();
+ assert.equal(w.walkable(276,43),false,'ridge hides the northern shortcut');
+ assert.ok(w.walkable(276,57),'the folded ridge has a dry notch');
+ const from={x:269,y:43},to={x:289,y:71},path=w.findPath(w,from,to);
+ assert.ok(path.some(p=>p.x>=275&&p.x<=277&&p.y>=55&&p.y<=59),'the near approach passes the notch');
+ const south={...w,walkable:(x,y)=>w.walkable(x,y)&&!(x>=275&&x<=277&&y>=55&&y<=59)};
+ assert.ok(w.findPath(south,{x:262,y:145},to),'southern city approach stays open');
+});
+
+test('distant city glimpses grow at authored lookouts and disappear behind the ridge',()=>{
+ assert.ok(imperialOutlook(269,43).scale<imperialOutlook(273,57).scale);
+ assert.equal(imperialOutlook(253,68),null);
+ assert.equal(imperialOutlook(262,32),null);
+ assert.equal(imperialOutlook(276,43),null);
+});
+
+test('temple listening holds silence across its edge and resumes outside, without changing settings',()=>{
+ const d=createImperialListening();
+ assert.equal(d.update(253,76),false);
+ assert.equal(d.update(253,70),true);
+ assert.equal(d.update(253,73),true);
+ assert.equal(d.update(253,76),false);
+ const keys=['journey-living-water','journey-dry-water','journey-empty-ridge','journey-imperial-remains'];
+ const tracks=keys.map(k=>pickJourneyTrack(k,'0:1',()=>.999));
+ assert.deepEqual(tracks,keys.map(k=>JOURNEY_PLAYLISTS[k][0]));
+ assert.equal(tracks[0].split(':')[0],tracks[1].split(':')[0],'paired melody');
+ assert.notEqual(tracks[0],tracks[1],'different arrangement');
+ const music=createJourneyMusicDirector();
+ music.update(keys[0],0);assert.equal(music.update(keys[1],1000),null);
+ assert.equal(music.update(keys[1],11999),null);
+ assert.equal(music.update(keys[1],12000),keys[1],'no immediate border change or lost eventual change');
+});
+
+test('touching an open temple floor means walking, while pillars and sealed walls mean investigation',()=>{
+ const w=makeJourneyWorld(),wet=IMPERIAL_SITES.find(s=>s.form==='receiving-wet');
+ assert.equal(imperialWalkableFloor(w,wet,{x:222,y:129}),true);
+ assert.equal(imperialWalkableFloor(w,wet,{x:218,y:129}),false);
+ assert.equal(imperialWalkableFloor(w,IMPERIAL_SITES.find(s=>s.form==='sealed'),{x:253,y:65}),false);
 });

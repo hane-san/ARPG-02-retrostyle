@@ -26,32 +26,32 @@ export const IMPERIAL_SITES=[
  site('watercourt','合水の神殿','confluence',190,73,12,8,196,82,
   '三方から来た細い水路が、屋根のない庭で合わさる。縁の低い器には、両手を添える窪みがある。',
   '足台だけは新しい木だ。器の石は、足台よりずっと古い。',
-  {sound:'drip',responses:['水を一杯注ぐ。三つの溝のうち、低い方へ静かに流れた。','輪を一つ回す。流れは変わり、石の裏側から小さく音が返る。','手を離す。溝の端に残った一滴が、遅れて落ちた。']}),
+  {blocking:false,solid:[{x:0,y:0,w:1,h:8},{x:11,y:0,w:1,h:8},{x:1,y:0,w:9,h:3}],sound:'drip',responses:['水を一杯注ぐ。三つの溝のうち、低い方へ静かに流れた。','輪を一つ回す。流れは変わり、石の裏側から小さく音が返る。','手を離す。溝の端に残った一滴が、遅れて落ちた。']}),
  site('receiving-wet','水を受ける神殿','receiving-wet',217,124,10,8,222,133,
   '六本の柱と、左右に並ぶ浅い槽。水面には、柱の根元より上の模様まで映っている。',
-  '遠い東の庭にも、同じ数の柱が、同じ向きに並んでいるという。',
-  {sound:'drip',responses:['器を傾ける。細い水の筋が、左、右、中央の順に走る。','水が石の段を下りていく。戻ってきた音は、注いだ量より小さい。']}),
+  '槽の縁に三本の刻み。浅い溝は足洗い場へ、深い溝は畑へ続いている。',
+  {blocking:false,solid:[{x:1,y:1,w:1,h:6},{x:8,y:1,w:1,h:6}],sound:'drip',responses:['器を傾ける。細い水の筋が、左、右、中央の順に走る。','水が石の段を下りていく。戻ってきた音は、注いだ量より小さい。']}),
  site('receiving-dry','水を失った神殿','receiving-dry',257,124,10,8,262,133,
   '六本の柱と、左右に並ぶ浅い槽。水を受ける庭と同じ配置だが、底の段差まで歩いて見渡せる。',
-  '水面の下にあった部分ほど、磨かれて滑らかだ。',
-  {sound:'stone',responses:['空の器を傾ける。石の下で、乾いた小さなものが一つ転がった。','輪は同じ位置まで回る。溝の先には砂がある。水音は返らない。']}),
+  '槽の縁に三本の刻み。浅い溝の先は低い腰掛け、深い溝の先は、四角く区切られた砂地。',
+  {blocking:false,solid:[{x:1,y:1,w:1,h:6},{x:8,y:1,w:1,h:6}],sound:'stone',responses:['空の器を傾ける。石の下で、乾いた小さなものが一つ転がった。','輪は同じ位置まで回る。溝の先には砂がある。水音は返らない。']}),
  site('closed-temple','閉じた応答殿','sealed',248,58,10,9,253,68,
   '窓のない低い神殿。人が通る扉は見当たらない。外壁に、手を添える幅だけの細い溝がある。',
-  '飾りのような溝は、壁の向こう側へ続いている。',
-  {responses:['手を添えて離す。入口のない壁の内側から、一度だけ石の擦れる音がした。','もう一度待つ。今度は何も聞こえない。石は同じ温度のままだ。']}),
+  '壁の下に、一人ぶんの受け皿と、余った水の逃げ道。どちらもきれいに磨かれている。',
+  {responses:['手を添えて離す。壁の下の小さな受け皿へ、砂の混じらない水が一杯ぶん落ちた。','もう一度待つ。今度は何も聞こえない。石は同じ温度のままだ。']}),
  site('echo-court','巡音の石庭','echo-court',235,81,8,6,239,88,
   '低い石の環が四つ、重ならない間隔で置かれている。花も供物台もない。',
   '環の内側だけ、砂が細かく揃っている。風は外側にも吹いている。',
   {sound:'echo',responses:['小石で縁を打つ。近い環からではなく、奥の環から先に響いた。','同じ場所を打つ。同じ順序で、少しずつ短い音が返る。']}),
  site('black-pair','間のある二枚石','monolith',218,48,5,11,221,60,
   '二枚の黒い石のあいだに、細い空が残っている。片方の表面にだけ、乾いた水の跡がある。',
-  '離れて見ると、あいだの空の方が一枚の石に見える。',{sound:'echo'}),
+  '離れて見ると、あいだの空の方が一枚の石に見える。',{sound:'echo',artTop:5}),
  site('ridge-gauge','空槽の水尺','gauge',259,40,6,6,262,47,
   '尾根の上に、深い石槽と水位の刻みがある。水を汲んだ人のための段が、底まで続く。',
   '一番高い線には、指先が届かない。低い線にも誰かの傷がある。'),
  site('first-wall','帝都外郭の切れ目','gate',282,64,14,6,289,71,
   '大きな門の左右に、折れた壁が続く。飾りの帯と水尺の線が、同じ高さで途切れている。',
-  '遠くで細い線に見えたものは、門のいちばん上の縁だった。',{blocking:false,solid:[{x:0,y:0,w:5,h:6},{x:9,y:0,w:5,h:6}]}),
+  '遠くで細い線に見えたものは、門のいちばん上の縁だった。',{artTop:6,blocking:false,solid:[{x:0,y:0,w:5,h:6},{x:9,y:0,w:5,h:6}]}),
  site('acropolis','帝都の奥の高壇','acropolis',286,34,14,12,293,47,
   '幾重もの石段と、屋根を失った列柱。その奥に、まだ別の建物の輪郭が重なっている。',
   '誰がここを帝都と呼び始めたのか、街道の人も知らなかった。'),
@@ -78,18 +78,18 @@ export const IMPERIAL_SITES=[
   '旅人は手を洗い、山羊はその先の溝から水を飲む。',{sound:'drip',blocking:false}),
  site('capital-road','帝都を指す古い里程柱','marker',268,31,4,5,270,37,
   '文字は読めないが、柱の矢印は、山ではなく壁の切れ目に向いている。',
-  '裏面には、反対方向へ行く人のための小さな印。',{blocking:false}),
+  '裏面には、反対方向へ行く人のための小さな印。腰掛けから振り返ると、越えてきた黒い石が低く重なる。',{blocking:false}),
  site('little-game','輪を回す小さな台','wheel',195,111,5,4,198,116,
   '低い台に石の輪が一つ。小さな手でも回せる幅に、縁が丸く削られている。',
   '輪の先から伸びる溝は、地面の下へ消えている。',
-  {sound:'wood',blocking:false,responses:['輪が一つ回る。台の下で、小さな石が持ち上がって戻った。','同じ位置まで回す。同じ音がする。少し遠くの水音は変わらない。']}),
+  {sound:'wood',blocking:false,responses:['輪が一つ回る。台の下で、小さな石が持ち上がって戻った。','同じ位置まで回す。三つの小さな器に、同じだけ水が入る。幼い手の跡が縁に重なっている。']}),
  site('outer-bridge','古水道の横断橋','bridge',243,154,8,4,247,159,
   '橋の下には、もう川のない水路がある。橋を残したまま、横に新しい踏み跡ができている。',
   'どちらを通っても、帰り舟のない街道へ出る。',{blocking:false})
 ];
 const npc=(id,name,role,x,y,a,b)=>({id:'journey-imperial-'+id,name,role,x,y,color:'#c2b6a2',lines:[a,b]});
 export const IMPERIAL_NPCS=[
- npc('cup-child','器を洗う子','水路の子供',204,84,'下の畑へ行く水だから、砂を入れないでって。','でも落ち葉はいいんだって。落ち葉だけ、ずるい。'),
+ npc('cup-child','器を洗う子','水路の子供',204,84,'下の畑へ行く水だから、砂を入れないでって。','三つの器がいっぱいになると、お船を出すの。ちっちゃい頃から、ここの水は冷たかったよ。'),
  npc('channel-mender','溝を直す人','水路の職人',202,108,'石が減ったぶんだけ継ぎ足す。大きく直すと、流れが変わるからね。','昔の人も、何度も直しているよ。古い石の全部が最初の石じゃない。'),
  npc('reed-maker','籠を編む人','水庭の住人',227,145,'水は毎日来る。だから籠も毎日濡れる。干す場所が足りないよ。','東の庭の人とは、市で会う。あっちは砂が細かいんだ。'),
  npc('dry-reader','底石を写す人','干上がった庭の旅人',267,145,'向こうでは見えなかった溝が、ここでは全部見える。','同じ形だと思ったら、最後の分かれ目だけ少し違う。'),
@@ -110,7 +110,7 @@ export const IMPERIAL_VISTAS=[
 ];
 export const IMPERIAL_PALETTE={
  'study-meadow':'#a5b7a0','study-stone':'#c3c0ad','study-silt':'#d7cbb1',
- 'study-water':'#6b9999','study-cliff':'#7e8987','study-black':'#444b50','study-masonry':'#9e9a88'
+ 'study-channel':'#c2b496','study-water':'#6b9999','study-cliff':'#7e8987','study-black':'#444b50','study-masonry':'#9e9a88'
 };
 export const IMPERIAL_BLOCKED=['study-water','study-cliff','study-black','study-masonry'];
 const shore=[[183,65],[194,56],[197,39],[209,24],[234,19],[250,30],[266,19],[293,23],[309,42],[312,73],[301,92],[307,116],[299,144],[278,163],[246,178],[220,172],[205,156],[195,143],[192,113],[181,97]];
@@ -129,9 +129,16 @@ export function paintImperialLand(tiles,set){
   let tile=zone==='confluence'||zone==='living-water'?'study-meadow':zone==='blackreach'||zone==='imperial-remains'?'study-stone':'study-silt';
   if(zone==='empty-ridge'&&Math.abs(x-255-Math.sin(y*.12)*3)<2.5&&y>41&&y<81)tile='study-cliff';
   if(zone==='confluence'&&y>=76&&y<=112&&Math.abs(x-(205+2*Math.sin(y*.13)))<1.2)tile='study-water';
-  for(const [cx,wet] of [[222,true],[262,false]])if(basinChannel(x-cx,y-127))tile=wet?'study-water':'study-silt';
+  for(const [cx,wet] of [[222,true],[262,false]])if(basinChannel(x-cx,y-127))tile=wet?'study-water':'study-channel';
   set(x,y,tile);
  }
+ // A folded escarpment reveals the city in stages. Gaps are real dry passes,
+ // not camera locks. Both the northern ridge and the southern road remain usable.
+ for(let y=27;y<=64;y++)for(let x=275;x<=277;x++)
+  if(!(y>=55&&y<=59)&&tiles[y][x]!=='~')set(x,y,'study-cliff');
+ // Offset low banks narrow the last approach to the sealed wall without a maze.
+ for(let x=245;x<=260;x++)if(x<251||x>254)set(x,72,'study-masonry');
+ for(let y=63;y<=71;y++)set(246,y,'study-masonry');
  // Visible, finite obstacles. The column valley has more than one route around it.
  for(const [cx,cy] of [[212,48],[226,45],[233,63],[215,74],[229,82]])
   for(let y=cy;y<cy+5;y++)for(let x=cx;x<cx+2;x++)if(tiles[y][x]!=='~')set(x,y,'study-black');
@@ -145,14 +152,14 @@ export function paintImperialRoads(tiles,set){
  // The only edits west of x=176 are this explicit physical bridge across the old coast.
  for(let x=170;x<=188;x++)set(x,72,['~','study-water'].includes(tiles[72][x])?'+':tiles[72][x]);
  const roads=[
-  [[188,72],[188,83],[196,82],[198,84],[211,86],[223,80],[222,61],[233,56],[245,46],[262,32],[270,37],[278,39],[280,48],[293,47]],
+  [[188,72],[188,83],[196,82],[198,84],[211,86],[223,80],[222,61],[233,56],[245,46],[262,32],[270,37],[272,49],[273,57],[278,57],[280,71],[289,71],[293,61],[293,47]],
   [[198,84],[202,103],[202,108],[198,116],[202,137],[210,151],[213,163],[240,164],[265,159],[282,145],[293,126],[293,100],[293,80],[293,76],[289,71],[280,71]],
   [[210,151],[222,145],[222,133]],[[222,133],[222,112],[223,80]],
   [[265,159],[262,145],[262,133]],[[262,133],[262,112],[271,99],[279,100],[290,100],[290,92]],
   [[211,86],[213,98],[213,115]],[[245,96],[253,115]],
   [[233,56],[245,56],[245,69],[253,68],[253,70],[261,91],[245,96],[239,88],[223,80]],
   [[262,32],[269,43],[262,47]],[[293,47],[297,59],[304,59]],
-  [[280,71],[278,52],[280,48]],[[293,76],[293,80]],
+  [[280,71],[278,57],[273,57]],[[293,76],[293,80]],
   [[240,164],[247,159],[265,159]],[[253,115],[262,112]]
  ];
  for(const points of roads)for(let i=1;i<points.length;i++){
@@ -173,3 +180,25 @@ export function imperialResponse(site){
  return site.responses[state%site.responses.length];
 }
 export function imperialPhase(id){return replies.get(id)||0;}
+
+// Authored lookouts: only here does the ridge open toward the distant city.
+// Elsewhere the intervening terrain hides it. This never changes field of view.
+export function imperialOutlook(x,y){
+ for(const [cx,cy,scale] of [[269,43,.45],[273,57,.7]]){
+  const distance=Math.hypot(x-cx,y-cy);
+  if(distance<7)return {scale,opacity:Math.min(1,(7-distance)/2)};
+ }
+ return null;
+}
+export function createImperialListening(){
+ let quiet=false;
+ return {update(x,y){
+  const distance=Math.hypot(x-253,y-68);
+  quiet=distance<(quiet?7:4);
+  return quiet;
+ }};
+}
+
+export function imperialWalkableFloor(world,site,point){
+ return site?.kind==='imperial'&&site.blocking===false&&['confluence','receiving-wet','receiving-dry'].includes(site.form)&&world.walkable(point.x,point.y);
+}

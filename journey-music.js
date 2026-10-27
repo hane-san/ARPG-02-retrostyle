@@ -34,6 +34,10 @@ export const JOURNEY_PLAYLISTS={
 export function pickJourneyTrack(zone,previous,random=Math.random){
  const pool=JOURNEY_PLAYLISTS[zone];
  if(!pool)throw new Error('Unknown journey music region '+zone);
+ // These seven studies have an authored first colour: the paired water melody,
+ // stone, distant return motif, then the city in full. Later choices still vary.
+ if(['journey-confluence','journey-blackreach','journey-empty-ridge','journey-imperial-remains',
+  'journey-living-water','journey-dry-water','journey-return-causeway'].includes(zone)&&previous!==pool[0])return pool[0];
  const choices=pool.filter(key=>key!==previous);
  return choices[Math.floor(Math.max(0,Math.min(.999999,random()))*choices.length)];
 }

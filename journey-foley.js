@@ -30,6 +30,9 @@ const SURFACES={
  salt:{frequency:179,body:.024,rustle:.029,low:1700,high:500,duration:.15}
 };
 function surfaceOf(tile){
+ if(['study-stone','study-masonry'].includes(tile))return SURFACES.stone;
+ if(tile==='study-channel'||tile==='study-silt')return SURFACES.salt;
+ if(tile==='study-meadow')return SURFACES.grass;
  if('gGvi'.includes(tile)&&tile)return SURFACES.grass;
  if('htp'.includes(tile)&&tile)return SURFACES.stone;
  if(tile==='+')return SURFACES.wood;
@@ -118,8 +121,8 @@ export function createJourneyFoley(storage){
   if(!active){clock.reset();if(context&&context.state!=='running')retireAll(true);}
   return active;
  }
- function envelope(voice,peak,duration,attack=.012){
-  const node=context.createGain(),start=context.currentTime+.002;
+ function envelope(voice,peak,duration,attack=.012,delay=0){
+  const node=context.createGain(),start=context.currentTime+.002+delay;
   const data={node,start,attack,tail:start+duration-.012,end:start+duration,peak};
   node.gain.setValueAtTime(0,start);
   node.gain.linearRampToValueAtTime(peak,start+attack);
@@ -134,8 +137,8 @@ export function createJourneyFoley(storage){
   node.start(envelope.start);
   node.stop(envelope.end+.004);
  }
- function tone(voice,frequency,peak,duration,end=frequency){
-  const e=envelope(voice,peak,duration),node=context.createOscillator();
+ function tone(voice,frequency,peak,duration,end=frequency,delay=0){
+  const e=envelope(voice,peak,duration,.012,delay),node=context.createOscillator();
   node.type='sine';node.frequency.setValueAtTime(frequency,e.start);
   node.frequency.exponentialRampToValueAtTime(end,e.end);
   node.connect(e.node);source(voice,node,e);
@@ -205,6 +208,19 @@ export function createJourneyFoley(storage){
   else unlock();
   level();return enabled;
  }
+ // Investigation uses the gesture-unlocked context and the existing voice
+ // budget. Delays are audio-clock times, never timers or a loud arrival sting.
+ function respond(form){
+  if(!ready())return false;
+  const wet=['confluence','receiving-wet'].includes(form),dry=form==='receiving-dry';
+  if(!wet&&!dry&&!['sealed','echo-court','wheel'].includes(form))return false;
+  return voice(v=>{
+   const a=wet?740:dry?260:form==='sealed'?310:173;
+   const delay=form==='sealed'?.6:form==='echo-court'?.25:.08;
+   tone(v,a,.009,wet?.35:.22,a*.98,delay);
+   tone(v,wet?390:173,.004,wet?.5:.4,wet?385:169,delay+(wet?.18:.3));
+  });
+ }
  function setVolume(value){
   const numeric=Number(value);
   if(!Number.isFinite(numeric))return volume;
@@ -245,7 +261,7 @@ export function createJourneyFoley(storage){
   }catch{/* A failing audio device must never interrupt exploration. */}
  }
  globalThis.document?.addEventListener?.('visibilitychange',visibility);
- return {unlock,play,step,ambience,toggle,setVolume,get enabled(){return enabled;},get volume(){return volume;},
+ return {unlock,play,step,ambience,respond,toggle,setVolume,get enabled(){return enabled;},get volume(){return volume;},
   destroy(){
    destroyed=true;clock.reset();retireAll(true);disconnect(master);
    globalThis.document?.removeEventListener?.('visibilitychange',visibility);

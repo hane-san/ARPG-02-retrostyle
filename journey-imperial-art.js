@@ -1,5 +1,5 @@
 // Original, code-native pixel art. No downloaded images, particles or runtime dependencies.
-import {IMPERIAL_PALETTE,imperialPhase} from './journey-imperial.js';
+import {IMPERIAL_PALETTE,imperialPhase,imperialOutlook} from './journey-imperial.js';
 const rect=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));};
 const poly=(c,pts,color)=>{c.fillStyle=color;c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(Math.round(x),Math.round(y)):c.moveTo(Math.round(x),Math.round(y)));c.closePath();c.fill();};
 const line=(c,x,y,a,b,color,width=2)=>{c.strokeStyle=color;c.lineWidth=width;c.beginPath();c.moveTo(Math.round(x),Math.round(y));c.lineTo(Math.round(a),Math.round(b));c.stroke();};
@@ -21,19 +21,37 @@ function basin(c,x,y,w,h,wet){
  if(wet){for(let i=0;i<4;i++)rect(c,x+10+i*17,y+7+(i%2)*8,13,1,'#d4dfce');}
  else{line(c,x+10,y+9,x+w*.6,y+h*.7,'#b3aa91',1);line(c,x+w*.6,y+h*.7,x+w-7,y+h-5,'#b3aa91',1);}
 }
+// The same three notches, mooring ring and divided outlet recur at human and
+// city scale. No inscription explains their relationship for the traveller.
+function waterFitting(c,x,y,size,wet){
+ for(let i=0;i<3;i++)rect(c,x,y+i*size*.2,size*.25,Math.max(1,size*.035),shade);
+ c.strokeStyle=dark;c.lineWidth=Math.max(1,size*.04);c.beginPath();c.arc(x+size*.7,y+size*.25,size*.1,0,Math.PI*2);c.stroke();
+ line(c,x+size*.5,y+size*.5,x+size*.5,y+size,wet?water:shade,Math.max(2,size*.09));
+ for(const side of [-1,1])line(c,x+size*.5,y+size*.7,x+size*(.5+side*.35),y+size*.95,wet?water:shade,Math.max(1,size*.055));
+}
 export function drawImperialTile(c,x,y,t,world){
  const px=x*32,py=y*32,n=noise(x,y);
  rect(c,px,py,32,32,IMPERIAL_PALETTE[t]);
- if(t==='study-water'){
-  for(let i=0;i<3;i++)if(noise(x+i,y)>.3)rect(c,px+3+noise(y+i,x)*12,py+6+i*8,9+Math.floor(n*7),1,'#b8d0c1');
+ if(t==='study-water'||t==='study-channel'){
+  const wet=t==='study-water',channel=a=>['study-water','study-channel','+'].includes(a);
+  if(!wet){
+   // Exposed floor joints have exactly the orientation of the wet banks.
+   line(c,px+3,py+16,px+29,py+16,'#a69f88',2);
+   if(y%3===0)for(let i=0;i<3;i++)rect(c,px+6+i*8,py+9,2,4,'#e5d9bd');
+  }
+  if(wet)for(let i=0;i<3;i++)if(noise(x+i,y)>.3)rect(c,px+3+noise(y+i,x)*12,py+6+i*8,9+Math.floor(n*7),1,'#b8d0c1');
   for(const [dx,dy,xx,yy,ww,hh] of [[-1,0,0,0,3,32],[1,0,29,0,3,32],[0,-1,0,0,32,3],[0,1,0,29,32,3]])
-   if(!['study-water','+'].includes(world.tileAt(x+dx,y+dy)))rect(c,px+xx,py+yy,ww,hh,stone);
+   if(!channel(world.tileAt(x+dx,y+dy))){
+    rect(c,px+xx,py+yy,ww,hh,stone);
+    if(!wet)rect(c,px+xx,py+yy+3,ww,2,'#899b91');
+   }
  }else if(t==='study-masonry')masonry(c,px,py-14,32,46);
  else if(t==='study-black'){
   rect(c,px+2,py-16,28,48,'#454d50');rect(c,px+2,py-16,3,48,'#7d8681');rect(c,px+24,py-16,6,48,'#343e44');
  }else if(t==='study-cliff'){
   poly(c,[[px,py+30],[px+3,py+5],[px+14,py-4],[px+28,py+4],[px+32,py+32]],'#7d8989');
   line(c,px+5,py+7,px+14,py-2,'#b7b9aa');
+  for(let i=0;i<3;i++)line(c,px+4,py+10+i*7,px+29,py+14+i*7,i===1?'#c4c3ad':'#627b79',2);
  }else{
   for(let i=0;i<3;i++){const xx=px+noise(x+i,y+2)*26,yy=py+noise(y+i,x+1)*28;
    rect(c,xx,yy,3+n*6,1,t==='study-meadow'?'#bfcca9':t==='study-silt'?'#ede0c3':'#dcd5bc');}
@@ -54,6 +72,12 @@ export function drawImperialSite(c,s,x,y,w,h,cx,time=0){
   basin(c,cx-35,ground-65,70,25,true);
   for(const xx of [x+10,x+w-24])column(c,xx,y+20,h-38,14);
   rect(c,cx-16,ground-17,32,4,'#947e61');
+  waterFitting(c,cx-16,ground-61,32,true);
+  // Open paving, a replacement wooden child's step and outward irrigation.
+  for(const side of [-1,1]){
+   line(c,cx+side*32,ground-39,cx+side*100,ground-5,water,5);
+   basin(c,cx+side*100-12,ground-9,24,16,true);
+  }
  }else if(s.form.startsWith('receiving-')){
   const wet=s.form==='receiving-wet';
   poly(c,[[x+8,ground],[x+24,y+38],[x+w-24,y+38],[x+w-8,ground]],wet?'#a7b7a1':'#c8b899');
@@ -63,6 +87,12 @@ export function drawImperialSite(c,s,x,y,w,h,cx,time=0){
   }
   steps(c,cx-28,ground-26,56,24,5);basin(c,cx-24,y+70,48,24,wet);
   line(c,cx,y+96,cx,ground-32,wet?water:'#afa88c',wet?6:3);
+  for(const side of [-1,1]){
+   waterFitting(c,cx+side*w*.34-12,y+75,24,wet);
+   // The outlet serves three equal bowls, including the unoccupied one.
+   for(let i=0;i<3;i++)basin(c,cx+side*(48+i*23)-8,ground-17,16,11,wet);
+   rect(c,cx+side*94-14,ground-2,28,5,'#a69b7e');
+  }
   if(!wet)for(let i=0;i<5;i++)rect(c,x+28+i*47,ground-8,8,2,'#a7ac89');
  }else if(s.form==='sealed'){
   masonry(c,x+12,y+32,w-24,h-45,'#b7b9aa');
@@ -72,6 +102,8 @@ export function drawImperialSite(c,s,x,y,w,h,cx,time=0){
   rect(c,cx-3,ground-42,6,24,dark);rect(c,cx-2,ground-41,2,22,'#858a7a');
   if(active)rect(c,cx-4,ground-39+(phase%2)*8,8,7,stone);
   for(let i=0;i<5;i++)rect(c,x+27+i*(w-54)/5,y+58,5,4,'#8f9787');
+  basin(c,cx-18,ground-9,36,17,active&&phase%2===1);
+  line(c,cx,ground+8,cx,ground+21,water,3);
  }else if(s.form==='echo-court'){
   for(let i=0;i<4;i++){
    const xx=x+25+i*(w-50)/4,yy=y+35+(i%2)*25;
@@ -80,11 +112,15 @@ export function drawImperialSite(c,s,x,y,w,h,cx,time=0){
   }
   steps(c,cx-25,ground-17,50,15,3);
  }else if(s.form==='monolith'){
-  for(const [xx,ww,top] of [[x+14,w*.39,y+12],[cx+6,w*.32,y+24]]){
+  for(const [xx,ww,top] of [[x+14,w*.39,y-140],[cx+6,w*.32,y-120]]){
    poly(c,[[xx,ground],[xx-3,top],[xx+ww-10,top-8],[xx+ww,top+2],[xx+ww-2,ground-3]],'#424e51');
    line(c,xx,ground,xx-3,top,'#8c958c',3);rect(c,xx+ww-9,top+4,7,ground-top-7,'#303e44');
    for(let i=0;i<4;i++)rect(c,xx+5,ground-55-i*37,ww-13,2,'#737f78');
   }
+  // A low repair stool and measuring cord remain at a person's scale.
+  rect(c,x-6,ground-9,22,5,'#ac9979');rect(c,x-4,ground-4,3,9,shade);rect(c,x+10,ground-4,3,9,shade);
+  line(c,x+10,ground-13,cx-12,ground-13,'#c8b894',1);
+  poly(c,[[x+8,ground],[cx-12,ground-9],[cx+3,ground+6],[x-10,ground+9]],'#b8b7a0');
  }else if(s.form==='acropolis'){
   steps(c,x+35,ground-86,w-70,78,7);
   for(let tier=2;tier>=0;tier--){
@@ -94,6 +130,13 @@ export function drawImperialSite(c,s,x,y,w,h,cx,time=0){
   }
   for(const [xx,hh] of [[x+18,95],[x+w-44,131]])masonry(c,xx,y+15,25,hh,'#a5ad9e');
  }else if(s.form==='gate'){
+  // The upper lintel continues beyond a portrait screen; a familiar fitting is
+  // now several human heights. Collision remains the two authored buttresses.
+  for(const xx of [x+8,x+w-104]){
+   masonry(c,xx,y-166,96,188,'#a4ad9d');
+   waterFitting(c,xx+16,y-132,58,false);
+  }
+  masonry(c,x+5,y-180,w-10,26,'#b8baa4');
   const opening=w*.25;
   for(const [xx,ww] of [[x+8,(w-opening)/2-8],[cx+opening/2,(w-opening)/2-8]])masonry(c,xx,y+18,ww,h-32);
   masonry(c,x+5,y+8,w-10,28);rect(c,x+12,y+9,w-24,3,light);
@@ -108,6 +151,7 @@ export function drawImperialSite(c,s,x,y,w,h,cx,time=0){
   for(let i=0;i<6;i++)rect(c,x+9+i*12,y+22+i*12,w-18-i*24,h-40-i*23,i%2?shade:stone);
   rect(c,x+85,y+105,w-170,h-143,'#a7a78f');
   for(let i=0;i<8;i++)column(c,x+20+i*(w-40)/8,y+20,32,7);
+  for(let i=0;i<4;i++)waterFitting(c,x+28+i*(w-56)/4,y+53,58,false);
  }else if(s.form==='inn'){
   masonry(c,x+15,y+43,w-30,h-62,'#bcb39c');
   poly(c,[[x+3,y+45],[cx,y+8],[x+w-3,y+45]],'#a18976');
@@ -118,6 +162,8 @@ export function drawImperialSite(c,s,x,y,w,h,cx,time=0){
   steps(c,x+25,y+21,w-50,h-45,7);
   basin(c,x+15,ground-25,w-30,20,s.form==='stairs-wet');
   c.strokeStyle=shade;c.lineWidth=4;c.beginPath();c.arc(x+w-17,y+42,9,0,Math.PI*2);c.stroke();
+  waterFitting(c,x+9,y+33,30,s.form==='stairs-wet');
+  if(s.form==='stairs-wet')rect(c,x+20,y+h*.58,w-40,h*.24,'#749f9ca8');
  }else if(s.form==='pier'||s.form==='bridge'){
   const base=s.form==='pier'?y+28:y+45;
   for(let i=0;i<6;i++)column(c,x+14+i*(w-28)/6,base+13,h-(base-y)-32,8);
@@ -131,9 +177,14 @@ export function drawImperialSite(c,s,x,y,w,h,cx,time=0){
  }else if(s.form==='wheel'){
   masonry(c,x+15,ground-39,w-30,29);
   c.strokeStyle=shade;c.lineWidth=7;c.beginPath();c.ellipse(cx,ground-40,w*.29,12,0,0,Math.PI*2);c.stroke();
+  for(let i=0;i<3;i++)basin(c,cx-38+i*29,ground-8,20,13,active);
   const angle=phase*Math.PI/4;line(c,cx-Math.cos(angle)*w*.25,ground-40-Math.sin(angle)*9,cx+Math.cos(angle)*w*.25,ground-40+Math.sin(angle)*9,light,3);
  }else if(s.form==='bowl')basin(c,x+18,ground-35,w-36,30,true);
- else{column(c,cx-8,y+12,h-31,16);for(let i=0;i<4;i++)rect(c,cx-5,y+29+i*22,9,2,dark);}
+ else{column(c,cx-8,y+12,h-31,16);for(let i=0;i<4;i++)rect(c,cx-5,y+29+i*22,9,2,dark);
+  // A practical rest, facing the road already travelled rather than the city.
+  rect(c,x-35,ground-15,55,8,stone);for(const xx of [x-31,x+9])rect(c,xx,ground-7,7,13,shade);
+  basin(c,x+w-22,ground-18,32,16,false);
+ }
  if(active){
   // A local, quiet response, not a global world-state change or SF glow.
   const yy=ground-5+(reduced?0:Math.round(tick));
@@ -142,6 +193,27 @@ export function drawImperialSite(c,s,x,y,w,h,cx,time=0){
 }
 
 export const IMPERIAL_VISTA_KINDS=new Set(['imperial-confluence','imperial-blackreach','imperial-capital','imperial-capital-near','imperial-wet','imperial-dry','imperial-sealed','imperial-return']);
+// A low distant skyline in the walking view, not a modal illustration. Its lower
+// edge dissolves into the ridge; the ordinary walk and camera remain visible.
+export function drawImperialOutlook(c,position,width,height){
+ const view=imperialOutlook(position.x,position.y);if(!view)return;
+ const base=Math.min(height*.23,155),span=width*view.scale;
+ c.save();c.globalAlpha=view.opacity*.8;
+ const mist=c.createLinearGradient(0,0,0,base+44);
+ mist.addColorStop(0,'#b8c5bc');mist.addColorStop(.65,'#c8cbb9c0');mist.addColorStop(1,'#c8cbb900');
+ rect(c,0,0,width,base+44,mist);
+ for(let band=0;band<2;band++)for(let i=0;i<15;i++){
+  const x=width*.16+i*span/12+(band?9:0),h=(12+noise(i,band)*37)*view.scale;
+  rect(c,x,base-h-band*16,span/24,h,band?'#9aaba2':'#b3bbaa');
+ }
+ for(let i=0;i<18;i++){
+  const x=width*.08+i*span/14;
+  rect(c,x,base-4,span/14+1,3,'#d4d6bd');rect(c,x,base,3,17*view.scale,'#96aaa0');
+ }
+ // Near strata interrupt the repeated line, so the city is partly hidden.
+ poly(c,[[0,base+28],[width*.22,base-14],[width*.43,base+10],[width*.6,base+30]],'#abb4a1');
+ c.restore();
+}
 export function drawImperialVista(canvas,kind,time=0){
  const W=480,H=252;if(canvas.width!==W)canvas.width=W;if(canvas.height!==H)canvas.height=H;
  const c=canvas.getContext('2d');c.save();c.imageSmoothingEnabled=false;

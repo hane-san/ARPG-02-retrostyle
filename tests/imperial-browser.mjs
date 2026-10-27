@@ -47,5 +47,42 @@ export async function checkImperialStudies(page,origin){
  for(let i=IMPERIAL_SCORE_START;i<IMPERIAL_SCORE_START+3;i++)for(const phase of [1,2])assert.equal(await page.locator(`#trackSelect option[value="${i}:${phase}"]`).count(),1);
  await page.locator('#musicPanel [data-close]').click();
  mkdirSync('test-results',{recursive:true});await page.screenshot({path:'test-results/imperial-watercourt.png'});
+ // Compare the walkable spaces in real time, not just their optional vistas.
+ async function walkTo(x,y,label){
+  await page.locator('#mapBtn').click();const box=await page.locator('#miniMap').boundingBox();
+  await page.mouse.click(box.x+(x+.72)/JOURNEY_W*box.width,box.y+(y+.72)/JOURNEY_H*box.height);
+  await page.waitForFunction(()=>document.querySelector('#worldCanvas').getAttribute('aria-busy')==='false',null,{timeout:60000});
+  if(await page.locator('#dialogue:not(.hidden)').count())await page.locator('#dialogueClose').click();
+  const inside=IMPERIAL_SITES.find(s=>x>=s.x&&x<s.x+s.w&&y>=s.y&&y<s.y+s.h);
+  if(inside&&x===inside.entrance.x&&y<inside.entrance.y){
+   for(let step=inside.entrance.y;step>y;step--){await page.keyboard.press('ArrowUp');await page.waitForTimeout(230);}
+  }
+  await page.locator('#homeBtn').click();
+  await page.waitForTimeout(800);
+  await page.screenshot({path:`test-results/imperial-${label}.png`});
+ }
+ await walkTo(196,79,'open-court');
+ // The same coordinates within the two plans now admit the traveller between
+ // the pillars, rather than an invisible whole-building collision rectangle.
+ await walkTo(222,129,'wet-interior');
+ assert.equal(await page.locator('#zoneName').textContent(),'水を受ける庭');
+ await walkTo(262,129,'dry-interior');
+ assert.equal(await page.locator('#zoneName').textContent(),'水を失った庭');
+ await walkTo(269,43,'ridge-approach');
+ await walkTo(273,57,'notch-approach');
+ await walkTo(289,71,'gate-scale');
+ await walkTo(253,68,'sealed-approach');
+ await page.locator('#soundBtn').click();
+ // BGM has a diegetic quiet zone without overwriting the player's ON preference.
+ if(await page.locator('#musicToggle').textContent()==='OFF')await page.locator('#musicToggle').click();
+ await page.waitForFunction(()=>document.querySelector('#nowPlaying').textContent.includes('静まります'));
+ assert.equal(await page.locator('#musicToggle').textContent(),'ON');
+ await page.locator('#musicPanel [data-close]').click();
+ await walkTo(253,78,'outside-sealed');
+ await page.locator('#soundBtn').click();
+ assert.ok((await page.locator('#nowPlaying').textContent()).startsWith('再生中：'));
+ await page.locator('#musicToggle').click();
+ await page.locator('#musicPanel [data-close]').click();
  console.log('Imperial studies: 8 actual Canvas vistas, local art response, 7 atlas regions, actual bridge-to-temple walk and reinvestigation, 6 new scores available.');
+ console.log('Imperial comparison: actual open/wet/dry interior walks, ridge and notch, gate scale, sealed quiet and resumed BGM preference.');
 }
