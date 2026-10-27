@@ -901,7 +901,12 @@ function drawMinimap(){
  c.strokeStyle='#244658';c.lineWidth=2;c.stroke();
 }
 mini.addEventListener('click',e=>{
- const r=mini.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*H;
+ const r=mini.getBoundingClientRect();
+ // At subpixel tile sizes, integer mouse coordinates denote a whole CSS pixel.
+ // Use its centre rather than systematically choosing the upper-left neighbour.
+ const ox=JOURNEY_MODE&&r.width<W&&Number.isInteger(e.clientX)?.5:0;
+ const oy=JOURNEY_MODE&&r.height<H&&Number.isInteger(e.clientY)?.5:0;
+ const x=(e.clientX+ox-r.left)/r.width*W,y=(e.clientY+oy-r.top)/r.height*H;
  if(JOURNEY_MODE){
   const site=world.siteAt(Math.floor(x),Math.floor(y));
   if(site){closePanels();startWalk(site.entrance,{kind:'site',item:site},'map');return;}
