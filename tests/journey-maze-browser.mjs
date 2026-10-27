@@ -28,7 +28,8 @@ export async function checkMazeTrial(browser,origin){
   // Raw mouse coordinates retain fractional CSS pixels on the expanded atlas.
   // Locator.click rounds its offset, which can select an adjacent tile at 320px.
   const pixel=(origin,extent,cells,tile)=>extent<cells?Math.round(origin+(tile+.5)/cells*extent-.5):Math.ceil(origin+tile/cells*extent+.01);
-  await page.mouse.click(pixel(size.x,size.width,JOURNEY_W,17),pixel(size.y,size.height,JOURNEY_H,102));
+  const border=await map.evaluate(c=>({x:parseFloat(getComputedStyle(c).borderLeftWidth)||0,y:parseFloat(getComputedStyle(c).borderTopWidth)||0}));
+  await map.click({position:{x:pixel(size.x,size.width,JOURNEY_W,17)-size.x-border.x,y:pixel(size.y,size.height,JOURNEY_H,102)-size.y-border.y}});
   await page.waitForFunction(()=>document.querySelector('#worldCanvas').getAttribute('aria-busy')==='true');
   const settle=()=>page.waitForFunction(()=>document.querySelector('#worldCanvas').getAttribute('aria-busy')==='false',null,{timeout:40000});
   await settle();
