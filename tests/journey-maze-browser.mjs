@@ -37,6 +37,13 @@ export async function checkMazeTrial(browser,origin){
    await page.locator('#mapBtn').click();const p=await page.evaluate(()=>window.mazeMarker);
    await page.locator('#mapPanel [data-close]').click();return p;
   }
+  const entry=await position();
+  assert.ok(Math.abs(entry.x-17)<=1&&Math.abs(entry.y-102)<=1,'atlas reaches the maze entrance neighbourhood');
+  // A subpixel atlas cannot name every individual tile. Finish the last step
+  // through the real keyboard controls so A/B begin at exactly the same cell.
+  for(const [axis,target,negative,positive] of [['x',17,'ArrowLeft','ArrowRight'],['y',102,'ArrowUp','ArrowDown']]){
+   while(entry[axis]!==target){await page.keyboard.press(entry[axis]>target?negative:positive);await settle();entry[axis]+=entry[axis]>target?-1:1;}
+  }
   assert.deepEqual(await position(),{x:17,y:102},`atlas entry ${width}x${height} ${mode}`);
   async function fieldTap(target){
    await page.locator('#homeBtn').click();
