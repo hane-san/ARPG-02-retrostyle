@@ -432,8 +432,9 @@ function drawHero(c,t){
 function drawDestination(c,t){
  if(hero.path.length<=1)return;
  const p=hero.path[hero.path.length-1],x=(p.x+.5)*TILE,y=(p.y+.5)*TILE;
- c.save();c.strokeStyle='#fff4c2';c.lineWidth=3;c.globalAlpha=.65+.25*Math.sin(t*.005);
- c.beginPath();c.arc(x,y,11+Math.sin(t*.005)*2,0,Math.PI*2);c.stroke();
+ const pulse=JOURNEY_MODE&&reduceMotion.matches?0:Math.sin(t*.005);
+ c.save();c.strokeStyle='#fff4c2';c.lineWidth=3;c.globalAlpha=.65+.25*pulse;
+ c.beginPath();c.arc(x,y,11+pulse*2,0,Math.PI*2);c.stroke();
  c.fillStyle='#fff2ca';c.beginPath();c.moveTo(x,y-15);c.lineTo(x-4,y-22);c.lineTo(x+4,y-22);c.closePath();c.fill();c.restore();
 }
 function paint(t){
