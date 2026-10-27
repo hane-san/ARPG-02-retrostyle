@@ -10,7 +10,7 @@ import {JOURNEY_PLAYLISTS} from '../journey-music.js';
 
 test('southwest labyrinth connects four atmospheres, usable devices and earned vistas',()=>{
  const w=makeJourneyWorld();
- assert.deepEqual([w.w,w.h],[176,136]);
+ assert.deepEqual([w.w,w.h],[320,192]);
  assert.deepEqual([RUINS_ZONES.length,RUINS_SITES.length,RUINS_NPCS.length,RUINS_VISTAS.length],[4,12,4,4]);
  for(const z of RUINS_ZONES){
   assert.equal(w.zoneAt(z.cx,z.cy).id,z.id);

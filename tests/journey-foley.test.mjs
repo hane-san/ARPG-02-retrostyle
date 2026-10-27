@@ -203,3 +203,15 @@ test('storage, unavailable audio and resume failures never escape into movement'
   assert.equal(sound.snapshot().steps,0);
  });
 });
+
+test('temple replies wait on the audio clock, use the same context, and respect SE OFF and zero volume',()=>audioHarness(({contexts,storage})=>{
+ const sound=createJourneyFoley(storage);
+ assert.equal(sound.respond('sealed'),false,'gesture is required');
+ sound.unlock();const c=contexts[0];
+ assert.equal(sound.respond('sealed'),true);
+ assert.equal(contexts.length,1);
+ assert.ok(c.sources.every(s=>s.started>=.6),'a quiet wait precedes the response');
+ sound.toggle();assert.equal(sound.respond('receiving-wet'),false);
+ sound.toggle();sound.setVolume(0);assert.equal(sound.respond('receiving-dry'),false);
+ sound.destroy();assert.equal(sound.snapshot().activeVoices,0);
+}));

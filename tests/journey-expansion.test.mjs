@@ -1,3 +1,4 @@
+import {IMPERIAL_ZONES} from '../journey-imperial.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {makeJourneyWorld,JOURNEY_ZONES} from '../journey-world.js';
@@ -10,10 +11,10 @@ import {RUINS_ZONES} from '../journey-ruins.js';
 
 test('expanded scenery preserves the original walking country and adds six coherent regions',()=>{
  const world=makeJourneyWorld();
- assert.deepEqual([world.w,world.h],[176,136]);
+ assert.deepEqual([world.w,world.h],[320,192]);
  assert.deepEqual([EXTENSION_ZONES.length,EXTENSION_SITES.length,EXTENSION_NPCS.length,EXTENSION_VISTAS.length],[7,13,11,7]);
- assert.equal(JOURNEY_ZONES.filter(z=>!RUINS_ZONES.includes(z)).length,14,'original regions survive intact');
- assert.equal(JOURNEY_ZONES.length,14+RUINS_ZONES.length,'southwest extension is additive');
+ assert.equal(JOURNEY_ZONES.filter(z=>!RUINS_ZONES.includes(z)&&!IMPERIAL_ZONES.includes(z)).length,14,'original regions survive intact');
+ assert.equal(JOURNEY_ZONES.length,14+RUINS_ZONES.length+IMPERIAL_ZONES.length,'southwest extension is additive');
  assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.35,.8,.6]);
  for(const zone of EXTENSION_ZONES){
   const loc={x:zone.cx,y:zone.cy};

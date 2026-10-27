@@ -1,3 +1,4 @@
+import {JOURNEY_W,JOURNEY_H,JOURNEY_ZONES,JOURNEY_SITES} from '../journey-world.js';
 // Real-time UI walks, with no teleport, frame acceleration, or production debug
 // hook. The visible atlas marker provides the final position for assertions.
 import assert from 'node:assert/strict';
@@ -5,6 +6,7 @@ import {mkdirSync} from 'node:fs';
 import {JOURNEY_PLAYLISTS} from '../journey-music.js';
 import {MUSIC_LIBRARY,ORIGINAL_SCORE_COUNT} from '../music.js';
 import {RUINS_ZONES,RUINS_SITES} from '../journey-ruins.js';
+import {IMPERIAL_SITES} from '../journey-imperial.js';
 
 export async function checkJourney(page,origin){
  mkdirSync('test-results',{recursive:true});
@@ -42,7 +44,7 @@ export async function checkJourney(page,origin){
  });
  const response=await page.goto(origin+'/',{waitUntil:'load'});
  assert.ok(response?.ok());
- await page.waitForFunction(total=>document.querySelector('#discovered')?.textContent==='0 / '+total,35+RUINS_SITES.length);
+ await page.waitForFunction(total=>document.querySelector('#discovered')?.textContent==='0 / '+total,35+RUINS_SITES.length+IMPERIAL_SITES.length);
  assert.equal(await page.locator('#worldTitle').textContent(),'小さく壮大な旅');
  assert.equal(await page.title(),'潮環群島 × 星風回廊 — TIDAL ATLAS');
  assert.equal(await page.locator('#zoneName').textContent(),'白い船着場');
@@ -108,7 +110,7 @@ export async function checkJourney(page,origin){
 
 
  async function mapPosition(){
-  return page.locator('#miniMap').evaluate(canvas=>{
+  return page.locator('#miniMap').evaluate((canvas,{w,h})=>{
    const c=canvas.getContext('2d'),{data}=c.getImageData(0,0,canvas.width,canvas.height);
    let minX=Infinity,minY=Infinity,maxX=-1,maxY=-1;
    for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++){
@@ -118,8 +120,8 @@ export async function checkJourney(page,origin){
     }
    }
    if(maxX<0)throw Error('Visible explorer marker missing from atlas');
-   return {x:(minX+maxX)/2/canvas.width*176-.5,y:(minY+maxY)/2/canvas.height*136-.5};
-  });
+   return {x:(minX+maxX)/2/canvas.width*w-.5,y:(minY+maxY)/2/canvas.height*h-.5};
+  },{w:JOURNEY_W,h:JOURNEY_H});
  }
  // 自分へ glides back instead of jumping; taps relative to the centre wait until it rests.
  async function returnHome(){
@@ -133,7 +135,9 @@ export async function checkJourney(page,origin){
  async function mapClick(x,y){
   await page.locator('#mapBtn').click();
   const box=await page.locator('#miniMap').boundingBox();
-  await page.mouse.click(box.x+(x+.72)/176*box.width,box.y+(y+.72)/136*box.height);
+  const site=JOURNEY_SITES.find(s=>x>=s.x&&x<s.x+s.w&&y>=s.y&&y<s.y+s.h);
+  const px=site?site.x+site.w/2:x+.72,py=site?site.y+site.h/2:y+.72;
+  await page.mouse.click(box.x+px/JOURNEY_W*box.width,box.y+py/JOURNEY_H*box.height);
  }
  async function walk(x,y,{name=null,arrival=null,shot=null}={}){
   await mapClick(x,y);
@@ -155,7 +159,7 @@ export async function checkJourney(page,origin){
  }
 
  await page.locator('#mapBtn').click();
- assert.equal(await page.locator('#zoneList button').count(),14+RUINS_ZONES.length);
+ assert.equal(await page.locator('#zoneList button').count(),JOURNEY_ZONES.length);
  const start=await mapPosition();assert.ok(Math.hypot(start.x-19,start.y-70)<1,'new-world spawn');
  await page.screenshot({path:'test-results/journey-atlas.png'});
  await page.locator('#mapPanel [data-close]').click();
@@ -281,7 +285,7 @@ export async function checkJourney(page,origin){
  assert.ok(await page.locator('#dialogue').isHidden(),'walking keys dismiss the reading card');
  await page.waitForFunction(()=>document.querySelector('#worldCanvas').getAttribute('aria-busy')==='false');
  await walk(12,71,{name:'白い連絡舎',arrival:{x:12,y:75}});
- assert.equal(await page.locator('#discovered').textContent(),'1 / '+(35+RUINS_SITES.length));
+ assert.equal(await page.locator('#discovered').textContent(),'1 / '+(35+RUINS_SITES.length+IMPERIAL_SITES.length));
 
  // Redirect before arrival; wheel cannot change the steady outdoor framing.
  await mapClick(36,38);
@@ -318,7 +322,7 @@ export async function checkJourney(page,origin){
  await walk(14,38);await walk(36,60);
  await walk(46,65,{name:'水路の茶屋',arrival:{x:46,y:69}});
  await page.waitForFunction(()=>Math.abs(window.journeyRenderZoom-.8)<.002,null,{timeout:9000});
- assert.equal(await page.locator('#discovered').textContent(),'6 / '+(35+RUINS_SITES.length));
+ assert.equal(await page.locator('#discovered').textContent(),'6 / '+(35+RUINS_SITES.length+IMPERIAL_SITES.length));
  await walk(19,70);
  assert.equal(await page.locator('#zoneName').textContent(),'白い船着場');
  assert.ok(await page.evaluate(()=>window.journeyAudioProbe.contexts.length<=2),'music and SFX contexts are reused for the entire loop');
@@ -338,7 +342,7 @@ export async function checkJourney(page,origin){
  assert.ok(keys.length>0&&keys.every(key=>key.startsWith('tidal-atlas:')));
  await page.goto(origin+'/?prototype=1&journey=1');
  await page.waitForFunction(()=>document.querySelector('#worldTitle').textContent==='小さく壮大な旅');
- assert.equal(await page.locator('#discovered').textContent(),'0 / '+(35+RUINS_SITES.length),'mode flags have explicit precedence, with no game-save added');
+ assert.equal(await page.locator('#discovered').textContent(),'0 / '+(35+RUINS_SITES.length+IMPERIAL_SITES.length),'mode flags have explicit precedence, with no game-save added');
  await page.locator('#soundBtn').click();
  assert.equal(await page.locator('#sfxVolumeRange').inputValue(),'27','foley volume persists separately from music');
  await page.locator('#soundBtn').click();

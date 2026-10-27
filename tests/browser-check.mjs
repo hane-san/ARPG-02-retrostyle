@@ -1,3 +1,4 @@
+import {checkImperialStudies} from './imperial-browser.mjs';
 // Browser smoke test for the published static ES module game.
 // Chromium approximates mobile input; it does NOT certify an actual iPhone.
 import assert from 'node:assert/strict';
@@ -97,6 +98,7 @@ async function main(){
  await checkPortalRoutes(page,origin);
  await checkCameraInput(page,origin);
  await checkJourney(page,origin);
+ await checkImperialStudies(page,origin);
  await checkJourneyTaps(browser,origin);
  await checkJourneyTargets(browser,origin);
  await checkMazeTrial(browser,origin);
