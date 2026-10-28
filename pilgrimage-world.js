@@ -54,9 +54,9 @@ for(const [i,z] of PILGRIM_ZONES.entries()){
 }
 // Smaller inspectable objects share the same ground/collision contract as the landmarks.
 for(let k=1;k<PILGRIM_ROUTE.length-1;k+=2){
- const q=PILGRIM_ROUTE[k];
- PILGRIM_SITES.push({id:'pilgrim-detail-'+k,kind:'pilgrimage',form:['gauge','bowl','boat','arch'][k%4],name:['道端の水尺','使いこまれた受け皿','陸に残る舟','欠けた通り門'][k%4],
-  x:q.x+3,y:q.y-4,w:4,h:3,blocking:false,solid:k%4===3?[{x:0,y:0,w:1,h:3},{x:3,y:0,w:1,h:3}]:k%4===0?[{x:2,y:0,w:1,h:3}]:[{x:0,y:1,w:4,h:2}],artTop:1,entrance:{x:q.x+2,y:q.y},chapter:chapter(k),
+ const q=PILGRIM_ROUTE[k],study=((k-1)/2)%4;
+ PILGRIM_SITES.push({id:'pilgrim-detail-'+k,kind:'pilgrimage',form:['gauge','bowl','boat','arch'][study],name:['道端の水尺','使いこまれた受け皿','陸に残る舟','欠けた通り門'][study],
+  x:q.x+3,y:q.y-4,w:4,h:3,blocking:false,solid:study===3?[{x:0,y:0,w:1,h:3},{x:3,y:0,w:1,h:3}]:study===0?[{x:2,y:0,w:1,h:3}]:[{x:0,y:1,w:4,h:2}],artTop:1,entrance:{x:q.x+2,y:q.y},chapter:chapter(k),
   desc:'かつての手順が、石と木の形に残っている。近づくと、同じもののはずなのに少しずつ違う。',aside:'水に浸かった線は水平だが、その上の傷は、人の手の高さでばらばらに付いている。'});
 }
 export const PILGRIM_NPCS=[0,1,2,3,4,6,7,8,9,11].map((ci,i)=>{
@@ -128,3 +128,12 @@ export function pilgrimCameraScene(world,hero,accepted){
 }
 export function pilgrimFloor(world,site,p){return !!(world.pilgrimage&&site&&site.blocking===false&&p.x>=site.x&&p.x<site.x+site.w&&p.y>=site.y&&p.y<site.y+site.h&&world.walkable(Math.floor(p.x),Math.floor(p.y)));}
 export function pilgrimQuiet(world,p,wasQuiet=false){const z=PILGRIM_ZONES.find(z=>z.theme==='sealed');return !!world.pilgrimage&&Math.hypot(p.x-z.cx,p.y-z.cy)<(wasQuiet?9:5);}
+
+// Keep an explorer behind tall foreground art legible without changing terrain,
+// camera or the monument's footprint. Opacity blends over a tile at the edges.
+export function pilgrimSiteOpacity(world,site,hero){
+ if(!world.pilgrimage||pilgrimFloor(world,site,{x:Math.floor(hero.px),y:Math.floor(hero.py)}))return 1;
+ const horizontal=Math.min(hero.px+.9-site.x,site.x+site.w+.3-hero.px);
+ const vertical=Math.min(hero.py+1-(site.y-(site.artTop||0)),site.y+site.h-hero.py);
+ return 1-.84*Math.max(0,Math.min(1,horizontal,vertical));
+}

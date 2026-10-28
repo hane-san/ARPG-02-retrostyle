@@ -96,7 +96,8 @@ export function drawPilgrimSite(c,s,time=0){
   for(let i=0;i<6;i++){const a=i*Math.PI/3;line(c,cx,base-46,cx+Math.cos(a)*w*.23,base-46+Math.sin(a)*14,p[1],3);}
   for(let i=0;i<3;i++)bowl(c,cx-55+i*40,base-19,29,19,p,true);
  }else if(s.form==='arch'){
-  masonry(c,x,y-48,64,h+48,p);masonry(c,x+w-64,y-48,64,h+48,p);masonry(c,x-9,y-69,w+18,27,p);
+  const pier=Math.min(64,w/4);
+  masonry(c,x,y-48,pier,h+48,p);masonry(c,x+w-pier,y-48,pier,h+48,p);masonry(c,x-9,y-69,w+18,27,p);
   for(let j=0;j<3;j++)rect(c,x+60+j*19,y-53,9,8,p[3]);
  }else if(s.form==='stairs'){
   for(let i=0;i<5;i++)column(c,x+25+i*(w-50)/5,y-56,h+31,p,10);

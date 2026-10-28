@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {makePilgrimageWorld,PILGRIM_ROUTE,PILGRIM_ZONES,PILGRIM_BLOCKED,pilgrimCameraScene,pilgrimFloor,pilgrimQuiet} from '../pilgrimage-world.js';
+import {makePilgrimageWorld,PILGRIM_ROUTE,PILGRIM_ZONES,PILGRIM_BLOCKED,pilgrimCameraScene,pilgrimFloor,pilgrimQuiet,pilgrimSiteOpacity} from '../pilgrimage-world.js';
 import {routeJourneyWalk} from '../journey-world.js';
 import {MUSIC_LIBRARY,buildTrack} from '../music.js';
 import {pickJourneyTrack,createJourneyMusicDirector} from '../journey-music.js';
@@ -90,4 +90,20 @@ test('pillar gaps, the space beneath the old pier, and stairs are floors, not wh
  assert.equal(w.walkable(stone.x+stone.w-1,stone.y+2),false,'the second stone has its own foot');
  const gate=w.sites.find(s=>s.form==='citadel');
  assert.equal(w.walkable(gate.x,gate.y+1),false,'the fortress wall is solid');
+});
+
+test('all four roadside study designs appear, including gauges and grounded boats',()=>{
+ const details=w.sites.filter(s=>s.id.startsWith('pilgrim-detail-'));
+ assert.deepEqual([...new Set(details.map(s=>s.form))].sort(),['arch','boat','bowl','gauge']);
+ for(const form of ['arch','boat','bowl','gauge'])assert.ok(details.filter(s=>s.form===form).length>=5);
+});
+test('tall foreground art reveals an explorer behind it while front and open-floor views stay opaque',()=>{
+ const s=w.sites.find(s=>s.form==='monolith'),behind={px:s.x+s.w/2,py:s.y-3};
+ assert.ok(w.walkable(Math.floor(behind.px),Math.floor(behind.py)));
+ assert.ok(pilgrimSiteOpacity(w,s,behind)<.4);
+ assert.equal(pilgrimSiteOpacity(w,s,{px:s.entrance.x,py:s.entrance.y}),1);
+ assert.equal(pilgrimSiteOpacity(w,s,{px:s.x-2,py:s.y-3}),1);
+ const edge=pilgrimSiteOpacity(w,s,{px:s.x-.5,py:s.y-3});assert.ok(edge>.4&&edge<1,'one-tile edge blend');
+ const garden=w.sites.find(s=>s.form==='garden');assert.equal(pilgrimSiteOpacity(w,garden,{px:garden.x+6,py:garden.y+4}),1);
+ assert.equal(pilgrimSiteOpacity({...w,pilgrimage:false},s,behind),1);
 });

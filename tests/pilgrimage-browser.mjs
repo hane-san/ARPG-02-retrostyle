@@ -6,8 +6,9 @@ export async function checkPilgrimage(browser,origin){
  const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,deviceScaleFactor:2});
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.addInitScript(({w,h})=>{
-  const arc=CanvasRenderingContext2D.prototype.arc,scale=CanvasRenderingContext2D.prototype.scale,translate=CanvasRenderingContext2D.prototype.translate;
+  const fill=CanvasRenderingContext2D.prototype.fillRect,arc=CanvasRenderingContext2D.prototype.arc,scale=CanvasRenderingContext2D.prototype.scale,translate=CanvasRenderingContext2D.prototype.translate;
   window.pilgrimFrames=[];let next=false;
+  CanvasRenderingContext2D.prototype.fillRect=function(x,y,w,h){fill.call(this,x,y,w,h);if(window.pilgrimCheckOcclusion&&this.canvas.id==='worldCanvas'&&this.fillStyle==='#b8d9dc'){const p=this.getTransform().transformPoint({x:x+w/2,y:y+h/2});window.pilgrimHeroPixel={x:Math.floor(p.x),y:Math.floor(p.y),before:[...this.getImageData(Math.floor(p.x),Math.floor(p.y),1,1).data]};}};
   CanvasRenderingContext2D.prototype.arc=function(x,y,r,...rest){if(this.canvas.id==='miniMap'&&this.fillStyle==='#fae5a1')window.pilgrimPosition={x:x/this.canvas.width*w-.5,y:y/this.canvas.height*h-.5};return arc.call(this,x,y,r,...rest);};
   CanvasRenderingContext2D.prototype.scale=function(x,y){if(this.canvas.id==='worldCanvas'){next=true;window.pilgrimZoom=x;}return scale.call(this,x,y);};
   CanvasRenderingContext2D.prototype.translate=function(x,y){if(next&&this.canvas.id==='worldCanvas'){next=false;window.pilgrimCamera={x:-x,y:-y};window.pilgrimFrames.push({x:-x,y:-y,zoom:window.pilgrimZoom});}return translate.call(this,x,y);};
@@ -15,6 +16,17 @@ export async function checkPilgrimage(browser,origin){
  await page.goto(origin+'/');await page.waitForSelector('.journey-menu');
  assert.equal(await page.locator('#zoneName').textContent(),'白い船着場');
  assert.equal(await page.locator('.journey-tool').count(),4);
+ const arches=world.sites.filter(s=>s.form==='arch');
+ const gaps=await page.evaluate(async sites=>{
+  const {drawPilgrimSite}=await import(new URL('pilgrimage-art.js',location.href).href);
+  return sites.map(site=>{
+   const s={...site,x:2,y:4},canvas=document.createElement('canvas');canvas.width=(s.w+4)*32;canvas.height=(s.h+6)*32;
+   const c=canvas.getContext('2d');drawPilgrimSite(c,s,0);
+   const alpha=(x,y)=>c.getImageData(x*32+16,y*32+16,1,1).data[3];
+   return {gap:alpha(s.x+Math.floor(s.w/2),s.y+2),pier:alpha(s.x,s.y+2)};
+  });
+ },arches);
+ for(const a of gaps){assert.equal(a.gap,0,'walkable arch centre must be visually open');assert.equal(a.pier,255,'solid pier remains visible');}
  await page.locator('#mapBtn').click();assert.equal(await page.locator('#zoneList button').count(),13);await page.locator('#mapPanel [data-close]').click();
  await page.locator('#soundBtn').click();assert.equal(await page.locator('#trackSelect option').count(),90);assert.equal(await page.locator('#musicToggle').textContent(),'OFF');assert.equal(await page.locator('#sfxToggle').textContent(),'ON');await page.locator('#musicPanel [data-close]').click();
  await page.clock.install();
@@ -63,6 +75,14 @@ export async function checkPilgrimage(browser,origin){
     const beside={x:s.x+1,y:s.y+Math.floor(s.h/2)};await fieldTap(beside);
     await page.keyboard.press('ArrowLeft');await page.clock.runFor(400);assert.deepEqual(await position(),beside,'solid pillar stops the actual walking controls');
     await walk(PILGRIM_ROUTE[i]);
+   }
+   if(z.index===5){
+    const stone=world.sites.find(s=>s.form==='monolith');
+    await walk({x:stone.x+4,y:stone.y-3});
+    await page.evaluate(()=>{window.pilgrimCheckOcclusion=true;});await page.locator('#homeBtn').click();await page.clock.runFor(1800);
+    const difference=await page.evaluate(()=>{const p=window.pilgrimHeroPixel,after=document.querySelector('#worldCanvas').getContext('2d').getImageData(p.x,p.y,1,1).data;return [...after].slice(0,3).reduce((n,v,i)=>n+Math.abs(v-p.before[i]),0);});
+    assert.ok(difference<140,'explorer remains visible in final pixels behind the foreground monolith');
+    await page.screenshot({path:'test-results/pilgrimage-behind-monolith.png'});await page.evaluate(()=>{window.pilgrimCheckOcclusion=false;});await walk(PILGRIM_ROUTE[i]);
    }
    if(z.theme==='sealed'){
     await page.locator('#soundBtn').click();await page.locator('#musicToggle').click();await page.clock.runFor(1000);

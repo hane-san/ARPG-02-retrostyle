@@ -1,4 +1,4 @@
-import {makePilgrimageWorld,pilgrimFloor,pilgrimQuiet} from './pilgrimage-world.js';
+import {makePilgrimageWorld,pilgrimFloor,pilgrimQuiet,pilgrimSiteOpacity} from './pilgrimage-world.js';
 import {drawPilgrimTile,drawPilgrimSite,drawPilgrimDecor,drawPilgrimOutlook,pilgrimTileColor} from './pilgrimage-art.js';
 import {imperialResponse,imperialPhase,createImperialListening,imperialWalkableFloor} from './journey-imperial.js';
 import {drawImperialOutlook} from './journey-imperial-art.js';
@@ -306,7 +306,7 @@ function bridgeArt(c,b,time){
  c.restore();
 }
 function drawSite(c,s,t){
- if(PILGRIMAGE_MODE){drawPilgrimSite(c,s,t);return;}
+ if(PILGRIMAGE_MODE){c.save();c.globalAlpha*=pilgrimSiteOpacity(world,s,hero);drawPilgrimSite(c,s,t);c.restore();return;}
  if(currentWorldId==='journey'){drawJourneySite(c,s,t);return;}
  if(currentWorldId==='silk'){drawSilkSite(c,s,t);return;}
  const x=s.x*TILE,y=s.y*TILE,w=s.w*TILE,h=s.h*TILE,mid=x+w/2;
