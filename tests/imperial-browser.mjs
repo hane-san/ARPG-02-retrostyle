@@ -6,7 +6,7 @@ import {IMPERIAL_SCORE_START} from '../music.js';
 
 // Actual Canvas rendering and atlas-to-site walks. No teleport, faster game clock or production debug API.
 export async function checkImperialStudies(page,origin){
- await page.goto(origin+'/');await page.waitForSelector('#worldCanvas');
+ await page.goto(origin+'/?atlas=previous');await page.waitForSelector('#worldCanvas');
  const render=await page.evaluate(async()=>{
   const {IMPERIAL_VISTAS,IMPERIAL_SITES}=await import('./journey-imperial.js');
   const {drawImperialVista,drawImperialSite}=await import('./journey-imperial-art.js');

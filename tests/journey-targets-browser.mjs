@@ -5,7 +5,7 @@ export async function checkJourneyTargets(browser,origin){
  for(const [width,height]of [[320,568],[390,844],[844,390]]){
   const context=await browser.newContext({viewport:{width,height},isMobile:true,hasTouch:true});
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto(origin+'/');await page.waitForSelector('.journey-menu');
+  await page.goto(origin+'/?atlas=previous');await page.waitForSelector('.journey-menu');
   const field=await page.locator('#worldCanvas').boundingBox();
   async function measure(selector){
    for(const target of await page.locator(selector).all()){
@@ -34,11 +34,11 @@ export async function checkJourneyTargets(browser,origin){
   await page.locator('#musicPanel [data-close]').tap();
   await page.locator('#helpBtn').tap();await measure('#helpPanel a');
   await page.locator('.maze-trial-links a').nth(1).tap();
-  await page.waitForURL('**/?maze=turns');
+  await page.waitForURL('**/?atlas=previous&maze=turns');
   await page.locator('#helpBtn').tap();
   assert.match(await page.locator('#helpPanel').innerText(),/Bを試遊中/);
   await page.locator('.maze-trial-links a').first().tap();
-  await page.waitForURL(origin+'/');await page.waitForSelector('.journey-menu');
+  await page.waitForURL(origin+'/?atlas=previous');await page.waitForSelector('.journey-menu');
   assert.deepEqual(await page.locator('#worldCanvas').boundingBox(),field,'field/dock geometry unchanged');
   assert.deepEqual(errors,[]);results.push({width,height,targets44:true});
   await context.close();

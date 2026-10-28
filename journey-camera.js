@@ -1,3 +1,4 @@
+import {pilgrimCameraScene} from './pilgrimage-world.js';
 import {IMPERIAL_ZONES} from './journey-imperial.js';
 import {limitCamera} from './camera-limits.js';
 import {journeyScenicScene,JOURNEY_SCENIC_BEATS} from './journey-scenic.js';
@@ -29,6 +30,7 @@ export const JOURNEY_CAMERA_PROFILES=Object.freeze({
  'journey-scenic-near':JOURNEY_DEFAULT_ZOOM
 });
 export function journeyCameraScene(world,hero,acceptedScene=null){
+ if(world.pilgrimage)return pilgrimCameraScene(world,hero,acceptedScene);
  // The narrow glass arcade is an opt-in-to-approach example of the closest frame.
  const ruinCore=world.sites.find(site=>site.id==='journey-ruins-monolith-core');
  if(ruinCore&&Math.hypot(hero.px-ruinCore.entrance.x,hero.py-ruinCore.entrance.y)<=3)return 'journey-detail';
@@ -98,7 +100,7 @@ export function easeJourneyFollowCamera(current,hero,path,dt,viewport,world){
  let leadX=vx/length*maxX,leadY=vy/length*maxY;
  // Existing authored scenic thresholds lightly draw the eye forward.
  // Behind-the-traveller landmarks must never pull the view backwards.
- for(const beat of JOURNEY_SCENIC_BEATS){
+ for(const beat of world.pilgrimage?[]:JOURNEY_SCENIC_BEATS){
   const bx=beat.x-hero.x,by=beat.y-hero.y,proximity=Math.hypot(bx,by);
   if(proximity<.25||proximity>beat.r+5||bx*vx+by*vy<=0)continue;
   const influence=.24*Math.min(1,(beat.r+5-proximity)/3);

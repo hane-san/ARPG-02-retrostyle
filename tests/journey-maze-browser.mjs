@@ -17,7 +17,7 @@ export async function checkMazeTrial(browser,origin){
    CanvasRenderingContext2D.prototype.scale=function(x,y){if(this.canvas.id==='worldCanvas'){window.mazeZoom=x;cameraNext=true;}return scale.call(this,x,y);};
    CanvasRenderingContext2D.prototype.translate=function(x,y){if(cameraNext&&this.canvas.id==='worldCanvas'){window.mazeCamera={x:-x,y:-y};cameraNext=false;}return translate.call(this,x,y);};
   },{w:JOURNEY_W,h:JOURNEY_H});
-  await page.goto(origin+(mode==='B'?'/?maze=turns':'/'));
+  await page.goto(origin+(mode==='B'?'/?atlas=previous&maze=turns':'/?atlas=previous'));
   await page.waitForFunction(()=>document.querySelector('#zoneName')?.textContent==='白い船着場');
   await page.locator('#helpBtn').click();
   assert.match(await page.locator('#helpPanel').innerText(),mode==='B'?/Bを試遊中/:/Aでは今までどおり/);

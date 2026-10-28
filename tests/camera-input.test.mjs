@@ -72,7 +72,7 @@ function animation({pending=null,idleEdge=false}={}){
  const hero={x:20,y:20,px:20,py:20,moving:false},screen={w:390,h:640};
  const camera={x:656,y:656,zoom:1.25},world={width:164*32,height:120*32,tile:32};
  if(idleEdge)Object.assign(camera,limitCamera({x:1e6,y:656},hero,{...screen,width:screen.w,height:screen.h,zoom:1.25},world,.08));
- const context=vm.createContext({camera,hero,screen,W:164,H:120,TILE:32,panTarget:pending,gesture:null,last:0,
+ const context=vm.createContext({camera,hero,screen,W:164,H:120,TILE:32,panTarget:pending,gesture:null,last:0,PILGRIMAGE_MODE:false,
   updateMove(){},updateDialogue(){},updateJourneyMusic(){},journeyView:null,journeyCamera:null,ambience:null,dialogue:null,isPanelOpen:()=>false,
   limitCamera,easeEdgeCamera,smoothPanCamera,paint(){},requestAnimationFrame(){},
   confineCamera(x=camera.x,y=camera.y,margin=.65){Object.assign(camera,limitCamera({x,y},hero,{width:screen.w,height:screen.h,zoom:camera.zoom},world,margin));}});

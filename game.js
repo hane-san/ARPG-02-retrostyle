@@ -1,3 +1,5 @@
+import {makePilgrimageWorld,pilgrimFloor,pilgrimQuiet} from './pilgrimage-world.js';
+import {drawPilgrimTile,drawPilgrimSite,drawPilgrimDecor,drawPilgrimOutlook,pilgrimTileColor} from './pilgrimage-art.js';
 import {imperialResponse,imperialPhase,createImperialListening,imperialWalkableFloor} from './journey-imperial.js';
 import {drawImperialOutlook} from './journey-imperial-art.js';
 import {W as TIDAL_W,H as TIDAL_H,TILE,ZONES as TIDAL_ZONES,SITES as TIDAL_SITES,NPCS as TIDAL_NPCS,BRIDGES as TIDAL_BRIDGES,START,makeWorld,findPath,nearestWalkable,routeWalk} from './world.js';
@@ -32,9 +34,12 @@ const $=id=>document.getElementById(id);
 const stage=$('stage'),canvas=$('worldCanvas'),ctx=canvas.getContext('2d',{alpha:false});
 const gameMode=resolveGameMode(window.location.search);
 const JOURNEY_MODE=gameMode==='journey';
-const mazeTrial=JOURNEY_MODE?createMazeTrial(window.location.search):null;
+const modeParams=new URLSearchParams(window.location.search);
+const PREVIOUS_ATLAS=modeParams.get('atlas')==='previous'||modeParams.get('maze')==='turns';
+const PILGRIMAGE_MODE=JOURNEY_MODE&&!PREVIOUS_ATLAS;
+const mazeTrial=JOURNEY_MODE?createMazeTrial(PILGRIMAGE_MODE?'':window.location.search):null;
 const PROTOTYPE_MODE=gameMode==='prototype';
-const worlds={tidal:JOURNEY_MODE?null:PROTOTYPE_MODE?makePrototypeWorld():makeWorld(),silk:null,journey:JOURNEY_MODE?makeJourneyWorld():null};
+const worlds={tidal:JOURNEY_MODE?null:PROTOTYPE_MODE?makePrototypeWorld():makeWorld(),silk:null,journey:JOURNEY_MODE?(PILGRIMAGE_MODE?makePilgrimageWorld():makeJourneyWorld()):null};
 let currentWorldId=JOURNEY_MODE?'journey':'tidal',world=worlds[currentWorldId];
 // Small art pieces are things to inspect, not places: they never inflate the discovery count (Issue #51).
 const isCurio=site=>site.kind==='art';
@@ -54,7 +59,7 @@ const CLASSIC_WALK_SPEED=6.15;
 const journeyCamera=JOURNEY_MODE?createJourneyCamera():null;
 const camera={x:(spawn.x+.5)*TILE,y:(spawn.y+.5)*TILE,zoom:journeyCamera?.target||1.25};
 const journeyMusic=JOURNEY_MODE?createJourneyMusicDirector():null;
-const imperialListening=JOURNEY_MODE?createImperialListening():null;
+const imperialListening=JOURNEY_MODE&&!PILGRIMAGE_MODE?createImperialListening():null;
 let imperialQuiet=false;
 const journeyView=JOURNEY_MODE?createJourneyView(stage,world):null;
 let panTarget=null;
@@ -84,7 +89,7 @@ if(JOURNEY_MODE){
  document.querySelector('.map-hint').textContent='';
  $('worldCanvas').setAttribute('aria-label','中央アジアの地形に着想した、草原と湖を歩く試遊マップ');
  $('mapPanel').querySelector('p.secondary').textContent=
-  '湖の東に赤い峡谷、雲上の高地、逆流する川、玻璃の町、雨の湿原、白い旧水底が続きます。好きな道を選んでください。';
+  PILGRIMAGE_MODE?'船着場から草原、水の庭、裂け目、列石、乾いた七段へ。湖を巡る細い道を一周すると、分水嶺の奥から扉のない殿と帝都へ道が続きます。好きな場所へ歩くこともできます。':'湖の東に赤い峡谷、雲上の高地、逆流する川、玻璃の町、雨の湿原、白い旧水底が続きます。好きな道を選んでください。';
  $('helpPanel').querySelector('.sheet p').textContent=
   '白い橋から円い草原へ。湖の東側へ渡れば、赤い崖、雲上の寺、逆流する川、淡い光の街、葦の湿原、白い旧水底へ。道順は自由です。高台では少し立ち止まって遠景もどうぞ。';
  const helpParagraphs=$('helpPanel').querySelectorAll('.sheet > p');
@@ -95,9 +100,9 @@ if(JOURNEY_MODE){
  mazeHelp.innerHTML='<strong>迷路の歩き方を比べる</strong><br>'+
   (mazeTrial.enabled?'Bを試遊中。南西の風蝕迷路では、まだ歩いていない曲がり角で止まります。先へはもう一度行き先を選んでください。地図からの徒歩はいつもどおり。覚えた道はこの画面を開いているあいだだけ残ります。':'Aでは今までどおり、選んだ場所まで道を探して歩きます。Bでは南西迷路の曲がり角で、先を選び直す歩き方を試せます。')+
   '<span class="maze-trial-links"><a href="./">A：今までの歩き方</a><a href="./?maze=turns">B：迷路の角で立ち止まる</a></span>';
- $('helpPanel').querySelector('.sheet').append(mazeHelp);
+ if(!PILGRIMAGE_MODE){mazeHelp.querySelectorAll('a')[0].href='./?atlas=previous';mazeHelp.querySelectorAll('a')[1].href='./?atlas=previous&maze=turns';$('helpPanel').querySelector('.sheet').append(mazeHelp);}
  $('musicPanel').querySelector('p.secondary').textContent=
-  '土地ごとの曲が流れます。ここでは68曲から、好きな一曲を選ぶこともできます。';
+  '土地ごとの曲が流れます。原曲68曲と追加曲から、好きな一曲を選ぶこともできます。';
  installJourneyUI();
 }
 const modeNav=document.createElement('p');
@@ -151,6 +156,7 @@ const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):nu
 observer?.observe(stage);window.addEventListener('resize',resize);resize();
 
 function paintTile(c,x,y,t){
+ if(PILGRIMAGE_MODE){drawPilgrimTile(c,x,y,t,world);return;}
  if(currentWorldId==='journey'){drawJourneyTile(c,x,y,t,world);return;}
  if(currentWorldId==='silk'){drawSilkTile(c,x,y,t);return;}
  const px=x*TILE,py=y*TILE,n=hash(x,y),n2=hash(y,x);
@@ -300,6 +306,7 @@ function bridgeArt(c,b,time){
  c.restore();
 }
 function drawSite(c,s,t){
+ if(PILGRIMAGE_MODE){drawPilgrimSite(c,s,t);return;}
  if(currentWorldId==='journey'){drawJourneySite(c,s,t);return;}
  if(currentWorldId==='silk'){drawSilkSite(c,s,t);return;}
  const x=s.x*TILE,y=s.y*TILE,w=s.w*TILE,h=s.h*TILE,mid=x+w/2;
@@ -451,7 +458,8 @@ function paint(t){
    ctx.drawImage(chunk(cx,cy),cx*CHUNK*TILE,cy*CHUNK*TILE);
  for(const b of BRIDGES)
   if(b.x1<=right&&b.x2>=left&&b.y1<=bottom&&b.y2>=top)bridgeArt(ctx,b,t);
- if(JOURNEY_MODE)drawJourneyAtmosphere(ctx,{left,right,top,bottom},t);
+ if(PILGRIMAGE_MODE)drawPilgrimDecor(ctx,world,{left,right,top,bottom});
+ else if(JOURNEY_MODE)drawJourneyAtmosphere(ctx,{left,right,top,bottom},t);
  // Landmarks marking the portals at the far end of each bridge.
  for(const portal of world.transitions||[]){
   if(portal.x<left||portal.x>right||portal.y<top||portal.y>bottom)continue;
@@ -470,7 +478,7 @@ function paint(t){
  }
  const objects=[];
  for(const s of SITES)if(s.x<=right+3&&s.x+s.w>=left-3&&s.y-(s.artTop||0)<=bottom+3&&s.y+s.h>=top-3)
-  objects.push({y:imperialWalkableFloor(world,s,{x:hero.x,y:hero.y})?hero.py-.1:s.y+s.h,render:()=>drawSite(ctx,s,t)});
+  objects.push({y:(pilgrimFloor(world,s,{x:hero.x,y:hero.y})||imperialWalkableFloor(world,s,{x:hero.x,y:hero.y}))?hero.py-.1:s.y+s.h,render:()=>drawSite(ctx,s,t)});
  for(const n of NPCS)if(n.x>=left-1&&n.x<=right+1&&n.y>=top-1&&n.y<=bottom+1)
   objects.push({y:n.y+.5,render:()=>drawNpc(ctx,n,t)});
  objects.push({y:hero.py+.7,render:()=>drawHero(ctx,t)});
@@ -480,7 +488,8 @@ function paint(t){
  const vignette=ctx.createRadialGradient(screen.w*.5,screen.h*.48,screen.h*.2,screen.w*.5,screen.h*.5,Math.max(screen.w,screen.h)*.75);
  vignette.addColorStop(0,'#0c233000');vignette.addColorStop(1,'#10203355');
  ctx.fillStyle=vignette;ctx.fillRect(0,0,screen.w,screen.h);
- if(JOURNEY_MODE)drawImperialOutlook(ctx,{x:hero.px,y:hero.py},screen.w,screen.h);
+ if(PILGRIMAGE_MODE)drawPilgrimOutlook(ctx,world,hero,screen.w,screen.h);
+ else if(JOURNEY_MODE)drawImperialOutlook(ctx,{x:hero.px,y:hero.py},screen.w,screen.h);
 }
 function screenToWorld(clientX,clientY){
  const r=canvas.getBoundingClientRect(),sx=clientX-r.left,sy=clientY-r.top;
@@ -505,7 +514,7 @@ function updateDiscoveries(){
 }
 function updateJourneyMusic(now){
  if(!journeyMusic)return;
- const quiet=imperialListening.update(hero.px,hero.py),quietChanged=quiet!==imperialQuiet;
+ const quiet=PILGRIMAGE_MODE?pilgrimQuiet(world,{x:hero.px,y:hero.py},imperialQuiet):imperialListening.update(hero.px,hero.py),quietChanged=quiet!==imperialQuiet;
  imperialQuiet=quiet;
  const accepted=journeyMusic.update(world.zoneAt(hero.x,hero.y).id,now);
  if(accepted){$('trackSelect').value=pickJourneyTrack(accepted,$('trackSelect').value);applyTrack();}
@@ -548,8 +557,9 @@ function onArrive(){
  if(obj.kind==='npc'){openDialogue(obj.item.name,obj.item.role,JOURNEY_MODE?obj.item.lines:(currentWorldId==='silk'?SILK_TALK:TALK)[obj.item.id]||obj.item.lines);return;}
  if(obj.kind==='site'){
   const fresh=!isCurio(obj.item)&&!discovered.has(obj.item.id);
-  if(fresh){discovered.add(obj.item.id);updateDiscoveries();sfx.play('heal');}
+  if(fresh){discovered.add(obj.item.id);updateDiscoveries();if(!PILGRIMAGE_MODE)sfx.play('heal');}
   if(JOURNEY_MODE){
+   if(PILGRIMAGE_MODE)sfx.respond(obj.item.form==='garden'?(obj.item.chapter===2?'receiving-wet':'receiving-dry'):obj.item.form);
    const response=imperialResponse(obj.item)||activateRuinsDevice(obj.item);
    if(response&&obj.item.kind==='imperial'&&!(obj.item.form==='sealed'&&imperialPhase(obj.item.id)%2===0))sfx.respond(obj.item.form);
    openDialogue(obj.item.name,'この場所で',[obj.item.desc,response,obj.item.aside]);return;
@@ -597,7 +607,7 @@ function handleTap(e){
   if(npc){walkToNpc(npc);return;}
  }
  const site=world.siteAt(p.x,p.y);
- if(imperialWalkableFloor(world,site,p)){startWalk(p);return;}
+ if(pilgrimFloor(world,site,p)||imperialWalkableFloor(world,site,p)){startWalk(p);return;}
  if(site){startWalk(site.entrance,{kind:'site',item:site});return;}
  const bridge=world.bridgeAt(p.x,p.y);
  // Either Starwind bridge, including the one beside the spawn, leads across.
@@ -722,7 +732,7 @@ function animate(time){
  }
  // Time-based smoothing makes both fingertip panning and edge-following fluid.
  const viewport={width:screen.w,height:screen.h,zoom:camera.zoom};
- const bounds={width:W*TILE,height:H*TILE,tile:TILE};
+ const bounds={width:W*TILE,height:H*TILE,tile:TILE,pilgrimage:PILGRIMAGE_MODE};
  if(panTarget){
   // The hero or viewport can change after a drag; settle against the current
   // reachable target instead of keeping an impossible target alive forever.
@@ -881,24 +891,26 @@ function drawMinimap(){
  const c=mini.getContext('2d'),sx=mini.width/W,sy=mini.height/H;
  c.clearRect(0,0,mini.width,mini.height);
  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
-  c.fillStyle=(JOURNEY_MODE?JOURNEY_PALETTE:currentWorldId==='silk'?SILK_PALETTE:palette)[world.tileAt(x,y)]||'#91a49a';c.fillRect(x*sx,y*sy,sx+1,sy+1);
+  c.fillStyle=PILGRIMAGE_MODE?pilgrimTileColor(world,x,y):(JOURNEY_MODE?JOURNEY_PALETTE:currentWorldId==='silk'?SILK_PALETTE:palette)[world.tileAt(x,y)]||'#91a49a';c.fillRect(x*sx,y*sy,sx+1,sy+1);
  }
+ if(PILGRIMAGE_MODE){c.save();c.strokeStyle='#f1e5cc99';c.lineWidth=2;c.setLineDash([4,5]);c.beginPath();world.route.forEach((p,i)=>i?c.lineTo((p.x+.5)*sx,(p.y+.5)*sy):c.moveTo((p.x+.5)*sx,(p.y+.5)*sy));c.stroke();c.restore();}
  c.strokeStyle='#f3e5c8';c.lineWidth=2;
  for(const z of ZONES){
   if(z.rx&&z.ry)c.strokeRect((z.cx-z.rx)*sx,(z.cy-z.ry)*sy,z.rx*2*sx,z.ry*2*sy);
-  c.textAlign='center';c.fillStyle='#fff6db';c.font='bold 12px system-ui';
+  const chartScale=PILGRIMAGE_MODE?mini.width/Math.max(1,mini.getBoundingClientRect().width):1;
+  c.textAlign='center';c.fillStyle='#fff6db';c.font=`bold ${12*chartScale}px system-ui`;
   const lx=JOURNEY_MODE?z.label.x:z.cx,ly=JOURNEY_MODE?z.label.y:z.cy-13;
   // Unvisited regions keep their names (they are reachable) but read as rumours.
   const known=!JOURNEY_MODE||visitedZones.has(z.id);
   c.globalAlpha=known?1:.55;
-  c.strokeStyle='#17374a';c.lineWidth=3;c.strokeText(z.name,lx*sx,ly*sy);
-  c.fillText(z.name,lx*sx,ly*sy);c.globalAlpha=1;
+  c.strokeStyle='#17374a';c.lineWidth=3*chartScale;c.strokeText(PILGRIMAGE_MODE?z.chartName:z.name,lx*sx,ly*sy);
+  c.fillText(PILGRIMAGE_MODE?z.chartName:z.name,lx*sx,ly*sy);c.globalAlpha=1;
  }
  for(const s of SITES){
   if(JOURNEY_MODE&&!discovered.has(s.id)&&s.kind!=='terminal')continue;
   c.fillStyle=discovered.has(s.id)?'#fff0a1':'#f8d5b0';c.fillRect(s.entrance.x*sx-3,s.entrance.y*sy-3,6,6);
  }
- c.fillStyle='#fae5a1';c.beginPath();c.arc((hero.px+.5)*sx,(hero.py+.5)*sy,6,0,Math.PI*2);c.fill();
+ c.fillStyle='#fae5a1';c.beginPath();c.arc((hero.px+.5)*sx,(hero.py+.5)*sy,PILGRIMAGE_MODE?6*mini.width/Math.max(1,mini.getBoundingClientRect().width):6,0,Math.PI*2);c.fill();
  c.strokeStyle='#244658';c.lineWidth=2;c.stroke();
 }
 mini.addEventListener('click',e=>{

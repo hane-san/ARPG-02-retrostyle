@@ -42,7 +42,7 @@ export async function checkJourney(page,origin){
    return draw.apply(this,args);
   };
  });
- const response=await page.goto(origin+'/',{waitUntil:'load'});
+ const response=await page.goto(origin+'/?atlas=previous',{waitUntil:'load'});
  assert.ok(response?.ok());
  await page.waitForFunction(total=>document.querySelector('#discovered')?.textContent==='0 / '+total,35+RUINS_SITES.length+IMPERIAL_SITES.length);
  assert.equal(await page.locator('#worldTitle').textContent(),'小さく壮大な旅');
@@ -340,7 +340,7 @@ export async function checkJourney(page,origin){
  assert.equal(await page.locator('#sfxToggle').textContent(),'OFF');
  const keys=await page.evaluate(()=>Object.keys(localStorage));
  assert.ok(keys.length>0&&keys.every(key=>key.startsWith('tidal-atlas:')));
- await page.goto(origin+'/?prototype=1&journey=1');
+ await page.goto(origin+'/?prototype=1&journey=1&atlas=previous');
  await page.waitForFunction(()=>document.querySelector('#worldTitle').textContent==='小さく壮大な旅');
  assert.equal(await page.locator('#discovered').textContent(),'0 / '+(35+RUINS_SITES.length+IMPERIAL_SITES.length),'mode flags have explicit precedence, with no game-save added');
  await page.locator('#soundBtn').click();
