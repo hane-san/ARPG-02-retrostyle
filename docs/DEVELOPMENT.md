@@ -62,6 +62,7 @@ Chromium検査は一時的に `npm install --no-save --package-lock=false playwr
 
 ## 4. 実装境界
 
+- `pilgrimage-world.js` / `pilgrimage-art.js`：Issue #80の既定巡礼。配置変更の採用範囲と事前計画は [PILGRIMAGE-LOOP](PILGRIMAGE-LOOP.md)。以前のatlasは `?atlas=previous` の比較資料。
 - `world.js`、`silk-world.js`：地形、遮断、水域、道、施設、NPC、橋、ワープ接続・A*。
 - `prototype-world.js`：通常版の座標系を保つ80×110の切り出し。4施設・4NPC・2地区、通常版と共通の経路探索。小さな旅の詳細と未確認の独立監査は[PROTOTYPE](PROTOTYPE.md)。
 - `game.js`：描画、タッチ/マウス/キー、NPC会話、UI、世界切替、カメラ統合。

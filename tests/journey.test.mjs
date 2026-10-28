@@ -1,3 +1,4 @@
+import {PILGRIM_ZONES} from '../pilgrimage-world.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {makeJourneyWorld,JOURNEY_W,JOURNEY_H,STEPPE,routeJourneyWalk} from '../journey-world.js';
@@ -125,8 +126,8 @@ test('the three world data contracts coexist without shared occupancy or hidden 
 
 test('journey playlists keep the original 68 pieces first and distinguish every region',()=>{
  assert.equal(ORIGINAL_SCORE_COUNT*2,68);assert.ok(MUSIC_LIBRARY.length>=ORIGINAL_SCORE_COUNT);
- assert.equal(Object.keys(JOURNEY_PLAYLISTS).length,world.zones.length);
- for(const z of world.zones){
+ assert.equal(Object.keys(JOURNEY_PLAYLISTS).length,world.zones.length+PILGRIM_ZONES.length);
+ for(const z of [...world.zones,...PILGRIM_ZONES]){
   const pool=JOURNEY_PLAYLISTS[z.id];assert.ok(pool?.length>=3);
   for(const key of pool){
    const [score,phase]=key.split(':').map(Number);

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {makeJourneyWorld,JOURNEY_W,JOURNEY_H} from '../journey-world.js';
+import {makePilgrimageWorld as makeJourneyWorld,PILGRIM_W as JOURNEY_W,PILGRIM_H as JOURNEY_H} from '../pilgrimage-world.js';
 import {nearestWalkable} from '../world.js';
 
 export async function checkJourneyMotion(browser,origin){

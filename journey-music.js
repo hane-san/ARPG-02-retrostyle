@@ -1,8 +1,10 @@
+import {PILGRIM_ZONES} from './pilgrimage-world.js';
 import {IMPERIAL_SCORE_START as I} from './music.js';
 // Each region has a small, intentional set of colours. Scores 0-33 are the original 68 pieces;
 // 34-37 are the melancholic drive tracks, 38-39 the uneasy ones and 40-41 the steppe travel
 // tracks added on 2026-10-22 for the open, empty-feeling regions.
 export const JOURNEY_PLAYLISTS={
+ ...Object.fromEntries(PILGRIM_ZONES.map(z=>[z.id,z.music])),
  'journey-confluence':[`${I}:1`,'23:2','29:2'],
  'journey-blackreach':[`${I+1}:1`,`${I+1}:2`,'7:2'],
  'journey-empty-ridge':[`${I+2}:2`,'27:2','37:1'],
@@ -34,6 +36,7 @@ export const JOURNEY_PLAYLISTS={
 export function pickJourneyTrack(zone,previous,random=Math.random){
  const pool=JOURNEY_PLAYLISTS[zone];
  if(!pool)throw new Error('Unknown journey music region '+zone);
+ if(zone.startsWith('pilgrim-')&&previous!==pool[0])return pool[0];
  // These seven studies have an authored first colour: the paired water melody,
  // stone, distant return motif, then the city in full. Later choices still vary.
  if(['journey-confluence','journey-blackreach','journey-empty-ridge','journey-imperial-remains',
