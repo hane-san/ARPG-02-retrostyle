@@ -5,7 +5,11 @@ const ellipse=(c,x,y,rx,ry,color,width)=>{c.strokeStyle=color;c.lineWidth=width;
 function pier(c,x,y,h,p){box(c,x,y,32,h,p[3]);box(c,x,y,7,h,p[1]);for(let j=18;j<h;j+=28){line(c,x,y+j,x+31,y+j,p[0],2);box(c,x+11,y+j-14,9,5,p[0]);}}
 function human(c,x,y,p){box(c,x+1,y-9,3,3,p[1]);box(c,x,y-6,5,6,p[3]);box(c,x,y,2,3,p[3]);box(c,x+4,y,1,3,p[3]);}
 function letters(c,x,y,w,p){for(let i=0;i<7;i++){const xx=x+9+i*(w-20)/7;box(c,xx,y,19,13,p[1]);box(c,xx+3,y+3,12,1,p[3]);box(c,xx+3,y+6,7,1,p[0]);if(i%3===0)line(c,xx+3,y+10,xx+14,y+10,'#ae827b');}}
-function wheel(c,x,y,r,p,angle=0){ellipse(c,x,y,r,r,p[3],9);ellipse(c,x,y,r-10,r-10,p[1],3);for(let i=0;i<12;i++){const a=i*Math.PI/6+angle,xx=Math.cos(a),yy=Math.sin(a);line(c,x,y,x+xx*r,y+yy*r,p[0],4);box(c,x+xx*(r-2)-6,y+yy*(r-2)-4,12,8,p[1]);}box(c,x-5,y-5,10,10,p[3]);}
+function wheel(c,x,y,r,p,angle=0){
+ ellipse(c,x,y,r,r,p[3],Math.max(1,r*.15));ellipse(c,x,y,r*.8,r*.8,p[1],Math.max(1,r*.05));
+ for(let i=0;i<12;i++){const a=i*Math.PI/6+angle,xx=Math.cos(a),yy=Math.sin(a);line(c,x,y,x+xx*r,y+yy*r,p[0],Math.max(1,r*.07));box(c,x+xx*r-r*.1,y+yy*r-r*.07,Math.max(1,r*.2),Math.max(1,r*.14),p[1]);}
+ box(c,x-r*.08,y-r*.08,Math.max(1,r*.16),Math.max(1,r*.16),p[3]);
+}
 export function drawJourneyWonder(c,s,p,time=0){
  const x=s.x*32,y=s.y*32,w=s.w*32,h=s.h*32,cx=x+w/2,base=y+h,form=s.form.slice(7);
  c.save();

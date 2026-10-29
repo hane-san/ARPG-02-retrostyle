@@ -29,10 +29,16 @@ export async function checkPilgrimage(browser,origin){
   });
  },arches);
  for(const a of gaps){assert.equal(a.gap,0,'walkable arch centre must be visually open');assert.equal(a.pier,255,'solid pier remains visible');}
+ // Exercise each new vista's actual Canvas commands before the long itinerary.
+ const newVistas=await page.evaluate(async vistas=>{
+  const {drawJourneyPanorama}=await import('./journey-panorama.js');
+  return vistas.map(v=>{const canvas=document.createElement('canvas');drawJourneyPanorama(canvas,v.kind);const d=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data,colours=new Set();for(let i=0;i<d.length;i+=4)colours.add(d[i]+','+d[i+1]+','+d[i+2]);return {w:canvas.width,h:canvas.height,colours:colours.size};});
+ },WONDER_VISTAS);
+ for(const v of newVistas){assert.deepEqual([v.w,v.h],[480,252]);assert.ok(v.colours>8,'every new vista draws its landscape');}
  await page.locator('#mapBtn').click();assert.equal(await page.locator('#zoneList button').count(),13);await page.locator('#mapPanel [data-close]').click();
  await page.locator('#soundBtn').click();assert.equal(await page.locator('#trackSelect option').count(),90);assert.equal(await page.locator('#musicToggle').textContent(),'OFF');assert.equal(await page.locator('#sfxToggle').textContent(),'ON');await page.locator('#musicPanel [data-close]').click();
  await page.clock.install();
- async function settle(){for(let i=0;i<75;i++){await page.clock.runFor(1000);if(await page.locator('#worldCanvas').getAttribute('aria-busy')==='false')return;}throw Error('walk did not settle');}
+ async function settle(){for(let i=0;i<75;i++){await page.clock.runFor(1000);assert.deepEqual(errors,[],'walking must retain its rendering loop');if(await page.locator('#worldCanvas').getAttribute('aria-busy')==='false')return;}throw Error('walk did not settle');}
  async function position(){await page.locator('#mapBtn').click();const p=await page.evaluate(()=>window.pilgrimPosition);await page.locator('#mapPanel [data-close]').click();return {x:Math.round(p.x),y:Math.round(p.y)};}
  async function walk(target){
   await page.locator('#mapBtn').click();const box=await page.locator('#miniMap').boundingBox();
