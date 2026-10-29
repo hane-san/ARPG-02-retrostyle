@@ -32,3 +32,8 @@ export function drawPilgrimPlay(c,site,p){
  c.strokeStyle=p[1];c.lineWidth=3;c.beginPath();c.arc(cx,y-77,9,0,Math.PI*2);c.stroke();
  c.fillStyle=p[3];c.fillRect(cx-2,y-80,4,7);c.restore();
 }
+// Pick the visible handle even on an open floor; never make that floor solid.
+export function pilgrimPlayHandle(world,point){
+ if(!world.pilgrimage)return null;
+ return world.sites.find(s=>pilgrimPlayKind(s)&&Math.abs((point.x+.5)*32-(s.x+s.w/2)*32)<=24&&Math.abs((point.y+.5)*32-((s.y+s.h)*32-97))<=24)||null;
+}

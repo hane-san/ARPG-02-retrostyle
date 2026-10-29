@@ -1,4 +1,4 @@
-import {turnPilgrimPlay} from './pilgrimage-play.js';
+import {turnPilgrimPlay,pilgrimPlayHandle} from './pilgrimage-play.js';
 import {drawForestCanopies} from './forest-market-art.js';
 import {makePilgrimageWorld,pilgrimFloor,pilgrimQuiet,pilgrimSiteOpacity,pilgrimArtHit} from './pilgrimage-world.js';
 import {drawPilgrimTile,drawPilgrimSite,drawPilgrimDecor,drawPilgrimOutlook,pilgrimTileColor} from './pilgrimage-art.js';
@@ -609,6 +609,8 @@ function handleTap(e){
   const npc=NPCS.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<1.8);
   if(npc){walkToNpc(npc);return;}
  }
+ const handle=pilgrimPlayHandle(world,p);
+ if(handle){startWalk(handle.entrance,{kind:'site',item:handle});return;}
  const site=world.siteAt(p.x,p.y)||pilgrimArtHit(world,p);
  if(pilgrimFloor(world,site,p)||imperialWalkableFloor(world,site,p)){startWalk(p);return;}
  if(site){startWalk(site.entrance,{kind:'site',item:site});return;}

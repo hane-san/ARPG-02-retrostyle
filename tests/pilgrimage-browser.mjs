@@ -60,7 +60,8 @@ export async function checkPilgrimage(browser,origin){
   const hashes=[];
   for(let i=0;i<4;i++){
    const before=await page.evaluate(async s=>(await import('./pilgrimage-play.js')).pilgrimPlayPhase(s),site);
-   await fieldTap(point);assert.equal(await page.locator('#dialogueName').textContent(),site.name);
+   const handle={x:Math.floor(site.x+site.w/2),y:Math.floor(site.y+site.h-97/32)};
+   await fieldTap(i%2?point:handle);assert.equal(await page.locator('#dialogueName').textContent(),site.name);
    const result=await page.evaluate(async s=>{
     const {pilgrimPlayPhase}=await import('./pilgrimage-play.js'),{drawPilgrimSite}=await import('./pilgrimage-art.js');
     const canvas=document.createElement('canvas');canvas.width=700;canvas.height=700;drawPilgrimSite(canvas.getContext('2d'),{...s,x:2,y:8},0);
