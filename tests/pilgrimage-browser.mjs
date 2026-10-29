@@ -56,6 +56,23 @@ export async function checkPilgrimage(browser,origin){
   assert.ok(x>0&&x<box.width&&y>0&&y<box.height,'field target visible');
   await page.locator('#worldCanvas').tap({position:{x,y}});await settle();
  }
+ async function playWithWheel(site,point){
+  const hashes=[];
+  for(let i=0;i<4;i++){
+   const before=await page.evaluate(async s=>(await import('./pilgrimage-play.js')).pilgrimPlayPhase(s),site);
+   const handle={x:Math.floor(site.x+site.w/2),y:Math.floor(site.y+site.h-97/32)};
+   await fieldTap(i%2?point:handle);assert.equal(await page.locator('#dialogueName').textContent(),site.name);
+   const result=await page.evaluate(async s=>{
+    const {pilgrimPlayPhase}=await import('./pilgrimage-play.js'),{drawPilgrimSite}=await import('./pilgrimage-art.js');
+    const canvas=document.createElement('canvas');canvas.width=700;canvas.height=700;drawPilgrimSite(canvas.getContext('2d'),{...s,x:2,y:8},0);
+    const data=canvas.getContext('2d').getImageData(0,0,700,700).data;let hash=2166136261;for(const v of data)hash=Math.imul(hash^v,16777619);return {phase:pilgrimPlayPhase(s),hash};
+   },site);
+   assert.equal(result.phase,(before+1)%3);hashes.push(result.hash);
+   await page.locator('#dialogueClose').click();await page.clock.runFor(250);
+  }
+  assert.equal(new Set(hashes.slice(0,3)).size,3,'each groove has a distinct rendered boat or cloth position');assert.equal(hashes[0],hashes[3],'one full turn returns to the same picture');
+  await page.screenshot({path:`test-results/play-${site.id}.png`});console.log('Wheel play: '+site.name+'; four real investigations and three distinct Canvas states.');
+ }
  // Repeated nearby ground taps preserve the existing composition without Home.
  const initialCamera=await page.evaluate(()=>window.pilgrimCamera);
  for(const dx of [1,2,1,0]){
@@ -102,6 +119,7 @@ export async function checkPilgrimage(browser,origin){
    }
    if(z.index===1){
     assert.equal(zone,'輪を結ぶ森市');
+    const toy=world.sites.find(s=>s.id==='pilgrim-place-1');await playWithWheel(toy,{x:toy.x+1,y:toy.y+toy.h-1});await walk(PILGRIM_ROUTE[i]);
     const leaves=await page.evaluate(async()=>{
      const {drawForestCanopies,drawForestTree}=await import('./forest-market-art.js');
      const tree={x:3,y:5,variant:12,seed:.4},canvas=document.createElement('canvas');canvas.width=256;canvas.height=256;const c=canvas.getContext('2d');
@@ -146,6 +164,7 @@ export async function checkPilgrimage(browser,origin){
     await fieldTap({x:stone.x+3,y:stone.y-5});assert.equal(await page.locator('#dialogueName').textContent(),stone.name,'drawn high stone is a real investigation target');
     await page.locator('#dialogueClose').click();await walk(PILGRIM_ROUTE[i]);
    }
+   if(z.index===6){const dry=world.sites.find(s=>s.id==='pilgrim-place-6');await playWithWheel(dry,{x:dry.x,y:dry.y+2});await walk(PILGRIM_ROUTE[i]);}
    for(const s of JOURNEY_WONDERS.filter(s=>s.chapter===z.index)){
     await walk(s.entrance);await page.locator('#homeBtn').click();await page.clock.runFor(2000);
     // Inspect an actual solid foot, then walk through the open span.
@@ -156,6 +175,7 @@ export async function checkPilgrimage(browser,origin){
     await page.screenshot({path:`test-results/${s.id}.png`});
     const vista=WONDER_VISTAS.find(v=>v.chapter===s.chapter);
     if(vista){await page.locator('#vistaBtn').click();assert.equal(await page.locator('#vistaTitle').textContent(),vista.title);await page.screenshot({path:`test-results/${s.id}-vista.png`});await page.locator('#vistaClose').click();}
+    if(s.form==='wonder-wheel')await playWithWheel(s,{x:s.x,y:s.y});
     console.log('World study walked and investigated: '+s.name);
    }
    if(JOURNEY_WONDERS.some(s=>s.chapter===z.index))await walk(PILGRIM_ROUTE[i]);

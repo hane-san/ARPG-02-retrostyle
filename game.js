@@ -1,3 +1,4 @@
+import {turnPilgrimPlay,pilgrimPlayHandle} from './pilgrimage-play.js';
 import {drawForestCanopies} from './forest-market-art.js';
 import {makePilgrimageWorld,pilgrimFloor,pilgrimQuiet,pilgrimSiteOpacity,pilgrimArtHit} from './pilgrimage-world.js';
 import {drawPilgrimTile,drawPilgrimSite,drawPilgrimDecor,drawPilgrimOutlook,pilgrimTileColor} from './pilgrimage-art.js';
@@ -561,8 +562,8 @@ function onArrive(){
   const fresh=!isCurio(obj.item)&&!discovered.has(obj.item.id);
   if(fresh){discovered.add(obj.item.id);updateDiscoveries();if(!PILGRIMAGE_MODE)sfx.play('heal');}
   if(JOURNEY_MODE){
-   if(PILGRIMAGE_MODE)sfx.respond(obj.item.form==='forest-wheel'?'wheel':obj.item.form==='garden'?(obj.item.chapter===2?'receiving-wet':'receiving-dry'):obj.item.form);
-   const response=imperialResponse(obj.item)||activateRuinsDevice(obj.item);
+   if(PILGRIMAGE_MODE)sfx.respond(['forest-wheel','wonder-wheel'].includes(obj.item.form)?'wheel':obj.item.form==='garden'?(obj.item.chapter===2?'receiving-wet':'receiving-dry'):obj.item.form);
+   const response=(PILGRIMAGE_MODE?turnPilgrimPlay(obj.item):null)||imperialResponse(obj.item)||activateRuinsDevice(obj.item);
    if(response&&obj.item.kind==='imperial'&&!(obj.item.form==='sealed'&&imperialPhase(obj.item.id)%2===0))sfx.respond(obj.item.form);
    openDialogue(obj.item.name,'この場所で',[obj.item.desc,response,obj.item.aside]);return;
   }
@@ -608,6 +609,8 @@ function handleTap(e){
   const npc=NPCS.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<1.8);
   if(npc){walkToNpc(npc);return;}
  }
+ const handle=pilgrimPlayHandle(world,p);
+ if(handle){startWalk(handle.entrance,{kind:'site',item:handle});return;}
  const site=world.siteAt(p.x,p.y)||pilgrimArtHit(world,p);
  if(pilgrimFloor(world,site,p)||imperialWalkableFloor(world,site,p)){startWalk(p);return;}
  if(site){startWalk(site.entrance,{kind:'site',item:site});return;}
