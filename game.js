@@ -559,7 +559,7 @@ function onArrive(){
   const fresh=!isCurio(obj.item)&&!discovered.has(obj.item.id);
   if(fresh){discovered.add(obj.item.id);updateDiscoveries();if(!PILGRIMAGE_MODE)sfx.play('heal');}
   if(JOURNEY_MODE){
-   if(PILGRIMAGE_MODE)sfx.respond(obj.item.form==='garden'?(obj.item.chapter===2?'receiving-wet':'receiving-dry'):obj.item.form);
+   if(PILGRIMAGE_MODE)sfx.respond(obj.item.form==='forest-wheel'?'wheel':obj.item.form==='garden'?(obj.item.chapter===2?'receiving-wet':'receiving-dry'):obj.item.form);
    const response=imperialResponse(obj.item)||activateRuinsDevice(obj.item);
    if(response&&obj.item.kind==='imperial'&&!(obj.item.form==='sealed'&&imperialPhase(obj.item.id)%2===0))sfx.respond(obj.item.form);
    openDialogue(obj.item.name,'この場所で',[obj.item.desc,response,obj.item.aside]);return;
