@@ -102,7 +102,7 @@ export function drawForestCanopies(c,world,bounds,hero){
  const people=[{x:hero.px,y:hero.py},...world.npcs];
  for(const d of world.decor){
   if(d.variant!==12||d.x<bounds.left-3||d.x>bounds.right+3||d.y<bounds.top-1||d.y>bounds.bottom+5)continue;
-  const covered=people.some(p=>p.x>=d.x-1.5&&p.x<=d.x+2.5&&p.y>=d.y-3.8&&p.y<=d.y-1);
+  const covered=people.some(p=>p.x>=d.x-2.4&&p.x<=d.x+2.5&&p.y>=d.y-4.8&&p.y<=d.y-1);
   c.save();c.globalAlpha=covered?.22:1;drawForestTree(c,d,'canopy');c.restore();
  }
 }
