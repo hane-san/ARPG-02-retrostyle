@@ -76,7 +76,10 @@ export function createJourneyCamera(){
 }
 export function easeJourneyCamera(current,hero,target,dt,viewport,world){
  const difference=target-current.zoom;
- const zoom=Math.abs(difference)<.001?target:current.zoom+difference*(1-Math.exp(-Math.max(0,Math.min(.12,dt))*1.8));
+ // Large reveals take several seconds rather than spending the whole change
+ // in the first few frames. Ordinary/legacy zoom retains its established rate.
+ const response=target<.6||current.zoom<.66?.65:1.8;
+ const zoom=Math.abs(difference)<.001?target:current.zoom+difference*(1-Math.exp(-Math.max(0,Math.min(.07,dt))*response));
  const hx=(hero.x+.5)*world.tile,hy=(hero.y+.5)*world.tile;
  // Keep the traveller at the same screen position as the field expands.
  const anchor={x:hx-(hx-current.x)*current.zoom/zoom,y:hy-(hy-current.y)*current.zoom/zoom};

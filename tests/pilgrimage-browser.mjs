@@ -63,6 +63,7 @@ export async function checkPilgrimage(browser,origin){
   await walk(PILGRIM_ROUTE[i]);const zone=await page.locator('#zoneName').textContent();visited.add(zone);
   const z=PILGRIM_ZONES.find(z=>z.at===i);
   if(z){
+   if([4,11,12].includes(z.index))await page.clock.runFor(6000);
    console.log('Pilgrimage region '+z.index+': '+zone);
    assert.equal(zone,world.zoneAt(PILGRIM_ROUTE[i].x,PILGRIM_ROUTE[i].y).name);
    if([2,5,6,10,11,12].includes(z.index)){
