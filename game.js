@@ -1,3 +1,4 @@
+import {drawForestCanopies} from './forest-market-art.js';
 import {makePilgrimageWorld,pilgrimFloor,pilgrimQuiet,pilgrimSiteOpacity,pilgrimArtHit} from './pilgrimage-world.js';
 import {drawPilgrimTile,drawPilgrimSite,drawPilgrimDecor,drawPilgrimOutlook,pilgrimTileColor} from './pilgrimage-art.js';
 import {imperialResponse,imperialPhase,createImperialListening,imperialWalkableFloor} from './journey-imperial.js';
@@ -483,6 +484,7 @@ function paint(t){
   objects.push({y:n.y+.5,render:()=>drawNpc(ctx,n,t)});
  objects.push({y:hero.py+.7,render:()=>drawHero(ctx,t)});
  objects.sort((a,b)=>a.y-b.y);for(const obj of objects)obj.render();
+ if(PILGRIMAGE_MODE)drawForestCanopies(ctx,world,{left,right,top,bottom},hero);
  drawDestination(ctx,t);
  ctx.restore();
  const vignette=ctx.createRadialGradient(screen.w*.5,screen.h*.48,screen.h*.2,screen.w*.5,screen.h*.5,Math.max(screen.w,screen.h)*.75);

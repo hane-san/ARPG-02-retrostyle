@@ -8,11 +8,14 @@ function cloth(c,x,y,w,h,color){
  for(let i=4;i<w;i+=12){poly(c,[[x+i,y+5],[x+i+4,y+9],[x+i,y+13],[x+i-4,y+9]],cream);rect(c,x+i-1,y+h-3,2,7,cream);}
  line(c,x,y+2,x+w,y+2,cream,2);
 }
-export function drawForestTree(c,d){
+export function drawForestTree(c,d,layer='all'){
  const x=d.x*32,y=d.y*32;
+ if(layer!=='canopy'){
  poly(c,[[x-17,y+24],[x+25,y+16],[x+49,y+29],[x+8,y+37]],'#5b816b35');
  rect(c,x+9,y-54,14,83,wood);rect(c,x+9,y-53,4,78,honey);
  line(c,x+14,y-24,x-11,y-54,wood,8);line(c,x+17,y-33,x+42,y-65,wood,7);
+ }
+ if(layer!=='trunk'){
  for(const [dx,dy,w,h,color] of [[-38,-96,78,49,'#658b71'],[-17,-116,77,54,'#739e7b'],[15,-93,60,52,'#7fa983'],[-35,-85,54,35,'#83af86'],[-12,-112,43,28,'#a3c393']]){
   poly(c,[[x+dx,y+dy+12],[x+dx+w*.25,y+dy],[x+dx+w*.76,y+dy+3],[x+dx+w,y+dy+h*.43],[x+dx+w*.87,y+dy+h],[x+dx+7,y+dy+h-2]],color);
  }
@@ -20,8 +23,9 @@ export function drawForestTree(c,d){
   const xx=x-24+(i*19)%75,yy=y-92+(i*13)%34;
   rect(c,xx,yy,7,4,i%3===0?'#d7ab72':'#b6d09b');
  }
+ }
  // The foot is legible at exactly the solid ground tile.
- poly(c,[[x+9,y+20],[x+23,y+20],[x+29,y+31],[x+4,y+31]],wood);
+ if(layer!=='canopy')poly(c,[[x+9,y+20],[x+23,y+20],[x+29,y+31],[x+4,y+31]],wood);
 }
 export function drawForestSite(c,s){
  const x=s.x*32,y=s.y*32,w=s.w*32,h=s.h*32,base=y+h;
@@ -91,4 +95,14 @@ export function drawForestProp(c,d){
   for(let i=0;i<4;i++)rect(c,x+6+i*5,y+10+(i%2)*3,5,6,i%2?red:honey);
  }else return false;
  return true;
+}
+
+
+export function drawForestCanopies(c,world,bounds,hero){
+ const people=[{x:hero.px,y:hero.py},...world.npcs];
+ for(const d of world.decor){
+  if(d.variant!==12||d.x<bounds.left-3||d.x>bounds.right+3||d.y<bounds.top-1||d.y>bounds.bottom+5)continue;
+  const covered=people.some(p=>p.x>=d.x-1.5&&p.x<=d.x+2.5&&p.y>=d.y-3.8&&p.y<=d.y-1);
+  c.save();c.globalAlpha=covered?.22:1;drawForestTree(c,d,'canopy');c.restore();
+ }
 }

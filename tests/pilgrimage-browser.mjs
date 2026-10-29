@@ -79,6 +79,16 @@ export async function checkPilgrimage(browser,origin){
    }
    if(z.index===1){
     assert.equal(zone,'輪を結ぶ森市');
+    const leaves=await page.evaluate(async()=>{
+     const {drawForestCanopies,drawForestTree}=await import('./forest-market-art.js');
+     const tree={x:3,y:5,variant:12,seed:.4},canvas=document.createElement('canvas');canvas.width=256;canvas.height=256;const c=canvas.getContext('2d');
+     drawForestTree(c,tree,'trunk');const behind=c.getImageData(136,90,1,1).data[3];
+     const paint=hero=>{c.clearRect(0,0,256,256);c.fillStyle='#2255dd';c.fillRect(130,83,16,18);drawForestCanopies(c,{decor:[tree],npcs:[]},{left:0,right:8,top:0,bottom:8},hero);return c.getImageData(136,90,1,1).data[2];};
+     return {behind,covered:paint({px:3,py:3}),opaque:paint({px:100,py:100}),alpha:c.globalAlpha};
+    });
+    assert.equal(leaves.behind,0,'the lower tree pass does not paint opaque leaves behind the explorer');
+    assert.ok(leaves.covered>leaves.opaque+30,'foreground leaves reveal the explorer beneath them');assert.equal(leaves.alpha,1);
+
     await page.locator('#soundBtn').click();assert.equal(await page.locator('#trackSelect').inputValue(),'31:1');await page.locator('#musicPanel [data-close]').click();
     for(const s of FOREST_SITES){
      await walk(s.entrance);await fieldTap({x:s.x,y:s.y+2});

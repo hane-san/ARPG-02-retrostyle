@@ -124,7 +124,7 @@ export function drawPilgrimDecor(c,world,bounds){
   const p=PILGRIM_ZONES[d.chapter].palette,x=d.x*32,y=d.y*32,v=d.variant;
   if(d.solid){poly(c,[[x+2,y+23],[x+24,y+19],[x+32,y+28],[x+9,y+32]],p[3]+'55');line(c,x+6,y+29,x+27,y+25,p[1],2);}
   if(v!==12&&world.zoneAt(d.x,d.y).theme==='forest'&&drawForestProp(c,d))continue;
-  if(v===12){drawForestTree(c,d);}
+  if(v===12){drawForestTree(c,d,'trunk');}
   else if(v===0){line(c,x+14,y+27,x+15,y-11,p[3],2);poly(c,[[x+15,y-10],[x+41,y-5],[x+15,y+6]],p[1]);}
   else if(v===1){for(let i=0;i<4;i++){line(c,x+4+i*7,y+26,x+5+i*7,y+8,p[3]);rect(c,x+3+i*7,y+6,4,3,d.chapter%2?'#d5bbad':'#e6dfbd');}}
   else if(v===2){rect(c,x+7,y-30,17,58,p[3]);rect(c,x+8,y-29,3,54,p[1]);for(let i=0;i<3;i++)rect(c,x+13,y-20+i*12,6,2,p[0]);}
