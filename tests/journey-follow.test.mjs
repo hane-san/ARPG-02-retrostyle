@@ -74,7 +74,8 @@ test('pilgrimage holds a forward pan until the traveller catches up, then follow
   const panned={...c};
   for(let i=0;i<60;i++)c=easePilgrimageFollowCamera(c,hero,[here(hero.x+dx,hero.y+dy)],1/60,view,world);
   assert.deepEqual(c,panned,'tap must retain manually panned composition');
-  for(let i=0;i<180;i++){
+  const frames=Math.ceil(((half-24)+half*.45+180)/(tile*.12));
+  for(let i=0;i<frames;i++){
    hero.x+=dx*.12;hero.y+=dy*.12;
    const before={...c};
    c=easePilgrimageFollowCamera(c,hero,[here(hero.x+dx,hero.y+dy)],1/60,view,world);
