@@ -1,3 +1,4 @@
+import {drawJourneyWonder} from './journey-wonders-art.js';
 import {drawForestSite,drawForestTree,drawForestProp} from './forest-market-art.js';
 // Original pixel compositions for #80. Terrain and solid footprints come from the world.
 import {PILGRIM_ZONES} from './pilgrimage-world.js';
@@ -42,6 +43,7 @@ function bowl(c,x,y,w,h,p,wet){rect(c,x,y,w,h,p[3]);rect(c,x+4,y+4,w-8,h-7,wet?p
 function steps(c,x,y,w,h,p,n=7){for(let i=0;i<n;i++){rect(c,x-i*3,y+i*h/n,w+i*6,h/n+1,i%2?p[0]:p[1]);line(c,x-i*3,y+(i+1)*h/n,x+w+i*3,y+(i+1)*h/n,p[3]);}}
 export function drawPilgrimSite(c,s,time=0){
  const z=PILGRIM_ZONES[s.chapter],p=z.palette,x=s.x*32,y=s.y*32,w=s.w*32,h=s.h*32,cx=x+w/2,base=y+h;
+ if(s.form.startsWith('wonder-')){drawJourneyWonder(c,s,p,time);return;}
  c.save();rect(c,x+8,base-6,w-16,14,'#485f5b25');
  if(s.form.startsWith('forest-')){drawForestSite(c,s);c.restore();return;}
  if(s.form==='monolith'){

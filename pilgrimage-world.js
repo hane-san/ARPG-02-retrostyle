@@ -1,3 +1,4 @@
+import {JOURNEY_WONDERS,WONDER_VISTAS} from './journey-wonders.js';
 import {FOREST_SITES,FOREST_NPCS,plantForestMarket} from './forest-market.js';
 // #80: a deliberately edited walking study. The former atlas is retained separately.
 import {silkPath} from './silk-world.js';
@@ -60,14 +61,14 @@ for(let k=1;k<PILGRIM_ROUTE.length-1;k+=2){
   x:q.x+3,y:q.y-4,w:4,h:3,blocking:false,solid:study===3?[{x:0,y:0,w:1,h:3},{x:3,y:0,w:1,h:3}]:study===0?[{x:2,y:0,w:1,h:3}]:[{x:0,y:1,w:4,h:2}],artTop:1,entrance:{x:q.x+2,y:q.y},chapter:chapter(k),
   desc:'かつての手順が、石と木の形に残っている。近づくと、同じもののはずなのに少しずつ違う。',aside:'水に浸かった線は水平だが、その上の傷は、人の手の高さでばらばらに付いている。'});
 }
-PILGRIM_SITES.push(...FOREST_SITES);
+PILGRIM_SITES.push(...FOREST_SITES,...JOURNEY_WONDERS);
 export const PILGRIM_NPCS=[0,1,2,3,4,6,7,8,9,11].map((ci,i)=>{
  const remarks=[['帆は今日は畳んだまま。縄だけ乾かしておくんだ。','湖の反対側でも、同じ結び方を見かけるよ。'],['この輪、三回までは音がするの。四回目はしない！','わたしのはこっち。大人の大きな輪は重くて回らないよ。'],['浅い溝は足洗い。深い方は下の畑へ。','古い石もあるけど、減ったところは今も直すんだ。'],['ここで帽子を飛ばされて、三つ先の角まで追ったよ。','風を待ってから行くと、帰りに砂を払わずに済む。'],['いちばん上の線にも、同じ指の傷がある。','写す紙がもう足りない。線だけにすればよかったな。'],['向こうでは水に隠れていた底を写しているんだ。','同じ七段だと思ったけど、最後の溝だけ向きが違う。'],['舟は動かないけれど、帆は毎年たたみ直すんだ。','布が破れると鳥の巣になる。そこまでなら構わないけどね。'],['椀は全部違うよ。割れたときだけ買い足すから。','急ぎでも、鍋が煮える速さは変わらないよ。'],['ここに人がいなくても、器は同じだけ満たす。','余った分は下へ。今日も、昨日と同じ手順だよ。'],['あの細い白い線が、門の上だったんだ。','近づいたら、一枚の紙に入りきらなくなった。']];
  const z=PILGRIM_ZONES[ci];return {id:'pilgrim-person-'+i,name:['舟を結ぶ人','輪を運ぶ子','溝を直す人','風待ちの旅人','水尺を写す人','底を歩く人','帆をたたむ人','鍋を見ている人','空の器を洗う人','門を写す人'][i],role:'この道の人',
   x:z.cx-3,y:z.cy+2,color:z.palette[3],lines:remarks[i]};
 });
 PILGRIM_NPCS.push(...FOREST_NPCS);
-export const PILGRIM_VISTAS=PILGRIM_ZONES.filter((_,i)=>![0,1,8].includes(i)).map(z=>({id:'pilgrim-vista-'+z.index,x:z.cx,y:z.cy,radius:5,title:z.name,sub:z.sub,kind:'pilgrim-'+z.theme,chapter:z.index}));
+export const PILGRIM_VISTAS=PILGRIM_ZONES.filter((_,i)=>![0,1,8].includes(i)).map(z=>({id:'pilgrim-vista-'+z.index,x:z.cx,y:z.cy,radius:5,title:z.name,sub:z.sub,kind:'pilgrim-'+z.theme,chapter:z.index})).concat(WONDER_VISTAS);
 const hash=(x,y)=>{let n=Math.imul(x+117,374761393)^Math.imul(y+59,668265263);n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967295;};
 export function makePilgrimageWorld(){
  const w=PILGRIM_W,h=PILGRIM_H,tiles=Array.from({length:h},()=>Array(w).fill('X')),occupied=new Uint8Array(w*h),regions=new Uint8Array(w*h),routeDistance=new Float32Array(w*h);routeDistance.fill(Infinity);
@@ -127,10 +128,10 @@ export function makePilgrimageWorld(){
  return world;
 }
 export function pilgrimCameraScene(world,hero,accepted){
- // Hysteresis is spatial as well as temporal; ordinary regional borders never zoom.
- const spots=[[PILGRIM_ROUTE[11],'journey-reveal'],[PILGRIM_ROUTE[38],'journey-monument'],[PILGRIM_ROUTE[43],'journey-monument']];
- const radius=['journey-reveal','journey-monument'].includes(accepted)?12:7;
- return spots.find(([p])=>Math.hypot(hero.px-p.x,hero.py-p.y)<radius)?.[1]||'journey-road';
+ // Scale belongs to the landscape, including its approach and departure road.
+ // The director debounces border crossings instead of zooming at each object.
+ const theme=world.zoneAt(hero.px,hero.py).theme;
+ return theme==='ridge'?'journey-reveal':['capital','citadel'].includes(theme)?'journey-monument':'journey-road';
 }
 export function pilgrimFloor(world,site,p){return !!(world.pilgrimage&&site&&site.blocking===false&&p.x>=site.x&&p.x<site.x+site.w&&p.y>=site.y&&p.y<site.y+site.h&&world.walkable(Math.floor(p.x),Math.floor(p.y)));}
 export function pilgrimQuiet(world,p,wasQuiet=false){const z=PILGRIM_ZONES.find(z=>z.theme==='sealed');return !!world.pilgrimage&&Math.hypot(p.x-z.cx,p.y-z.cy)<(wasQuiet?9:5);}
