@@ -54,7 +54,7 @@ export function journeyCameraScene(world,hero,acceptedScene=null){
 // Changes of district or proximity are immediately accepted when the zoom is
 // unchanged: they must not create a backlog of false camera transitions.
 const isCinematic=scene=>['journey-interior','journey-scenic-wide','journey-reveal','journey-monument'].includes(scene);
-export function createJourneyCamera(){
+export function createJourneyCamera({regional=false}={}){
  let scene='journey-port',target=JOURNEY_DEFAULT_ZOOM,candidate=null,since=0,acceptedAt=0;
  return {
   update(next,now){
@@ -64,8 +64,8 @@ export function createJourneyCamera(){
    if(nextTarget===target){scene=next;candidate=null;return target;}
    if(candidate!==next){candidate=next;since=now;}
    const cinematicIn=isCinematic(next),cinematicOut=isCinematic(scene);
-   const dwell=cinematicIn?800:1200;
-   const hold=cinematicOut?2400:cinematicIn?1600:5000;
+   const dwell=regional?(cinematicIn?1600:2400):(cinematicIn?800:1200);
+   const hold=regional?5000:(cinematicOut?2400:cinematicIn?1600:5000);
    if(now-since>=dwell&&now-acceptedAt>=hold){
     scene=next;target=nextTarget;candidate=null;acceptedAt=now;
    }
@@ -118,4 +118,20 @@ export function easeJourneyFollowCamera(current,hero,path,dt,viewport,world){
   x:current.x+(target.x-current.x)*factor,
   y:current.y+(target.y-current.y)*factor
  },hero,viewport,world,.6);
+}
+
+// Hold a panned composition until the traveller catches its forward side.
+// Only the occupied path edge decides direction; future bends cannot pull back.
+export function easePilgrimageFollowCamera(current,hero,path,dt,viewport,world){
+ if(!path?.length)return {x:current.x,y:current.y};
+ const next=path.find(p=>Math.hypot(p.x-hero.x,p.y-hero.y)>.0001);
+ if(!next)return {x:current.x,y:current.y};
+ const axis=(value,position,direction,extent)=>{
+  const forward=extent/(2*viewport.zoom)*.45;
+  return direction>.0001?Math.max(value,position-forward):direction<-.0001?Math.min(value,position+forward):value;
+ };
+ const x=axis(current.x,(hero.x+.5)*world.tile,next.x-hero.x,viewport.width);
+ const y=axis(current.y,(hero.y+.5)*world.tile,next.y-hero.y,viewport.height);
+ const factor=1-Math.exp(-Math.max(0,Math.min(.12,dt))*4.5);
+ return limitCamera({x:current.x+(x-current.x)*factor,y:current.y+(y-current.y)*factor},hero,viewport,world,.08);
 }

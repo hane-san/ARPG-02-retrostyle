@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {easeJourneyFollowCamera} from '../journey-camera.js';
+import {easeJourneyFollowCamera,easePilgrimageFollowCamera} from '../journey-camera.js';
 import {heroVisible} from '../camera-limits.js';
 
 const tile=32;
@@ -62,6 +62,47 @@ test('close zoom and world corners always keep the traveller visible',()=>{
    const halfX=view.width/(2*zoom),halfY=view.height/(2*zoom);
    assert.ok(camera.x>=halfX-1e-6&&camera.x<=world.width-halfX+1e-6);
    assert.ok(camera.y>=halfY-1e-6&&camera.y<=world.height-halfY+1e-6);
+  }
+ }
+});
+
+test('pilgrimage holds a forward pan until the traveller catches up, then follows without recoil',()=>{
+ const view={...viewport,zoom:.8};
+ for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+  const hero=here(80,70),initial=centered(hero),half=(dx?view.width:view.height)/(2*view.zoom);
+  let c={x:initial.x+dx*(half-24),y:initial.y+dy*(half-24)};
+  const panned={...c};
+  for(let i=0;i<60;i++)c=easePilgrimageFollowCamera(c,hero,[here(hero.x+dx,hero.y+dy)],1/60,view,world);
+  assert.deepEqual(c,panned,'tap must retain manually panned composition');
+  const frames=Math.ceil(((half-24)+half*.45+180)/(tile*.12));
+  for(let i=0;i<frames;i++){
+   hero.x+=dx*.12;hero.y+=dy*.12;
+   const before={...c};
+   c=easePilgrimageFollowCamera(c,hero,[here(hero.x+dx,hero.y+dy)],1/60,view,world);
+   assert.ok((c.x-before.x)*dx>=-1e-8&&(c.y-before.y)*dy>=-1e-8,'never follows against the occupied edge');
+   assert.ok(heroVisible(c,hero,view,world));
+  }
+  assert.ok((c.x-panned.x)*dx+(c.y-panned.y)*dy>100,'catch-up eventually resumes following');
+ }
+});
+test('pilgrimage bends, stopped paths and world borders preserve visibility',()=>{
+ for(const zoom of [.38,.46,.6,.8])for(const hero of [here(0,0),here(175,135),here(80,70)]){
+  const view={...viewport,zoom};let c=centered(hero);
+  for(const [dx,dy] of [[1,0],[0,1],[-1,0],[0,-1]]){
+   c=easePilgrimageFollowCamera(c,hero,[here(hero.x+dx,hero.y+dy)],.016,view,world);
+   assert.ok(heroVisible(c,hero,view,world));
+  }
+  assert.deepEqual(easePilgrimageFollowCamera(c,hero,[],.016,view,world),c);
+ }
+});
+
+test('two-step pilgrimage taps remain inside the static composition at phone and landscape sizes',()=>{
+ for(const [width,height] of [[320,568],[390,755],[844,390]]){
+  const view={width,height,zoom:.8},hero=here(80,70),initial=centered(hero);
+  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const moved={x:hero.x+dx*2,y:hero.y+dy*2};
+   const camera=easePilgrimageFollowCamera(initial,moved,[here(moved.x+dx,moved.y+dy)],1/30,view,world);
+   assert.deepEqual(camera,initial,'two tiles should not start a camera pursuit');
   }
  }
 });

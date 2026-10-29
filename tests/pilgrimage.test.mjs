@@ -12,7 +12,7 @@ function legal(from,to){const path=w.findPath(w,from,to);assert.ok(path?.length,
 test('edited journey is the continuous pilgrimage loop and then a changed final approach',()=>{
  assert.deepEqual([w.w,w.h],[480,288]);assert.equal(w.pilgrimage,true);
  for(const z of w.zones)assert.equal(w.zoneAt(z.cx,z.cy).id,z.id,'authored centre '+z.id);
- assert.equal(w.zones.length,13);assert.equal(w.npcs.length,12);assert.equal(w.sites.length,37);assert.ok(w.decor.length>1000);
+ assert.equal(w.zones.length,13);assert.equal(w.npcs.length,12);assert.equal(w.sites.length,44);assert.ok(w.decor.length>1000);
  assert.ok(Math.hypot(PILGRIM_ROUTE[31].x-w.start.x,PILGRIM_ROUTE[31].y-w.start.y)<12,'the first circuit comes back near its start');
  let steps=0;for(let i=1;i<PILGRIM_ROUTE.length;i++)steps+=legal(PILGRIM_ROUTE[i-1],PILGRIM_ROUTE[i]).length-1;
  assert.ok(steps>2200&&steps<3000,'an authored journey rather than a tiny showroom');
@@ -57,7 +57,7 @@ test('outdoor framing is stable except explicit large vistas, with spatial and t
  for(const z of w.zones)if(![4,11,12].includes(z.index))assert.equal(pilgrimCameraScene(w,{px:z.cx,py:z.cy},null),'journey-road');
  const p=PILGRIM_ROUTE[38];assert.equal(pilgrimCameraScene(w,{px:p.x,py:p.y},null),'journey-monument');
  assert.equal(pilgrimCameraScene(w,{px:p.x+9,py:p.y},'journey-monument'),'journey-monument');
- assert.equal(pilgrimCameraScene(w,{px:p.x+13,py:p.y},'journey-monument'),'journey-road');
+ assert.equal(pilgrimCameraScene(w,{px:p.x+30,py:p.y},null),'journey-monument','the whole capital approach holds its regional scale');
  assert.equal(camera.update('journey-scenic-wide',1000),.8);assert.equal(camera.update('journey-scenic-wide',1799),.8);assert.equal(camera.update('journey-scenic-wide',1800),.6);
  assert.equal(camera.update('journey-road',1900),.6);assert.equal(camera.update('journey-road',4200),.8);
 });

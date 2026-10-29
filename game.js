@@ -25,7 +25,7 @@ import {createJourneyFoley} from './journey-foley.js';
 import {journeySoundSources} from './journey-curios.js';
 import {createAmbienceDirector} from './journey-ambience.js';
 import {resolveGameMode} from './game-mode.js';
-import {createJourneyCamera,journeyCameraScene,easeJourneyCamera,easeJourneyFollowCamera} from './journey-camera.js';
+import {createJourneyCamera,journeyCameraScene,easeJourneyCamera,easeJourneyFollowCamera,easePilgrimageFollowCamera} from './journey-camera.js';
 import {createTyper} from './dialogue-typer.js';
 import {walkSpeed} from './walk-speed.js';
 import {pickJourneyTap} from './journey-tap.js';
@@ -57,7 +57,7 @@ const hero={x:spawn.x,y:spawn.y,px:spawn.x,py:spawn.y,face:'down',path:[],arriva
 mazeTrial?.arrive(spawn);
 // The older worlds keep their original single pace; Issue #44 tunes the journey.
 const CLASSIC_WALK_SPEED=6.15;
-const journeyCamera=JOURNEY_MODE?createJourneyCamera():null;
+const journeyCamera=JOURNEY_MODE?createJourneyCamera({regional:PILGRIMAGE_MODE}):null;
 const camera={x:(spawn.x+.5)*TILE,y:(spawn.y+.5)*TILE,zoom:journeyCamera?.target||1.25};
 const journeyMusic=JOURNEY_MODE?createJourneyMusicDirector():null;
 const imperialListening=JOURNEY_MODE&&!PILGRIMAGE_MODE?createImperialListening():null;
@@ -746,9 +746,8 @@ function animate(time){
   if(!gesture?.drag&&Math.hypot(next.x-panTarget.x,next.y-panTarget.y)<.6)panTarget=null;
  }else if(hero.moving){
   const next=easeEdgeCamera(camera,{x:hero.px,y:hero.py},viewport,bounds,dt);
-  // The current pilgrimage leaves ordinary taps inside a stable composition.
-  // Atlas routes look ahead; the older journey and other modes retain their behaviour.
-  const framed=JOURNEY_MODE&&(!PILGRIMAGE_MODE||hero.walkSource==='map')?easeJourneyFollowCamera(camera,{x:hero.px,y:hero.py},hero.path,dt,viewport,bounds):next;
+  // Field and atlas taps share catch-up framing in the current pilgrimage.
+  const framed=PILGRIMAGE_MODE?easePilgrimageFollowCamera(camera,{x:hero.px,y:hero.py},hero.path,dt,viewport,bounds):JOURNEY_MODE?easeJourneyFollowCamera(camera,{x:hero.px,y:hero.py},hero.path,dt,viewport,bounds):next;
   camera.x=framed.x;camera.y=framed.y;
  }else confineCamera(camera.x,camera.y,.08);
  // Prioritize 60fps while the camera moves, but retain low-cost idle frames.

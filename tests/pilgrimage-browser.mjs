@@ -1,3 +1,4 @@
+import {JOURNEY_WONDERS,WONDER_VISTAS} from '../journey-wonders.js';
 import {FOREST_SITES,FOREST_NPCS} from '../forest-market.js';
 import assert from 'node:assert/strict';
 import {mkdirSync} from 'node:fs';
@@ -28,10 +29,16 @@ export async function checkPilgrimage(browser,origin){
   });
  },arches);
  for(const a of gaps){assert.equal(a.gap,0,'walkable arch centre must be visually open');assert.equal(a.pier,255,'solid pier remains visible');}
+ // Exercise each new vista's actual Canvas commands before the long itinerary.
+ const newVistas=await page.evaluate(async vistas=>{
+  const {drawJourneyPanorama}=await import('./journey-panorama.js');
+  return vistas.map(v=>{const canvas=document.createElement('canvas');drawJourneyPanorama(canvas,v.kind);const d=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data,colours=new Set();for(let i=0;i<d.length;i+=4)colours.add(d[i]+','+d[i+1]+','+d[i+2]);return {w:canvas.width,h:canvas.height,colours:colours.size};});
+ },WONDER_VISTAS);
+ for(const v of newVistas){assert.deepEqual([v.w,v.h],[480,252]);assert.ok(v.colours>8,'every new vista draws its landscape');}
  await page.locator('#mapBtn').click();assert.equal(await page.locator('#zoneList button').count(),13);await page.locator('#mapPanel [data-close]').click();
  await page.locator('#soundBtn').click();assert.equal(await page.locator('#trackSelect option').count(),90);assert.equal(await page.locator('#musicToggle').textContent(),'OFF');assert.equal(await page.locator('#sfxToggle').textContent(),'ON');await page.locator('#musicPanel [data-close]').click();
  await page.clock.install();
- async function settle(){for(let i=0;i<75;i++){await page.clock.runFor(1000);if(await page.locator('#worldCanvas').getAttribute('aria-busy')==='false')return;}throw Error('walk did not settle');}
+ async function settle(){for(let i=0;i<75;i++){await page.clock.runFor(1000);assert.deepEqual(errors,[],'walking must retain its rendering loop');if(await page.locator('#worldCanvas').getAttribute('aria-busy')==='false')return;}throw Error('walk did not settle');}
  async function position(){await page.locator('#mapBtn').click();const p=await page.evaluate(()=>window.pilgrimPosition);await page.locator('#mapPanel [data-close]').click();return {x:Math.round(p.x),y:Math.round(p.y)};}
  async function walk(target){
   await page.locator('#mapBtn').click();const box=await page.locator('#miniMap').boundingBox();
@@ -57,6 +64,22 @@ export async function checkPilgrimage(browser,origin){
  }
  const afterTaps=await page.evaluate(()=>window.pilgrimCamera);
  assert.ok(Math.hypot(afterTaps.x-initialCamera.x,afterTaps.y-initialCamera.y)<1,'nearby repeated taps do not recenter the camera');
+ // Reproduce the reported recoil: pan ahead, then tap without using Home.
+ await page.mouse.move(330,400);await page.mouse.down();await page.mouse.move(150,400,{steps:12});await page.mouse.up();await page.clock.runFor(1800);
+ const panned=await page.evaluate(()=>window.pilgrimCamera);
+ assert.ok(panned.x>initialCamera.x+120,'real drag frames the route ahead');
+ async function rawTap(target){
+  const point=await page.evaluate(({x,y})=>{const r=document.querySelector('#worldCanvas').getBoundingClientRect(),a=window.pilgrimCamera,z=window.pilgrimZoom;return {x:r.left+r.width/2+((x+.5)*32-a.x)*z,y:r.top+r.height/2+((y+.5)*32-a.y)*z};},target);
+  await page.touchscreen.tap(point.x,point.y);
+ }
+ await rawTap({x:world.start.x+2,y:world.start.y});await page.clock.runFor(900);
+ const retained=await page.evaluate(()=>window.pilgrimCamera);
+ assert.ok(Math.hypot(retained.x-panned.x,retained.y-panned.y)<1,'a tap does not recoil toward the traveller behind the panned view');
+ await rawTap({x:world.start.x+13,y:world.start.y});await settle();
+ const followed=await page.evaluate(()=>window.pilgrimCamera);
+ assert.ok(followed.x>panned.x+10,'camera follows after catch-up: '+JSON.stringify({initialCamera,panned,followed,position:await position()}));
+ await walk(world.start);await page.locator('#homeBtn').click();await page.clock.runFor(1500);
+ console.log('Catch-up camera: real forward drag, nearby tap retains composition, farther tap resumes following.');
  const visited=new Set();mkdirSync('test-results',{recursive:true});
  // The full itinerary traverses actual routes through normal map/keyboard input.
  // Browser time is advanced; no hero coordinate, terrain or product speed is patched.
@@ -123,6 +146,19 @@ export async function checkPilgrimage(browser,origin){
     await fieldTap({x:stone.x+3,y:stone.y-5});assert.equal(await page.locator('#dialogueName').textContent(),stone.name,'drawn high stone is a real investigation target');
     await page.locator('#dialogueClose').click();await walk(PILGRIM_ROUTE[i]);
    }
+   for(const s of JOURNEY_WONDERS.filter(s=>s.chapter===z.index)){
+    await walk(s.entrance);await page.locator('#homeBtn').click();await page.clock.runFor(2000);
+    // Inspect an actual solid foot, then walk through the open span.
+    await fieldTap({x:s.x,y:s.y});assert.equal(await page.locator('#dialogueName').textContent(),s.name);await page.locator('#dialogueClose').click();
+    const gap={x:s.x+Math.floor(s.w/2),y:s.y+s.h-1};await fieldTap(gap);assert.deepEqual(await position(),gap,'new landmark has real walkable space');
+    if(s.solid.some(r=>r.x===0&&r.h===s.h)){const beside={x:s.x+1,y:s.y};await fieldTap(beside);await page.keyboard.press('ArrowLeft');await page.clock.runFor(400);assert.deepEqual(await position(),beside,'new visible pier blocks walking');}
+    await walk(s.entrance);await page.locator('#homeBtn').click();await page.clock.runFor(2500);
+    await page.screenshot({path:`test-results/${s.id}.png`});
+    const vista=WONDER_VISTAS.find(v=>v.chapter===s.chapter);
+    if(vista){await page.locator('#vistaBtn').click();assert.equal(await page.locator('#vistaTitle').textContent(),vista.title);await page.screenshot({path:`test-results/${s.id}-vista.png`});await page.locator('#vistaClose').click();}
+    console.log('World study walked and investigated: '+s.name);
+   }
+   if(JOURNEY_WONDERS.some(s=>s.chapter===z.index))await walk(PILGRIM_ROUTE[i]);
    if(z.theme==='sealed'){
     await page.locator('#soundBtn').click();await page.locator('#musicToggle').click();await page.clock.runFor(1000);
     assert.equal(await page.locator('#musicToggle').textContent(),'ON');assert.match(await page.locator('#nowPlaying').textContent(),/静まります/);await page.locator('#musicPanel [data-close]').click();

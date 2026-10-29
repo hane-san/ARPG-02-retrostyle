@@ -106,3 +106,13 @@ test('ordinary scenic approaches stay fixed; actual interior is the only close-u
  assert.equal(c.update('journey-road',6000),1.35);
  assert.equal(c.update('journey-road',8300),.8,'leaving an interior restores the journey view');
 });
+test('regional pilgrimage zoom ignores border chatter and holds an accepted scale for five seconds',()=>{
+ const c=createJourneyCamera({regional:true});
+ c.update('journey-reveal',6000);assert.equal(c.update('journey-reveal',7599),.8);
+ assert.equal(c.update('journey-reveal',7600),.46);
+ for(let i=0;i<20;i++)assert.equal(c.update(i%2?'journey-road':'journey-reveal',7800+i*150),.46);
+ c.update('journey-reveal',10800);c.update('journey-road',11000);assert.equal(c.update('journey-road',13399),.46);
+ assert.equal(c.update('journey-road',13400),.8);
+ c.update('journey-monument',14000);assert.equal(c.update('journey-monument',17000),.8,'minimum hold');
+ assert.equal(c.update('journey-monument',18400),.38);
+});

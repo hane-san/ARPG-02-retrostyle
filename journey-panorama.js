@@ -1,3 +1,4 @@
+import {drawWonderVista} from './journey-wonders-art.js';
 import {drawPilgrimVista} from './pilgrimage-art.js';
 import {drawImperialVista,IMPERIAL_VISTA_KINDS} from './journey-imperial-art.js';
 // A small original landscape painting, revealed only when the traveller stops.
@@ -259,6 +260,7 @@ function waterLight(c,kind,time){
 }
 
 export function drawJourneyPanorama(canvas,kind,time=0){
+ if(kind.startsWith('wonder-')){drawWonderVista(canvas,kind);return;}
  if(kind.startsWith('pilgrim-')){drawPilgrimVista(canvas,kind);return;}
  if(IMPERIAL_VISTA_KINDS.has(kind)){drawImperialVista(canvas,kind,time);return;}
  if(RUINS_VISTA_KINDS.has(kind)){drawRuinsVista(canvas,kind,time);return;}
