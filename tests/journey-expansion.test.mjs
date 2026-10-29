@@ -15,7 +15,7 @@ test('expanded scenery preserves the original walking country and adds six coher
  assert.deepEqual([EXTENSION_ZONES.length,EXTENSION_SITES.length,EXTENSION_NPCS.length,EXTENSION_VISTAS.length],[7,13,11,7]);
  assert.equal(JOURNEY_ZONES.filter(z=>!RUINS_ZONES.includes(z)&&!IMPERIAL_ZONES.includes(z)).length,14,'original regions survive intact');
  assert.equal(JOURNEY_ZONES.length,14+RUINS_ZONES.length+IMPERIAL_ZONES.length,'southwest extension is additive');
- assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.35,.8,.6]);
+ assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.35,.8,.6,.46,.38]);
  for(const zone of EXTENSION_ZONES){
   const loc={x:zone.cx,y:zone.cy};
   assert.equal(world.zoneAt(loc.x,loc.y).id,zone.id,zone.id+' centre has intended biome');

@@ -60,7 +60,7 @@ test('new outlooks are optional, unique and reachable from the original quay',()
 });
 test('scenic landmarks keep a calm outdoor zoom, apart from authored wide vistas',()=>{
  assert.ok(JOURNEY_SCENIC_BEATS.length>=10);
- assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.35,.8,.6]);
+ assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.35,.8,.6,.46,.38]);
  for(const b of JOURNEY_SCENIC_BEATS){
   assert.ok(b.r>=3&&b.r<=5,b.id);
   assert.ok(world.walkable(b.x,b.y),b.id+' scene must be reachable');

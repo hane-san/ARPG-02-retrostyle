@@ -27,10 +27,10 @@ function replayTargets(world,target){
 }
 
 test('long walks use one outdoor zoom, with only interior and exceptional vista overrides',()=>{
- assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.35,.8,.6]);
+ assert.deepEqual(JOURNEY_ZOOM_STAGES,[1.35,.8,.6,.46,.38]);
  assert.equal(createJourneyCamera().target,.8,'the first rendered frame starts outdoors');
  for(const [name,zoom] of Object.entries(JOURNEY_CAMERA_PROFILES)){
-  assert.equal(zoom,name==='journey-interior'?1.35:name==='journey-scenic-wide'?.6:.8,name);
+  assert.equal(zoom,name==='journey-interior'?1.35:name==='journey-scenic-wide'?.6:name==='journey-reveal'?.46:name==='journey-monument'?.38:.8,name);
  }
  assert.equal(typeof createJourneyCamera().manual,'undefined');
 });

@@ -1,4 +1,4 @@
-import {makePilgrimageWorld,pilgrimFloor,pilgrimQuiet,pilgrimSiteOpacity} from './pilgrimage-world.js';
+import {makePilgrimageWorld,pilgrimFloor,pilgrimQuiet,pilgrimSiteOpacity,pilgrimArtHit} from './pilgrimage-world.js';
 import {drawPilgrimTile,drawPilgrimSite,drawPilgrimDecor,drawPilgrimOutlook,pilgrimTileColor} from './pilgrimage-art.js';
 import {imperialResponse,imperialPhase,createImperialListening,imperialWalkableFloor} from './journey-imperial.js';
 import {drawImperialOutlook} from './journey-imperial-art.js';
@@ -546,7 +546,7 @@ function startWalk(target,arrival=null,source='field'){
  if(!path){toast('この場所へ続く道が見つかりません。');return;}
  const trial=mazeTrial?.plan(path,{x:hero.x,y:hero.y},world,source);
  hero.path=trial?.path||path;hero.arrival=trial?.limited?null:arrival;hero.speed=JOURNEY_MODE?walkSpeed(source):CLASSIC_WALK_SPEED;
- panTarget=null;syncTravelState();
+ panTarget=null;hero.walkSource=source;syncTravelState();
  if(hero.path.length===0){hero.px=hero.x;hero.py=hero.y;onArrive();return;}
  // Walking does not display distances or step counts: explore visually.
  sfx.play('confirm');
@@ -606,7 +606,7 @@ function handleTap(e){
   const npc=NPCS.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<1.8);
   if(npc){walkToNpc(npc);return;}
  }
- const site=world.siteAt(p.x,p.y);
+ const site=world.siteAt(p.x,p.y)||pilgrimArtHit(world,p);
  if(pilgrimFloor(world,site,p)||imperialWalkableFloor(world,site,p)){startWalk(p);return;}
  if(site){startWalk(site.entrance,{kind:'site',item:site});return;}
  const bridge=world.bridgeAt(p.x,p.y);
@@ -723,7 +723,9 @@ function animate(time){
  updateJourneyMusic(time);
  journeyView?.update(hero,!!dialogue||isPanelOpen(),time);
  if(journeyCamera){
-  const target=journeyCamera.update(journeyCameraScene(world,hero,journeyCamera.scene),time);
+  let scene=journeyCameraScene(world,hero,journeyCamera.scene);
+  if(reduceMotion.matches&&['journey-reveal','journey-monument'].includes(scene))scene='journey-scenic-wide';
+  const target=journeyCamera.update(scene,time);
   if(!dialogue&&!isPanelOpen()&&!gesture&&!panTarget&&$('vistaCard').hidden){
    Object.assign(camera,easeJourneyCamera(camera,{x:hero.px,y:hero.py},target,dt,
     {width:screen.w,height:screen.h},{width:W*TILE,height:H*TILE,tile:TILE}));
@@ -742,9 +744,9 @@ function animate(time){
   if(!gesture?.drag&&Math.hypot(next.x-panTarget.x,next.y-panTarget.y)<.6)panTarget=null;
  }else if(hero.moving){
   const next=easeEdgeCamera(camera,{x:hero.px,y:hero.py},viewport,bounds,dt);
-  // Every journey path, short or long, receives a forward-looking composition.
-  // Older world modes retain their established edge-following behaviour.
-  const framed=JOURNEY_MODE?easeJourneyFollowCamera(camera,{x:hero.px,y:hero.py},hero.path,dt,viewport,bounds):next;
+  // The current pilgrimage leaves ordinary taps inside a stable composition.
+  // Atlas routes look ahead; the older journey and other modes retain their behaviour.
+  const framed=JOURNEY_MODE&&(!PILGRIMAGE_MODE||hero.walkSource==='map')?easeJourneyFollowCamera(camera,{x:hero.px,y:hero.py},hero.path,dt,viewport,bounds):next;
   camera.x=framed.x;camera.y=framed.y;
  }else confineCamera(camera.x,camera.y,.08);
  // Prioritize 60fps while the camera moves, but retain low-cost idle frames.
