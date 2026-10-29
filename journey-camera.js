@@ -127,7 +127,7 @@ export function easePilgrimageFollowCamera(current,hero,path,dt,viewport,world){
  const next=path.find(p=>Math.hypot(p.x-hero.x,p.y-hero.y)>.0001);
  if(!next)return {x:current.x,y:current.y};
  const axis=(value,position,direction,extent)=>{
-  const forward=extent/(2*viewport.zoom)*.22;
+  const forward=extent/(2*viewport.zoom)*.45;
   return direction>.0001?Math.max(value,position-forward):direction<-.0001?Math.min(value,position+forward):value;
  };
  const x=axis(current.x,(hero.x+.5)*world.tile,next.x-hero.x,viewport.width);

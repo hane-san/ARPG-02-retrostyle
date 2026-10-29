@@ -94,3 +94,14 @@ test('pilgrimage bends, stopped paths and world borders preserve visibility',()=
   assert.deepEqual(easePilgrimageFollowCamera(c,hero,[],.016,view,world),c);
  }
 });
+
+test('two-step pilgrimage taps remain inside the static composition at phone and landscape sizes',()=>{
+ for(const [width,height] of [[320,568],[390,755],[844,390]]){
+  const view={width,height,zoom:.8},hero=here(80,70),initial=centered(hero);
+  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const moved={x:hero.x+dx*2,y:hero.y+dy*2};
+   const camera=easePilgrimageFollowCamera(initial,moved,[here(moved.x+dx,moved.y+dy)],1/30,view,world);
+   assert.deepEqual(camera,initial,'two tiles should not start a camera pursuit');
+  }
+ }
+});

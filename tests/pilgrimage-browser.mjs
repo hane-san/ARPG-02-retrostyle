@@ -75,7 +75,7 @@ export async function checkPilgrimage(browser,origin){
  await rawTap({x:world.start.x+2,y:world.start.y});await page.clock.runFor(900);
  const retained=await page.evaluate(()=>window.pilgrimCamera);
  assert.ok(Math.hypot(retained.x-panned.x,retained.y-panned.y)<1,'a tap does not recoil toward the traveller behind the panned view');
- await rawTap({x:world.start.x+11,y:world.start.y});await settle();
+ await rawTap({x:world.start.x+13,y:world.start.y});await settle();
  const followed=await page.evaluate(()=>window.pilgrimCamera);
  assert.ok(followed.x>panned.x+10,'camera follows after catch-up: '+JSON.stringify({initialCamera,panned,followed,position:await position()}));
  await walk(world.start);await page.locator('#homeBtn').click();await page.clock.runFor(1500);
