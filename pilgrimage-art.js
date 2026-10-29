@@ -1,3 +1,4 @@
+import {drawForestSite,drawForestTree,drawForestProp} from './forest-market-art.js';
 // Original pixel compositions for #80. Terrain and solid footprints come from the world.
 import {PILGRIM_ZONES} from './pilgrimage-world.js';
 const rect=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));};
@@ -22,7 +23,7 @@ export function drawPilgrimTile(c,x,y,t,world){
   for(let yy=3;yy<32;yy+=5)line(c,px,py+yy,px+32,py+yy,'#ddd9bd');
   line(c,px+3,py,px+3,py+32,shade,2);line(c,px+29,py,px+29,py+32,shade,2);
  }else{
-  const dry=['dry','salt','capital','citadel'].includes(z.theme),green=['harbour','meadow','garden'].includes(z.theme);
+  const dry=['dry','salt','capital','citadel'].includes(z.theme),green=['harbour','meadow','garden','forest'].includes(z.theme);
   for(let j=0;j<(dry?5:3);j++){
    const xx=px+noise(x+j*3,y)*28,yy=py+noise(y+j*7,x)*28;
    if(green&&t!=='='){rect(c,xx,yy,1,3+q*3,shade+'70');if(q>.62)rect(c,xx+2,yy+1,3,2,light);}
@@ -42,6 +43,7 @@ function steps(c,x,y,w,h,p,n=7){for(let i=0;i<n;i++){rect(c,x-i*3,y+i*h/n,w+i*6,
 export function drawPilgrimSite(c,s,time=0){
  const z=PILGRIM_ZONES[s.chapter],p=z.palette,x=s.x*32,y=s.y*32,w=s.w*32,h=s.h*32,cx=x+w/2,base=y+h;
  c.save();rect(c,x+8,base-6,w-16,14,'#485f5b25');
+ if(s.form.startsWith('forest-')){drawForestSite(c,s);c.restore();return;}
  if(s.form==='monolith'){
   // The base is solid, the immense height is art; its top can leave the viewport.
   const top=y-360;
@@ -121,7 +123,9 @@ export function drawPilgrimDecor(c,world,bounds){
   if(d.x<bounds.left-2||d.x>bounds.right+2||d.y<bounds.top-2||d.y>bounds.bottom+5)continue;
   const p=PILGRIM_ZONES[d.chapter].palette,x=d.x*32,y=d.y*32,v=d.variant;
   if(d.solid){poly(c,[[x+2,y+23],[x+24,y+19],[x+32,y+28],[x+9,y+32]],p[3]+'55');line(c,x+6,y+29,x+27,y+25,p[1],2);}
-  if(v===0){line(c,x+14,y+27,x+15,y-11,p[3],2);poly(c,[[x+15,y-10],[x+41,y-5],[x+15,y+6]],p[1]);}
+  if(v!==12&&world.zoneAt(d.x,d.y).theme==='forest'&&drawForestProp(c,d))continue;
+  if(v===12){drawForestTree(c,d,'trunk');}
+  else if(v===0){line(c,x+14,y+27,x+15,y-11,p[3],2);poly(c,[[x+15,y-10],[x+41,y-5],[x+15,y+6]],p[1]);}
   else if(v===1){for(let i=0;i<4;i++){line(c,x+4+i*7,y+26,x+5+i*7,y+8,p[3]);rect(c,x+3+i*7,y+6,4,3,d.chapter%2?'#d5bbad':'#e6dfbd');}}
   else if(v===2){rect(c,x+7,y-30,17,58,p[3]);rect(c,x+8,y-29,3,54,p[1]);for(let i=0;i<3;i++)rect(c,x+13,y-20+i*12,6,2,p[0]);}
   else if(v===3){bowl(c,x+3,y+12,27,15,p,d.chapter<6);line(c,x+15,y+27,x+15,y+39,p[2],3);}

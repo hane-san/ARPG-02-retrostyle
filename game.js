@@ -1,3 +1,4 @@
+import {drawForestCanopies} from './forest-market-art.js';
 import {makePilgrimageWorld,pilgrimFloor,pilgrimQuiet,pilgrimSiteOpacity,pilgrimArtHit} from './pilgrimage-world.js';
 import {drawPilgrimTile,drawPilgrimSite,drawPilgrimDecor,drawPilgrimOutlook,pilgrimTileColor} from './pilgrimage-art.js';
 import {imperialResponse,imperialPhase,createImperialListening,imperialWalkableFloor} from './journey-imperial.js';
@@ -483,6 +484,7 @@ function paint(t){
   objects.push({y:n.y+.5,render:()=>drawNpc(ctx,n,t)});
  objects.push({y:hero.py+.7,render:()=>drawHero(ctx,t)});
  objects.sort((a,b)=>a.y-b.y);for(const obj of objects)obj.render();
+ if(PILGRIMAGE_MODE)drawForestCanopies(ctx,world,{left,right,top,bottom},hero);
  drawDestination(ctx,t);
  ctx.restore();
  const vignette=ctx.createRadialGradient(screen.w*.5,screen.h*.48,screen.h*.2,screen.w*.5,screen.h*.5,Math.max(screen.w,screen.h)*.75);
@@ -559,7 +561,7 @@ function onArrive(){
   const fresh=!isCurio(obj.item)&&!discovered.has(obj.item.id);
   if(fresh){discovered.add(obj.item.id);updateDiscoveries();if(!PILGRIMAGE_MODE)sfx.play('heal');}
   if(JOURNEY_MODE){
-   if(PILGRIMAGE_MODE)sfx.respond(obj.item.form==='garden'?(obj.item.chapter===2?'receiving-wet':'receiving-dry'):obj.item.form);
+   if(PILGRIMAGE_MODE)sfx.respond(obj.item.form==='forest-wheel'?'wheel':obj.item.form==='garden'?(obj.item.chapter===2?'receiving-wet':'receiving-dry'):obj.item.form);
    const response=imperialResponse(obj.item)||activateRuinsDevice(obj.item);
    if(response&&obj.item.kind==='imperial'&&!(obj.item.form==='sealed'&&imperialPhase(obj.item.id)%2===0))sfx.respond(obj.item.form);
    openDialogue(obj.item.name,'この場所で',[obj.item.desc,response,obj.item.aside]);return;

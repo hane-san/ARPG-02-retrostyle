@@ -1,3 +1,4 @@
+import {FOREST_SITES,FOREST_NPCS} from '../forest-market.js';
 import assert from 'node:assert/strict';
 import {mkdirSync} from 'node:fs';
 import {makePilgrimageWorld,PILGRIM_ROUTE,PILGRIM_W,PILGRIM_H,PILGRIM_ZONES} from '../pilgrimage-world.js';
@@ -75,6 +76,33 @@ export async function checkPilgrimage(browser,origin){
     const canvas=await page.locator('#vistaCanvas').evaluate(c=>{const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data,s=new Set();for(let i=0;i<d.length;i+=4)s.add(d[i]+','+d[i+1]+','+d[i+2]);return {w:c.width,h:c.height,colours:s.size};});
     assert.deepEqual([canvas.w,canvas.h],[480,252]);assert.ok(canvas.colours>20);
     await page.locator('#vistaClose').click();assert.equal(await page.locator('#worldCanvas').getAttribute('aria-busy'),'false');
+   }
+   if(z.index===1){
+    assert.equal(zone,'輪を結ぶ森市');
+    const leaves=await page.evaluate(async()=>{
+     const {drawForestCanopies,drawForestTree}=await import('./forest-market-art.js');
+     const tree={x:3,y:5,variant:12,seed:.4},canvas=document.createElement('canvas');canvas.width=256;canvas.height=256;const c=canvas.getContext('2d');
+     drawForestTree(c,tree,'trunk');const behind=c.getImageData(136,90,1,1).data[3];
+     const paint=hero=>{c.clearRect(0,0,256,256);c.fillStyle='#2255dd';c.fillRect(130,83,16,18);drawForestCanopies(c,{decor:[tree],npcs:[]},{left:0,right:8,top:0,bottom:8},hero);return c.getImageData(136,90,1,1).data[2];};
+     return {behind,covered:paint({px:3,py:3}),edge:paint({px:3,py:.8}),opaque:paint({px:100,py:100}),alpha:c.globalAlpha};
+    });
+    assert.equal(leaves.behind,0,'the lower tree pass does not paint opaque leaves behind the explorer');
+    assert.ok(leaves.covered>leaves.opaque+30,'foreground leaves reveal the explorer beneath them');assert.ok(leaves.edge>leaves.opaque+30,'sprite height is included at the near canopy edge');assert.equal(leaves.alpha,1);
+
+    await page.locator('#soundBtn').click();assert.equal(await page.locator('#trackSelect').inputValue(),'31:1');await page.locator('#musicPanel [data-close]').click();
+    for(const s of FOREST_SITES){
+     await walk(s.entrance);await fieldTap({x:s.x,y:s.y+2});
+     assert.equal(await page.locator('#dialogueName').textContent(),s.name);
+     await page.locator('#dialogueClose').click();
+     const floor={x:s.x+Math.floor(s.w/2),y:s.y+s.h-1};await fieldTap(floor);assert.deepEqual(await position(),floor);
+     const beside={x:s.x+1,y:s.y+s.h-1};await fieldTap(beside);await page.keyboard.press('ArrowLeft');await page.clock.runFor(400);assert.deepEqual(await position(),beside,'timber post stops movement');
+     await page.screenshot({path:`test-results/${s.id}.png`});
+    }
+    for(const p of FOREST_NPCS){await walk({x:p.x,y:p.y-1});await fieldTap(p);assert.equal(await page.locator('#dialogueName').textContent(),p.name);await page.locator('#dialogueClose').click();}
+    const tree=world.decor.find(d=>d.variant===12&&world.walkable(d.x,d.y-1));
+    await walk({x:tree.x,y:tree.y-1});const before=await position();await page.keyboard.press('ArrowDown');await page.clock.runFor(400);assert.deepEqual(await position(),before,'a visible tree trunk blocks the real controls');
+    await walk(PILGRIM_ROUTE[i]);await page.locator('#homeBtn').click();await page.clock.runFor(1000);await page.screenshot({path:'test-results/forest-market-square.png'});
+    console.log('Forest market: 3 shops investigated, 2 residents, open verandas, posts/trunk collision, distinctive region music.');
    }
    if(z.index===2){
     const s=world.sites.find(s=>s.id==='pilgrim-place-2'),floor={x:s.x+Math.floor(s.w/2),y:s.y+Math.floor(s.h/2)};

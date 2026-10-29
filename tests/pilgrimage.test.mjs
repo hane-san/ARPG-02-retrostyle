@@ -12,7 +12,7 @@ function legal(from,to){const path=w.findPath(w,from,to);assert.ok(path?.length,
 test('edited journey is the continuous pilgrimage loop and then a changed final approach',()=>{
  assert.deepEqual([w.w,w.h],[480,288]);assert.equal(w.pilgrimage,true);
  for(const z of w.zones)assert.equal(w.zoneAt(z.cx,z.cy).id,z.id,'authored centre '+z.id);
- assert.equal(w.zones.length,13);assert.equal(w.npcs.length,10);assert.equal(w.sites.length,34);assert.ok(w.decor.length>1000);
+ assert.equal(w.zones.length,13);assert.equal(w.npcs.length,12);assert.equal(w.sites.length,37);assert.ok(w.decor.length>1000);
  assert.ok(Math.hypot(PILGRIM_ROUTE[31].x-w.start.x,PILGRIM_ROUTE[31].y-w.start.y)<12,'the first circuit comes back near its start');
  let steps=0;for(let i=1;i<PILGRIM_ROUTE.length;i++)steps+=legal(PILGRIM_ROUTE[i-1],PILGRIM_ROUTE[i]).length-1;
  assert.ok(steps>2200&&steps<3000,'an authored journey rather than a tiny showroom');
@@ -24,7 +24,7 @@ test('edited journey is the continuous pilgrimage loop and then a changed final 
 test('all architectural entrances, speakers, region centres and vistas have legal outward and return walks',()=>{
  const objects=[...w.sites.map(s=>({...s.entrance,id:s.id})),...w.npcs,...w.zones.map(z=>({x:z.cx,y:z.cy,id:z.id})),...w.vistas];
  for(const p of objects){legal(w.start,p);legal(p,w.start);}
- assert.equal(new Set(w.npcs.map(p=>p.x+','+p.y)).size,10);
+ assert.equal(new Set(w.npcs.map(p=>p.x+','+p.y)).size,12);
 });
 test('every walkable floor belongs to one connected country and water remains unwalkable',()=>{
  const q=[w.start],seen=new Uint8Array(w.w*w.h);seen[w.start.y*w.w+w.start.x]=1;
