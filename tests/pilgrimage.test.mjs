@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {makePilgrimageWorld,PILGRIM_ROUTE,PILGRIM_ZONES,PILGRIM_BLOCKED,pilgrimCameraScene,pilgrimFloor,pilgrimQuiet,pilgrimSiteOpacity} from '../pilgrimage-world.js';
+import {makePilgrimageWorld,PILGRIM_ROUTE,PILGRIM_ZONES,PILGRIM_BLOCKED,pilgrimCameraScene,pilgrimFloor,pilgrimQuiet,pilgrimSiteOpacity,pilgrimArtHit} from '../pilgrimage-world.js';
 import {routeJourneyWalk} from '../journey-world.js';
 import {MUSIC_LIBRARY,buildTrack} from '../music.js';
 import {pickJourneyTrack,createJourneyMusicDirector} from '../journey-music.js';
@@ -55,9 +55,9 @@ test('rendered solid piers and large props collide, open court floors and gate c
 test('outdoor framing is stable except explicit large vistas, with spatial and temporal hysteresis',()=>{
  const camera=createJourneyCamera();
  for(const z of w.zones)if(![4,11,12].includes(z.index))assert.equal(pilgrimCameraScene(w,{px:z.cx,py:z.cy},null),'journey-road');
- const p=PILGRIM_ROUTE[38];assert.equal(pilgrimCameraScene(w,{px:p.x,py:p.y},null),'journey-scenic-wide');
- assert.equal(pilgrimCameraScene(w,{px:p.x+6,py:p.y},'journey-scenic-wide'),'journey-scenic-wide');
- assert.equal(pilgrimCameraScene(w,{px:p.x+9,py:p.y},'journey-scenic-wide'),'journey-road');
+ const p=PILGRIM_ROUTE[38];assert.equal(pilgrimCameraScene(w,{px:p.x,py:p.y},null),'journey-monument');
+ assert.equal(pilgrimCameraScene(w,{px:p.x+9,py:p.y},'journey-monument'),'journey-monument');
+ assert.equal(pilgrimCameraScene(w,{px:p.x+13,py:p.y},'journey-monument'),'journey-road');
  assert.equal(camera.update('journey-scenic-wide',1000),.8);assert.equal(camera.update('journey-scenic-wide',1799),.8);assert.equal(camera.update('journey-scenic-wide',1800),.6);
  assert.equal(camera.update('journey-road',1900),.6);assert.equal(camera.update('journey-road',4200),.8);
 });
@@ -106,4 +106,16 @@ test('tall foreground art reveals an explorer behind it while front and open-flo
  const edge=pilgrimSiteOpacity(w,s,{px:s.x-.5,py:s.y-3});assert.ok(edge>.4&&edge<1,'one-tile edge blend');
  const garden=w.sites.find(s=>s.form==='garden');assert.equal(pilgrimSiteOpacity(w,garden,{px:garden.x+6,py:garden.y+4}),1);
  assert.equal(pilgrimSiteOpacity({...w,pilgrimage:false},s,behind),1);
+});
+
+test('giant landmark framing has deliberate dwell, holds through edge jitter and restores the road',()=>{
+ const c=createJourneyCamera();assert.equal(c.update('journey-monument',2000),.8);
+ assert.equal(c.update('journey-monument',2799),.8);assert.equal(c.update('journey-monument',2800),.38);
+ assert.equal(c.update('journey-road',2900),.38);assert.equal(c.update('journey-road',5300),.8);
+});
+test('high architecture can be investigated without blocking the open gate or the ground behind it',()=>{
+ const gate=w.sites.find(s=>s.form==='gate'),p={x:gate.x,y:gate.y-3};
+ assert.equal(pilgrimArtHit(w,p)?.id,gate.id);
+ assert.notEqual(pilgrimArtHit(w,{x:gate.x+Math.floor(gate.w/2),y:gate.y-3})?.id,gate.id);
+ const old=JSON.stringify(w.occupied);pilgrimArtHit(w,p);assert.equal(JSON.stringify(w.occupied),old);
 });

@@ -48,6 +48,14 @@ export async function checkPilgrimage(browser,origin){
   assert.ok(x>0&&x<box.width&&y>0&&y<box.height,'field target visible');
   await page.locator('#worldCanvas').tap({position:{x,y}});await settle();
  }
+ // Repeated nearby ground taps preserve the existing composition without Home.
+ const initialCamera=await page.evaluate(()=>window.pilgrimCamera);
+ for(const dx of [1,2,1,0]){
+  const point=await page.evaluate(({x,y})=>{const c=document.querySelector('#worldCanvas'),r=c.getBoundingClientRect(),a=window.pilgrimCamera,z=window.pilgrimZoom;return {x:r.left+r.width/2+((x+.5)*32-a.x)*z,y:r.top+r.height/2+((y+.5)*32-a.y)*z};},{x:world.start.x+dx,y:world.start.y});
+  await page.touchscreen.tap(point.x,point.y);await page.clock.runFor(800);
+ }
+ const afterTaps=await page.evaluate(()=>window.pilgrimCamera);
+ assert.ok(Math.hypot(afterTaps.x-initialCamera.x,afterTaps.y-initialCamera.y)<1,'nearby repeated taps do not recenter the camera');
  const visited=new Set();mkdirSync('test-results',{recursive:true});
  // The full itinerary traverses actual routes through normal map/keyboard input.
  // Browser time is advanced; no hero coordinate, terrain or product speed is patched.
@@ -55,6 +63,7 @@ export async function checkPilgrimage(browser,origin){
   await walk(PILGRIM_ROUTE[i]);const zone=await page.locator('#zoneName').textContent();visited.add(zone);
   const z=PILGRIM_ZONES.find(z=>z.at===i);
   if(z){
+   if([4,11,12].includes(z.index))await page.clock.runFor(6000);
    console.log('Pilgrimage region '+z.index+': '+zone);
    assert.equal(zone,world.zoneAt(PILGRIM_ROUTE[i].x,PILGRIM_ROUTE[i].y).name);
    if([2,5,6,10,11,12].includes(z.index)){
@@ -82,7 +91,9 @@ export async function checkPilgrimage(browser,origin){
     await page.evaluate(()=>{window.pilgrimCheckOcclusion=true;});await page.locator('#homeBtn').click();await page.clock.runFor(1800);
     const difference=await page.evaluate(()=>{const p=window.pilgrimHeroPixel,after=document.querySelector('#worldCanvas').getContext('2d').getImageData(p.x,p.y,1,1).data;return [...after].slice(0,3).reduce((n,v,i)=>n+Math.abs(v-p.before[i]),0);});
     assert.ok(difference<140,'explorer remains visible in final pixels behind the foreground monolith');
-    await page.screenshot({path:'test-results/pilgrimage-behind-monolith.png'});await page.evaluate(()=>{window.pilgrimCheckOcclusion=false;});await walk(PILGRIM_ROUTE[i]);
+    await page.screenshot({path:'test-results/pilgrimage-behind-monolith.png'});await page.evaluate(()=>{window.pilgrimCheckOcclusion=false;});
+    await fieldTap({x:stone.x+3,y:stone.y-5});assert.equal(await page.locator('#dialogueName').textContent(),stone.name,'drawn high stone is a real investigation target');
+    await page.locator('#dialogueClose').click();await walk(PILGRIM_ROUTE[i]);
    }
    if(z.theme==='sealed'){
     await page.locator('#soundBtn').click();await page.locator('#musicToggle').click();await page.clock.runFor(1000);
@@ -95,7 +106,7 @@ export async function checkPilgrimage(browser,origin){
  }
  assert.ok(visited.size>=12,'all distinct regions along the loop and changed latter half are seen');
  const frames=await page.evaluate(()=>window.pilgrimFrames);
- assert.ok(frames.some(f=>f.zoom<.63),'authored grand views expand');assert.ok(frames.every(f=>f.zoom>=.59&&f.zoom<=.801));
+ assert.ok(frames.some(f=>f.zoom<.4),'capital pulls back strongly');assert.ok(frames.some(f=>f.zoom>.45&&f.zoom<.47),'ridge has its own wider scale');assert.ok(frames.every(f=>f.zoom>=.379&&f.zoom<=.801));
  for(let i=1;i<frames.length;i++)assert.ok(Math.abs(frames[i].zoom-frames[i-1].zoom)<.02,'zoom interpolates rather than cuts');
  assert.deepEqual(errors,[]);console.log('Pilgrimage: all 43 actual map/keyboard walking legs, loop and changed final approach, 13 regions, vistas, quiet/resumed BGM, 90 tracks and stable wide framing. Browser clock advanced, not a real-time human playtest.');
  await context.close();

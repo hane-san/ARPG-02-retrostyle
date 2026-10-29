@@ -12,14 +12,14 @@ export const PILGRIM_ROUTE=[
 ].map(([x,y])=>p(x,y));
 const chapterData=[
  [0,'白い船着場','帰りの舟を、ここに結ぶ','harbour',['#b6c9bc','#e2dcc5','#729ba6','#8a9e92'],'30:1','13:1'],
- [2,'輪を結ぶ草原','生活の音が、湖の方へ薄くなる','meadow',['#b7c69c','#e2d5ad','#8faea4','#94a382'],'40:1','25:1'],
+ [2,'輪を結ぶ草原','生活の音が、湖の方へ薄くなる','meadow',['#b7c69c','#e2d5ad','#8faea4','#94a382'],'34:2','40:1'],
  [5,'水を渡す庭','三つの溝へ、同じ水を分ける','garden',['#a6c5b7','#dce1c9','#74a7a4','#7b9c91'],'42:1','23:1'],
- [8,'赤い裂け目の街道','岩の切れ目に、空が残る','canyon',['#c6ac9b','#ead2b1','#92a5aa','#a08b85'],'37:1','29:2'],
+ [8,'赤い裂け目の街道','岩の切れ目に、空が残る','canyon',['#c6ac9b','#ead2b1','#92a5aa','#a08b85'],'36:1','36:2'],
  [11,'雲の上の水尺','高さだけが、水を覚えている','ridge',['#bdcbd0','#e7dfcf','#8ba7bb','#929eaa'],'41:2','27:1'],
  [14,'間を測る列石','石よりも、石と石の間が大きい','monolith',['#a5b7b7','#d1d2c0','#819d9e','#6d7d87'],'43:1','7:2'],
  [17,'水の失せた七段','同じ器の底を、今は歩ける','dry',['#d2c7ad','#eee0bd','#a2b4ad','#aaa58e'],'42:2','27:2'],
  [21,'白い舟の眠る原','桟橋の下に、草が生えている','salt',['#d5d8cd','#f0e9d4','#a2bbc0','#b2b4a5'],'35:2','38:2'],
- [25,'青い灯の宿道','一周しても、同じ夜には戻らない','inn',['#b4c0be','#ded9c6','#8bafaf','#8d999a'],'36:1','30:2'],
+ [25,'青い灯の宿道','一周しても、同じ夜には戻らない','inn',['#b4c0be','#ded9c6','#8bafaf','#8d999a'],'35:1','30:2'],
  [31,'静かな分水嶺','来た道のすぐ奥で、水の色が変わる','threshold',['#bcc1b7','#ded8c7','#91a8a5','#989f94'],'43:2','38:1'],
  [35,'扉のない受水殿','働いているのに、人の気配がない','sealed',['#aab7b3','#d5d6c6','#839997','#738785'],'43:2','7:2'],
  [38,'帝都の外郭','細かった線が、空より高くなる','capital',['#bfc0ad','#e8dfc0','#94a69b','#8c978a'],'44:1','22:2'],
@@ -122,9 +122,9 @@ export function makePilgrimageWorld(){
 }
 export function pilgrimCameraScene(world,hero,accepted){
  // Hysteresis is spatial as well as temporal; ordinary regional borders never zoom.
- const wide=[PILGRIM_ROUTE[11],PILGRIM_ROUTE[38],PILGRIM_ROUTE[43]];
- const radius=accepted==='journey-scenic-wide'?8:4;
- return wide.some(p=>Math.hypot(hero.px-p.x,hero.py-p.y)<radius)?'journey-scenic-wide':'journey-road';
+ const spots=[[PILGRIM_ROUTE[11],'journey-reveal'],[PILGRIM_ROUTE[38],'journey-monument'],[PILGRIM_ROUTE[43],'journey-monument']];
+ const radius=['journey-reveal','journey-monument'].includes(accepted)?12:7;
+ return spots.find(([p])=>Math.hypot(hero.px-p.x,hero.py-p.y)<radius)?.[1]||'journey-road';
 }
 export function pilgrimFloor(world,site,p){return !!(world.pilgrimage&&site&&site.blocking===false&&p.x>=site.x&&p.x<site.x+site.w&&p.y>=site.y&&p.y<site.y+site.h&&world.walkable(Math.floor(p.x),Math.floor(p.y)));}
 export function pilgrimQuiet(world,p,wasQuiet=false){const z=PILGRIM_ZONES.find(z=>z.theme==='sealed');return !!world.pilgrimage&&Math.hypot(p.x-z.cx,p.y-z.cy)<(wasQuiet?9:5);}
@@ -136,4 +136,11 @@ export function pilgrimSiteOpacity(world,site,hero){
  const horizontal=Math.min(hero.px+.9-site.x,site.x+site.w+.3-hero.px);
  const vertical=Math.min(hero.py+1-(site.y-(site.artTop||0)),site.y+site.h-hero.py);
  return 1-.84*Math.max(0,Math.min(1,horizontal,vertical));
+}
+
+// Visual high parts can be investigated, but never add collision above a foot.
+// Only the solid pier's horizontal span is picked; a gate's open centre stays open.
+export function pilgrimArtHit(world,p){
+ if(!world.pilgrimage)return null;
+ return world.sites.filter(s=>p.y<s.y&&p.y>=s.y-(s.artTop||0)&&s.solid.some(r=>p.x>=s.x+r.x&&p.x<s.x+r.x+r.w)).sort((a,b)=>(a.y+a.h)-(b.y+b.h)).at(-1)||null;
 }

@@ -9,9 +9,10 @@ import {journeyScenicScene,JOURNEY_SCENIC_BEATS} from './journey-scenic.js';
 export const JOURNEY_DEFAULT_ZOOM=.8;
 export const JOURNEY_INTERIOR_ZOOM=1.35;
 export const JOURNEY_SPECIAL_WIDE_ZOOM=.6;
-export const JOURNEY_ZOOM_STAGES=Object.freeze([JOURNEY_INTERIOR_ZOOM,JOURNEY_DEFAULT_ZOOM,JOURNEY_SPECIAL_WIDE_ZOOM]);
+export const JOURNEY_ZOOM_STAGES=Object.freeze([JOURNEY_INTERIOR_ZOOM,JOURNEY_DEFAULT_ZOOM,JOURNEY_SPECIAL_WIDE_ZOOM,.46,.38]);
 export const JOURNEY_CAMERA_PROFILES=Object.freeze({
  ...Object.fromEntries(IMPERIAL_ZONES.map(z=>[z.id,JOURNEY_DEFAULT_ZOOM])),
+ 'journey-reveal':.46,'journey-monument':.38,
  'journey-interior':JOURNEY_INTERIOR_ZOOM,
  'journey-scenic-wide':JOURNEY_SPECIAL_WIDE_ZOOM,
  // All outdoor regions, buildings, ruins and ordinary scenic beats are steady.
@@ -52,7 +53,7 @@ export function journeyCameraScene(world,hero,acceptedScene=null){
 // Only a special wide vantage or an actual indoor scene starts a transition.
 // Changes of district or proximity are immediately accepted when the zoom is
 // unchanged: they must not create a backlog of false camera transitions.
-const isCinematic=scene=>scene==='journey-interior'||scene==='journey-scenic-wide';
+const isCinematic=scene=>['journey-interior','journey-scenic-wide','journey-reveal','journey-monument'].includes(scene);
 export function createJourneyCamera(){
  let scene='journey-port',target=JOURNEY_DEFAULT_ZOOM,candidate=null,since=0,acceptedAt=0;
  return {
@@ -75,7 +76,10 @@ export function createJourneyCamera(){
 }
 export function easeJourneyCamera(current,hero,target,dt,viewport,world){
  const difference=target-current.zoom;
- const zoom=Math.abs(difference)<.001?target:current.zoom+difference*(1-Math.exp(-Math.max(0,Math.min(.12,dt))*1.8));
+ // Large reveals take several seconds rather than spending the whole change
+ // in the first few frames. Ordinary/legacy zoom retains its established rate.
+ const response=target<.6||current.zoom<.66?.65:1.8;
+ const zoom=Math.abs(difference)<.001?target:current.zoom+difference*(1-Math.exp(-Math.max(0,Math.min(.07,dt))*response));
  const hx=(hero.x+.5)*world.tile,hy=(hero.y+.5)*world.tile;
  // Keep the traveller at the same screen position as the field expands.
  const anchor={x:hx-(hx-current.x)*current.zoom/zoom,y:hy-(hy-current.y)*current.zoom/zoom};
