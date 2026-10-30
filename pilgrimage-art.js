@@ -1,3 +1,4 @@
+import {drawRegionalGrain} from './pilgrimage-ground.js';
 import {drawPilgrimPlay} from './pilgrimage-play.js';
 import {drawJourneyWonder} from './journey-wonders-art.js';
 import {drawForestSite,drawForestTree,drawForestProp} from './forest-market-art.js';
@@ -31,6 +32,7 @@ export function drawPilgrimTile(c,x,y,t,world){
    if(green&&t!=='='){rect(c,xx,yy,1,3+q*3,shade+'70');if(q>.62)rect(c,xx+2,yy+1,3,2,light);}
    else line(c,xx,yy,xx+3+q*7,yy+(dry?0:2),q>.5?light+'88':shade+'55');
   }
+  drawRegionalGrain(c,x,y,z.theme,z.palette,q);
   if(t==='='&&q>.7){rect(c,px+5,py+16,6,2,ground);rect(c,px+19,py+8,4,1,shade+'55');}
   if(z.theme==='garden'&&t!=='='){line(c,px,py+15,px+32,py+15,water+'88');line(c,px+16,py,px+16,py+32,light+'88');}
   if(z.theme==='salt'&&q>.6)poly(c,[[px+8,py+20],[px+17,py+6],[px+23,py+22]],'#edf0e180');

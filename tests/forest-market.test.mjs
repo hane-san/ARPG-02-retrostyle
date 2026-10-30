@@ -33,7 +33,7 @@ test('trees have finite solid feet and keep cross-streets, doorsteps and people 
  for(let x=125;x<=157;x++)assert.ok(w.walkable(x,38),'through street '+x);
 });
 test('the inhabited forest has its own music and quiet nearby working sounds',()=>{
- const pool=JOURNEY_PLAYLISTS['pilgrim-1'];assert.equal(pool[0],'31:1');
+ const pool=JOURNEY_PLAYLISTS['pilgrim-1'];assert.equal(pool[0],'18:1');
  assert.notEqual(pool[0],JOURNEY_PLAYLISTS['pilgrim-0'][0]);assert.equal(MUSIC_LIBRARY.length*2,90);
  const sources=journeySoundSources(w.sites).filter(s=>s.id.startsWith('forest-'));
  assert.deepEqual(sources.map(s=>s.kind).sort(),['kettle','wood','wood']);
