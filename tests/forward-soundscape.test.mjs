@@ -32,3 +32,16 @@ test('foot materials match authored regions and bridges; sand traces expire and 
  assert.ok(trails.visible(2000).length<=48);assert.equal(trails.visible(6000).length,0);
  const stone={...sand,zoneAt:()=>({theme:'capital'})};for(let i=0;i<10;i++)trails.step(stone,hero,.5,7000);assert.equal(trails.visible(7000).length,0);
 });
+
+test('successive short taps carry forward progress, while a manual reset holds a new pan',()=>{
+ const f=createPilgrimageFollower(),h={x:100,y:100},world={width:480*32,height:288*32,tile:32},v={width:390,height:755,zoom:.8};let c={x:3216,y:3216};
+ for(let tap=0;tap<10;tap++){
+  for(let frame=0;frame<20;frame++){h.x+=.05;c=f.update(c,h,[{x:h.x+1,y:h.y}],1/60,v,world);}
+  const stopped={...c};assert.deepEqual(f.update(c,h,[],1,v,world),stopped);
+  if(tap===1)assert.equal(c.x,3216,'first two nearby taps are still static');
+ }
+ assert.ok(c.x>(h.x+.5)*32,'series of small taps eventually looks ahead');
+ f.reset();c={x:(h.x+.5)*32+170,y:3216};const panned={...c};
+ for(let frame=0;frame<20;frame++){h.x+=.05;c=f.update(c,h,[{x:h.x+1,y:h.y}],1/60,v,world);}
+ assert.deepEqual(c,panned,'new manual composition does not recoil');
+});

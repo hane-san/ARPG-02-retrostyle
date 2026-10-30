@@ -97,6 +97,9 @@ export async function checkPilgrimage(browser,origin){
  const followed=await page.evaluate(()=>window.pilgrimCamera);
  assert.ok(followed.x>panned.x+10,'camera follows after catch-up: '+JSON.stringify({initialCamera,panned,followed,position:await position()}));
  await walk(world.start);await page.locator('#homeBtn').click();await page.clock.runFor(1500);
+ for(let dx=1;dx<=8;dx++){await rawTap({x:world.start.x+dx,y:world.start.y});await settle();}
+ const series=await page.evaluate(()=>window.pilgrimCamera.x-(window.pilgrimActorWorld.x+.5)*32);assert.ok(series>0,'repeated one-tile taps carry forward lead across arrivals');
+ await walk(world.start);await page.locator('#homeBtn').click();await page.clock.runFor(1500);
  console.log('Catch-up camera: real forward drag, nearby tap retains composition, farther tap resumes following.');
  const visited=new Set();mkdirSync('test-results',{recursive:true});
  // The full itinerary traverses actual routes through normal map/keyboard input.

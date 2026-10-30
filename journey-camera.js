@@ -144,7 +144,7 @@ export function createPilgrimageFollower(){
   reset(){last=null;heading='';travel=leadTravel=0;following=false;},
   update(current,hero,path,dt,viewport,world){
    const next=path?.find(p=>Math.hypot(p.x-hero.x,p.y-hero.y)>.0001);
-   if(!next){this.reset();return {x:current.x,y:current.y};}
+   if(!next)return {x:current.x,y:current.y};
    const dx=Math.sign(next.x-hero.x),dy=Math.sign(next.y-hero.y),key=dx+','+dy;
    const moved=last?Math.hypot(hero.x-last.x,hero.y-last.y):0;last={...hero};
    if(key!==heading||moved>1){heading=key;travel=leadTravel=0;following=false;}
