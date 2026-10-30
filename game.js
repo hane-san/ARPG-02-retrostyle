@@ -131,6 +131,7 @@ function confineCamera(x=camera.x,y=camera.y,margin=.65){
 function centerCamera(){
  // Travel is always guided by the route camera, including from the atlas.
  if(hero.path.length){panTarget=null;return;}
+ if(PILGRIMAGE_MODE)pilgrimageFollow.reset();
  panTarget={x:(hero.px+.5)*TILE,y:(hero.py+.5)*TILE};
 }
 const hash=(x,y)=>{let n=Math.imul(x+23,374761393)+Math.imul(y+51,668265263);n=Math.imul(n^(n>>>13),1274126177);return ((n^(n>>>16))>>>0)/4294967295;};
@@ -552,7 +553,6 @@ function startWalk(target,arrival=null,source='field'){
   routeWalk(world,hero,target,currentWorldId==='silk'?silkPath:findPath);
  if(!path){toast('この場所へ続く道が見つかりません。');return;}
  const trial=mazeTrial?.plan(path,{x:hero.x,y:hero.y},world,source);
- if(PILGRIMAGE_MODE&&!hero.path.length)pilgrimageFollow.reset();
  hero.path=trial?.path||path;hero.arrival=trial?.limited?null:arrival;hero.speed=JOURNEY_MODE?walkSpeed(source):CLASSIC_WALK_SPEED;
  panTarget=null;hero.walkSource=source;syncTravelState();
  if(hero.path.length===0){hero.px=hero.x;hero.py=hero.y;onArrive();return;}
@@ -833,6 +833,7 @@ canvas.addEventListener('pointermove',e=>{
  // A simple tap still reaches handleTap on release and may reroute immediately.
  if(hero.path?.length)return;
  if(gesture.drag){
+  if(PILGRIMAGE_MODE)pilgrimageFollow.reset();
   const sensitivity=JOURNEY_MODE?JOURNEY_PAN_SENSITIVITY:PAN_SENSITIVITY;
   panTarget=limitCamera({x:gesture.cx-dx*sensitivity/camera.zoom,y:gesture.cy-dy*sensitivity/camera.zoom},
    {x:hero.px,y:hero.py},{width:screen.w,height:screen.h,zoom:camera.zoom},

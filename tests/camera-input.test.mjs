@@ -12,7 +12,7 @@ function input({journey=false}={}){
  const listeners={},events={},documentEvents={},taps=[],zoom=[];
  const canvas={addEventListener:(id,fn)=>listeners[id]=fn,setPointerCapture(){},hasPointerCapture(){return false;},releasePointerCapture(){}};
  const context=vm.createContext({canvas,camera:{x:100,y:100,zoom:1.25},hero:{px:3,py:3},screen:{w:390,h:640},W:164,H:120,TILE:32,PAN_SENSITIVITY,JOURNEY_PAN_SENSITIVITY,panTarget:null,
-  limitCamera:p=>p,zoomTo:z=>zoom.push(z),handleTap:e=>taps.push(e),readingPress:null,dialogue:null,JOURNEY_MODE:journey,
+  limitCamera:p=>p,zoomTo:z=>zoom.push(z),handleTap:e=>taps.push(e),readingPress:null,dialogue:null,JOURNEY_MODE:journey,PILGRIMAGE_MODE:journey,pilgrimageFollow:{reset(){}},
   window:{addEventListener:(id,fn)=>events[id]=fn},document:{hidden:false,addEventListener:(id,fn)=>documentEvents[id]=fn}});
  vm.runInContext(block,context);
  const send=(type,id,x=100,y=100)=>listeners[type]({pointerId:id,button:0,clientX:x,clientY:y,preventDefault(){}});
