@@ -135,3 +135,30 @@ export function easePilgrimageFollowCamera(current,hero,path,dt,viewport,world){
  const factor=1-Math.exp(-Math.max(0,Math.min(.12,dt))*4.5);
  return limitCamera({x:current.x+(x-current.x)*factor,y:current.y+(y-current.y)*factor},hero,viewport,world,.08);
 }
+
+// A stopped/panned composition is retained until real walking catches it.
+// Then the forward lead grows over four tiles, independent of route length.
+export function createPilgrimageFollower(){
+ let last=null,heading='',travel=0,leadTravel=0,following=false;
+ return {
+  reset(){last=null;heading='';travel=leadTravel=0;following=false;},
+  update(current,hero,path,dt,viewport,world){
+   const next=path?.find(p=>Math.hypot(p.x-hero.x,p.y-hero.y)>.0001);
+   if(!next){this.reset();return {x:current.x,y:current.y};}
+   const dx=Math.sign(next.x-hero.x),dy=Math.sign(next.y-hero.y),key=dx+','+dy;
+   const moved=last?Math.hypot(hero.x-last.x,hero.y-last.y):0;last={...hero};
+   if(key!==heading||moved>1){heading=key;travel=leadTravel=0;following=false;}
+   travel+=Math.min(1,moved);
+   const hx=(hero.x+.5)*world.tile,hy=(hero.y+.5)*world.tile;
+   const caught=(hx-current.x)*dx+(hy-current.y)*dy>=-world.tile*.25;
+   if(!following&&travel>=2.6&&caught)following=true;
+   if(following)leadTravel+=Math.min(1,moved);
+   if(!following)return limitCamera(current,hero,viewport,world,.08);
+   const lead=Math.min(1,leadTravel/4)*world.tile*3;
+   const x=dx>0?Math.max(current.x,hx+lead):dx<0?Math.min(current.x,hx-lead):current.x;
+   const y=dy>0?Math.max(current.y,hy+lead):dy<0?Math.min(current.y,hy-lead):current.y;
+   const f=1-Math.exp(-Math.min(.07,Math.max(0,dt))*3.5);
+   return limitCamera({x:current.x+(x-current.x)*f,y:current.y+(y-current.y)*f},hero,viewport,world,.08);
+  }
+ };
+}

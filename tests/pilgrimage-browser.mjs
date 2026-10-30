@@ -10,7 +10,7 @@ export async function checkPilgrimage(browser,origin){
  await page.addInitScript(({w,h})=>{
   const fill=CanvasRenderingContext2D.prototype.fillRect,arc=CanvasRenderingContext2D.prototype.arc,scale=CanvasRenderingContext2D.prototype.scale,translate=CanvasRenderingContext2D.prototype.translate;
   window.pilgrimFrames=[];let next=false;
-  CanvasRenderingContext2D.prototype.fillRect=function(x,y,w,h){fill.call(this,x,y,w,h);if(window.pilgrimCheckOcclusion&&this.canvas.id==='worldCanvas'&&this.fillStyle==='#b8d9dc'){const p=this.getTransform().transformPoint({x:x+w/2,y:y+h/2});window.pilgrimHeroPixel={x:Math.floor(p.x),y:Math.floor(p.y),before:[...this.getImageData(Math.floor(p.x),Math.floor(p.y),1,1).data]};}};
+  CanvasRenderingContext2D.prototype.fillRect=function(x,y,w,h){fill.call(this,x,y,w,h);if(this.canvas.id==='worldCanvas'&&this.fillStyle==='#b8d9dc')window.pilgrimActorWorld={x:(x-8)/32,y:(y-13)/32};if(window.pilgrimCheckOcclusion&&this.canvas.id==='worldCanvas'&&this.fillStyle==='#b8d9dc'){const p=this.getTransform().transformPoint({x:x+w/2,y:y+h/2});window.pilgrimHeroPixel={x:Math.floor(p.x),y:Math.floor(p.y),before:[...this.getImageData(Math.floor(p.x),Math.floor(p.y),1,1).data]};}};
   CanvasRenderingContext2D.prototype.arc=function(x,y,r,...rest){if(this.canvas.id==='miniMap'&&this.fillStyle==='#fae5a1')window.pilgrimPosition={x:x/this.canvas.width*w-.5,y:y/this.canvas.height*h-.5};return arc.call(this,x,y,r,...rest);};
   CanvasRenderingContext2D.prototype.scale=function(x,y){if(this.canvas.id==='worldCanvas'){next=true;window.pilgrimZoom=x;}return scale.call(this,x,y);};
   CanvasRenderingContext2D.prototype.translate=function(x,y){if(next&&this.canvas.id==='worldCanvas'){next=false;window.pilgrimCamera={x:-x,y:-y};window.pilgrimFrames.push({x:-x,y:-y,zoom:window.pilgrimZoom});}return translate.call(this,x,y);};
@@ -92,7 +92,8 @@ export async function checkPilgrimage(browser,origin){
  await rawTap({x:world.start.x+2,y:world.start.y});await page.clock.runFor(900);
  const retained=await page.evaluate(()=>window.pilgrimCamera);
  assert.ok(Math.hypot(retained.x-panned.x,retained.y-panned.y)<1,'a tap does not recoil toward the traveller behind the panned view');
- await rawTap({x:world.start.x+13,y:world.start.y});await settle();
+ await rawTap({x:world.start.x+13,y:world.start.y});await page.clock.runFor(1600);
+ const ahead=await page.evaluate(()=>window.pilgrimCamera.x-(window.pilgrimActorWorld.x+.5)*32);assert.ok(ahead>4,'after catching up the moving camera looks ahead of the explorer');await settle();
  const followed=await page.evaluate(()=>window.pilgrimCamera);
  assert.ok(followed.x>panned.x+10,'camera follows after catch-up: '+JSON.stringify({initialCamera,panned,followed,position:await position()}));
  await walk(world.start);await page.locator('#homeBtn').click();await page.clock.runFor(1500);
@@ -119,6 +120,11 @@ export async function checkPilgrimage(browser,origin){
    }
    if(z.index===1){
     assert.equal(zone,'輪を結ぶ森市');
+    for(const [target,track] of [[{x:122,y:38},'30:1'],[PILGRIM_ROUTE[i],'18:1'],[{x:122,y:38},'30:1'],[PILGRIM_ROUTE[i],'18:1']]){
+     await walk(target);await page.clock.runFor(3000);await page.locator('#soundBtn').click();assert.equal(await page.locator('#trackSelect').inputValue(),track,'outward and return walking restore the regional cue');await page.locator('#musicPanel [data-close]').click();
+    }
+    console.log('Regional music: two real outward/return walks restore harbour/forest cues.');
+
     const toy=world.sites.find(s=>s.id==='pilgrim-place-1');await playWithWheel(toy,{x:toy.x+1,y:toy.y+toy.h-1});await walk(PILGRIM_ROUTE[i]);
     const leaves=await page.evaluate(async()=>{
      const {drawForestCanopies,drawForestTree}=await import('./forest-market-art.js');
@@ -130,7 +136,7 @@ export async function checkPilgrimage(browser,origin){
     assert.equal(leaves.behind,0,'the lower tree pass does not paint opaque leaves behind the explorer');
     assert.ok(leaves.covered>leaves.opaque+30,'foreground leaves reveal the explorer beneath them');assert.ok(leaves.edge>leaves.opaque+30,'sprite height is included at the near canopy edge');assert.equal(leaves.alpha,1);
 
-    await page.locator('#soundBtn').click();assert.equal(await page.locator('#trackSelect').inputValue(),'31:1');await page.locator('#musicPanel [data-close]').click();
+    await page.locator('#soundBtn').click();assert.equal(await page.locator('#trackSelect').inputValue(),'18:1');await page.locator('#musicPanel [data-close]').click();
     for(const s of FOREST_SITES){
      await walk(s.entrance);await fieldTap({x:s.x,y:s.y+2});
      assert.equal(await page.locator('#dialogueName').textContent(),s.name);

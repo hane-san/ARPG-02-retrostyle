@@ -1,3 +1,4 @@
+import {createPilgrimTrails,drawPilgrimTrails,pilgrimStepTile} from './pilgrimage-ground.js';
 import {turnPilgrimPlay,pilgrimPlayHandle} from './pilgrimage-play.js';
 import {drawForestCanopies} from './forest-market-art.js';
 import {makePilgrimageWorld,pilgrimFloor,pilgrimQuiet,pilgrimSiteOpacity,pilgrimArtHit} from './pilgrimage-world.js';
@@ -19,14 +20,14 @@ import {makePrototypeWorld} from './prototype-world.js';
 import {makeJourneyWorld,routeJourneyWalk} from './journey-world.js';
 import {activateRuinsDevice} from './journey-ruins.js';
 import {drawJourneyTile,drawJourneySite,drawJourneyAtmosphere,JOURNEY_PALETTE} from './journey-art.js';
-import {createJourneyMusicDirector,pickJourneyTrack} from './journey-music.js';
+import {createJourneyMusicDirector,pickJourneyTrack,pickJourneyArrivalTrack} from './journey-music.js';
 import {createJourneyView} from './journey-view.js';
 import {installJourneyUI} from './journey-ui.js';
 import {createJourneyFoley} from './journey-foley.js';
 import {journeySoundSources} from './journey-curios.js';
 import {createAmbienceDirector} from './journey-ambience.js';
 import {resolveGameMode} from './game-mode.js';
-import {createJourneyCamera,journeyCameraScene,easeJourneyCamera,easeJourneyFollowCamera,easePilgrimageFollowCamera} from './journey-camera.js';
+import {createJourneyCamera,journeyCameraScene,easeJourneyCamera,easeJourneyFollowCamera,createPilgrimageFollower} from './journey-camera.js';
 import {createTyper} from './dialogue-typer.js';
 import {walkSpeed} from './walk-speed.js';
 import {pickJourneyTap} from './journey-tap.js';
@@ -60,7 +61,8 @@ mazeTrial?.arrive(spawn);
 const CLASSIC_WALK_SPEED=6.15;
 const journeyCamera=JOURNEY_MODE?createJourneyCamera({regional:PILGRIMAGE_MODE}):null;
 const camera={x:(spawn.x+.5)*TILE,y:(spawn.y+.5)*TILE,zoom:journeyCamera?.target||1.25};
-const journeyMusic=JOURNEY_MODE?createJourneyMusicDirector():null;
+const pilgrimageFollow=createPilgrimageFollower(),pilgrimTrails=createPilgrimTrails();
+const journeyMusic=JOURNEY_MODE?createJourneyMusicDirector(PILGRIMAGE_MODE?{settleMs:900,minHoldMs:2200}:undefined):null;
 const imperialListening=JOURNEY_MODE&&!PILGRIMAGE_MODE?createImperialListening():null;
 let imperialQuiet=false;
 const journeyView=JOURNEY_MODE?createJourneyView(stage,world):null;
@@ -430,11 +432,12 @@ function drawNpc(c,n,t){
 }
 
 function drawHero(c,t){
- const bob=hero.moving?Math.abs(Math.sin(hero.stride*9))*2:Math.sin(t*.002)*.4;
+ const bob=PILGRIMAGE_MODE?(reduceMotion.matches?0:hero.moving?Math.abs(Math.sin(hero.stride*9))*1.5:Math.sin(t*.002)*.4):hero.moving?Math.abs(Math.sin(hero.stride*9))*2:Math.sin(t*.002)*.4;
  c.save();c.translate(0,-bob);
  drawSrpgUnit(c,{x:hero.px,y:hero.py,team:'ally',acted:false,type:'sword'});
  // Light-blue travel scarf distinguishes the sole playable explorer.
  const x=hero.px*TILE,y=hero.py*TILE;
+ if(PILGRIMAGE_MODE&&hero.moving&&!reduceMotion.matches){const step=Math.sin(hero.stride*9);rect(c,x+10,y+27+step,4,2,'#456166');rect(c,x+19,y+27-step,4,2,'#456166');}
  rect(c,x+8,y+13,15,3,'#b8d9dc');rect(c,x+7,y+16,5,7,'#7dbac5');
  c.restore();
 }
@@ -460,6 +463,7 @@ function paint(t){
    ctx.drawImage(chunk(cx,cy),cx*CHUNK*TILE,cy*CHUNK*TILE);
  for(const b of BRIDGES)
   if(b.x1<=right&&b.x2>=left&&b.y1<=bottom&&b.y2>=top)bridgeArt(ctx,b,t);
+ if(PILGRIMAGE_MODE)drawPilgrimTrails(ctx,pilgrimTrails.visible(t),t);
  if(PILGRIMAGE_MODE)drawPilgrimDecor(ctx,world,{left,right,top,bottom});
  else if(JOURNEY_MODE)drawJourneyAtmosphere(ctx,{left,right,top,bottom},t);
  // Landmarks marking the portals at the far end of each bridge.
@@ -520,7 +524,7 @@ function updateJourneyMusic(now){
  const quiet=PILGRIMAGE_MODE?pilgrimQuiet(world,{x:hero.px,y:hero.py},imperialQuiet):imperialListening.update(hero.px,hero.py),quietChanged=quiet!==imperialQuiet;
  imperialQuiet=quiet;
  const accepted=journeyMusic.update(world.zoneAt(hero.x,hero.y).id,now);
- if(accepted){$('trackSelect').value=pickJourneyTrack(accepted,$('trackSelect').value);applyTrack();}
+ if(accepted){$('trackSelect').value=(PILGRIMAGE_MODE?pickJourneyArrivalTrack(accepted):pickJourneyTrack(accepted,$('trackSelect').value));applyTrack();}
  else if(quietChanged)applyTrack();
 }
 function switchWorld(id,spawn){
@@ -548,6 +552,7 @@ function startWalk(target,arrival=null,source='field'){
   routeWalk(world,hero,target,currentWorldId==='silk'?silkPath:findPath);
  if(!path){toast('この場所へ続く道が見つかりません。');return;}
  const trial=mazeTrial?.plan(path,{x:hero.x,y:hero.y},world,source);
+ if(PILGRIMAGE_MODE&&!hero.path.length)pilgrimageFollow.reset();
  hero.path=trial?.path||path;hero.arrival=trial?.limited?null:arrival;hero.speed=JOURNEY_MODE?walkSpeed(source):CLASSIC_WALK_SPEED;
  panTarget=null;hero.walkSource=source;syncTravelState();
  if(hero.path.length===0){hero.px=hero.x;hero.py=hero.y;onArrive();return;}
@@ -698,7 +703,9 @@ function updateMove(dt){
  while(remaining>0&&hero.path.length){
   const step=hero.path[0];
   const dx=step.x-hero.px,dy=step.y-hero.py,distance=Math.hypot(dx,dy);
-  if(JOURNEY_MODE)sfx.step(Math.min(distance,remaining),world.tileAt(step.x,step.y));
+  if(JOURNEY_MODE)sfx.step(Math.min(distance,remaining),PILGRIMAGE_MODE?pilgrimStepTile(world,step.x,step.y):world.tileAt(step.x,step.y));
+  if(PILGRIMAGE_MODE)hero.stride+=Math.min(distance,remaining)*Math.PI/18;
+  if(PILGRIMAGE_MODE)pilgrimTrails.step(world,hero,Math.min(distance,remaining),performance.now());
   if(distance<=remaining+.0001){
    hero.px=step.x;hero.py=step.y;hero.x=step.x;hero.y=step.y;
    mazeTrial?.arrive(step);
@@ -712,7 +719,7 @@ function updateMove(dt){
   }
   if(Math.abs(dx)>Math.abs(dy))hero.face=dx>0?'right':'left';
   else if(Math.abs(dy)>0)hero.face=dy>0?'down':'up';
-  hero.stride+=distance>.001?dt*3:0;
+  if(!PILGRIMAGE_MODE)hero.stride+=distance>.001?dt*3:0;
  }
  hero.moving=hero.path.length>0;updateZone();
 }
@@ -750,7 +757,7 @@ function animate(time){
  }else if(hero.moving){
   const next=easeEdgeCamera(camera,{x:hero.px,y:hero.py},viewport,bounds,dt);
   // Field and atlas taps share catch-up framing in the current pilgrimage.
-  const framed=PILGRIMAGE_MODE?easePilgrimageFollowCamera(camera,{x:hero.px,y:hero.py},hero.path,dt,viewport,bounds):JOURNEY_MODE?easeJourneyFollowCamera(camera,{x:hero.px,y:hero.py},hero.path,dt,viewport,bounds):next;
+  const framed=PILGRIMAGE_MODE?pilgrimageFollow.update(camera,{x:hero.px,y:hero.py},hero.path,dt,viewport,bounds):JOURNEY_MODE?easeJourneyFollowCamera(camera,{x:hero.px,y:hero.py},hero.path,dt,viewport,bounds):next;
   camera.x=framed.x;camera.y=framed.y;
  }else confineCamera(camera.x,camera.y,.08);
  // Prioritize 60fps while the camera moves, but retain low-cost idle frames.

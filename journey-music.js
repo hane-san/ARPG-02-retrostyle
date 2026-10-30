@@ -61,3 +61,6 @@ export function createJourneyMusicDirector({settleMs=2200,minHoldMs=12000}={}){
   }
  };
 }
+
+// Every accepted arrival, including a return, restores the authored regional cue.
+export function pickJourneyArrivalTrack(zone){if(!JOURNEY_PLAYLISTS[zone])throw new Error("Unknown journey music region "+zone);return JOURNEY_PLAYLISTS[zone][0];}
