@@ -16,7 +16,7 @@
 .journey-mode .sheet{width:min(100%,520px);max-height:min(76dvh,calc(100dvh - var(--journey-dock-height) - 20px));padding:17px 18px 15px;border:1px solid var(--journey-line);border-radius:17px;background:var(--journey-paper);box-shadow:0 8px 32px #34565033;scrollbar-color:#b3c3b2 transparent}
 .journey-mode .sheet-head{align-items:center;gap:8px;margin-bottom:12px}
 .journey-mode .sheet-head small{display:none}
-.journey-mode .sheet-head h2{font-size:20px;font-weight:500;color:var(--journey-ink);margin:0;letter-spacing:.05em}
+.journey-mode .sheet-head h2{font-size:20px;font-weight:500;color:var(--journey-ink);margin:0;letter-spacing:.05em;text-wrap:balance;word-break:keep-all;overflow-wrap:anywhere}
 .journey-mode .close{color:#57756e;background:#e2e5d7;border:0;min-width:38px;min-height:38px;border-radius:50%}
 .journey-mode .sheet p{color:#526c6a;font-size:13px;line-height:1.85}
 .journey-mode .sheet p.secondary{color:#70827a;font-size:11px;line-height:1.75}
@@ -78,7 +78,7 @@
 @media(max-height:560px){.journey-mode .dock .vista-button::after{inset:-16px -6px 0}}
 
 /* Issue #11: regions already walked carry a small quiet mark in the atlas list. */
-.journey-mode #zoneList button.visited span::after{content:' ・訪れた';font-size:10px;color:#8b9f87;font-weight:400}
+.journey-mode #zoneList button.visited span::after{content:'訪れた';display:block;font-size:10px;color:#8b9f87;font-weight:400;white-space:nowrap}
 .journey-mode #zoneList button:not(.visited){opacity:.82}
 /* Issue #76: retain the notice, but omit its slide and fade under Reduced Motion. */
 @media(prefers-reduced-motion:reduce){.journey-mode .toast{transition:none;transform:translate(-50%,0)}}
