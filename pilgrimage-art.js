@@ -1,4 +1,5 @@
 import {drawRegionalGrain} from './pilgrimage-ground.js';
+import {drawRegionalEdge} from './pilgrimage-edges.js';
 import {drawPilgrimPlay} from './pilgrimage-play.js';
 import {drawJourneyWonder} from './journey-wonders-art.js';
 import {drawForestSite,drawForestTree,drawForestProp} from './forest-market-art.js';
@@ -18,6 +19,8 @@ export function drawPilgrimTile(c,x,y,t,world){
  if(t==='L'||t==='~'){
   for(let j=0;j<3;j++)rect(c,px+noise(x+j,y)*25,py+6+j*9,4+noise(y,x+j)*13,1,'#d7ded044');
   if(q>.8)rect(c,px+6,py+25,18,2,'#487f8322');
+ }else if(t==='X'&&drawRegionalEdge(c,x,y,world,z.theme,z.palette,q)){
+  // #93: forest, canyon, salt and capital draw their own impassable grammar.
  }else if(t==='X'){
   poly(c,[[px,py+32],[px+3,py+9],[px+13,py+3],[px+24,py+10],[px+32,py+31]],shade);
   line(c,px+3,py+10,px+13,py+3,light);line(c,px+13,py+3,px+24,py+10,'#d4d7cc50');

@@ -917,8 +917,11 @@ function drawMinimap(){
   // Unvisited regions keep their names (they are reachable) but read as rumours.
   const known=!JOURNEY_MODE||visitedZones.has(z.id);
   c.globalAlpha=known?1:.55;
-  c.strokeStyle='#17374a';c.lineWidth=3*chartScale;c.strokeText(PILGRIMAGE_MODE?z.chartName:z.name,lx*sx,ly*sy);
-  c.fillText(PILGRIMAGE_MODE?z.chartName:z.name,lx*sx,ly*sy);c.globalAlpha=1;
+  // Keep every chart name wholly inside the map: names near the edge used to be cut off.
+  const name=PILGRIMAGE_MODE?z.chartName:z.name,half=c.measureText(name).width/2+3*chartScale;
+  const tx=Math.max(half,Math.min(mini.width-half,lx*sx)),ty=Math.max(14*chartScale,Math.min(mini.height-4*chartScale,ly*sy));
+  c.strokeStyle='#17374a';c.lineWidth=3*chartScale;c.strokeText(name,tx,ty);
+  c.fillText(name,tx,ty);c.globalAlpha=1;
  }
  for(const s of SITES){
   if(JOURNEY_MODE&&!discovered.has(s.id)&&s.kind!=='terminal')continue;
