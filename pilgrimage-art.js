@@ -1,6 +1,7 @@
 import {drawRegionalGrain} from './pilgrimage-ground.js';
 import {drawRegionalEdge} from './pilgrimage-edges.js';
 import {drawPilgrimPlay} from './pilgrimage-play.js';
+import {drawPilgrimToy} from './pilgrimage-toys.js';
 import {drawJourneyWonder} from './journey-wonders-art.js';
 import {drawForestSite,drawForestTree,drawForestProp} from './forest-market-art.js';
 // Original pixel compositions for #80. Terrain and solid footprints come from the world.
@@ -51,7 +52,7 @@ export function drawPilgrimSite(c,s,time=0){
  const z=PILGRIM_ZONES[s.chapter],p=z.palette,x=s.x*32,y=s.y*32,w=s.w*32,h=s.h*32,cx=x+w/2,base=y+h;
  if(s.form.startsWith('wonder-')){drawJourneyWonder(c,s,p,time);drawPilgrimPlay(c,s,p);return;}
  c.save();rect(c,x+8,base-6,w-16,14,'#485f5b25');
- if(s.form.startsWith('forest-')){drawForestSite(c,s);drawPilgrimPlay(c,s,p);c.restore();return;}
+ if(s.form.startsWith('forest-')){drawForestSite(c,s);drawPilgrimToy(c,s);drawPilgrimPlay(c,s,p);c.restore();return;}
  if(s.form==='monolith'){
   // The base is solid, the immense height is art; its top can leave the viewport.
   const top=y-360;
