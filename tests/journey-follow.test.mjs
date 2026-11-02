@@ -233,7 +233,8 @@ test('smooth follow bounds the speed on atlas walks without pulling back a manua
    assert.ok(heroVisible(c,hero,view,world));
    lastFraction=.5+((hero.x+.5)*tile-c.x)*zoom/view.width;
   }
-  const speedLimit=tile*(speed+6)*zoom;
+  const pace=Math.max(.7,Math.min(1.6,speed/5.7));
+  const speedLimit=tile*(speed+6*pace)*zoom;
   assert.ok(maxScreenVelocity<speedLimit+4,'no camera catch-up sprint: '+JSON.stringify({speed,zoom,maxScreenVelocity,speedLimit}));
   assert.ok(lastFraction>.12&&lastFraction<.32,'long routes eventually reveal the way ahead: '+JSON.stringify({speed,zoom,lastFraction}));
  }
