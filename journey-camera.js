@@ -150,7 +150,9 @@ export function pilgrimageForwardLead(viewport,axis){
  const span=axis==='x'?viewport.width:viewport.height;
  return Math.max(0,span/zoom*fraction);
 }
-// Hold any panned view until catch-up; then grow a forward look over four tiles.
+// Hold any panned view until catch-up; then ease into the forward look over
+// six tiles. Gentle acceleration is as important as the eventual composition:
+// a sharp catch-up feels like an unsolicited camera drag on a phone.
 // The real occupied edge, not the eventual route endpoint, controls the lead.
 export function createPilgrimageFollower(){
  let last=null,heading='',travel=0,leadTravel=0,following=false;
@@ -168,15 +170,26 @@ export function createPilgrimageFollower(){
    if(!following&&travel>=2.6&&caught)following=true;
    if(following)leadTravel+=Math.min(1,moved);
    if(!following)return limitCamera(current,hero,viewport,world,.08);
-   const ramp=Math.min(1,leadTravel/4);
+   const progress=Math.min(1,leadTravel/6);
+   const ramp=progress*progress*(3-2*progress); // smoothstep: no sudden start or finish
    const leadX=pilgrimageForwardLead(viewport,'x')*ramp;
    const leadY=pilgrimageForwardLead(viewport,'y')*ramp;
    const x=dx>0?Math.max(current.x,hx+leadX):dx<0?Math.min(current.x,hx-leadX):current.x;
    const y=dy>0?Math.max(current.y,hy+leadY):dy<0?Math.min(current.y,hy-leadY):current.y;
-   // A brisk but smooth response avoids lagging behind the moving player;
-   // never move backwards along an occupied forward edge.
-   const f=1-Math.exp(-Math.min(.07,Math.max(0,dt))*6.5);
-   return limitCamera({x:current.x+(x-current.x)*f,y:current.y+(y-current.y)*f},hero,viewport,world,.08);
+   const elapsed=Math.max(0,Math.min(.07,dt));
+   const f=1-Math.exp(-elapsed*4.2);
+   // Even if the target suddenly gets farther ahead, camera speed can only
+   // exceed the traveler's current speed by a bounded amount. This prevents
+   // the strong catch-up lurch of the earlier 6.5-response, four-tile ramp.
+   const walkingRate=dt>0?Math.min(10,moved/dt):0;
+   const maxAdvance=world.tile*(walkingRate+6)*elapsed;
+   const soften=(old,target,direction)=>{
+    const eased=old+(target-old)*f;
+    if(direction>0)return Math.min(eased,old+maxAdvance);
+    if(direction<0)return Math.max(eased,old-maxAdvance);
+    return old;
+   };
+   return limitCamera({x:soften(current.x,x,dx),y:soften(current.y,y,dy)},hero,viewport,world,.08);
   }
  };
 }
