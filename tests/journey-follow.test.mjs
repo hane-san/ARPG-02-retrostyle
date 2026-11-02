@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {easeJourneyFollowCamera,easePilgrimageFollowCamera} from '../journey-camera.js';
+import {easeJourneyFollowCamera,easePilgrimageFollowCamera,createPilgrimageFollower,pilgrimageForwardLead} from '../journey-camera.js';
 import {heroVisible} from '../camera-limits.js';
 
 const tile=32;
@@ -105,4 +105,92 @@ test('two-step pilgrimage taps remain inside the static composition at phone and
    assert.deepEqual(camera,initial,'two tiles should not start a camera pursuit');
   }
  }
+});
+
+test('forward lead uses screen proportions: horizontal portrait travel has more lookahead than vertical',()=>{
+ for(const view of [{width:390,height:740,zoom:.8},{width:320,height:568,zoom:.8},{width:844,height:390,zoom:.8},{width:390,height:740,zoom:.38}]){
+  const portrait=view.height>view.width;
+  const x=pilgrimageForwardLead(view,'x')*view.zoom/view.width;
+  const y=pilgrimageForwardLead(view,'y')*view.zoom/view.height;
+  assert.ok(Math.abs(x-(portrait?.34:.265))<1e-10,'horizontal fraction');
+  assert.ok(Math.abs(y-(portrait?.18:.16))<1e-10,'vertical fraction');
+  assert.ok(x>y,'horizontal roads get a stronger composition offset');
+ }
+});
+
+// Simulate real tile-speed walking, not simply a stationary hero and a static path.
+function simulatePilgrimageFollow({dx=1,dy=0,width=390,height=740,zoom=.8,hz=60,speed=5.7,steps=14}={}){
+ const view={width,height,zoom},hero=here(80,70),follow=createPilgrimageFollower();
+ let c=centered(hero),maxStep=0,visible=true;
+ for(let i=0;i<Math.ceil(steps/speed*hz);i++){
+  hero.x+=dx*speed/hz;hero.y+=dy*speed/hz;
+  const before={...c},future=[here(hero.x+dx,hero.y+dy)];
+  c=follow.update(c,hero,future,1/hz,view,world);
+  maxStep=Math.max(maxStep,Math.hypot(c.x-before.x,c.y-before.y)*zoom);
+  visible&&=heroVisible(c,hero,view,world);
+ }
+ return {camera:c,hero,view,visible,maxStep,
+  screen:{x:width/2+((hero.x+.5)*tile-c.x)*zoom,y:height/2+((hero.y+.5)*tile-c.y)*zoom}};
+}
+test('long taps frame roads ahead on all four axes, with portrait and landscape-specific balance',()=>{
+ for(const [width,height] of [[390,740],[320,568],[844,390]]){
+  const portrait=height>width;
+  for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+   const r=simulatePilgrimageFollow({dx,dy,width,height});
+   assert.ok(r.visible,'hero remains visible across long route');
+   assert.ok(r.maxStep<20,'camera never jumps more than 20 screen pixels per 60Hz frame');
+   const px=r.screen.x/width,py=r.screen.y/height;
+   if(dx>0)assert.ok(px>(portrait?.12:.19)&&px<(portrait?.31:.38),'right-going hero is on left: '+JSON.stringify({width,height,px}));
+   if(dx<0)assert.ok(px<(portrait?.88:.81)&&px>(portrait?.69:.62),'left-going hero is on right: '+JSON.stringify({width,height,px}));
+   if(dy>0)assert.ok(py>.27&&py<.46,'down-going hero leaves road below: '+JSON.stringify({width,height,py}));
+   if(dy<0)assert.ok(py>.54&&py<.73,'up-going hero leaves road above: '+JSON.stringify({width,height,py}));
+  }
+ }
+});
+test('forward bias is speed independent in screen space and handles grand-vantage zoom',()=>{
+ for(const zoom of [.8,.46,.38]){
+  const fast=simulatePilgrimageFollow({zoom,speed:7.35,steps:16});
+  const normal=simulatePilgrimageFollow({zoom,speed:5.7,steps:16});
+  for(const sample of [fast,normal]){
+   assert.ok(sample.visible,'large vista still keeps player on-screen');
+   const fraction=sample.screen.x/sample.view.width;
+   assert.ok(fraction>.13&&fraction<.31,'viewport-based lead stays readable: '+JSON.stringify({zoom,fraction}));
+  }
+  assert.ok(Math.abs(fast.screen.x-normal.screen.x)<16,'atlas and field travel should settle at comparable compositions');
+ }
+});
+test('steady tracking has minimal frame-rate drift and short taps do not recenter',()=>{
+ const a=simulatePilgrimageFollow({hz:30,steps:12}),b=simulatePilgrimageFollow({hz:120,steps:12});
+ assert.ok(Math.abs(a.screen.x-b.screen.x)<7,'different frame rates settle near the same screen anchor');
+ for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+  const hero=here(80,70),view={width:390,height:740,zoom:.8};
+  const follow=createPilgrimageFollower(),start=centered(hero);
+  let camera={...start};
+  for(let i=0;i<20;i++){
+   hero.x+=dx*.1;hero.y+=dy*.1;
+   camera=follow.update(camera,hero,[here(hero.x+dx,hero.y+dy)],.1/5.7,view,world);
+  }
+  assert.deepEqual(camera,start,'two tiles do not steal an existing field composition');
+ }
+});
+test('manual forward pan never recoils, even as the forward lead grows; turns remain gradual',()=>{
+ const view={width:390,height:740,zoom:.8},hero=here(80,70),follow=createPilgrimageFollower();
+ const start=centered(hero),pan={x:start.x+170,y:start.y};let camera={...pan};
+ for(let i=0;i<130;i++){
+  const before=camera;
+  hero.x+=5.7/60;
+  camera=follow.update(camera,hero,[here(hero.x+1,hero.y)],1/60,view,world);
+  assert.ok(camera.x>=before.x-1e-8,'forward pan does not move backwards before catch-up');
+  assert.ok(heroVisible(camera,hero,view,world));
+ }
+ assert.ok(camera.x>pan.x+60,'long walking eventually advances beyond initial pan');
+ let turnStep=0;
+ for(let i=0;i<100;i++){
+  const before=camera;
+  hero.y-=5.7/60;turnStep++;
+  camera=follow.update(camera,hero,[here(hero.x,hero.y-1)],1/60,view,world);
+  assert.ok(Math.hypot(camera.x-before.x,camera.y-before.y)*view.zoom<20,'bend never jumps');
+  assert.ok(heroVisible(camera,hero,view,world),'bend keeps player visible');
+ }
+ assert.ok(turnStep>0);
 });

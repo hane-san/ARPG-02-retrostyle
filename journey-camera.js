@@ -137,7 +137,21 @@ export function easePilgrimageFollowCamera(current,hero,path,dt,viewport,world){
 }
 
 // A stopped/panned composition is retained until real walking catches it.
-// Then the forward lead grows over four tiles, independent of route length.
+// Once following, the player is anchored away from the screen centre so the
+// *next stretch* of road remains visible. Screen-relative lead is preferable to
+// fixed map tiles at the pilgrimage's 0.8 / 0.46 / 0.38 magnifications.
+export function pilgrimageForwardLead(viewport,axis){
+ const zoom=viewport.zoom||1;
+ const portrait=viewport.height>viewport.width;
+ // The producer's portrait reference puts a right-going traveller near the
+ // left fifth of the screen. Vertical travel is deliberately less off-centre;
+ // landscape keeps more margin around the player for turns and side paths.
+ const fraction=axis==='x'?(portrait?.34:.265):(portrait?.18:.16);
+ const span=axis==='x'?viewport.width:viewport.height;
+ return Math.max(0,span/zoom*fraction);
+}
+// Hold any panned view until catch-up; then grow a forward look over four tiles.
+// The real occupied edge, not the eventual route endpoint, controls the lead.
 export function createPilgrimageFollower(){
  let last=null,heading='',travel=0,leadTravel=0,following=false;
  return {
@@ -154,10 +168,14 @@ export function createPilgrimageFollower(){
    if(!following&&travel>=2.6&&caught)following=true;
    if(following)leadTravel+=Math.min(1,moved);
    if(!following)return limitCamera(current,hero,viewport,world,.08);
-   const lead=Math.min(1,leadTravel/4)*world.tile*3;
-   const x=dx>0?Math.max(current.x,hx+lead):dx<0?Math.min(current.x,hx-lead):current.x;
-   const y=dy>0?Math.max(current.y,hy+lead):dy<0?Math.min(current.y,hy-lead):current.y;
-   const f=1-Math.exp(-Math.min(.07,Math.max(0,dt))*3.5);
+   const ramp=Math.min(1,leadTravel/4);
+   const leadX=pilgrimageForwardLead(viewport,'x')*ramp;
+   const leadY=pilgrimageForwardLead(viewport,'y')*ramp;
+   const x=dx>0?Math.max(current.x,hx+leadX):dx<0?Math.min(current.x,hx-leadX):current.x;
+   const y=dy>0?Math.max(current.y,hy+leadY):dy<0?Math.min(current.y,hy-leadY):current.y;
+   // A brisk but smooth response avoids lagging behind the moving player;
+   // never move backwards along an occupied forward edge.
+   const f=1-Math.exp(-Math.min(.07,Math.max(0,dt))*6.5);
    return limitCamera({x:current.x+(x-current.x)*f,y:current.y+(y-current.y)*f},hero,viewport,world,.08);
   }
  };
