@@ -12,7 +12,7 @@ function legal(from,to){const path=w.findPath(w,from,to);assert.ok(path?.length,
 test('edited journey is the continuous pilgrimage loop and then a changed final approach',()=>{
  assert.deepEqual([w.w,w.h],[480,288]);assert.equal(w.pilgrimage,true);
  for(const z of w.zones)assert.equal(w.zoneAt(z.cx,z.cy).id,z.id,'authored centre '+z.id);
- assert.equal(w.zones.length,13);assert.equal(w.npcs.length,12);assert.equal(w.sites.length,44);assert.ok(w.decor.length>1000);
+ assert.equal(w.zones.filter(z=>!z.detour).length,13);assert.equal(w.zones.length,16);assert.equal(w.npcs.length,12);assert.equal(w.sites.filter(s=>!s.id.startsWith('pilgrim-detour-')).length,44);assert.equal(w.sites.length,47);assert.ok(w.decor.length>1000);
  assert.ok(Math.hypot(PILGRIM_ROUTE[31].x-w.start.x,PILGRIM_ROUTE[31].y-w.start.y)<12,'the first circuit comes back near its start');
  let steps=0;for(let i=1;i<PILGRIM_ROUTE.length;i++)steps+=legal(PILGRIM_ROUTE[i-1],PILGRIM_ROUTE[i]).length-1;
  assert.ok(steps>2200&&steps<3000,'an authored journey rather than a tiny showroom');
@@ -62,7 +62,7 @@ test('outdoor framing is stable except explicit large vistas, with spatial and t
  assert.equal(camera.update('journey-road',1900),.6);assert.equal(camera.update('journey-road',4200),.8);
 });
 test('pale regional colours and valid contrasting music change without altering user audio preferences',()=>{
- assert.equal(new Set(w.zones.map(z=>z.palette[0])).size,13);
+ assert.equal(new Set(w.zones.map(z=>z.palette[0])).size,16);
  assert.equal(MUSIC_LIBRARY.length*2,90);
  for(const z of PILGRIM_ZONES){assert.ok(z.music.length>=3);for(const key of z.music){const [id,phase]=key.split(':').map(Number);assert.ok(buildTrack(id,phase).events.length>100);}assert.equal(pickJourneyTrack(z.id,'0:1'),z.music[0]);}
  const d=createJourneyMusicDirector();assert.equal(d.update(w.zones[0].id,0),w.zones[0].id);assert.equal(d.update(w.zones[1].id,100),null);assert.equal(d.update(w.zones[1].id,12000),w.zones[1].id);

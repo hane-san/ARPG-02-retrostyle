@@ -8,7 +8,7 @@ import {MUSIC_LIBRARY} from '../music.js';
 const w=makePilgrimageWorld();
 const inside=(s,p)=>p.x>=s.x&&p.x<s.x+s.w&&p.y>=s.y&&p.y<s.y+s.h;
 test('forest market houses and residents are separate reachable places on the unchanged pilgrimage',()=>{
- assert.equal(w.zones.length,13);assert.equal(PILGRIM_ROUTE.length,44);
+ assert.equal(w.zones.filter(z=>!z.detour).length,13);assert.equal(w.zones.length,16,'13 loop regions plus the three #99 walks');assert.equal(PILGRIM_ROUTE.length,44);
  assert.equal(w.zoneAt(143,38).name,'輪を結ぶ森市');
  for(const s of FOREST_SITES){
   assert.ok(w.findPath(w,w.start,s.entrance));assert.equal(w.siteAt(s.x+1,s.y+1).id,s.id);
