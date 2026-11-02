@@ -177,12 +177,14 @@ export function createPilgrimageFollower(){
    const x=dx>0?Math.max(current.x,hx+leadX):dx<0?Math.min(current.x,hx-leadX):current.x;
    const y=dy>0?Math.max(current.y,hy+leadY):dy<0?Math.min(current.y,hy-leadY):current.y;
    const elapsed=Math.max(0,Math.min(.07,dt));
-   const f=1-Math.exp(-elapsed*4.2);
-   // Even if the target suddenly gets farther ahead, camera speed can only
-   // exceed the traveler's current speed by a bounded amount. This prevents
-   // the strong catch-up lurch of the earlier 6.5-response, four-tile ramp.
    const walkingRate=dt>0?Math.min(10,moved/dt):0;
-   const maxAdvance=world.tile*(walkingRate+6)*elapsed;
+   // Follow in *walking distance*, not elapsed seconds alone: fast atlas travel
+   // must settle at the same composition after the same number of tiles.
+   const pace=Math.max(.7,Math.min(1.6,walkingRate/5.7));
+   const f=1-Math.exp(-elapsed*4.2*pace);
+   // Even if the target gets farther ahead, limit the catch-up relative to
+   // player speed. This prevents the sharp surge from the previous 6.5 rate.
+   const maxAdvance=world.tile*(walkingRate+6*pace)*elapsed;
    const soften=(old,target,direction)=>{
     const eased=old+(target-old)*f;
     if(direction>0)return Math.min(eased,old+maxAdvance);
