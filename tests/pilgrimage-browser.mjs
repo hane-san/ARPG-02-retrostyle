@@ -93,7 +93,18 @@ export async function checkPilgrimage(browser,origin){
  const retained=await page.evaluate(()=>window.pilgrimCamera);
  assert.ok(Math.hypot(retained.x-panned.x,retained.y-panned.y)<1,'a tap does not recoil toward the traveller behind the panned view');
  await rawTap({x:world.start.x+13,y:world.start.y});await page.clock.runFor(1600);
- const ahead=await page.evaluate(()=>window.pilgrimCamera.x-(window.pilgrimActorWorld.x+.5)*32);assert.ok(ahead>4,'after catching up the moving camera looks ahead of the explorer');await settle();
+ const ahead=await page.evaluate(()=>window.pilgrimCamera.x-(window.pilgrimActorWorld.x+.5)*32);assert.ok(ahead>4,'after catching up the moving camera looks ahead of the explorer');
+ // The real canvas composition (not just a camera unit test) must give a
+ // right-going explorer most of the available screen width to look forward.
+ const followFrame=await page.evaluate(()=>{
+  const width=document.querySelector('#worldCanvas').getBoundingClientRect().width;
+  const x=width/2+((window.pilgrimActorWorld.x+.5)*32-window.pilgrimCamera.x)*window.pilgrimZoom;
+  return {fraction:x/width,width};
+ });
+ assert.ok(followFrame.fraction>.1&&followFrame.fraction<.33,
+  'rightward camera shows a wide forward road on iPhone: '+JSON.stringify(followFrame));
+ await page.screenshot({path:'test-results/pilgrimage-forward-right.png'});
+ await settle();
  const followed=await page.evaluate(()=>window.pilgrimCamera);
  assert.ok(followed.x>panned.x+10,'camera follows after catch-up: '+JSON.stringify({initialCamera,panned,followed,position:await position()}));
  await walk(world.start);await page.locator('#homeBtn').click();await page.clock.runFor(1500);
