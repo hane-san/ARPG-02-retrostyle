@@ -11,6 +11,7 @@ import {MUSIC_LIBRARY,ORIGINAL_SCORE_COUNT} from '../music.js';
 import {chromium} from 'playwright';
 import {checkJourney} from './journey-browser.mjs';
 import {checkJourneyTaps} from './journey-tap-browser.mjs';
+import {checkJourneyFlow} from './journey-flow-browser.mjs';
 import {checkJourneyTargets} from './journey-targets-browser.mjs';
 import {checkJourneyMotion} from './journey-motion-browser.mjs';
 import {checkMazeTrial} from './journey-maze-browser.mjs';
@@ -103,6 +104,7 @@ async function main(){
  await checkJourney(page,origin);
  await checkImperialStudies(page,origin);
  await checkJourneyTaps(browser,origin);
+ await checkJourneyFlow(browser,origin);
  await checkJourneyTargets(browser,origin);
  await checkJourneyMotion(browser,origin);
  await checkMazeTrial(browser,origin);

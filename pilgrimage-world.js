@@ -2,6 +2,7 @@ import {JOURNEY_WONDERS,WONDER_VISTAS} from './journey-wonders.js';
 import {FOREST_SITES,FOREST_NPCS,plantForestMarket} from './forest-market.js';
 // #80: a deliberately edited walking study. The former atlas is retained separately.
 import {silkPath} from './silk-world.js';
+import {DETOURS,carveDetours,detourPoints} from './pilgrimage-detours.js';
 export const PILGRIM_W=480,PILGRIM_H=288;
 const p=(x,y)=>({x:Math.round(x*1.5),y:Math.round(y*1.5)});
 export const PILGRIM_ROUTE=[
@@ -69,6 +70,16 @@ export const PILGRIM_NPCS=[0,1,2,3,4,6,7,8,9,11].map((ci,i)=>{
 });
 PILGRIM_NPCS.push(...FOREST_NPCS);
 export const PILGRIM_VISTAS=PILGRIM_ZONES.filter((_,i)=>![0,1,8].includes(i)).map(z=>({id:'pilgrim-vista-'+z.index,x:z.cx,y:z.cy,radius:5,title:z.name,sub:z.sub,kind:'pilgrim-'+z.theme,chapter:z.index})).concat(WONDER_VISTAS);
+// Issue #99: three walks off the loop (twilight hills, a small climb, a lakeside dusk path).
+// They are regions of their own with a name, palette, music and one small landmark each,
+// appended after the loop's own regions so every earlier index keeps its meaning.
+export const DETOUR_ZONE_START=PILGRIM_ZONES.length;
+for(const [k,d] of DETOURS.entries()){
+ const i=DETOUR_ZONE_START+k,c=d.court;
+ PILGRIM_ZONES.push({id:'pilgrim-'+i,index:i,at:Infinity,detour:true,name:d.name,chartName:d.chartName,sub:d.sub,theme:d.theme,palette:d.palette,music:d.music,cx:c.x,cy:c.y,label:{x:c.x+6,y:c.y-6}});
+ PILGRIM_SITES.push({id:'pilgrim-detour-'+d.theme,kind:'pilgrimage',form:d.site.form,name:d.site.name,x:d.site.x,y:d.site.y,w:d.site.w,h:d.site.h,blocking:false,solid:d.site.solid,artTop:4,
+  entrance:{...d.site.entrance},chapter:i,desc:d.site.desc,aside:d.site.aside,sound:d.theme==='shore'?'drip':d.theme==='climb'?'echo':undefined});
+}
 const hash=(x,y)=>{let n=Math.imul(x+117,374761393)^Math.imul(y+59,668265263);n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967295;};
 export function makePilgrimageWorld(){
  const w=PILGRIM_W,h=PILGRIM_H,tiles=Array.from({length:h},()=>Array(w).fill('X')),occupied=new Uint8Array(w*h),regions=new Uint8Array(w*h),routeDistance=new Float32Array(w*h);routeDistance.fill(Infinity);
@@ -88,7 +99,7 @@ export function makePilgrimageWorld(){
   }
  }
  // Spacious courts create places to wander, not only a narrow prescribed line.
- for(const z of PILGRIM_ZONES)for(let y=z.cy-15;y<=z.cy+15;y++)for(let x=z.cx-15;x<=z.cx+15;x++){
+ for(const z of PILGRIM_ZONES)if(!z.detour)for(let y=z.cy-15;y<=z.cy+15;y++)for(let x=z.cx-15;x<=z.cx+15;x++){
   if(!inside(x,y)||Math.hypot(x-z.cx,(y-z.cy)*.9)>14)continue;
   if(tiles[y][x]!=='='){tiles[y][x]='pil-'+z.index;regions[y*w+x]=z.index;}
  }
@@ -97,7 +108,9 @@ export function makePilgrimageWorld(){
   let best=Infinity;for(const z of PILGRIM_ZONES){const d=(x-z.cx)**2+(y-z.cy)**2;if(d<best){best=d;regions[y*w+x]=z.index;}}
  }
  // At a chapter's own court, its material belongs to that place even at a road junction.
- for(const z of PILGRIM_ZONES)for(let y=z.cy-4;y<=z.cy+4;y++)for(let x=z.cx-4;x<=z.cx+4;x++)if(inside(x,y)&&Math.hypot(x-z.cx,y-z.cy)<=4)regions[y*w+x]=z.index;
+ for(const z of PILGRIM_ZONES)if(!z.detour)for(let y=z.cy-4;y<=z.cy+4;y++)for(let x=z.cx-4;x<=z.cx+4;x++)if(inside(x,y)&&Math.hypot(x-z.cx,y-z.cy)<=4)regions[y*w+x]=z.index;
+ // Issue #99: carve the three walks into ground nothing else uses.
+ carveDetours({tiles,regions,w,h,inside,set:(x,y,t)=>{tiles[y][x]=t;},zoneIndex:DETOUR_ZONE_START,isOpen:(x,y)=>tiles[y][x]!=='X'&&tiles[y][x]!=='L'});
  // The same market colour and selection cover its western approach and all shops.
  for(let y=24;y<=50;y++)for(let x=125;x<=157;x++)if(!PILGRIM_BLOCKED.has(tiles[y][x]))regions[y*w+x]=1;
  // Real architectural collision: solid piers, open floors, and legal doorsteps.
@@ -119,6 +132,12 @@ export function makePilgrimageWorld(){
   }
  }
  decor.push(...plantForestMarket(occupied,w,walkable,PILGRIM_SITES,PILGRIM_NPCS));
+ // Walk-side details along the three new walks; none is solid, so the narrow paths stay open.
+ for(const [k,d] of DETOURS.entries())for(const leg of detourPoints(d))for(let i=0;i<leg.length-1;i++){
+  const a=leg[i],b=leg[i+1],length=Math.hypot(b.x-a.x,b.y-a.y)||1,dx=(b.x-a.x)/length,dy=(b.y-a.y)/length;
+  for(let s=2;s<length;s+=4){const side=hash(k*31+i,s)>.5?1:-1,off=d.width+1.2,x=Math.round(a.x+dx*s-dy*off*side),y=Math.round(a.y+dy*s+dx*off*side);
+   if(inside(x,y)&&tiles[y][x]==='X')decor.push({x,y,chapter:DETOUR_ZONE_START+k,variant:Math.floor(hash(s,k*7+i)*12),solid:false,seed:hash(i,s+k),detour:d.theme});}
+ }
  const world={id:'journey',pilgrimage:true,w,h,tile:32,tiles,occupied,decor,regions,route:PILGRIM_ROUTE,start:{...PILGRIM_START},sites:PILGRIM_SITES,npcs:PILGRIM_NPCS,zones:PILGRIM_ZONES,vistas:PILGRIM_VISTAS,bridges:[],transitions:[],
   tileAt(x,y){return inside(x,y)?tiles[y][x]:'~';},walkable,
   siteAt(x,y){return PILGRIM_SITES.filter(s=>x>=s.x&&x<s.x+s.w&&y>=s.y&&y<s.y+s.h).sort((a,b)=>a.w*a.h-b.w*b.h)[0];},

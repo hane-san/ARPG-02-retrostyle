@@ -48,6 +48,7 @@
 .journey-mode .dialogue-top small{color:#8d9b8a;font-size:9px;letter-spacing:.05em}
 .journey-mode .dialogue-top h2{font-size:15px;font-weight:500;color:var(--journey-ink);margin:2px 0 0}
 .journey-mode .dialogue-top button{color:#668078;min-width:35px;min-height:35px;border-radius:50%}
+.journey-mode .dialogue-top button::after{inset:-7px -6px}
 .journey-mode .dialogue p{color:#2f4a4c;font-size:13px;line-height:1.85;margin:9px 0;min-height:3.7em}
 .journey-mode .dialogue>button{font-size:11px;min-height:31px;padding:4px 11px;background:#e0e6d7;color:#56766c;border:0}
 .journey-mode .dialogue>button span{color:#8b9f87;font-size:13px}

@@ -1,5 +1,6 @@
 import {drawRegionalGrain} from './pilgrimage-ground.js';
 import {drawRegionalEdge} from './pilgrimage-edges.js';
+import {drawDetourGround,drawDetourEdge,drawDuskGlint,drawDetourSite,DETOUR_FORMS} from './pilgrimage-detour-art.js';
 import {drawPilgrimPlay} from './pilgrimage-play.js';
 import {drawPilgrimToy} from './pilgrimage-toys.js';
 import {drawJourneyWonder} from './journey-wonders-art.js';
@@ -20,7 +21,8 @@ export function drawPilgrimTile(c,x,y,t,world){
  if(t==='L'||t==='~'){
   for(let j=0;j<3;j++)rect(c,px+noise(x+j,y)*25,py+6+j*9,4+noise(y,x+j)*13,1,'#d7ded044');
   if(q>.8)rect(c,px+6,py+25,18,2,'#487f8322');
- }else if(t==='X'&&drawRegionalEdge(c,x,y,world,z.theme,z.palette,q)){
+  drawDuskGlint(c,x,y,world);
+ }else if(t==='X'&&(drawRegionalEdge(c,x,y,world,z.theme,z.palette,q)||drawDetourEdge(c,x,y,world,z,q))){
   // #93: forest, canyon, salt and capital draw their own impassable grammar.
  }else if(t==='X'){
   poly(c,[[px,py+32],[px+3,py+9],[px+13,py+3],[px+24,py+10],[px+32,py+31]],shade);
@@ -36,7 +38,7 @@ export function drawPilgrimTile(c,x,y,t,world){
    if(green&&t!=='='){rect(c,xx,yy,1,3+q*3,shade+'70');if(q>.62)rect(c,xx+2,yy+1,3,2,light);}
    else line(c,xx,yy,xx+3+q*7,yy+(dry?0:2),q>.5?light+'88':shade+'55');
   }
-  drawRegionalGrain(c,x,y,z.theme,z.palette,q);
+  if(!drawDetourGround(c,x,y,t,world,z,q))drawRegionalGrain(c,x,y,z.theme,z.palette,q);
   if(t==='='&&q>.7){rect(c,px+5,py+16,6,2,ground);rect(c,px+19,py+8,4,1,shade+'55');}
   if(z.theme==='garden'&&t!=='='){line(c,px,py+15,px+32,py+15,water+'88');line(c,px+16,py,px+16,py+32,light+'88');}
   if(z.theme==='salt'&&q>.6)poly(c,[[px+8,py+20],[px+17,py+6],[px+23,py+22]],'#edf0e180');
@@ -51,6 +53,7 @@ function steps(c,x,y,w,h,p,n=7){for(let i=0;i<n;i++){rect(c,x-i*3,y+i*h/n,w+i*6,
 export function drawPilgrimSite(c,s,time=0){
  const z=PILGRIM_ZONES[s.chapter],p=z.palette,x=s.x*32,y=s.y*32,w=s.w*32,h=s.h*32,cx=x+w/2,base=y+h;
  if(s.form.startsWith('wonder-')){drawJourneyWonder(c,s,p,time);drawPilgrimPlay(c,s,p);return;}
+ if(DETOUR_FORMS.includes(s.form)){drawDetourSite(c,s);return;}
  c.save();rect(c,x+8,base-6,w-16,14,'#485f5b25');
  if(s.form.startsWith('forest-')){drawForestSite(c,s);drawPilgrimToy(c,s);drawPilgrimPlay(c,s,p);c.restore();return;}
  if(s.form==='monolith'){
