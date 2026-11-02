@@ -151,7 +151,7 @@ export function pilgrimageForwardLead(viewport,axis){
  return Math.max(0,span/zoom*fraction);
 }
 // Hold any panned view until catch-up; then ease into the forward look over
-// six tiles. Gentle acceleration is as important as the eventual composition:
+// five tiles. Gentle acceleration is as important as the eventual composition:
 // a sharp catch-up feels like an unsolicited camera drag on a phone.
 // The real occupied edge, not the eventual route endpoint, controls the lead.
 export function createPilgrimageFollower(){
@@ -170,7 +170,7 @@ export function createPilgrimageFollower(){
    if(!following&&travel>=2.6&&caught)following=true;
    if(following)leadTravel+=Math.min(1,moved);
    if(!following)return limitCamera(current,hero,viewport,world,.08);
-   const progress=Math.min(1,leadTravel/6);
+   const progress=Math.min(1,leadTravel/5);
    const ramp=progress*progress*(3-2*progress); // smoothstep: no sudden start or finish
    const leadX=pilgrimageForwardLead(viewport,'x')*ramp;
    const leadY=pilgrimageForwardLead(viewport,'y')*ramp;
@@ -181,7 +181,7 @@ export function createPilgrimageFollower(){
    // Follow in *walking distance*, not elapsed seconds alone: fast atlas travel
    // must settle at the same composition after the same number of tiles.
    const pace=Math.max(.7,Math.min(1.6,walkingRate/5.7));
-   const f=1-Math.exp(-elapsed*4.2*pace);
+   const f=1-Math.exp(-elapsed*4.6*pace);
    // Even if the target gets farther ahead, limit the catch-up relative to
    // player speed. This prevents the sharp surge from the previous 6.5 rate.
    const maxAdvance=world.tile*(walkingRate+6*pace)*elapsed;
