@@ -138,7 +138,7 @@ test('long taps frame roads ahead on all four axes, with portrait and landscape-
   for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
    const r=simulatePilgrimageFollow({dx,dy,width,height});
    assert.ok(r.visible,'hero remains visible across long route');
-   assert.ok(r.maxStep<20,'camera never jumps more than 20 screen pixels per 60Hz frame');
+   assert.ok(r.maxStep<6.5,'camera advances at a comfortably bounded per-frame speed');
    const px=r.screen.x/width,py=r.screen.y/height;
    if(dx>0)assert.ok(px>(portrait?.12:.19)&&px<(portrait?.31:.38),'right-going hero is on left: '+JSON.stringify({width,height,px}));
    if(dx<0)assert.ok(px<(portrait?.88:.81)&&px>(portrait?.69:.62),'left-going hero is on right: '+JSON.stringify({width,height,px}));
@@ -193,4 +193,48 @@ test('manual forward pan never recoils, even as the forward lead grows; turns re
   assert.ok(heroVisible(camera,hero,view,world),'bend keeps player visible');
  }
  assert.ok(turnStep>0);
+});
+
+test('a long horizontal walk grows the forward composition gradually rather than surging',()=>{
+ const view={width:390,height:740,zoom:.8},hero=here(80,70),follow=createPilgrimageFollower();
+ let c=centered(hero),maxStep=0,at=new Map();
+ const hz=60,speed=5.7,step=speed/hz;
+ for(let i=0;i<Math.ceil(18/step);i++){
+  const prev=c;hero.x+=step;
+  c=follow.update(c,hero,[here(hero.x+1,hero.y)],1/hz,view,world);
+  const moved=Math.hypot(c.x-prev.x,c.y-prev.y)*view.zoom;
+  maxStep=Math.max(maxStep,moved);
+  const steps=hero.x-80;
+  for(const milestone of [2,4,6,8,10,12,16]){
+   if(steps>=milestone&&!at.has(milestone)){
+    at.set(milestone,.5+((hero.x+.5)*tile-c.x)*view.zoom/view.width);
+   }
+  }
+ }
+ assert.ok(Math.abs(at.get(2)-.63)<.04,'the first two tiles keep the map nearly still');
+ assert.ok(at.get(4)>.55,'at four tiles the camera must not have already surged ahead');
+ assert.ok(at.get(6)>.42,'at six tiles it should still be growing its lead');
+ assert.ok(at.get(8)<at.get(6),'the explorer gradually moves to the left');
+ assert.ok(at.get(10)<.34,'a long right-going route still reveals the way ahead');
+ assert.ok(at.get(16)>.19&&at.get(16)<.31,'eventual composition retains the approved lookahead');
+ assert.ok(maxStep<6,'per-frame movement is far below the previous sharp catch-up');
+});
+test('smooth follow bounds the speed on atlas walks without pulling back a manual pan',()=>{
+ for(const speed of [5.7,7.35])for(const zoom of [.8,.46,.38]){
+  const view={width:390,height:740,zoom},hero=here(80,70),follow=createPilgrimageFollower();
+  let c=centered(hero),maxScreenVelocity=0,lastFraction=null;
+  const frame=1/60;
+  for(let i=0;i<Math.ceil(19/speed*60);i++){
+   const prev=c;hero.x+=speed*frame;
+   c=follow.update(c,hero,[here(hero.x+1,hero.y)],frame,view,world);
+   const travelled=(c.x-prev.x)*zoom/frame;
+   maxScreenVelocity=Math.max(maxScreenVelocity,travelled);
+   assert.ok(travelled>=-1e-6,'must not move against the occupied edge');
+   assert.ok(heroVisible(c,hero,view,world));
+   lastFraction=.5+((hero.x+.5)*tile-c.x)*zoom/view.width;
+  }
+  const speedLimit=tile*(speed+6)*zoom;
+  assert.ok(maxScreenVelocity<speedLimit+4,'no camera catch-up sprint: '+JSON.stringify({speed,zoom,maxScreenVelocity,speedLimit}));
+  assert.ok(lastFraction>.12&&lastFraction<.32,'long routes eventually reveal the way ahead: '+JSON.stringify({speed,zoom,lastFraction}));
+ }
 });
