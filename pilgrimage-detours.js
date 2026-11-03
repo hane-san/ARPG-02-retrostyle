@@ -2,7 +2,7 @@
 // Each is entrance -> bend -> opening view -> small find -> back to the road.
 // Only impassable 'X' ground is carved: the lake stays water, existing roads and
 // courts are untouched, and every walk joins the existing network at both ends.
-export const DETOUR_THEMES=Object.freeze(['dusk','climb','shore']);
+export const DETOUR_THEMES=Object.freeze(['dusk','climb','shore','plateau','conifer','windruin']);
 const path=(...pts)=>pts.map(([x,y])=>({x,y}));
 export const DETOURS=Object.freeze([
  {
@@ -33,6 +33,37 @@ export const DETOURS=Object.freeze([
   site:{form:'shore-bench',name:'水辺の腰掛け',x:250,y:218,w:3,h:2,solid:[{x:0,y:1,w:1,h:1},{x:2,y:1,w:1,h:1}],entrance:{x:251,y:217},
    desc:'湖へ向いた古い腰掛け。座面の端だけが、誰かの手で何度も削り直されている。',
    aside:'向こう岸の灯がひとつずつ増えていく。水面に映る数のほうが、少しだけ多い。'}
+ },
+ // Issue #99 P1: three more walks with different ground, outline and sound.
+ {
+  theme:'plateau',name:'白く乾いた高原',chartName:'白い高原',sub:'足音だけが、ひびの数を数えている',
+  palette:['#e3ded0','#f5f2e8','#b9c4c6','#a69e8e'],music:['35:1','34:2','10:1'],
+  // Down from the southern ridge road onto a cracked salt plain; out past weathered pillars to the east.
+  legs:[path([350,246],[352,256],[364,264],[384,268],[404,270],[420,268]),path([420,268],[432,262],[440,256],[440,252])],
+  width:2,court:{x:420,y:268,r:6.5},
+  site:{form:'salt-pillar',name:'風化した白い柱',x:419,y:261,w:3,h:4,solid:[{x:1,y:2,w:1,h:2}],entrance:{x:420,y:266},
+   desc:'塩と風が削り残した柱。根元の白い縁だけが、まだ水の高さを覚えているように見える。',
+   aside:'ここでは遠くまで見えるのに、何も近づいてこない。ひびの線が、歩いた跡より先へ伸びている。'}
+ },
+ {
+  theme:'conifer',name:'霧の針葉樹林',chartName:'針葉の森',sub:'高い幹の間で、音が低くなる',
+  palette:['#6f8a7c','#a9bcae','#9fb4bd','#3f5650'],music:['17:1','4:1','0:2'],
+  // From the western road into tall trees; a fork to one fallen giant, and the main path out toward the lake.
+  legs:[path([40,64],[56,60],[72,66],[92,70]),path([92,70],[104,80],[114,88],[116,92]),path([92,70],[104,64],[118,60])],
+  width:1.4,court:{x:120,y:60,r:3.5},
+  site:{form:'fallen-cedar',name:'倒れた大樹',x:119,y:55,w:4,h:3,solid:[{x:1,y:2,w:2,h:1}],entrance:{x:120,y:59},
+   desc:'倒れたまま苔に包まれた大きな幹。年輪の中心だけが、まだ乾いた色をしている。',
+   aside:'森を出る道はもう一本ある。こちらへ来たのは、霧が少しだけ明るく見えたからだ。'}
+ },
+ {
+  theme:'windruin',name:'風の草原と埋もれた門',chartName:'風の草原',sub:'草の下に、古い道の幅が残っている',
+  palette:['#b4c39a','#dfe5bf','#a7bcc2','#7d8a6a'],music:['40:2','37:1','23:2'],
+  // From the eastern road through tall grass to two half-buried gateposts, then down to the southern road.
+  legs:[path([434,184],[420,186],[406,194],[398,204]),path([398,204],[386,216],[372,226],[368,232])],
+  width:1.6,court:{x:398,y:204,r:4.5},
+  site:{form:'buried-gate',name:'埋もれた門柱',x:396,y:198,w:5,h:3,solid:[{x:0,y:2,w:1,h:1},{x:4,y:2,w:1,h:1}],entrance:{x:398,y:202},
+   desc:'草に半分埋もれた二本の門柱。間の地面だけ草が短く、昔の道幅がそのまま残っている。',
+   aside:'門をくぐっても、向こう側は同じ草原だ。それでも、くぐる前より風の音が近い。'}
  }
 ]);
 const LAKE={cx:235,cy:137,rx:126,ry:76};

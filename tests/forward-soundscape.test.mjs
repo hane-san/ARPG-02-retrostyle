@@ -19,7 +19,7 @@ test('pilgrimage music returns to its own authored cue on rapid outward and retu
  const d=createJourneyMusicDirector({settleMs:900,minHoldMs:2200}),a='pilgrim-1',b='pilgrim-2';
  assert.equal(d.update(a,0),a);assert.equal(d.update(b,1000),null);assert.equal(d.update(b,2200),b);
  assert.equal(d.update(a,2300),null);assert.equal(d.update(a,4400),a);assert.equal(pickJourneyArrivalTrack(a),'18:1');
- assert.equal(new Set(PILGRIM_ZONES.map(z=>pickJourneyArrivalTrack(z.id))).size,16,'every loop region and #99 walk has its own arrival cue');
+ assert.equal(new Set(PILGRIM_ZONES.map(z=>pickJourneyArrivalTrack(z.id))).size,19,'every loop region and #99 walk has its own arrival cue');
 });
 test('foot materials match authored regions and bridges; sand traces expire and cannot grow without bound',()=>{
  for(const [theme,expected] of [['forest','grass'],['garden','stone'],['canyon','sand'],['ridge','stone'],['salt','sand'],['capital','stone']]){

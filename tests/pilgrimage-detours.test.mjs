@@ -38,5 +38,5 @@ test('the lakeside walk really runs beside the water',()=>{
  const shore=walks.find(z=>z.theme==='shore');let beside=0;
  for(let y=0;y<w.h;y++)for(let x=0;x<w.w;x++)if(w.zoneAt(x,y).index===shore.index&&w.walkable(x,y)&&[[0,-1],[0,1],[-1,0],[1,0]].some(([dx,dy])=>w.tileAt(x+dx,y+dy)==='L'))beside++;
  assert.ok(beside>=20,`${beside} walk tiles touch the lake`);
- assert.equal(DETOURS.length,3);
+ assert.equal(DETOURS.length,6);
 });

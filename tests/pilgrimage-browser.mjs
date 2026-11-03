@@ -35,7 +35,7 @@ export async function checkPilgrimage(browser,origin){
   return vistas.map(v=>{const canvas=document.createElement('canvas');drawJourneyPanorama(canvas,v.kind);const d=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data,colours=new Set();for(let i=0;i<d.length;i+=4)colours.add(d[i]+','+d[i+1]+','+d[i+2]);return {w:canvas.width,h:canvas.height,colours:colours.size};});
  },WONDER_VISTAS);
  for(const v of newVistas){assert.deepEqual([v.w,v.h],[480,252]);assert.ok(v.colours>8,'every new vista draws its landscape');}
- await page.locator('#mapBtn').click();assert.equal(await page.locator('#zoneList button').count(),16);await page.locator('#mapPanel [data-close]').click();
+ await page.locator('#mapBtn').click();assert.equal(await page.locator('#zoneList button').count(),19);await page.locator('#mapPanel [data-close]').click();
  await page.locator('#soundBtn').click();assert.equal(await page.locator('#trackSelect option').count(),90);assert.equal(await page.locator('#musicToggle').textContent(),'OFF');assert.equal(await page.locator('#sfxToggle').textContent(),'ON');await page.locator('#musicPanel [data-close]').click();
  await page.clock.install();
  async function settle(){for(let i=0;i<75;i++){await page.clock.runFor(1000);assert.deepEqual(errors,[],'walking must retain its rendering loop');if(await page.locator('#worldCanvas').getAttribute('aria-busy')==='false')return;}throw Error('walk did not settle');}
@@ -208,9 +208,10 @@ export async function checkPilgrimage(browser,origin){
    }
   }
  }
- // Issue #99: the three walks off the loop are reached on foot and named on arrival.
- // Visited nearest-first from the final approach: summit, lakeside, then the twilight hills.
- for(const theme of ['climb','shore','dusk']){const z=PILGRIM_ZONES.find(z=>z.detour&&z.theme===theme);
+ // Issue #99: the six walks off the loop are reached on foot and named on arrival.
+ // Ordered so each map walk stays well inside settle()'s 75 browser-clock seconds
+ // (longest leg, twilight hills -> conifers, is about 450 tiles = 61s at 7.35 tiles/s).
+ for(const theme of ['climb','windruin','plateau','shore','dusk','conifer']){const z=PILGRIM_ZONES.find(z=>z.detour&&z.theme===theme);
   await walk({x:z.cx,y:z.cy});assert.equal(await page.locator('#zoneName').textContent(),z.name);
   await page.locator('#homeBtn').click();await page.clock.runFor(1400);
   await page.screenshot({path:`test-results/pilgrimage-${z.theme}.png`});console.log('Pilgrimage walk: '+z.name);
@@ -224,7 +225,7 @@ export async function checkPilgrimage(browser,origin){
  for(const [width,height] of [[320,568],[844,390]]){
   const page=await browser.newPage({viewport:{width,height},isMobile:true,hasTouch:true}),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(origin+'/?journey=1');await page.waitForSelector('.journey-menu');
-  await page.locator('#mapBtn').click();assert.equal(await page.locator('#zoneList button').count(),16);
+  await page.locator('#mapBtn').click();assert.equal(await page.locator('#zoneList button').count(),19);
   for(const e of await page.locator('#zoneList button').all()){await e.scrollIntoViewIfNeeded();const r=await e.boundingBox();assert.ok(r.width>=44&&r.height>=44);}
   await page.locator('#mapPanel [data-close]').click();await page.keyboard.press('ArrowRight');await page.waitForTimeout(300);
   assert.deepEqual(errors,[]);await page.close();
