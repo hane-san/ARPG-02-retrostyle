@@ -95,3 +95,11 @@ Codex/GPT等が作ったPRをClaude Codeが受け取るときの手順（競合�
 昼ラン：毎日15時ごろ（日本時間）に、ARPG-02とSRPGの採用済みIssue・PRを監査・実装・マージする（2026-10-21 採用、上の「ノンストップ試作」）。
 
 明け方の巡回：毎日4:12（日本時間）に、専用セッション「明け方の監督巡回（独立監査担当）」が5つのリポジトリのPRを、このスキルの手順で見回る（2026-10-20 採用）。
+
+## #106の実装・公開引継ぎ（2026-11-04）
+
+本Issueは制作者がCodexに通常PRマージまで明示委任した例外。上記の一般役割に関わらず、最新headのrules/browser成功、最新mainと競合なし、hold/BLOCKなしを確認してPR mergeを行い、main CIとPagesと公開起動を確認する。直push/force/auto-merge/Approve/Settings変更は禁止。失敗は修正PRまたはrevert PRで復旧。実機／実耳／独立監査は未実施を明示する。
+
+`western-world.js` が12地域・接続路・衝突、`western-art.js` が静的地面と可視範囲の空／光、`western-music.js` が12独自譜面と追加音色を持つ。巡礼への統合は `pilgrimage-world.js` / `pilgrimage-art.js`、選曲は既存 `journey-music.js` / `game.js`。地形は480×832で、旧モードの実寸をハードコードで上書きしない。
+
+`tests/western.test.mjs`、`western-browser.mjs`、`western-audio-browser.mjs` を既存check/browserに追加。ブラウザ時計で歩行を進めるが、主人公座標や製品速度を書き換えない。`test-results/western/` の各サイズの入口／構図／見回し画像とJSONはCIの `atlas-browser-evidence` に7日保持。継続保存の五つの独自試聴は `docs/audio/western/`。地域・主曲・参照・残件は [WESTERN-SKY-STUDIES](WESTERN-SKY-STUDIES.md)。

@@ -1,3 +1,5 @@
+import {checkWesternAudio} from './western-audio-browser.mjs';
+import {checkWestern} from './western-browser.mjs';
 import {checkPilgrimage} from './pilgrimage-browser.mjs';
 import {checkDeadzoneCamera} from './journey-deadzone-browser.mjs';
 import {checkImperialStudies} from './imperial-browser.mjs';
@@ -101,6 +103,8 @@ async function main(){
  await page.locator('#helpPanel [data-close]').click();
  await checkPortalRoutes(page,origin);
  await checkCameraInput(page,origin);
+ await checkWesternAudio(browser,origin);
+ await checkWestern(browser,origin);
  await checkPilgrimage(browser,origin);
  await checkDeadzoneCamera(browser,origin);
  await checkJourney(page,origin);

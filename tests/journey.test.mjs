@@ -128,12 +128,12 @@ test('journey playlists keep the original 68 pieces first and distinguish every 
  assert.equal(ORIGINAL_SCORE_COUNT*2,68);assert.ok(MUSIC_LIBRARY.length>=ORIGINAL_SCORE_COUNT);
  assert.equal(Object.keys(JOURNEY_PLAYLISTS).length,world.zones.length+PILGRIM_ZONES.length);
  for(const z of [...world.zones,...PILGRIM_ZONES]){
-  const pool=JOURNEY_PLAYLISTS[z.id];assert.ok(pool?.length>=3);
+  const pool=JOURNEY_PLAYLISTS[z.id];assert.ok(pool?.length>=(z.western?1:3));
   for(const key of pool){
    const [score,phase]=key.split(':').map(Number);
    assert.ok(MUSIC_LIBRARY[score]?.[phase===1?'ally':'hostile']);
    for(const roll of [0,.5,.99999]){
-    const picked=pickJourneyTrack(z.id,key,()=>roll);assert.ok(pool.includes(picked));assert.notEqual(picked,key);
+    const picked=pickJourneyTrack(z.id,key,()=>roll);assert.ok(pool.includes(picked));if(pool.length>1)assert.notEqual(picked,key);else assert.equal(picked,key);
    }
   }
  }

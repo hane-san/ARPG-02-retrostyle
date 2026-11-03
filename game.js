@@ -1,3 +1,5 @@
+import {westernAt} from './western-world.js';
+import {createWesternLight,drawWesternSky,drawWesternWeather} from './western-art.js';
 import {createPilgrimTrails,drawPilgrimTrails,pilgrimStepTile} from './pilgrimage-ground.js';
 import {turnPilgrimPlay,pilgrimPlayHandle} from './pilgrimage-play.js';
 import {turnPilgrimToy} from './pilgrimage-toys.js';
@@ -66,12 +68,13 @@ const CLASSIC_WALK_SPEED=6.15;
 const journeyCamera=JOURNEY_MODE?createJourneyCamera({regional:PILGRIMAGE_MODE}):null;
 const camera={x:(spawn.x+.5)*TILE,y:(spawn.y+.5)*TILE,zoom:journeyCamera?.target||1.25};
 const pilgrimageFollow=DEADZONE_CAMERA_TRIAL?createDeadzonePilgrimageFollower():createPilgrimageFollower(),pilgrimTrails=createPilgrimTrails();
-const journeyMusic=JOURNEY_MODE?createJourneyMusicDirector(PILGRIMAGE_MODE?{settleMs:900,minHoldMs:2200}:undefined):null;
+const journeyMusic=JOURNEY_MODE?createJourneyMusicDirector(PILGRIMAGE_MODE?{settleMs:650,minHoldMs:1600}:undefined):null;
 const imperialListening=JOURNEY_MODE&&!PILGRIMAGE_MODE?createImperialListening():null;
 let imperialQuiet=false;
 const journeyView=JOURNEY_MODE?createJourneyView(stage,world):null;
 let panTarget=null;
 let screen={w:1,h:1,dpr:1},last=0,zoneId='',noticeTimer=0,dialogue=null,readingPress=null;
+const westernLight=createWesternLight();
 const discovered=new Set(),visitedZones=new Set(),cache=new Map(),CHUNK=16,MAX_CHUNKS=42;
 const palette={'~':'#497d93','.':'#8d9f7c',',':'#cbbc96',f:'#567864','=':'#baa986','+':'#ae987a',s:'#98b0b0',n:'#576d88',p:'#b7a993','#':'#58605d',M:'#9eb88a',A:'#aa986e',R:'#7f9188',F:'#3e6559',G:'#73a49e',P:'#d1d4c5',C:'#77adb7',D:'#d2b78e',T:'#bc856d',Q:'#789e9f',B:'#496d78',K:'#424563',E:'#528eae'};
 // The previous two worlds remain explicitly available; the grassland journey is the current entrance.
@@ -97,9 +100,9 @@ if(JOURNEY_MODE){
  document.querySelector('.map-hint').textContent='';
  $('worldCanvas').setAttribute('aria-label','中央アジアの地形に着想した、草原と湖を歩く試遊マップ');
  $('mapPanel').querySelector('p.secondary').textContent=
-  PILGRIMAGE_MODE?'船着場から草原、水の庭、裂け目、列石、乾いた七段へ。湖を巡る細い道を一周すると、分水嶺の奥から扉のない殿と帝都へ道が続きます。好きな場所へ歩くこともできます。':'湖の東に赤い峡谷、雲上の高地、逆流する川、玻璃の町、雨の湿原、白い旧水底が続きます。好きな道を選んでください。';
+  PILGRIMAGE_MODE?'湖を巡る道に加え、西の宿道から雪嶺、温室、空の集落、段畑へ。遠原の先には並木道と水辺が続きます。地図の土地名から自由に歩けます。':'湖の東に赤い峡谷、雲上の高地、逆流する川、玻璃の町、雨の湿原、白い旧水底が続きます。好きな道を選んでください。';
  $('helpPanel').querySelector('.sheet p').textContent=
-  PILGRIMAGE_MODE?'白い船着場から草原、水を渡す庭、赤い裂け目、高地、列石へ。乾いた七段と舟の原を経て湖を巡ると、分水嶺の奥から扉のない殿、帝都、最後の器へ道が続きます。歩きたい道を選び、気になる景色では立ち止まってみてください。':'白い橋から円い草原へ。湖の東側へ渡れば、赤い崖、雲上の寺、逆流する川、淡い光の街、葦の湿原、白い旧水底へ。道順は自由です。高台では少し立ち止まって遠景もどうぞ。';
+  PILGRIMAGE_MODE?'白い船着場から草原、水を渡す庭、赤い裂け目、高地、列石へ。乾いた七段と舟の原を経て湖を巡ると、分水嶺の奥から扉のない殿、帝都、最後の器へ道が続きます。西の宿道からは雪山を望む崖道、温室や風車、空の段畑、遠原へ。崖道では少し立ち止まると、青空がゆっくり夕暮れになります。':'白い橋から円い草原へ。湖の東側へ渡れば、赤い崖、雲上の寺、逆流する川、淡い光の街、葦の湿原、白い旧水底へ。道順は自由です。高台では少し立ち止まって遠景もどうぞ。';
  const helpParagraphs=$('helpPanel').querySelectorAll('.sheet > p');
  helpParagraphs[1].textContent='地面や地図で行き先を選ぶと、主人公が道を探して歩きます。途中でも行き先を変えられます。建物や人を選ぶと、そのそばまで歩いて向かいます。';
  helpParagraphs[2].textContent='歩行中はカメラが道の先へ追従し、地面や地図のタップで行き先を変えられます。止まっている間は指で軽快になめらかに見回せます。屋外は少し引いた同じ画角で歩けます。特別な展望地点だけ遠くへ広がり、将来の屋内では近い画角になります。';
@@ -287,7 +290,8 @@ function chunk(cx,cy){
  const key=cx+','+cy;
  if(cache.has(key)){const value=cache.get(key);cache.delete(key);cache.set(key,value);return value;}
  const cvs=document.createElement('canvas');cvs.width=CHUNK*TILE;cvs.height=CHUNK*TILE;
- const c=cvs.getContext('2d',{alpha:false});c.imageSmoothingEnabled=false;
+ // Sky openings need transparent chunks; original terrain keeps opaque canvases.
+ const c=cvs.getContext('2d',{alpha:PILGRIMAGE_MODE&&cy*CHUNK>=288});c.imageSmoothingEnabled=false;
  c.translate(-cx*CHUNK*TILE,-cy*CHUNK*TILE);
  for(let y=cy*CHUNK;y<Math.min(H,(cy+1)*CHUNK);y++)
   for(let x=cx*CHUNK;x<Math.min(W,(cx+1)*CHUNK);x++)paintTile(c,x,y,world.tileAt(x,y));
@@ -326,7 +330,7 @@ function bridgeArt(c,b,time){
  c.restore();
 }
 function drawSite(c,s,t){
- if(PILGRIMAGE_MODE){c.save();c.globalAlpha*=pilgrimSiteOpacity(world,s,hero);drawPilgrimSite(c,s,t);c.restore();return;}
+ if(PILGRIMAGE_MODE){c.save();c.globalAlpha*=pilgrimSiteOpacity(world,s,hero);drawPilgrimSite(c,s,reduceMotion.matches?0:t,westernLight.phase);c.restore();return;}
  if(currentWorldId==='journey'){drawJourneySite(c,s,t);return;}
  if(currentWorldId==='silk'){drawSilkSite(c,s,t);return;}
  const x=s.x*TILE,y=s.y*TILE,w=s.w*TILE,h=s.h*TILE,mid=x+w/2;
@@ -474,9 +478,11 @@ function paint(t){
   top=Math.max(0,Math.floor((camera.y-screen.h/(2*camera.zoom))/TILE)-3),
   right=Math.min(W-1,Math.ceil((camera.x+screen.w/(2*camera.zoom))/TILE)+3),
   bottom=Math.min(H-1,Math.ceil((camera.y+screen.h/(2*camera.zoom))/TILE)+3);
+ if(PILGRIMAGE_MODE)drawWesternSky(ctx,camera,screen,westernLight.phase);
  for(let cy=Math.floor(top/CHUNK);cy<=Math.floor(bottom/CHUNK);cy++)
   for(let cx=Math.floor(left/CHUNK);cx<=Math.floor(right/CHUNK);cx++)
    ctx.drawImage(chunk(cx,cy),cx*CHUNK*TILE,cy*CHUNK*TILE);
+ if(PILGRIMAGE_MODE)drawWesternWeather(ctx,world,hero,camera,screen,reduceMotion.matches?0:t,westernLight.phase);
  for(const b of BRIDGES)
   if(b.x1<=right&&b.x2>=left&&b.y1<=bottom&&b.y2>=top)bridgeArt(ctx,b,t);
  if(PILGRIMAGE_MODE)drawPilgrimTrails(ctx,pilgrimTrails.visible(t),t);
@@ -742,6 +748,7 @@ let lastPaint=-Infinity,lastPaintCamera={x:camera.x,y:camera.y,zoom:camera.zoom}
 function animate(time){
  const dt=last?Math.min(.07,(time-last)/1000):0;last=time;
  updateMove(dt);updateDialogue(dt);
+ if(PILGRIMAGE_MODE)westernLight.update(time,westernAt(hero.px,hero.py)?.key==='cliff',document.hidden);
  if(ambience){
   const active=!dialogue&&!isPanelOpen()&&$('vistaCard').hidden&&!document.hidden&&sfx.enabled&&sfx.volume>0;
   const sound=ambience.update({x:hero.px,y:hero.py},time,active);
@@ -912,23 +919,37 @@ $('helpBtn').addEventListener('click',()=>showPanel('helpPanel'));
 document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closePanels));
 document.querySelectorAll('.overlay').forEach(e=>e.addEventListener('click',ev=>{if(ev.target===e)closePanels();}));
 const mini=$('miniMap');
+let miniTerrain=null,miniTerrainWorld=null;
 function drawMinimap(){
  // More atlas pixels per tile reduce raster ambiguity after expansion.
  // The element still scales down to the same mobile panel footprint.
- mini.width=JOURNEY_MODE?Math.max(520,W*4):520;mini.height=Math.round(mini.width*H/W);
- mini.style.aspectRatio=`${W}/${H}`;
+ const mw=JOURNEY_MODE?Math.max(520,W*4):520,mh=Math.round(mw*H/W);
+ if(mini.width!==mw||mini.height!==mh){mini.width=mw;mini.height=mh;}
+ mini.style.aspectRatio=`${W}/${H}`;mini.style.setProperty('--atlas-aspect',W/H);
  const c=mini.getContext('2d'),sx=mini.width/W,sy=mini.height/H;
  c.clearRect(0,0,mini.width,mini.height);
- for(let y=0;y<H;y++)for(let x=0;x<W;x++){
-  c.fillStyle=PILGRIMAGE_MODE?pilgrimTileColor(world,x,y):(JOURNEY_MODE?JOURNEY_PALETTE:currentWorldId==='silk'?SILK_PALETTE:palette)[world.tileAt(x,y)]||'#91a49a';c.fillRect(x*sx,y*sy,sx+1,sy+1);
+ // Cache only the static terrain at two pixels/tile. Labels and the traveller
+ // stay at full resolution and update on every opening; no full-world frame scan.
+ if(miniTerrainWorld!==world){
+  miniTerrain=document.createElement('canvas');miniTerrain.width=Math.max(520,W*2);miniTerrain.height=Math.round(miniTerrain.width*H/W);
+  const b=miniTerrain.getContext('2d'),bx=miniTerrain.width/W,by=miniTerrain.height/H;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+   b.fillStyle=PILGRIMAGE_MODE?pilgrimTileColor(world,x,y):(JOURNEY_MODE?JOURNEY_PALETTE:currentWorldId==='silk'?SILK_PALETTE:palette)[world.tileAt(x,y)]||'#91a49a';b.fillRect(x*bx,y*by,bx+1,by+1);
+  }
+  miniTerrainWorld=world;
  }
+ c.imageSmoothingEnabled=false;c.drawImage(miniTerrain,0,0,mini.width,mini.height);
  if(PILGRIMAGE_MODE){c.save();c.strokeStyle='#f1e5cc99';c.lineWidth=2;c.setLineDash([4,5]);c.beginPath();world.route.forEach((p,i)=>i?c.lineTo((p.x+.5)*sx,(p.y+.5)*sy):c.moveTo((p.x+.5)*sx,(p.y+.5)*sy));c.stroke();c.restore();}
  c.strokeStyle='#f3e5c8';c.lineWidth=2;
+ const chartLabels=[];
  for(const z of ZONES){
   if(z.rx&&z.ry)c.strokeRect((z.cx-z.rx)*sx,(z.cy-z.ry)*sy,z.rx*2*sx,z.ry*2*sy);
   const chartScale=PILGRIMAGE_MODE?mini.width/Math.max(1,mini.getBoundingClientRect().width):1;
   c.textAlign='center';c.fillStyle='#fff6db';c.font=`bold ${12*chartScale}px system-ui`;
   const lx=JOURNEY_MODE?z.label.x:z.cx,ly=JOURNEY_MODE?z.label.y:z.cy-13;
+  const labelText=PILGRIMAGE_MODE?z.chartName:z.name,tw=c.measureText(labelText).width,probeX=lx*sx,probeY=ly*sy,th=14*chartScale;
+  if(PILGRIMAGE_MODE&&chartLabels.some(r=>Math.abs(r.x-probeX)<(r.w+tw)/2+chartScale*2&&Math.abs(r.y-probeY)<th))continue;
+  chartLabels.push({x:probeX,y:probeY,w:tw});
   // Unvisited regions keep their names (they are reachable) but read as rumours.
   const known=!JOURNEY_MODE||visitedZones.has(z.id);
   c.globalAlpha=known?1:.55;
@@ -987,7 +1008,7 @@ const trackSelect=$('trackSelect');
 MUSIC_LIBRARY.forEach((score,i)=>{
  for(const [phase,key]of [[1,'ally'],[2,'hostile']]){
   const opt=document.createElement('option');opt.value=i+':'+phase;
-  opt.textContent=(i<6?'本編':i<25?'追加':'星風')+' '+String(i+1).padStart(2,'0')+' · '+score[key].title;
+  opt.textContent=(i>=45?'西の空':i<6?'本編':i<25?'追加':'星風')+' '+String(i+1).padStart(2,'0')+' · '+score[key].title;
   trackSelect.append(opt);
  }
 });

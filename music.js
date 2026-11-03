@@ -1,3 +1,4 @@
+import {WESTERN_SCORES,buildWesternTrack,scheduleWesternNote} from './western-music.js';
 import {IMPERIAL_SCORES} from './imperial-music.js';
 import {EXTRA_SCORES} from './extra-music.js';
 import {SILK_SCORES} from './silk-music.js';
@@ -1326,11 +1327,12 @@ export const BONUS_SCORES=[
 // The original 68 pieces (34 scores, two moods each) keep their numbers; later additions
 // append after them so every saved or listed 'score:phase' reference stays valid.
 export const ORIGINAL_SCORE_COUNT=34;
-export const MUSIC_LIBRARY=[...SCORES,...BONUS_SCORES,...EXTRA_SCORES,...SILK_SCORES,...GROK_SCORES,...UNEASY_SCORES,...STEPPE_SCORES,...IMPERIAL_SCORES];
-export const IMPERIAL_SCORE_START=MUSIC_LIBRARY.length-IMPERIAL_SCORES.length;
+export const MUSIC_LIBRARY=[...SCORES,...BONUS_SCORES,...EXTRA_SCORES,...SILK_SCORES,...GROK_SCORES,...UNEASY_SCORES,...STEPPE_SCORES,...IMPERIAL_SCORES,...WESTERN_SCORES];
+export const IMPERIAL_SCORE_START=MUSIC_LIBRARY.length-IMPERIAL_SCORES.length-WESTERN_SCORES.length;
 const degree=(root,scale,n)=>root+12*Math.floor(n/7)+scale[((n%7)+7)%7];
 export function buildTrack(mapId,phase=1){
  const score=MUSIC_LIBRARY[mapId]||SCORES[0],side=phase===1?'ally':'hostile',part=score[side],bar=score.meter,length=bar*32;
+ if(score.western)return buildWesternTrack(mapId,phase,score);
  const rhythm=part.rhythm||(bar===3?[.5,.5,.5,.5,1,.5,.5,2]:[1,.5,.5,1,1,1,1,2]),events=[];
  const push=(beat,duration,n,voice,velocity,pan=0)=>events.push({beat,duration,midi:degree(score.root,part.scale,n),voice,velocity,pan});
  for(let pass=0;pass<4;pass++)for(let phrase=0;phrase<4;phrase++){
@@ -1350,6 +1352,7 @@ export function buildTrack(mapId,phase=1){
 // Shared by realtime playback and deterministic OfflineAudioContext verification.
 // Keep the gain envelope continuous: stepping a sounding oscillator's gain creates a click.
 export function scheduleNote(context,destination,event,time,secondsPerBeat){
+ if(['bell','box','piano','reed','pluck'].includes(event.voice))return scheduleWesternNote(context,destination,event,time,secondsPerBeat,holdEnvelopeAt);
  const duration=Math.max(.035,event.duration*secondsPerBeat),gain=context.createGain(),filter=context.createBiquadFilter(),osc=context.createOscillator();
  const frequency=440*2**((event.midi-69)/12),isPad=event.voice==='pad',plucked=event.voice==='harp',drum=event.voice==='drum';
  osc.type=['flute','harp','bass','drum'].includes(event.voice)?'sine':'triangle';
@@ -1379,23 +1382,23 @@ export const MUSIC_TRANSITION={fade:.24,silence:0};
 export const MUSIC_SCHEDULER={lookAheadSeconds:1.25,intervalMs:50,maxEventsPerPump:480};
 export function createMusic(storage){
  if(arguments.length===0)try{storage=globalThis.localStorage;}catch{}
- let enabled=false,volume=.32,context=null,master=null,bus=null,timer=null,track=null,key=null,currentSource=null,requested=null,preview=null,index=0,start=0,scheduled=0,serial=0,starts=0,busFadeStart=0;
+ let enabled=false,volume=.32,context=null,master=null,bus=null,timer=null,track=null,key=null,currentSource=null,requested=null,preview=null,index=0,start=0,scheduled=0,serial=0,starts=0,busFadeStart=0,activeFade=MUSIC_TRANSITION.fade;
  const voices=new Set(),retired=new Set();
  const Offline=globalThis.OfflineAudioContext||globalThis.webkitOfflineAudioContext;
  const loops=createMusicLoopCache((score,alive)=>renderMusicLoop(score,scheduleNote,Offline,alive));
  let bufferSource=null,pending=null,destroyed=false,bufferRendering=!!Offline,renderer=Offline?'buffer':'synth';
  try{enabled=storage?.getItem('field-command-music')==='true';const saved=storage?.getItem('field-command-music-volume');if(saved!==null&&saved!==undefined&&Number.isFinite(Number(saved)))volume=Math.max(0,Math.min(1,Number(saved)));}catch{}
- function stop(){
+ function stop(fade=activeFade){
   serial++;pending=null;loops.cancel();if(timer!==null){clearInterval(timer);timer=null;}const now=context?.currentTime||0;
   if(bus)try{
-   holdFadeAt(bus.gain,now,busFadeStart,MUSIC_TRANSITION.fade);
-   bus.gain.linearRampToValueAtTime(0,now+MUSIC_TRANSITION.fade);
+   holdFadeAt(bus.gain,now,busFadeStart,activeFade);
+   bus.gain.linearRampToValueAtTime(0,now+fade);
   }catch{}
   // All future notes are already connected to the retiring bus. Fade that bus,
   // then release its oscillators; never abruptly drop a sounding note.
-  if(bufferSource){const old=bufferSource;bufferSource=null;try{old.stop(now+MUSIC_TRANSITION.fade+.02);}catch{}}
-  for(const v of voices)v.stop(now+MUSIC_TRANSITION.fade);voices.clear();
-  if(bus){const old=bus;const cleanup=setTimeout(()=>{old.disconnect();retired.delete(cleanup);},700);retired.add(cleanup);}bus=null;busFadeStart=0;key=null;currentSource=null;index=0;
+  if(bufferSource){const old=bufferSource;bufferSource=null;try{old.stop(now+fade+.02);}catch{}}
+  for(const v of voices)v.stop(now+fade);voices.clear();
+  if(bus){const old=bus;const cleanup=setTimeout(()=>{old.disconnect();retired.delete(cleanup);},Math.max(700,(fade+.1)*1000));retired.add(cleanup);}bus=null;busFadeStart=0;key=null;currentSource=null;index=0;
  }
  function pump(){
   if(!context||context.state!=='running'||!bus||!track||(!enabled&&!preview))return;
@@ -1414,10 +1417,10 @@ export function createMusic(storage){
   return preview||(enabled&&requested?.status==='playing'?requested:null);
  }
  function begin(target,next,source,buffer){
-  stop();track=buildTrack(target.mapId,target.phase);key=next;currentSource=source;
+  const fade=Math.max(activeFade,target.mapId>=45?1.2:MUSIC_TRANSITION.fade);stop(fade);activeFade=fade;track=buildTrack(target.mapId,target.phase);key=next;currentSource=source;
   bus=context.createGain();
   const now=context.currentTime;
-  bus.gain.setValueAtTime(0,now);bus.gain.linearRampToValueAtTime(1,now+MUSIC_TRANSITION.fade);busFadeStart=now;
+  bus.gain.setValueAtTime(0,now);bus.gain.linearRampToValueAtTime(1,now+fade);busFadeStart=now;
   bus.connect(master);start=now+.02;
   if(buffer){
    bufferSource=context.createBufferSource();bufferSource.buffer=buffer;bufferSource.loop=true;bufferSource.connect(bus);
@@ -1476,7 +1479,7 @@ export function createMusic(storage){
   if(globalThis.document?.hidden){
    stop();
    // Do not suspend the audio thread until the outgoing gain is silent.
-   suspendTask=setTimeout(()=>{suspendTask=null;if(globalThis.document?.hidden&&context?.state==='running')context.suspend().catch(()=>{});},MUSIC_TRANSITION.fade*1000+85);
+   suspendTask=setTimeout(()=>{suspendTask=null;if(globalThis.document?.hidden&&context?.state==='running')context.suspend().catch(()=>{});},activeFade*1000+85);
   }else if((enabled||preview)&&context)unlock();
  };
  globalThis.document?.addEventListener('visibilitychange',visibility);
