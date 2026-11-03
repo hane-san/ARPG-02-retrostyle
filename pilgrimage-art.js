@@ -1,6 +1,6 @@
 import {drawRegionalGrain} from './pilgrimage-ground.js';
 import {drawRegionalEdge} from './pilgrimage-edges.js';
-import {drawDetourGround,drawDetourEdge,drawDuskGlint,drawDetourSite,DETOUR_FORMS} from './pilgrimage-detour-art.js';
+import {drawDetourGround,drawDetourEdge,drawDuskGlint,drawDetourSite,drawDetourProp,DETOUR_FORMS} from './pilgrimage-detour-art.js';
 import {drawPilgrimPlay} from './pilgrimage-play.js';
 import {drawPilgrimToy} from './pilgrimage-toys.js';
 import {drawJourneyWonder} from './journey-wonders-art.js';
@@ -135,6 +135,7 @@ export function drawPilgrimDecor(c,world,bounds){
   if(d.x<bounds.left-2||d.x>bounds.right+2||d.y<bounds.top-2||d.y>bounds.bottom+5)continue;
   const p=PILGRIM_ZONES[d.chapter].palette,x=d.x*32,y=d.y*32,v=d.variant;
   if(d.solid){poly(c,[[x+2,y+23],[x+24,y+19],[x+32,y+28],[x+9,y+32]],p[3]+'55');line(c,x+6,y+29,x+27,y+25,p[1],2);}
+  if(d.detour&&drawDetourProp(c,d))continue;
   if(v!==12&&world.zoneAt(d.x,d.y).theme==='forest'&&drawForestProp(c,d))continue;
   if(v===12){drawForestTree(c,d,'trunk');}
   else if(v===0){line(c,x+14,y+27,x+15,y-11,p[3],2);poly(c,[[x+15,y-10],[x+41,y-5],[x+15,y+6]],p[1]);}
