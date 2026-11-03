@@ -911,7 +911,7 @@ function showPanel(id){
   $({mapPanel:'mapBtn',musicPanel:'soundBtn',helpPanel:'helpBtn'}[id]).setAttribute('aria-expanded','true');
   $(id).querySelector('[data-close]').focus({preventScroll:true});
  }
- if(id==='mapPanel'){rebuildZoneList();drawMinimap();}
+ if(id==='mapPanel'){rebuildZoneList();drawMinimap();if(PILGRIMAGE_MODE)$(id).querySelector('.sheet').scrollTop=0;}
 }
 $('mapBtn').addEventListener('click',()=>showPanel('mapPanel'));
 $('soundBtn').addEventListener('click',()=>showPanel('musicPanel'));

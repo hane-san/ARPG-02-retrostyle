@@ -95,3 +95,7 @@
 @media(max-height:560px) and (min-width:600px){
  .journey-mode .map-sheet .zone-grid{max-height:calc(100dvh - var(--journey-dock-height) - 110px);overflow:auto;align-content:start;grid-template-columns:1fr}
 }
+
+/* A tall atlas must keep its close control reachable even after choosing a distant land. */
+.journey-mode .map-sheet{scroll-padding-top:64px}
+.journey-mode .map-sheet .sheet-head{position:sticky;top:0;z-index:2;background:var(--journey-paper);padding-block:7px}

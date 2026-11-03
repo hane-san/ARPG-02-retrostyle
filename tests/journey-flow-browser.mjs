@@ -70,6 +70,8 @@ export async function checkJourneyFlow(browser,origin){
   await page.waitForFunction(()=>document.querySelector('#worldCanvas').getAttribute('aria-busy')==='false',null,{timeout:1500});
   await page.waitForTimeout(400);assert.equal(await busy(),false,'stopping stays stopped');
   await page.locator('#mapBtn').click();await page.locator('#mapPanel').waitFor({state:'visible'});
+  assert.ok(await reach('#mapPanel [data-close]'),'the reopened atlas restores its visible close control');
+  await page.locator('#mapPanel .sheet').evaluate(e=>e.scrollTop=e.scrollHeight);
   assert.ok(await reach('#mapPanel [data-close]'));
   await page.locator('#mapPanel [data-close]').click();await page.locator('#mapPanel').waitFor({state:'hidden'});
   assert.equal(await page.locator('#dialogue').isVisible(),false);
