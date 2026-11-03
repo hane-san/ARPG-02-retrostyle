@@ -20,7 +20,7 @@ jobs:
   browser:
     name: browser
     runs-on: ubuntu-latest
-    timeout-minutes: 18
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -36,9 +36,11 @@ jobs:
       - name: Run mobile-viewport smoke tests
         run: npm run test:browser
       - uses: actions/upload-artifact@v4
-        if: failure()
+        if: always()
         with:
-          name: atlas-browser-failure
-          path: test-results/*.png
+          name: atlas-browser-evidence
+          path: |
+            test-results/**/*.png
+            test-results/**/*.json
           if-no-files-found: ignore
-          retention-days: 3
+          retention-days: 7

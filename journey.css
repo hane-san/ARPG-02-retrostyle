@@ -67,7 +67,7 @@
 @media(max-height:560px) and (min-width:600px){
  .journey-mode .map-sheet{width:min(100%,720px);display:grid;grid-template-columns:1.2fr 1fr;gap:8px 14px;padding:12px 16px}
  .journey-mode .map-sheet .sheet-head{grid-column:1/-1;margin:0}
- .journey-mode #miniMap{grid-column:1;grid-row:2/span 2;width:min(100%,calc((100dvh - var(--journey-dock-height) - 95px)*112/88));justify-self:center;align-self:center}
+ .journey-mode #miniMap{grid-column:1;grid-row:2/span 2;width:min(100%,calc((100dvh - var(--journey-dock-height) - 95px)*var(--atlas-aspect,1.2727)));justify-self:center;align-self:center}
  .journey-mode .map-sheet p.secondary{display:none}
  .journey-mode .map-sheet .zone-grid{grid-column:2;gap:4px;margin:0}
  .journey-mode .map-sheet .line-btn{grid-column:2;margin:0}
@@ -83,3 +83,19 @@
 .journey-mode #zoneList button:not(.visited){opacity:.82}
 /* Issue #76: retain the notice, but omit its slide and fade under Reduced Motion. */
 @media(prefers-reduced-motion:reduce){.journey-mode .toast{transition:none;transform:translate(-50%,0)}}
+
+/* Issue #104: keep the A/B experiment inside Help, never on the travel HUD. */
+.journey-mode .camera-trial-links{margin:10px 0 0}
+.journey-mode .camera-trial-links a{display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:#496e68;text-decoration:underline;text-underline-offset:3px}
+.journey-mode .camera-trial-links a[aria-current="page"]{font-weight:650;text-decoration:none;color:#385c55}
+
+/* Keep a tall western atlas inside the sheet; every region remains listed below. */
+.journey-mode #miniMap{width:min(100%,calc((100dvh - var(--journey-dock-height) - 150px)*var(--atlas-aspect,1.2727)));justify-self:center;margin-inline:auto}
+
+@media(max-height:560px) and (min-width:600px){
+ .journey-mode .map-sheet .zone-grid{max-height:calc(100dvh - var(--journey-dock-height) - 110px);overflow:auto;align-content:start;grid-template-columns:1fr}
+}
+
+/* A tall atlas must keep its close control reachable even after choosing a distant land. */
+.journey-mode .map-sheet{scroll-padding-top:64px}
+.journey-mode .map-sheet .sheet-head{position:sticky;top:0;z-index:2;background:var(--journey-paper);padding-block:7px}

@@ -8,7 +8,7 @@ import {MUSIC_LIBRARY} from '../music.js';
 const w=makePilgrimageWorld();
 const inside=(s,p)=>p.x>=s.x&&p.x<s.x+s.w&&p.y>=s.y&&p.y<s.y+s.h;
 test('forest market houses and residents are separate reachable places on the unchanged pilgrimage',()=>{
- assert.equal(w.zones.filter(z=>!z.detour).length,13);assert.equal(w.zones.length,19,'13 loop regions plus the six #99 walks');assert.equal(PILGRIM_ROUTE.length,44);
+ assert.equal(w.zones.filter(z=>!z.detour&&!z.western).length,13);assert.equal(w.zones.length,29,'13 loop regions plus six #99 walks and ten #106 additions');assert.equal(PILGRIM_ROUTE.length,44);
  assert.equal(w.zoneAt(143,38).name,'輪を結ぶ森市');
  for(const s of FOREST_SITES){
   assert.ok(w.findPath(w,w.start,s.entrance));assert.equal(w.siteAt(s.x+1,s.y+1).id,s.id);
@@ -34,7 +34,7 @@ test('trees have finite solid feet and keep cross-streets, doorsteps and people 
 });
 test('the inhabited forest has its own music and quiet nearby working sounds',()=>{
  const pool=JOURNEY_PLAYLISTS['pilgrim-1'];assert.equal(pool[0],'18:1');
- assert.notEqual(pool[0],JOURNEY_PLAYLISTS['pilgrim-0'][0]);assert.equal(MUSIC_LIBRARY.length*2,90);
+ assert.notEqual(pool[0],JOURNEY_PLAYLISTS['pilgrim-0'][0]);assert.equal(MUSIC_LIBRARY.length*2,102);
  const sources=journeySoundSources(w.sites).filter(s=>s.id.startsWith('forest-'));
  assert.deepEqual(sources.map(s=>s.kind).sort(),['kettle','wood','wood']);
  assert.ok(FOREST_NPCS.every(p=>p.lines.length>=2));

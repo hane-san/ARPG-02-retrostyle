@@ -1,4 +1,7 @@
+import {checkWesternAudio} from './western-audio-browser.mjs';
+import {checkWestern} from './western-browser.mjs';
 import {checkPilgrimage} from './pilgrimage-browser.mjs';
+import {checkDeadzoneCamera} from './journey-deadzone-browser.mjs';
 import {checkImperialStudies} from './imperial-browser.mjs';
 // Browser smoke test for the published static ES module game.
 // Chromium approximates mobile input; it does NOT certify an actual iPhone.
@@ -100,7 +103,10 @@ async function main(){
  await page.locator('#helpPanel [data-close]').click();
  await checkPortalRoutes(page,origin);
  await checkCameraInput(page,origin);
+ await checkWesternAudio(browser,origin);
+ await checkWestern(browser,origin);
  await checkPilgrimage(browser,origin);
+ await checkDeadzoneCamera(browser,origin);
  await checkJourney(page,origin);
  await checkImperialStudies(page,origin);
  await checkJourneyTaps(browser,origin);

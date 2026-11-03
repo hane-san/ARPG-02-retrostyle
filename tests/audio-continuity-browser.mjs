@@ -22,7 +22,7 @@ export async function checkAudioContinuity(browser,origin){
     return (await rendered).getChannelData(0);
    }
    const results=[];
-   for(const voice of ['pad','harp','flute']){
+   for(const voice of ['pad','harp','flute','bell','box','piano','reed','pluck']){
     const reference=await render(voice);
     for(const fallback of [false,true]){
      const actual=await render(voice,true,fallback);
