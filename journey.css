@@ -83,3 +83,8 @@
 .journey-mode #zoneList button:not(.visited){opacity:.82}
 /* Issue #76: retain the notice, but omit its slide and fade under Reduced Motion. */
 @media(prefers-reduced-motion:reduce){.journey-mode .toast{transition:none;transform:translate(-50%,0)}}
+
+/* Issue #104: keep the A/B experiment inside Help, never on the travel HUD. */
+.journey-mode .camera-trial-links{margin:10px 0 0}
+.journey-mode .camera-trial-links a{display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:#496e68;text-decoration:underline;text-underline-offset:3px}
+.journey-mode .camera-trial-links a[aria-current="page"]{font-weight:650;text-decoration:none;color:#385c55}

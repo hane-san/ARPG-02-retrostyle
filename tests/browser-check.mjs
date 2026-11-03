@@ -1,4 +1,5 @@
 import {checkPilgrimage} from './pilgrimage-browser.mjs';
+import {checkDeadzoneCamera} from './journey-deadzone-browser.mjs';
 import {checkImperialStudies} from './imperial-browser.mjs';
 // Browser smoke test for the published static ES module game.
 // Chromium approximates mobile input; it does NOT certify an actual iPhone.
@@ -101,6 +102,7 @@ async function main(){
  await checkPortalRoutes(page,origin);
  await checkCameraInput(page,origin);
  await checkPilgrimage(browser,origin);
+ await checkDeadzoneCamera(browser,origin);
  await checkJourney(page,origin);
  await checkImperialStudies(page,origin);
  await checkJourneyTaps(browser,origin);

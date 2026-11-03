@@ -29,6 +29,7 @@ import {journeySoundSources} from './journey-curios.js';
 import {createAmbienceDirector} from './journey-ambience.js';
 import {resolveGameMode} from './game-mode.js';
 import {createJourneyCamera,journeyCameraScene,easeJourneyCamera,easeJourneyFollowCamera,createPilgrimageFollower} from './journey-camera.js';
+import {createDeadzonePilgrimageFollower} from './journey-deadzone-camera.js';
 import {createTyper} from './dialogue-typer.js';
 import {walkSpeed} from './walk-speed.js';
 import {pickJourneyTap} from './journey-tap.js';
@@ -41,6 +42,8 @@ const JOURNEY_MODE=gameMode==='journey';
 const modeParams=new URLSearchParams(window.location.search);
 const PREVIOUS_ATLAS=modeParams.get('atlas')==='previous'||modeParams.get('maze')==='turns';
 const PILGRIMAGE_MODE=JOURNEY_MODE&&!PREVIOUS_ATLAS;
+// A/B camera trial: original directional follow is still the default.
+const DEADZONE_CAMERA_TRIAL=PILGRIMAGE_MODE&&modeParams.get('camera')==='deadzone';
 const mazeTrial=JOURNEY_MODE?createMazeTrial(PILGRIMAGE_MODE?'':window.location.search):null;
 const PROTOTYPE_MODE=gameMode==='prototype';
 const worlds={tidal:JOURNEY_MODE?null:PROTOTYPE_MODE?makePrototypeWorld():makeWorld(),silk:null,journey:JOURNEY_MODE?(PILGRIMAGE_MODE?makePilgrimageWorld():makeJourneyWorld()):null};
@@ -62,7 +65,7 @@ mazeTrial?.arrive(spawn);
 const CLASSIC_WALK_SPEED=6.15;
 const journeyCamera=JOURNEY_MODE?createJourneyCamera({regional:PILGRIMAGE_MODE}):null;
 const camera={x:(spawn.x+.5)*TILE,y:(spawn.y+.5)*TILE,zoom:journeyCamera?.target||1.25};
-const pilgrimageFollow=createPilgrimageFollower(),pilgrimTrails=createPilgrimTrails();
+const pilgrimageFollow=DEADZONE_CAMERA_TRIAL?createDeadzonePilgrimageFollower():createPilgrimageFollower(),pilgrimTrails=createPilgrimTrails();
 const journeyMusic=JOURNEY_MODE?createJourneyMusicDirector(PILGRIMAGE_MODE?{settleMs:900,minHoldMs:2200}:undefined):null;
 const imperialListening=JOURNEY_MODE&&!PILGRIMAGE_MODE?createImperialListening():null;
 let imperialQuiet=false;
@@ -101,6 +104,17 @@ if(JOURNEY_MODE){
  helpParagraphs[1].textContent='地面や地図で行き先を選ぶと、主人公が道を探して歩きます。途中でも行き先を変えられます。建物や人を選ぶと、そのそばまで歩いて向かいます。';
  helpParagraphs[2].textContent='歩行中はカメラが道の先へ追従し、地面や地図のタップで行き先を変えられます。止まっている間は指で軽快になめらかに見回せます。屋外は少し引いた同じ画角で歩けます。特別な展望地点だけ遠くへ広がり、将来の屋内では近い画角になります。';
  helpParagraphs[3].textContent='訪れた場所の記録は、この画面を開いているあいだだけ残ります。';
+ if(PILGRIMAGE_MODE){
+  const compare=document.createElement('p');compare.className='secondary camera-trial-links';
+  compare.append('カメラ比較試作：',document.createElement('br'));
+  for(const [href,label] of [['./','通常の追従'],['./?camera=deadzone','デッドゾーン（画面を落ち着かせる）']]){
+   const link=document.createElement('a');link.href=href;link.textContent=label;
+   if(DEADZONE_CAMERA_TRIAL===href.includes('deadzone'))link.setAttribute('aria-current','page');
+   compare.append(link,document.createTextNode('　'));
+  }
+  compare.append(document.createElement('br'),'比較切替では再読込され、現在の旅の位置は引き継がれません。');
+  $('helpPanel').querySelector('.sheet').append(compare);
+ }
  const mazeHelp=document.createElement('p');mazeHelp.className='secondary';
  mazeHelp.innerHTML='<strong>迷路の歩き方を比べる</strong><br>'+
   (mazeTrial.enabled?'Bを試遊中。南西の風蝕迷路では、まだ歩いていない曲がり角で止まります。先へはもう一度行き先を選んでください。地図からの徒歩はいつもどおり。覚えた道はこの画面を開いているあいだだけ残ります。':'Aでは今までどおり、選んだ場所まで道を探して歩きます。Bでは南西迷路の曲がり角で、先を選び直す歩き方を試せます。')+
