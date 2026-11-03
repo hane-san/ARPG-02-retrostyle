@@ -9,7 +9,7 @@ export function deadzoneThreshold(viewport,axis,tile=32){
  const zoom=viewport.zoom||1;
  // Roughly two and a half tiles of slack, but never an enormous percentage
  // on small phones. Both axes scale in world units when the zoom changes.
- return Math.min(axis==='x'?.19:.135,2.45*tile*zoom/span);
+ return Math.min(.205,2.45*tile*zoom/span);
 }
 
 export function createDeadzonePilgrimageFollower(){
