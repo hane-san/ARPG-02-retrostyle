@@ -10,6 +10,9 @@ export async function checkWestern(browser,origin,{quick=false,viewports=[[320,5
   const context=await browser.newContext({viewport:{width,height},isMobile:true,hasTouch:true,deviceScaleFactor:1});
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.addInitScript(({w,h})=>{
+   const fillText=CanvasRenderingContext2D.prototype.fillText,clearRect=CanvasRenderingContext2D.prototype.clearRect;
+   CanvasRenderingContext2D.prototype.clearRect=function(...args){if(this.canvas.id==='miniMap')window.westChartLabels=[];return clearRect.apply(this,args);};
+   CanvasRenderingContext2D.prototype.fillText=function(text,x,y,...args){if(this.canvas.id==='miniMap'){const font=Number(this.font.match(/([\d.]+)px/)[1]);(window.westChartLabels??=[]).push({text,x,y,w:this.measureText(text).width+font*.5,h:font*4/3});}return fillText.call(this,text,x,y,...args);};
    const Native=window.AudioContext||window.webkitAudioContext;
    if(Native){const create=Native.prototype.createBufferSource;Native.prototype.createBufferSource=function(){const source=create.call(this),start=source.start.bind(source);source.start=(...args)=>{if(source.loop){window.westBufferSeconds=source.buffer?.duration;window.westMusicStarts=(window.westMusicStarts||0)+1;}return start(...args);};return source;};}
 
@@ -58,6 +61,8 @@ export async function checkWestern(browser,origin,{quick=false,viewports=[[320,5
   await page.locator('#soundBtn').click();if(width===390){assert.equal(await page.locator('#musicToggle').textContent(),'ON');await page.locator('#musicToggle').click();}
   assert.equal(await page.locator('#musicToggle').textContent(),'OFF');await page.locator('#musicToggle').click();assert.equal(await page.locator('#musicToggle').textContent(),'ON');assert.equal(await page.locator('#trackSelect').inputValue(),'47:1');await page.locator('#musicToggle').click();await page.locator('#musicPanel [data-close]').click();
   await page.locator('#mapBtn').click();await page.screenshot({path:`test-results/western/${width}x${height}-atlas.png`});
+  const labels=await page.evaluate(()=>window.westChartLabels);const atlasRect=await page.locator('#miniMap').boundingBox();assert.ok(labels.length>=Math.min(20,Math.floor(atlasRect.height/16)),'the atlas retains readable names at its actual display size');
+  for(let a=0;a<labels.length;a++)for(let b=a+1;b<labels.length;b++)assert.ok(Math.abs(labels[a].x-labels[b].x)>=(labels[a].w+labels[b].w)/2||Math.abs(labels[a].y-labels[b].y)>=Math.max(labels[a].h,labels[b].h),'actual clamped atlas labels overlap: '+JSON.stringify([labels[a],labels[b]]));
   assert.equal(await page.locator('#zoneList button').count(),33);assert.deepEqual(errors,[]);await context.close();
  }
  // The named former camera remains available for comparison on the same cliff.

@@ -948,15 +948,18 @@ function drawMinimap(){
   const chartScale=PILGRIMAGE_MODE?mini.width/Math.max(1,mini.getBoundingClientRect().width):1;
   c.textAlign='center';c.fillStyle='#fff6db';c.font=`bold ${12*chartScale}px system-ui`;
   const lx=JOURNEY_MODE?z.label.x:z.cx,ly=JOURNEY_MODE?z.label.y:z.cy-13;
-  const labelText=PILGRIMAGE_MODE?z.chartName:z.name,tw=c.measureText(labelText).width,probeX=lx*sx,probeY=ly*sy,th=14*chartScale;
-  if(PILGRIMAGE_MODE&&chartLabels.some(r=>Math.abs(r.x-probeX)<(r.w+tw)/2+chartScale*2&&Math.abs(r.y-probeY)<th))continue;
-  chartLabels.push({x:probeX,y:probeY,w:tw});
+  const labelText=PILGRIMAGE_MODE?z.chartName:z.name,tw=c.measureText(labelText).width,th=16*chartScale;
   // Unvisited regions keep their names (they are reachable) but read as rumours.
   const known=!JOURNEY_MODE||visitedZones.has(z.id);
   c.globalAlpha=known?1:.55;
   // Keep every chart name wholly inside the map: names near the edge used to be cut off.
   const name=PILGRIMAGE_MODE?z.chartName:z.name,half=c.measureText(name).width/2+3*chartScale;
   const tx=Math.max(half,Math.min(mini.width-half,lx*sx)),ty=Math.max(14*chartScale,Math.min(mini.height-4*chartScale,ly*sy));
+  // Check the actual, edge-clamped position including its outline. Testing the
+  // unclamped anchor allowed edge labels to move back over neighbouring names.
+  const labelWidth=tw+6*chartScale;
+  if(PILGRIMAGE_MODE&&chartLabels.some(r=>Math.abs(r.x-tx)<(r.w+labelWidth)/2+chartScale*2&&Math.abs(r.y-ty)<th))continue;
+  chartLabels.push({x:tx,y:ty,w:labelWidth});
   c.strokeStyle='#17374a';c.lineWidth=3*chartScale;c.strokeText(name,tx,ty);
   c.fillText(name,tx,ty);c.globalAlpha=1;
  }
