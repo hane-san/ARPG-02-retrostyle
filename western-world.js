@@ -79,7 +79,10 @@ export function carveWestern({tiles,regions,w,h}){
  // A visible spine of stairs joins every terrace, including the narrow upper strip.
  // A climb continues through the upper mountain contours; the stair gaps must
  // intersect real soil, even where the natural rim curves inside a wall's end.
- for(let y=523;y<=576;y++)for(let x=59;x<=61;x++)if(tiles[y]?.[x]!=='X')set(x,y,'west-stair',25);
+ for(let y=523;y<=576;y++){
+  const turn=60+Math.round(4*Math.sin((y-523)*.13));
+  for(let x=turn-1;x<=turn+1;x++)if(tiles[y]?.[x]!=='X')set(x,y,tiles[y][x]==='west-wall'||tiles[y][x]==='west-stair'?'west-stair':'=',25);
+ }
  const terraces=WEST_STUDIES.find(z=>z.key==='terrace');
  for(let y=terraces.y+6;y<=terraces.cy;y++)for(let x=terraces.cx-1;x<=terraces.cx+1;x++)set(x,y,'west-stair',terraces.index);
  // Facilities are planned on the central courts, clear of the authored ponds/sky.
