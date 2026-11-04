@@ -48,11 +48,7 @@ export function carveWestern({tiles,regions,w,h}){
   if(z.key==='cliff'){
    line(WEST_CLIFF_PATH,2.4,z.index);
   }else{
-   // Curved central walk and broad freely walkable courts; boundaries are real cliffs.
-   for(let y=z.y;y<=z.y+z.h;y++)for(let x=z.x;x<=z.x+z.w;x++){
-    // The broad noise field bends the shore and rim, rather than filling a rectangle.
-    if(landscapeShape(z,x,y)>1.18)continue;
-   }
+   // Curved walks sit inside the broad field that bends each land's natural rim.
    const yy=z.cy;line([[2,yy],[z.x+9,yy+5],[z.cx-18,yy+3],[z.cx,yy],[z.cx+22,yy+4],[z.x+z.w-8,yy-3],[238,yy]],2.5,z.index);
    if(['glass','impression','dots','shoal','azure'].includes(z.key)){
     for(let y=z.y+5;y<z.y+z.h-4;y++)for(let x=z.x+5;x<z.x+z.w-4;x++){
