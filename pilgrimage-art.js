@@ -1,3 +1,4 @@
+import {drawSoutheastTile,drawSoutheastSite,southeastTileColor} from './southeast-art.js';
 import {drawWesternTile,drawWesternSite,westernTileColor} from './western-art.js';
 import {drawRegionalGrain} from './pilgrimage-ground.js';
 import {drawRegionalEdge} from './pilgrimage-edges.js';
@@ -13,12 +14,13 @@ const line=(c,x,y,a,b,color,width=1)=>{c.strokeStyle=color;c.lineWidth=width;c.b
 const poly=(c,points,color)=>{c.fillStyle=color;c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();};
 const noise=(x,y)=>{let a=Math.imul(x+711,374761393)^Math.imul(y+129,668265263);a=Math.imul(a^(a>>>13),1274126177);return((a^(a>>>16))>>>0)/4294967295;};
 export function pilgrimTileColor(world,x,y){
+ const southeast=southeastTileColor(world,x,y);if(southeast)return southeast;
  const western=westernTileColor(world,x,y);if(western)return western;
  const t=world.tileAt(x,y),z=world.zoneAt(x,y),p=z.palette;
  return t==='L'||t==='~'?'#81a6aa':t==='X'?p[3]:t==='+'?'#b4b3a0':t==='='?p[1]:p[0];
 }
 export function drawPilgrimTile(c,x,y,t,world){
- if(drawWesternTile(c,x,y,t,world))return;
+ if(drawSoutheastTile(c,x,y,t,world)||drawWesternTile(c,x,y,t,world))return;
  const px=x*32,py=y*32,z=world.zoneAt(x,y),[ground,light,water,shade]=z.palette,q=noise(x,y);
  rect(c,px,py,32,32,pilgrimTileColor(world,x,y));
  if(t==='L'||t==='~'){
@@ -54,6 +56,7 @@ function column(c,x,y,h,p,w=12){masonry(c,x,y,w,h,p);rect(c,x-4,y-4,w+8,7,p[1]);
 function bowl(c,x,y,w,h,p,wet){rect(c,x,y,w,h,p[3]);rect(c,x+4,y+4,w-8,h-7,wet?p[2]:p[1]);if(wet)line(c,x+7,y+7,x+w-9,y+7,'#dae5d3');}
 function steps(c,x,y,w,h,p,n=7){for(let i=0;i<n;i++){rect(c,x-i*3,y+i*h/n,w+i*6,h/n+1,i%2?p[0]:p[1]);line(c,x-i*3,y+(i+1)*h/n,x+w+i*3,y+(i+1)*h/n,p[3]);}}
 export function drawPilgrimSite(c,s,time=0,phase=0){
+ if(s.form.startsWith('se-')){drawSoutheastSite(c,s,time);return;}
  if(s.form.startsWith('west-')){drawWesternSite(c,s,time,phase);return;}
  const z=PILGRIM_ZONES[s.chapter],p=z.palette,x=s.x*32,y=s.y*32,w=s.w*32,h=s.h*32,cx=x+w/2,base=y+h;
  if(s.form.startsWith('wonder-')){drawJourneyWonder(c,s,p,time);drawPilgrimPlay(c,s,p);return;}

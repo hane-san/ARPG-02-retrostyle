@@ -103,3 +103,11 @@ Codex/GPT等が作ったPRをClaude Codeが受け取るときの手順（競合�
 `western-world.js` が12地域・接続路・衝突、`western-art.js` が静的地面と可視範囲の空／光、`western-music.js` が12独自譜面と追加音色を持つ。巡礼への統合は `pilgrimage-world.js` / `pilgrimage-art.js`、選曲は既存 `journey-music.js` / `game.js`。地形は480×832で、旧モードの実寸をハードコードで上書きしない。
 
 `tests/western.test.mjs`、`western-browser.mjs`、`western-audio-browser.mjs` を既存check/browserに追加。ブラウザ時計で歩行を進めるが、主人公座標や製品速度を書き換えない。`test-results/western/` の各サイズの入口／構図／見回し画像とJSONはCIの `atlas-browser-evidence` に7日保持。継続保存の五つの独自試聴は `docs/audio/western/`。地域・主曲・参照・残件は [WESTERN-SKY-STUDIES](WESTERN-SKY-STUDIES.md)。
+
+## #108の開発と公開
+
+制作者が今回もCodexに通常PRマージまで明示委任。#106と同じ全ゲートを守り、一般役割の恒久変更はしない。最新headのrules/browser、最新mainとの無競合、hold/BLOCKなし、通常merge後のmain CIとPages・起動を確認する。
+
+[景観計画・台帳](LIVING-LANDSCAPES.md)を正本に、`landscape-geometry.js`／`landscape-objects.js`と`southeast-{world,art,music}.js`を巡礼へ統合。Nodeの`living-landscapes.test.mjs`で標準カメラ、橋・固体・土の先端・自然物の余裕、旧102曲の完全保持を検査。`western-browser.mjs`は既存12＋南東4を三サイズで通常歩行し、往復の選曲を確認する。以前の#96/#101の数値回帰は明示した`?camera=directional`で存続。標準#105の静止／前進検査は`/`で行う。
+
+全16地域を三画面サイズで歩き、南東の往復も追加したため、browserジョブの実行上限は40分から50分へ確保。既存の検査やアサーションは削らない。

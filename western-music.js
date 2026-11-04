@@ -24,7 +24,7 @@ export function buildWesternTrack(mapId,phase,score){
  const push=(beat,duration,n,voice,velocity,pan=0)=>events.push({beat,duration,midi:midi(p.root,p.scale,n),voice,velocity,pan});
  for(let b=0;b<32;b++){
   const section=Math.floor(b/8),phrase=b%8,chord=p.chords[(b+(section===1?2:0))%8],beat=b*bar;
-  const sparse=p.study===0||p.study===11,mel=section===1?p.b:p.a;
+  const sparse=p.sparse??(p.study===0||p.study===11),mel=section===1?p.b:p.a;
   const n1=mel[(phrase*2)%16],n2=mel[(phrase*2+1)%16];
   // A, answer B, softened A', then a spacious closing cadence.
   if(!(section===3&&phrase%3===1))push(beat+(section===2?.25:0),bar*(section===3?.8:.48),section===3&&phrase===7?0:n1,p.lead,sparse?.12:.17,-.08);
@@ -35,7 +35,7 @@ export function buildWesternTrack(mapId,phase,score){
   if(!sparse){
    const count=p.study===1?2:p.study===9?1:bar;
    for(let j=0;j<count;j++)if(!(section===3&&j%2))push(beat+j*bar/count,.45,chord+[0,4,2,6,1,5][(j+b)%6],p.arp,p.study===1?.045:.035,.25);
-   if([2,6,7,8].includes(p.study))events.push({beat:beat+bar*.5,duration:.09,midi:38,voice:'drum',velocity:.035,pan:0});
+   if((p.percussion??[2,6,7,8].includes(p.study)))events.push({beat:beat+bar*.5,duration:.09,midi:38,voice:'drum',velocity:.035,pan:0});
   }
  }
  events.sort((a,b)=>a.beat-b.beat);return {mapId,side:phase===1?'ally':'hostile',title:p.title,bpm:p.bpm,beats:32*bar,seconds:32*bar*60/p.bpm,events};

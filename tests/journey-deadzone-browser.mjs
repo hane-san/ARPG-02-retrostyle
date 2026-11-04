@@ -20,13 +20,13 @@ export async function checkDeadzoneCamera(browser,origin){
    return translate.call(this,x,y);
   };
  });
- await page.goto(origin+'/?camera=deadzone',{waitUntil:'load'});
+ await page.goto(origin+'/',{waitUntil:'load'});
  await page.waitForFunction(()=>window.deadzoneTestCamera&&document.querySelector('#zoneName')?.textContent==='白い船着場');
  assert.equal(await page.locator('.journey-tool').count(),4,'no additional permanent tool');
  await page.locator('#helpBtn').click();
- const alternate=page.getByRole('link',{name:'デッドゾーン（画面を落ち着かせる）'});
+ const alternate=page.getByRole('link',{name:'落ち着いた追従（標準）'});
  assert.equal(await alternate.getAttribute('aria-current'),'page');
- assert.ok((await page.getByRole('link',{name:'通常の追従'}).getAttribute('href')).endsWith('/'));
+ assert.ok((await page.getByRole('link',{name:'以前の追従（比較）'}).getAttribute('href')).endsWith('?camera=directional'));
  await page.locator('#helpPanel [data-close]').click();
  await page.clock.install();
  const base=await page.evaluate(()=>({...window.deadzoneTestCamera}));
@@ -48,5 +48,5 @@ export async function checkDeadzoneCamera(browser,origin){
  await page.screenshot({path:'test-results/pilgrimage-deadzone-forward.png'});
  assert.deepEqual(errors,[]);
  await page.close();
- console.log('Deadzone trial passed: optional link, static two-step screen, forward movement without HUD.');
+ console.log('Default composed camera passed: comparison link, static two-step screen, forward movement without HUD.');
 }

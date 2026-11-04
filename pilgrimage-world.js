@@ -1,3 +1,6 @@
+import {roundLandscapeTips} from './landscape-geometry.js';
+import {SOUTHEAST_STUDIES,SOUTHEAST_SITES,SOUTHEAST_NPCS,carveSoutheast} from './southeast-world.js';
+import {plantLandscapeObjects} from './landscape-objects.js';
 import {WEST_HEIGHT,WEST_STUDIES,WEST_SITES,WEST_NPCS,westernZone,carveWestern} from './western-world.js';
 import {JOURNEY_WONDERS,WONDER_VISTAS} from './journey-wonders.js';
 import {FOREST_SITES,FOREST_NPCS,plantForestMarket} from './forest-market.js';
@@ -33,7 +36,7 @@ export const PILGRIM_ZONES=chapterData.map(([at,name,sub,theme,palette,...music]
  const point=PILGRIM_ROUTE[at];return {id:'pilgrim-'+i,index:i,at,name,chartName:['船着場','森市','水庭','裂け目','雲上','列石','七段','白い舟','宿道','分水嶺','閉殿','帝都','最後の器'][i],sub,theme,palette,music:[...new Set([...music,'29:1','23:2'])].slice(0,3),cx:point.x,cy:point.y,label:i===0?{x:point.x-3,y:point.y-19}:i===9?{x:point.x+40,y:point.y+13}:i===12?{x:point.x-20,y:point.y+16}:{x:point.x+9,y:point.y-7}};
 });
 const chapter=i=>{let n=0;for(let k=1;k<PILGRIM_ZONES.length;k++)if(i>=PILGRIM_ZONES[k].at)n=k;return n;};
-export const PILGRIM_BLOCKED=new Set(['L','~','X','pil-wall','west-wall','west-sky']);
+export const PILGRIM_BLOCKED=new Set(['L','~','X','pil-wall','west-wall','west-sky','se-wall']);
 export const PILGRIM_START={...PILGRIM_ROUTE[0]};
 const names=['船着場の待合','森市の輪の台','水を渡す三つの器','風を通す裂け門','雲上の水尺','間を測る巨石','水を失った七段','高い桟橋の影','青い灯の宿','静かな分水器','扉のない受水殿','帝都の外郭門','最後の大きな器'];
 const forms=['tea','forest-wheel','garden','arch','stairs','monolith','garden','pier','tea','wheel','sealed','gate','citadel'];
@@ -83,7 +86,8 @@ for(const [k,d] of DETOURS.entries()){
 }
 // Integrate old twilight and shore studies rather than duplicating their regions.
 for(const z of WEST_STUDIES){const meta=westernZone(z);if(z.index<PILGRIM_ZONES.length){const old=PILGRIM_ZONES[z.index];Object.assign(old,meta,{theme:old.theme});}else PILGRIM_ZONES.push(meta);}
-PILGRIM_SITES.push(...WEST_SITES);PILGRIM_NPCS.push(...WEST_NPCS);
+PILGRIM_SITES.push(...WEST_SITES,...SOUTHEAST_SITES);PILGRIM_NPCS.push(...WEST_NPCS,...SOUTHEAST_NPCS);
+PILGRIM_ZONES.push(...SOUTHEAST_STUDIES);
 const hash=(x,y)=>{let n=Math.imul(x+117,374761393)^Math.imul(y+59,668265263);n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967295;};
 export function makePilgrimageWorld(){
  const w=PILGRIM_W,h=PILGRIM_H,tiles=Array.from({length:h},()=>Array(w).fill('X')),occupied=new Uint8Array(w*h),regions=new Uint8Array(w*h),routeDistance=new Float32Array(w*h);routeDistance.fill(Infinity);
@@ -116,6 +120,8 @@ export function makePilgrimageWorld(){
  // Issue #99: carve the three walks into ground nothing else uses.
  carveDetours({tiles,regions,w,h,inside,set:(x,y,t)=>{tiles[y][x]=t;},zoneIndex:DETOUR_ZONE_START,isOpen:(x,y)=>tiles[y][x]!=='X'&&tiles[y][x]!=='L'});
  carveWestern({tiles,regions,w,h});
+ carveSoutheast({tiles,regions,w,h});
+ roundLandscapeTips(tiles,w,h,[...PILGRIM_NPCS,...PILGRIM_SITES.map(s=>s.entrance)]);
  // The same market colour and selection cover its western approach and all shops.
  for(let y=24;y<=50;y++)for(let x=125;x<=157;x++)if(!PILGRIM_BLOCKED.has(tiles[y][x]))regions[y*w+x]=1;
  // Real architectural collision: solid piers, open floors, and legal doorsteps.
@@ -143,7 +149,8 @@ export function makePilgrimageWorld(){
   for(let s=2;s<length;s+=4){const side=hash(k*31+i,s)>.5?1:-1,off=d.width+1.2,x=Math.round(a.x+dx*s-dy*off*side),y=Math.round(a.y+dy*s+dx*off*side);
    if(inside(x,y)&&tiles[y][x]==='X')decor.push({x,y,chapter:DETOUR_ZONE_START+k,variant:Math.floor(hash(s,k*7+i)*12),solid:false,seed:hash(i,s+k),detour:d.theme});}
  }
- const world={id:'journey',pilgrimage:true,w,h,tile:32,tiles,occupied,decor,regions,route:PILGRIM_ROUTE,start:{...PILGRIM_START},sites:PILGRIM_SITES,npcs:PILGRIM_NPCS,zones:PILGRIM_ZONES,vistas:PILGRIM_VISTAS,bridges:[],transitions:[],
+ const landscapeObjects=plantLandscapeObjects(tiles,regions,occupied,w,walkable,PILGRIM_SITES,PILGRIM_NPCS);
+ const world={landscapeObjects,id:'journey',pilgrimage:true,w,h,tile:32,tiles,occupied,decor,regions,route:PILGRIM_ROUTE,start:{...PILGRIM_START},sites:PILGRIM_SITES,npcs:PILGRIM_NPCS,zones:PILGRIM_ZONES,vistas:PILGRIM_VISTAS,bridges:[],transitions:[],
   tileAt(x,y){return inside(x,y)?tiles[y][x]:'~';},walkable,
   siteAt(x,y){return PILGRIM_SITES.filter(s=>x>=s.x&&x<s.x+s.w&&y>=s.y&&y<s.y+s.h).sort((a,b)=>a.w*a.h-b.w*b.h)[0];},
   npcAt(x,y){return PILGRIM_NPCS.find(n=>n.x===x&&n.y===y);},bridgeAt(){},transitionAt(){},findPath:silkPath,
@@ -156,7 +163,7 @@ export function pilgrimCameraScene(world,hero,accepted){
  // The director debounces border crossings instead of zooming at each object.
  const theme=world.zoneAt(hero.px,hero.py).theme;
  const west=world.zoneAt(hero.px,hero.py).westKey;
- return west==='azure'?'journey-scenic-wide':west==='cliff'?'journey-reveal':theme==='ridge'?'journey-reveal':['capital','citadel'].includes(theme)?'journey-monument':'journey-road';
+ return world.zoneAt(hero.px,hero.py).cameraScene||(west==='azure'?'journey-scenic-wide':west==='cliff'?'journey-reveal':theme==='ridge'?'journey-reveal':['capital','citadel'].includes(theme)?'journey-monument':'journey-road');
 }
 export function pilgrimFloor(world,site,p){return !!(world.pilgrimage&&site&&site.blocking===false&&p.x>=site.x&&p.x<site.x+site.w&&p.y>=site.y&&p.y<site.y+site.h&&world.walkable(Math.floor(p.x),Math.floor(p.y)));}
 export function pilgrimQuiet(world,p,wasQuiet=false){const z=PILGRIM_ZONES.find(z=>z.theme==='sealed');return !!world.pilgrimage&&Math.hypot(p.x-z.cx,p.y-z.cy)<(wasQuiet?9:5);}

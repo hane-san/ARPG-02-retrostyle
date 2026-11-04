@@ -12,7 +12,7 @@ function legal(from,to){const path=w.findPath(w,from,to);assert.ok(path?.length,
 test('edited journey is the continuous pilgrimage loop and then a changed final approach',()=>{
  assert.deepEqual([w.w,w.h],[480,832]);assert.equal(w.pilgrimage,true);
  for(const z of w.zones)assert.equal(w.zoneAt(z.cx,z.cy).id,z.id,'authored centre '+z.id);
- assert.equal(w.zones.filter(z=>!z.detour&&!z.western).length,13);assert.equal(w.zones.length,29);assert.equal(w.npcs.length,26);assert.equal(w.sites.filter(s=>!s.id.startsWith('pilgrim-detour-')&&!s.id.startsWith('west-')).length,44);assert.equal(w.sites.length,76);assert.ok(w.decor.length>1000);
+ assert.equal(w.zones.filter(z=>!z.detour&&!z.western).length,13);assert.equal(w.zones.length,33);assert.equal(w.npcs.length,32);assert.equal(w.sites.filter(s=>!s.id.startsWith('pilgrim-detour-')&&!s.id.startsWith('west-')&&!s.id.startsWith('se-')).length,44);assert.equal(w.sites.length,86);assert.ok(w.decor.length>1000);
  assert.ok(Math.hypot(PILGRIM_ROUTE[31].x-w.start.x,PILGRIM_ROUTE[31].y-w.start.y)<12,'the first circuit comes back near its start');
  let steps=0;for(let i=1;i<PILGRIM_ROUTE.length;i++)steps+=legal(PILGRIM_ROUTE[i-1],PILGRIM_ROUTE[i]).length-1;
  assert.ok(steps>2200&&steps<3000,'an authored journey rather than a tiny showroom');
@@ -24,7 +24,7 @@ test('edited journey is the continuous pilgrimage loop and then a changed final 
 test('all architectural entrances, speakers, region centres and vistas have legal outward and return walks',()=>{
  const objects=[...w.sites.map(s=>({...s.entrance,id:s.id})),...w.npcs,...w.zones.map(z=>({x:z.cx,y:z.cy,id:z.id})),...w.vistas];
  for(const p of objects){legal(w.start,p);legal(p,w.start);}
- assert.equal(new Set(w.npcs.map(p=>p.x+','+p.y)).size,26);
+ assert.equal(new Set(w.npcs.map(p=>p.x+','+p.y)).size,32);
 });
 test('every walkable floor belongs to one connected country and water remains unwalkable',()=>{
  const q=[w.start],seen=new Uint8Array(w.w*w.h);seen[w.start.y*w.w+w.start.x]=1;
@@ -54,7 +54,7 @@ test('rendered solid piers and large props collide, open court floors and gate c
 });
 test('outdoor framing is stable except explicit large vistas, with spatial and temporal hysteresis',()=>{
  const camera=createJourneyCamera();
- for(const z of w.zones)if(![4,11,12,19,26].includes(z.index))assert.equal(pilgrimCameraScene(w,{px:z.cx,py:z.cy},null),'journey-road');
+ for(const z of w.zones)if(![4,11,12,19,26,29,32].includes(z.index))assert.equal(pilgrimCameraScene(w,{px:z.cx,py:z.cy},null),'journey-road');
  const p=PILGRIM_ROUTE[38];assert.equal(pilgrimCameraScene(w,{px:p.x,py:p.y},null),'journey-monument');
  assert.equal(pilgrimCameraScene(w,{px:p.x+9,py:p.y},'journey-monument'),'journey-monument');
  assert.equal(pilgrimCameraScene(w,{px:p.x+30,py:p.y},null),'journey-monument','the whole capital approach holds its regional scale');
@@ -62,8 +62,8 @@ test('outdoor framing is stable except explicit large vistas, with spatial and t
  assert.equal(camera.update('journey-road',1900),.6);assert.equal(camera.update('journey-road',4200),.8);
 });
 test('pale regional colours and valid contrasting music change without altering user audio preferences',()=>{
- assert.equal(new Set(w.zones.map(z=>z.palette[0])).size,29);
- assert.equal(MUSIC_LIBRARY.length*2,102);
+ assert.equal(new Set(w.zones.map(z=>z.palette[0])).size,33);
+ assert.equal(MUSIC_LIBRARY.length*2,106);
  for(const z of PILGRIM_ZONES){assert.ok(z.music.length>=(z.western?1:3));for(const key of z.music){const [id,phase]=key.split(':').map(Number);assert.ok(buildTrack(id,phase).events.length>100);}assert.equal(pickJourneyTrack(z.id,'0:1'),z.music[0]);}
  const d=createJourneyMusicDirector();assert.equal(d.update(w.zones[0].id,0),w.zones[0].id);assert.equal(d.update(w.zones[1].id,100),null);assert.equal(d.update(w.zones[1].id,12000),w.zones[1].id);
  const sealed=w.zones.find(z=>z.theme==='sealed');assert.ok(pilgrimQuiet(w,{x:sealed.cx,y:sealed.cy}));assert.equal(pilgrimQuiet(w,w.start),false);

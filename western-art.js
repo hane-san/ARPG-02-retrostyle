@@ -1,3 +1,4 @@
+import {landscapeNoise} from './landscape-geometry.js';
 import {WEST_STUDIES,westernAt,westSkyRows} from './western-world.js';
 const R=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));};
 const P=(c,pts,col)=>{c.fillStyle=col;c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();};
@@ -13,13 +14,27 @@ export function drawWesternTile(c,x,y,t,world){
  if(t==='west-sky')return true;
  const px=x*32,py=y*32,[g,light,water,shade]=z.palette,q=((Math.imul(x,73)^Math.imul(y,137))>>>0)%997/997;
  R(c,px,py,32,32,westernTileColor(world,x,y));
+ const field=landscapeNoise(x,y,10);
+ if(t==='west-ground'&&!['glass','terrace'].includes(z.key)&&field>.56)R(c,px,py,32,32,blend(g,light,(field-.56)*.8));
  if(t==='west-wall'&&z.key==='glass'){R(c,px,py,32,32,shade);R(c,px+3,py+3,26,25,g);for(let j=0;j<5;j++)E(c,px+5+j*5,py+10+j%2*10,3,4,['#e2b7a5','#c1cfa1','#e4d5a3'][j%3]);return true;}
  if(t==='west-wall'){
-  R(c,px,py,32,7,light);for(let j=11;j<32;j+=7){L(c,px,py+j,px+32,py+j-2,'#455d6255');L(c,px+(j%3)*8,py+j,px+(j%3)*8,py+j+6,'#455d6244');}return true;
+  const exposed=world.walkable(x,y-1);
+  if(exposed)R(c,px,py,32,4,light);
+  if(z.key==='terrace'){
+   for(let j=11;j<32;j+=9){L(c,px,py+j,px+32,py+j-2,'#455d6255');if(q>.45)L(c,px+(j%3)*8,py+j,px+(j%3)*8,py+j+7,'#455d6244');}
+  }else{
+   // Continuous geological faces, not a repeating brick cap on every tile.
+   if(field>.55)R(c,px,py+(exposed?5:0),32,exposed?27:32,blend(shade,g,.23));
+   if((y+Math.round(Math.sin(x*.07)*2))%4===0)L(c,px,py+17,px+32,py+16+Math.sin(x*.07),light+'44',2);
+   if(q>.83)L(c,px+21,py+4,px+14,py+27,'#455d6255',2);
+   if(exposed&&['grass','windmill','village','lane'].includes(z.key))for(let j=0;j<3;j++)L(c,px+4+j*12,py+5,px+7+j*10,py-2,g,3);
+  }
+  return true;
  }
  if(t==='west-bridge'){R(c,px,py,32,32,'#a58d70');for(let j=3;j<32;j+=6)R(c,px+1,py+j,30,2,light);if(x===z.x+27||x===z.x+29)R(c,px+(x===z.x+27?0:27),py,5,32,shade);return true;}
  if(t==='west-stair'){for(let j=3;j<32;j+=5){R(c,px+1,py+j,30,2,light);L(c,px,py+j+2,px+32,py+j+2,shade);}return true;}
  if(t==='L'){
+  for(const [dx,dy,a,b,ww,hh] of [[0,-1,0,0,32,3],[-1,0,0,0,3,32],[1,0,29,0,3,32],[0,1,0,29,32,3]])if(world.walkable(x+dx,y+dy)&&world.tileAt(x+dx,y+dy)!=='west-bridge')R(c,px+a,py+b,ww,hh,light+'bb');
   R(c,px,py+3,32,5,blend(water,'#d2e1d6',.3));L(c,px+3,py+18,px+26,py+18,light+'88',2);
   if(z.key==='impression'){R(c,px+3,py+7,19,3,'#c3cbb3');R(c,px+11,py+24,20,3,'#7e9daa');}
   if(z.key==='dots')for(let j=0;j<13;j++){const xx=(x*17+y*7+j*11)%30,yy=(x*3+y*13+j*7)%30;R(c,px+xx,py+yy,2,2,[light,water,'#b8b9a3'][j%3]);}
@@ -34,14 +49,14 @@ export function drawWesternTile(c,x,y,t,world){
   for(let j=0;j<4;j++)L(c,px+j*9,py+26,px+j*9+5,py+12,shade+'88');
   if(band===8){R(c,px,py+8,32,10,water);R(c,px,py+8,32,2,light);}
  }else if(z.key==='mountain'){
-  P(c,[[px+3,py+29],[px+6,py+9],[px+17,py+3],[px+29,py+20],[px+24,py+29]],q>.5?'#8d9f9c':'#b4bfb0');L(c,px+6,py+9,px+17,py+3,light,2);
+  if(q>.76){R(c,px+4,py+21,14,3,'#b4bfb0');L(c,px+6,py+18,px+20,py+14,light,2);}
  }else if(z.key==='grass'||z.key==='azure'){
-  for(let j=0;j<4;j++){const xx=px+3+j*8;L(c,xx,py+26,xx+5,py+17,q>.5?light+'88':shade+'66');}
+  if(q>.62)for(let j=0;j<2;j++){const xx=px+7+j*16;L(c,xx,py+26,xx+5,py+17,q>.5?light+'88':shade+'66');}
   if(z.key==='azure'&&q>.4&&Math.sin(x*.13)+Math.cos(y*.17)>1.1)for(let j=0;j<3;j++){R(c,px+5+j*8,py+9+j%2*11,3,3,'#f1efdb');R(c,px+6+j*8,py+10+j%2*11,1,1,'#b8c69f');}
  }else if(z.key==='dots'){
-  for(let j=0;j<12;j++)R(c,px+(x*11+j*7)%30,py+(y*7+j*13)%30,2,2,[light,'#8ba494','#c8b98d'][j%3]);
+  if(field>.49)for(let j=0;j<5;j++)R(c,px+(x*11+j*7)%30,py+(y*7+j*13)%30,2,2,[light,'#8ba494','#c8b98d'][j%3]);
  }else if(z.key==='impression'){
-  for(let j=0;j<4;j++)R(c,px+(j*7)%23,py+5+j*7,9+j*2,3,[g,light+'aa',shade+'55',water+'66'][j]);
+  if(q>.5)for(let j=0;j<2;j++)R(c,px+(j*7)%23,py+5+j*13,15+j*4,3,[g,light+'aa',shade+'55',water+'66'][j]);
  }else if(z.key==='shoal'){
   for(let j=0;j<3;j++)L(c,px,py+7+j*8,px+32,py+9+j*8,light,2);
  }else if(z.key==='lane'){

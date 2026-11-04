@@ -1,3 +1,4 @@
+import {landscapeShape,landscapeNoise} from './landscape-geometry.js';
 // #106: western outer lands. Existing coordinates and lake remain intact.
 export const WEST_HEIGHT=832,WEST_SCORE_START=45;
 export const WEST_CLIFF_PATH=[[4,345],[35,347],[60,344],[95,346],[116,345],[150,347],[185,344],[222,345],[222,355],[175,357],[120,354],[65,357],[12,355],[12,365],[80,367],[145,365],[200,367],[238,365]];
@@ -41,22 +42,18 @@ export function carveWestern({tiles,regions,w,h}){
  const set=(x,y,t,i)=>{if(x<1||y<1||x>=w-1||y>=h-1)return;if(y<288&&tiles[y][x]!=='X')return;const owner=westernAt(x,y);if(owner&&owner.index!==i)return;tiles[y][x]=t;regions[y*w+x]=i;};
  const line=(pts,width,i)=>{for(let n=1;n<pts.length;n++){const a=pts[n-1],b=pts[n];for(let y=Math.floor(Math.min(a[1],b[1])-width);y<=Math.ceil(Math.max(a[1],b[1])+width);y++)for(let x=Math.floor(Math.min(a[0],b[0])-width);x<=Math.ceil(Math.max(a[0],b[0])+width);x++)if(dist(x,y,a,b)<=width)set(x,y,'=',i);}};
  // Two independent returns join the old western/inn roads, never the lake.
- line([[45,270],[12,282],[2,300],[2,810]],2,19);line([[138,270],[236,282],[238,300],[238,810]],2,19);
+ line([[45,270],[12,282],[3,300],[3,810]],2.5,19);line([[138,270],[236,282],[238,300],[238,810]],2.5,19);
  for(const z of WEST_STUDIES){
-  for(let y=z.y;y<=z.y+z.h;y++)for(let x=z.x;x<=z.x+z.w;x++)set(x,y,z.key==='cliff'?(y<341+Math.round(2*Math.sin(x*.035)+Math.sin(x*.09))?'west-sky':'west-wall'):'west-ground',z.index);
+  for(let y=z.y;y<=z.y+z.h;y++)for(let x=z.x;x<=z.x+z.w;x++)set(x,y,z.key==='cliff'?(y<341+Math.round(2*Math.sin(x*.035)+Math.sin(x*.09))?'west-sky':'west-wall'):landscapeShape(z,x,y)<1?'west-ground':landscapeShape(z,x,y)<1.18?'west-wall':'X',z.index);
   if(z.key==='cliff'){
    line(WEST_CLIFF_PATH,2.4,z.index);
   }else{
-   // Curved central walk and broad freely walkable courts; boundaries are real cliffs.
-   for(let y=z.y;y<=z.y+z.h;y++)for(let x=z.x;x<=z.x+z.w;x++){
-    const nx=(x-z.cx)/(z.w*.52),ny=(y-z.cy)/(z.h*.55);
-    if(nx*nx+ny*ny>1.18)set(x,y,'west-wall',z.index);
-   }
-   const yy=z.cy;line([[2,yy],[z.x+4,yy+3],[z.cx,yy],[z.x+z.w-4,yy-2],[238,yy]],2.2,z.index);
+   // Curved walks sit inside the broad field that bends each land's natural rim.
+   const yy=z.cy;line([[2,yy],[z.x+9,yy+5],[z.cx-18,yy+3],[z.cx,yy],[z.cx+22,yy+4],[z.x+z.w-8,yy-3],[238,yy]],2.5,z.index);
    if(['glass','impression','dots','shoal','azure'].includes(z.key)){
     for(let y=z.y+5;y<z.y+z.h-4;y++)for(let x=z.x+5;x<z.x+z.w-4;x++){
-     const pond=z.key==='azure'?((x-z.cx-28)/25)**2+((y-z.cy-12)/8)**2<1:z.key==='shoal'?(Math.sin((y-z.y)*.12)*12+z.cx+10<x):((x-z.x-28)/11)**2+((y-z.y-17)/9)**2<1;
-     if(pond&&Math.abs(y-yy)>5)set(x,y,'L',z.index);
+     const pond=z.key==='azure'?((x-z.cx-28)/25)**2+((y-z.cy-12)/8)**2<1:z.key==='shoal'?(Math.sin((y-z.y)*.1)*9+z.cx+13+landscapeNoise(x,y,9)*5<x):((x-z.x-28)/11)**2+((y-z.y-17)/9)**2<1;
+     if(pond&&Math.abs(y-yy)>6&&landscapeShape(z,x,y)<.88)set(x,y,'L',z.index);
     }
    }
    if(z.key==='impression')for(let y=z.y+6;y<=z.y+28;y++)for(let x=z.x+27;x<=z.x+29;x++)set(x,y,'west-bridge',z.index);
@@ -66,7 +63,7 @@ export function carveWestern({tiles,regions,w,h}){
     for(let row=0;row<4;row++){
      const gap=row%2?z.x+15:z.x+z.w-16;
      for(let x=z.x+7;x<z.x+z.w-6;x++){
-      const yy=z.y+10+row*11+(z.key==='terrace'?Math.round(3*Math.sin((x-z.x)*.045+row*.4)):0);
+      const yy=z.y+(z.key==='terrace'?14:10)+row*11+(z.key==='terrace'?Math.round(3*Math.sin((x-z.x)*.045+row*.4)):0);
       const stair=Math.abs(x-gap)<4||(Math.abs(x-z.cx)<12&&Math.abs(yy-z.cy)<13);
       set(x,yy,stair?'west-stair':'west-wall',z.index);set(x,yy+1,stair?'west-stair':'west-wall',z.index);
      }
@@ -78,17 +75,23 @@ export function carveWestern({tiles,regions,w,h}){
  }
  // Shorter cross-country returns between neighbouring lands avoid compulsory
  // trips to the outer edges. The northern sky of the huge plain stays unbridged.
- line([[118,365],[118,585]],2.2,19);line([[118,631],[118,812]],2.2,26);
+ line([[118,365],[118,550],[110,562],[118,575],[126,562],[118,550]],2.5,19);line([[118,631],[118,788],[109,802],[118,810],[127,802],[118,788]],2.5,26);
  // A visible spine of stairs joins every terrace, including the narrow upper strip.
+ // A climb continues through the upper mountain contours; the stair gaps must
+ // intersect real soil, even where the natural rim curves inside a wall's end.
+ for(let y=523;y<=576;y++){
+  const turn=60+Math.round(4*Math.sin((y-523)*.13));
+  for(let x=turn-1;x<=turn+1;x++)if(tiles[y]?.[x]!=='X')set(x,y,tiles[y][x]==='west-wall'||tiles[y][x]==='west-stair'?'west-stair':'=',25);
+ }
  const terraces=WEST_STUDIES.find(z=>z.key==='terrace');
  for(let y=terraces.y+6;y<=terraces.cy;y++)for(let x=terraces.cx-1;x<=terraces.cx+1;x++)set(x,y,'west-stair',terraces.index);
  // Facilities are planned on the central courts, clear of the authored ponds/sky.
  for(const s of WEST_SITES)for(let y=s.y-1;y<s.y+s.h+4;y++)for(let x=s.x-2;x<s.x+s.w+2;x++){
-  if(tiles[y]?.[x]!=='L'&&tiles[y]?.[x]!=='west-sky'&&tiles[y]?.[x]!=='west-stair')set(x,y,'west-ground',s.chapter);
+  if(((x-(s.x+s.w*.5))/(s.w*.5+2))**2+((y-(s.y+s.h*.55))/(s.h*.5+3))**2<=1&&!['L','west-sky','west-stair','='].includes(tiles[y]?.[x]))set(x,y,'west-ground',s.chapter);
  }
  // Raised planting beds are solid; the service lanes between them remain open.
  const garden=WEST_STUDIES.find(z=>z.key==='glass');
- for(let y=garden.y+10;y<garden.y+garden.h-5;y++)for(let x=garden.x+4;x<garden.x+garden.w-4;x++)if(x%12<3&&y%12<8&&Math.abs(y-garden.cy)>4&&tiles[y][x]==='west-ground'&&!WEST_SITES.some(s=>x>=s.x-2&&x<s.x+s.w+2&&y>=s.y-2&&y<s.y+s.h+3)&&!WEST_NPCS.some(n=>Math.hypot(x-n.x,y-n.y)<3))set(x,y,'west-wall',garden.index);
+ for(let y=garden.y+10;y<garden.y+garden.h-5;y++)for(let x=garden.x+4;x<garden.x+garden.w-4;x++)if(x%12<2&&y%12<8&&Math.abs(y-garden.cy)>4&&tiles[y][x]==='west-ground'&&!WEST_SITES.some(s=>x>=s.x-2&&x<s.x+s.w+2&&y>=s.y-2&&y<s.y+s.h+3)&&!WEST_NPCS.some(n=>Math.hypot(x-n.x,y-n.y)<3))set(x,y,'west-wall',garden.index);
  // Connecting roads inherit the nearest land's cue rather than replaying the cliff everywhere.
  for(let y=288;y<=815;y++)for(let x=0;x<=240;x++)if(tiles[y][x]==='='&&!westernAt(x,y)){let near=WEST_STUDIES[0],d=Infinity;for(const z of WEST_STUDIES){const n=(x-z.cx)**2+(y-z.cy)**2;if(n<d){d=n;near=z;}}regions[y*w+x]=near.index;}
  return {line};
