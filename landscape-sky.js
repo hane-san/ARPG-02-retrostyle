@@ -13,7 +13,7 @@ const profiles={
  lane:{day:['#5e9dbf','#9bcad5','#d4e0d8','#eee1c6','#f4d9b2'],ridge:94,cloud:'#fff0d4',shade:'#b6c7c4'},
  grass:{day:['#3c96c4','#84cadb','#c6e7e2','#e4e9cc','#f0ddac'],ridge:115,cloud:'#fff4d7',shade:'#a2c5cb'}
 };
-export const CORE_SKY_STUDIES=[{key:'ridge',index:4,cx:186,cy:87,x:155,y:47,w:66,h:35,skyRect:true}];
+export const CORE_SKY_STUDIES=[{key:'ridge',index:4,cx:353,cy:83,x:318,y:44,w:100,h:48,skyRect:true}];
 export const blendSky=(a,b,t)=>'#'+[1,3,5].map(i=>Math.round(parseInt(a.slice(i,i+2),16)*(1-t)+parseInt(b.slice(i,i+2),16)*t).toString(16).padStart(2,'0')).join('');
 export function skyPalette(key,phase=0){
  const p=profiles[key]||profiles.azure,t=key==='cliff'?Math.max(0,Math.min(1,phase)):0;
@@ -30,7 +30,7 @@ const geometries=new Map();
 export function skyGeometry(z){
  if(geometries.has(z.key))return geometries.get(z.key);
  const box=skyWorldWindow(z),p=profiles[z.key];if(!box||!p)return null;
- const horizon=box.y+box.h-(z.key==='cliff'?80:0),depth=z.key==='cliff'?850:z.key==='azure'?420:z.key==='windmill'?700:520,ridges=[];
+ const horizon=z.skyRect?(z.cy-8)*32:box.y+box.h-(z.key==='cliff'?80:0),depth=z.key==='cliff'?850:z.key==='azure'?420:z.key==='windmill'?700:520,ridges=[];
  for(let layer=0;layer<3;layer++){
   const points=[];
   for(let i=0;i<=120;i++){

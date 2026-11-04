@@ -23,6 +23,7 @@ test('explicit arrivals discard old movement and camera/music candidates without
  const m=createJourneyMusicDirector({settleMs:650,minHoldMs:1600});m.update('pilgrim-0',0);m.update('pilgrim-1',1000);m.arrive('pilgrim-19',2000);assert.equal(m.update('pilgrim-19',2100),null);assert.equal(m.update('pilgrim-29',2200),null);assert.equal(m.update('pilgrim-29',3599),null);assert.equal(m.update('pilgrim-29',3600),'pilgrim-29');
 });
 test('every transparent sky tile has a world window, inclusive edges, and stable world geometry',()=>{
+ for(const z of CORE_SKY_STUDIES){assert.equal(z.cx,w.zones[z.index].cx);assert.equal(z.cy,w.zones[z.index].cy);assert.ok(z.cx>=z.x&&z.cx<=z.x+z.w&&z.cy>=z.y&&z.cy<=z.y+z.h,'the sky belongs to its actual viewpoint');}
  let count=0;
  for(let y=0;y<w.h;y++)for(let x=0;x<w.w;x++)if(['west-sky','pil-sky'].includes(w.tileAt(x,y))){const study=w.tileAt(x,y)==='pil-sky'?CORE_SKY_STUDIES[0]:WEST_STUDIES.find(z=>z.index===w.zoneAt(x,y).index);assert.ok(study);const b=skyWorldWindow(study);assert.ok(x*32>=b.x&&x*32+31<b.x+b.w&&y*32>=b.y&&y*32+31<b.y+b.h,`unpainted sky ${x},${y}`);assert.equal(w.walkable(x,y),false);count++;}
  assert.ok(count>10000);for(const z of [...WEST_STUDIES,...CORE_SKY_STUDIES])if(skyWorldWindow(z)){const g=skyGeometry(z);assert.equal(g,skyGeometry(z));assert.equal(g.ridges.length,3);assert.ok(g.clouds.length>20);}

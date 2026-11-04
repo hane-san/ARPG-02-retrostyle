@@ -32,6 +32,14 @@ export async function checkSkyTrial(browser,origin){
    let native=null;if(width===390){const [id,phase]=cue.split(':').map(Number),seconds=buildTrack(id,phase).seconds;let ready=false;for(let n=0;n<350;n++){await p.clock.runFor(200);await new Promise(r=>setTimeout(r,10));if(await p.evaluate(s=>Math.abs((window.trialLoopSeconds||0)-s)<.001,seconds)){ready=true;break;}}assert.ok(ready,'actual regional audio after trial warp '+cue);native=await p.evaluate(()=>window.trialLoopSeconds);}
    for(const button of ['#trialJump','#trialReturn']){const r=await p.locator(button).boundingBox();assert.ok(r.width>=44&&r.height>=44&&r.x>=0&&r.y>=0&&r.y+r.height<=height,'trial actions remain visible and touchable');}
    await p.locator('#dialogueClose').click();await p.screenshot({path:`test-results/sky-trial/${width}x${height}-${dest.id}.png`});
+   if(dest.id==='pilgrim-4'){
+    await p.mouse.move(width*.8,height*.13);await p.mouse.down();await p.mouse.move(width*.8,height*.55,{steps:10});await p.mouse.up();await p.clock.runFor(1700);
+    const camera=await p.evaluate(()=>({...window.trialEye,zoom:window.trialZoom,screen:{w:document.querySelector('#worldCanvas').clientWidth,h:document.querySelector('#worldCanvas').clientHeight}})),visible=[];
+    for(let y=44;y<=92;y++)for(let x=318;x<=418;x++){const sx=camera.screen.w/2+((x+.5)*32-camera.x)*camera.zoom,sy=camera.screen.h/2+((y+.5)*32-camera.y)*camera.zoom;if(world.tileAt(x,y)==='pil-sky'&&sx>4&&sx<camera.screen.w-4&&sy>4&&sy<camera.screen.h-4)visible.push({x:sx,y:sy});}
+    assert.ok(visible.length>10,'the original cloud ridge must actually overlook its sky');
+    const painted=await p.locator('#worldCanvas').evaluate((c,pts)=>{const g=c.getContext('2d'),r=c.width/c.clientWidth;return pts.filter(p=>{const a=g.getImageData(Math.floor(p.x*r),Math.floor(p.y*r),1,1).data;return a[0]+a[1]+a[2]>150;}).length;},visible);assert.ok(painted>visible.length*.9,'the visible sky is painted behind transparent terrain');
+    await p.screenshot({path:`test-results/sky-trial/${width}x${height}-cloud-ridge-look.png`});await p.locator('#homeBtn').click();await p.clock.runFor(1700);
+   }
    // Resume real movement on a legal adjacent tile, then read the real map dot.
    const move=[[1,0,'ArrowRight'],[-1,0,'ArrowLeft'],[0,1,'ArrowDown'],[0,-1,'ArrowUp']].find(([dx,dy])=>world.walkable(dest.x+dx,dest.y+dy));assert.ok(move);await p.keyboard.press(move[2]);await p.clock.runFor(1500);
    await p.locator('#mapBtn').click();assert.deepEqual(await p.evaluate(()=>window.trialPosition),{x:dest.x+move[0],y:dest.y+move[1]});await p.locator('#mapPanel [data-close]').click();
