@@ -52,6 +52,7 @@ export function pickJourneyTrack(zone,previous,random=Math.random){
 export function createJourneyMusicDirector({settleMs=2200,minHoldMs=12000}={}){
  let current=null,candidate=null,since=0,changed=-Infinity;
  return {
+  arrive(zone,now){if(!JOURNEY_PLAYLISTS[zone]||!Number.isFinite(now))throw Error('Invalid music arrival');current=zone;candidate=null;since=changed=now;return zone;},
   update(zone,now){
    if(!JOURNEY_PLAYLISTS[zone])throw new Error('Unknown journey music region '+zone);
    if(current===null){current=zone;changed=now;return zone;}

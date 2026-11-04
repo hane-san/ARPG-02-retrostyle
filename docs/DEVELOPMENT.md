@@ -111,3 +111,11 @@ Codex/GPT等が作ったPRをClaude Codeが受け取るときの手順（競合�
 [景観計画・台帳](LIVING-LANDSCAPES.md)を正本に、`landscape-geometry.js`／`landscape-objects.js`と`southeast-{world,art,music}.js`を巡礼へ統合。Nodeの`living-landscapes.test.mjs`で標準カメラ、橋・固体・土の先端・自然物の余裕、旧102曲の完全保持を検査。`western-browser.mjs`は既存12＋南東4を三サイズで通常歩行し、往復の選曲を確認する。以前の#96/#101の数値回帰は明示した`?camera=directional`で存続。標準#105の静止／前進検査は`/`で行う。
 
 全16地域を三画面サイズで歩き、南東の往復も追加したため、browserジョブの実行上限は40分から50分へ確保。既存の検査やアサーションは削らない。
+
+## #110 空・土地・試遊移動の開発
+
+本件も制作者がCodexへ通常PRマージまで明示委任。全ゲートと禁止事項は#108同様。[技術計画と全地域台帳](SKY-AND-TRIAL-TRAVEL.md)を参照。
+
+新ファイルは`landscape-sky.js`／`regional-detail.js`／`pilgrimage-landforms.js`／`energy-music.js`／`trial-travel.js`。試遊のカメラ・音楽同期は既存ディレクタの`arrive`で明示リセットする。普通の`update`は以前の待ち時間と処理を保つ。テストから主人公を移すAPIは追加せず、ブラウザ検査も実際の道標ボタンを使う。元の徒歩回帰はワープで置き換えない。
+
+`sky-trial-energy.test.mjs`で旧106曲・安全な19候補・袋の繰り返し・リセット・全空セル・地形を検査。`sky-trial-browser.mjs`は三サイズで全候補、帰還、歩行再開、OFFと音量、Reduced Motion、実Canvasの空を検査する。新pulseは既存のPCM停止連続性試験へ加える。音楽の緩急は全長PCMの導入／山場のRMSでも測る。成果物はCIの`sky-trial/`、`western/`へ。

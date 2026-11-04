@@ -71,6 +71,9 @@ export function createJourneyCamera({regional=false}={}){
    }
    return target;
   },
+  // Explicit trial jumps accept their new regional frame immediately. Walking
+  // continues to use the unchanged entry/exit dwell above.
+  arrive(next,now){if(!Object.hasOwn(JOURNEY_CAMERA_PROFILES,next)||!Number.isFinite(now))throw Error('Invalid camera arrival');scene=next;target=JOURNEY_CAMERA_PROFILES[next];candidate=null;since=acceptedAt=now;return target;},
   get target(){return target;},get scene(){return scene;}
  };
 }

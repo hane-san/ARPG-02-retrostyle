@@ -39,7 +39,7 @@ export async function checkPilgrimage(browser,origin){
  },WONDER_VISTAS);
  for(const v of newVistas){assert.deepEqual([v.w,v.h],[480,252]);assert.ok(v.colours>8,'every new vista draws its landscape');}
  await page.locator('#mapBtn').click();assert.equal(await page.locator('#zoneList button').count(),33);await page.locator('#mapPanel [data-close]').click();
- await page.locator('#soundBtn').click();assert.equal(await page.locator('#trackSelect option').count(),106);assert.equal(await page.locator('#musicToggle').textContent(),'OFF');assert.equal(await page.locator('#sfxToggle').textContent(),'ON');await page.locator('#musicPanel [data-close]').click();
+ await page.locator('#soundBtn').click();assert.equal(await page.locator('#trackSelect option').count(),110);assert.equal(await page.locator('#musicToggle').textContent(),'OFF');assert.equal(await page.locator('#sfxToggle').textContent(),'ON');await page.locator('#musicPanel [data-close]').click();
  await page.clock.install();
  async function settle(){for(let i=0;i<75;i++){await page.clock.runFor(1000);assert.deepEqual(errors,[],'walking must retain its rendering loop');if(await page.locator('#worldCanvas').getAttribute('aria-busy')==='false')return;}throw Error('walk did not settle');}
  async function position(){await page.locator('#mapBtn').click();const p=await page.evaluate(()=>window.pilgrimPosition);await page.locator('#mapPanel [data-close]').click();return {x:Math.round(p.x),y:Math.round(p.y)};}

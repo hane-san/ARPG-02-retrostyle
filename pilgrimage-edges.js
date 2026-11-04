@@ -4,7 +4,7 @@
 // salt plain = white crust split by blue cracks, capital = identical planned blocks.
 const fill=(c,x,y,w,h,color)=>{c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),Math.max(1,Math.round(w)),Math.max(1,Math.round(h)));};
 const stroke=(c,points,color,width=1)=>{c.strokeStyle=color;c.lineWidth=width;c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();};
-const open=t=>t!=='X'&&t!=='L'&&t!=='~';
+const open=t=>!['X','L','~','pil-wall','pil-sky','west-wall','west-sky','se-wall'].includes(t);
 
 export const EDGE_THEMES=Object.freeze(['forest','canyon','salt','capital']);
 

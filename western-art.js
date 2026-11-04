@@ -1,10 +1,10 @@
+import {drawLandscapeSky,skyWorldWindow} from './landscape-sky.js';
 import {landscapeNoise} from './landscape-geometry.js';
 import {WEST_STUDIES,westernAt,westSkyRows} from './western-world.js';
 const R=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h));};
 const P=(c,pts,col)=>{c.fillStyle=col;c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();};
 const L=(c,x,y,a,b,col,w=1)=>{c.strokeStyle=col;c.lineWidth=w;c.beginPath();c.moveTo(x,y);c.lineTo(a,b);c.stroke();};
 const E=(c,x,y,rx,ry,col)=>{c.fillStyle=col;c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fill();};
-const SNOW_RIDGE=[.28,.42,.35,.82,.48,.6,.4,.92,.56,.67,.9,.52,.36,.58,.85,.55,.62,.4,.88,.5,.3];
 const blend=(a,b,t)=>'#'+[1,3,5].map(i=>Math.round(parseInt(a.slice(i,i+2),16)*(1-t)+parseInt(b.slice(i,i+2),16)*t).toString(16).padStart(2,'0')).join('');
 export function createWesternLight(){let elapsed=0,last=null;return {update(now,active,hidden=false){if(last!==null&&active&&!hidden)elapsed+=Math.max(0,Math.min(200,now-last));last=now;return Math.min(1,elapsed/180000);},get phase(){return Math.min(1,elapsed/180000);}};}
 const tileLand=(world,x,y)=>westernAt(x,y)||(world.tileAt(x,y)==='west-sky'?WEST_STUDIES.find(z=>z.index===world.zoneAt(x,y).index):undefined);
@@ -126,28 +126,13 @@ export function drawWesternSite(c,s,time,phase=0){
 }
 // Scene layers have WORLD windows and are drawn before solid foreground terrain.
 // They can disappear behind a cliff when panning. Never a screen-attached strip.
-export function drawWesternSky(c,camera,screen,phase){
- const halfX=screen.w/(2*camera.zoom),halfY=screen.h/(2*camera.zoom);
- for(const z of WEST_STUDIES.filter(z=>['cliff','village','terrace','windmill','azure','lane','grass'].includes(z.key))){
-  const tint=z.key==='cliff'?phase:z.key==='windmill'?.85:.05;
-  const x=z.x*32,y=(z.y-(z.key==='cliff'?0:8))*32,w=z.w*32,h=(z.key==='cliff'?55:westSkyRows(z)+8)*32;
-  if(x+w<camera.x-halfX||x>camera.x+halfX||y+h<camera.y-halfY||y>camera.y+halfY)continue;
-  c.save();c.beginPath();c.rect(x,y,w,h);c.clip();
-  const horizon=y+h-(z.key==='cliff'?128:0),high=Math.min(600,screen.h/camera.zoom*.48)*(z.key==='cliff'?1:.45);
-  const sky=c.createLinearGradient(0,horizon-high*1.8,0,horizon);sky.addColorStop(0,blend('#619dce','#b7a1bc',tint));sky.addColorStop(.6,blend('#a7cee4','#e8c2aa',tint));sky.addColorStop(1,blend('#d7e0d5','#efce9e',tint));R(c,x,y,w,h,sky);
-  for(let layer=0;layer<3;layer++){
-   const pts=[[x,horizon]],n=160;
-   for(let i=0;i<=n;i++){const xx=x+i*w/n,ridge=SNOW_RIDGE,u=i/n*20,j=Math.min(19,Math.floor(u)),snowPeak=ridge[j]*(1-(u-j))+ridge[j+1]*(u-j);
-    const peak=(z.key==='cliff'&&layer===0?snowPeak+Math.sin(i*.91)*.018:(.42+.24*Math.abs(Math.sin(i*.0875+layer*.8+1.2))+.12*Math.cos(i*.194)+.035*Math.sin(i*.61+layer)))*(1-layer*.12);pts.push([xx,horizon-peak*high+layer*high*.22]);}
-   pts.push([x+w,horizon]);P(c,pts,layer===0?blend('#a2c3d0','#aa9baa',tint):layer===1?blend('#8cabb9','#8e8a9e',tint):blend('#718f9e','#777d90',tint));
-   if(layer===0&&z.key==='cliff'){
-    const crest=pts.slice(1,-1),snowline=crest.map(([xx,yy],i)=>[xx,yy+Math.max(0,Math.min(high*.17,(horizon-high*.36-yy)*.45))*(.8+.2*Math.sin(i*.7))]);
-    P(c,[...crest,...snowline.reverse()],blend('#eff3e5','#eed0b2',tint));
-   }
-  }
-  if(z.key==='terrace')for(let row=0;row<6;row++){const pts=[];for(let i=0;i<=30;i++)pts.push([x+i*w/30,horizon-30-row*19+Math.sin(i*.2+row*.3)*22]);pts.push([x+w,horizon],[x,horizon]);P(c,pts,['#98b5a5','#b7c6a3','#d5cfac'][row%3]+'88');}
-  for(let i=0;i<12;i++){const xx=x+(i+.2)*w/12,yy=y+h*.16+(i%3)*h*.12;E(c,xx,yy,w/38,h*.035,'#f1eee25a');E(c,xx+w/60,yy+h*.018,w/30,h*.025,'#f1eee244');}
-  if(z.key==='village')for(let i=0;i<7;i++){const xx=x+120+i*w/8,yy=y+h-75+Math.sin(i*2)*45;c.save();c.globalAlpha=.35+i%3*.15;P(c,[[xx-55,yy+30],[xx+45,yy+30],[xx+5,yy+65]],'#899f9e');house(c,xx-38,yy-40,75,65,z.palette,true);c.restore();}
+export function drawWesternSky(c,camera,screen,phase,time=0){
+ for(const z of WEST_STUDIES){
+  if(!drawLandscapeSky(c,z,camera,screen,phase,time))continue;
+  const b=skyWorldWindow(z),horizon=b.y+b.h;
+  c.save();c.beginPath();c.rect(b.x,b.y,b.w,b.h);c.clip();
+  if(z.key==='terrace')for(let row=0;row<6;row++){const pts=[];for(let i=0;i<=30;i++)pts.push([b.x+i*b.w/30,horizon-30-row*19+Math.sin(i*.2+row*.3)*22]);pts.push([b.x+b.w,horizon],[b.x,horizon]);P(c,pts,['#98b5a5','#b7c6a3','#d5cfac'][row%3]+'88');}
+  if(z.key==='village')for(let i=0;i<7;i++){const xx=b.x+120+i*b.w/8,yy=horizon-75+Math.sin(i*2)*45;c.save();c.globalAlpha=.35+i%3*.15;P(c,[[xx-55,yy+30],[xx+45,yy+30],[xx+5,yy+65]],'#899f9e');house(c,xx-38,yy-40,75,65,z.palette,true);c.restore();}
   c.restore();
  }
 }

@@ -1,3 +1,4 @@
+import {drawRegionalGroundDetail,drawRegionalSolidProp} from './regional-detail.js';
 import {drawSoutheastTile,drawSoutheastSite,southeastTileColor} from './southeast-art.js';
 import {drawWesternTile,drawWesternSite,westernTileColor} from './western-art.js';
 import {drawRegionalGrain} from './pilgrimage-ground.js';
@@ -14,13 +15,15 @@ const line=(c,x,y,a,b,color,width=1)=>{c.strokeStyle=color;c.lineWidth=width;c.b
 const poly=(c,points,color)=>{c.fillStyle=color;c.beginPath();points.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();};
 const noise=(x,y)=>{let a=Math.imul(x+711,374761393)^Math.imul(y+129,668265263);a=Math.imul(a^(a>>>13),1274126177);return((a^(a>>>16))>>>0)/4294967295;};
 export function pilgrimTileColor(world,x,y){
+ if(world.tileAt(x,y)==='pil-sky')return '#a5d5de';
  const southeast=southeastTileColor(world,x,y);if(southeast)return southeast;
  const western=westernTileColor(world,x,y);if(western)return western;
  const t=world.tileAt(x,y),z=world.zoneAt(x,y),p=z.palette;
  return t==='L'||t==='~'?'#81a6aa':t==='X'?p[3]:t==='+'?'#b4b3a0':t==='='?p[1]:p[0];
 }
 export function drawPilgrimTile(c,x,y,t,world){
- if(drawSoutheastTile(c,x,y,t,world)||drawWesternTile(c,x,y,t,world))return;
+ if(t==='pil-sky')return;
+ if(drawSoutheastTile(c,x,y,t,world)||drawWesternTile(c,x,y,t,world)){drawRegionalGroundDetail(c,x,y,t,world);return;}
  const px=x*32,py=y*32,z=world.zoneAt(x,y),[ground,light,water,shade]=z.palette,q=noise(x,y);
  rect(c,px,py,32,32,pilgrimTileColor(world,x,y));
  if(t==='L'||t==='~'){
@@ -49,6 +52,7 @@ export function drawPilgrimTile(c,x,y,t,world){
   if(z.theme==='salt'&&q>.6)poly(c,[[px+8,py+20],[px+17,py+6],[px+23,py+22]],'#edf0e180');
   for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])if(world.tileAt(x+dx,y+dy)==='L')rect(c,px+(dx===1?29:0),py+(dy===1?29:0),dx?3:32,dy?3:32,light);
  }
+ drawRegionalGroundDetail(c,x,y,t,world);
 }
 function masonry(c,x,y,w,h,p){rect(c,x,y,w,h,p[0]);rect(c,x,y,3,h,p[1]);
  for(let yy=12;yy<h;yy+=12){line(c,x,y+yy,x+w,y+yy,p[3],1);for(let xx=(yy%24?0:13);xx<w;xx+=26)line(c,x+xx,y+yy-11,x+xx,y+yy,p[3],1);}}
@@ -56,6 +60,7 @@ function column(c,x,y,h,p,w=12){masonry(c,x,y,w,h,p);rect(c,x-4,y-4,w+8,7,p[1]);
 function bowl(c,x,y,w,h,p,wet){rect(c,x,y,w,h,p[3]);rect(c,x+4,y+4,w-8,h-7,wet?p[2]:p[1]);if(wet)line(c,x+7,y+7,x+w-9,y+7,'#dae5d3');}
 function steps(c,x,y,w,h,p,n=7){for(let i=0;i<n;i++){rect(c,x-i*3,y+i*h/n,w+i*6,h/n+1,i%2?p[0]:p[1]);line(c,x-i*3,y+(i+1)*h/n,x+w+i*3,y+(i+1)*h/n,p[3]);}}
 export function drawPilgrimSite(c,s,time=0,phase=0){
+ if(s.form==='trial-waystone'){const x=s.x*32,y=s.y*32;c.save();c.fillStyle='#d2dfd3';c.beginPath();c.ellipse(x+48,y+53,45,25,0,0,Math.PI*2);c.fill();c.strokeStyle='#8aa9a7';c.lineWidth=4;c.beginPath();c.ellipse(x+48,y+53,36,19,0,0,Math.PI*2);c.stroke();for(let i=0;i<8;i++){const a=i*Math.PI/4;line(c,x+48+Math.cos(a)*24,y+53+Math.sin(a)*12,x+48+Math.cos(a)*31,y+53+Math.sin(a)*17,'#f5ebc9',3);}poly(c,[[x+48,y+37],[x+56,y+51],[x+48,y+62],[x+40,y+51]],'#8db9b9');line(c,x+48,y+27,x+48,y+15,'#eef3da',2);c.restore();return;}
  if(s.form.startsWith('se-')){drawSoutheastSite(c,s,time);return;}
  if(s.form.startsWith('west-')){drawWesternSite(c,s,time,phase);return;}
  const z=PILGRIM_ZONES[s.chapter],p=z.palette,x=s.x*32,y=s.y*32,w=s.w*32,h=s.h*32,cx=x+w/2,base=y+h;
@@ -144,6 +149,7 @@ export function drawPilgrimDecor(c,world,bounds){
   if(d.solid){poly(c,[[x+2,y+23],[x+24,y+19],[x+32,y+28],[x+9,y+32]],p[3]+'55');line(c,x+6,y+29,x+27,y+25,p[1],2);}
   if(d.detour&&drawDetourProp(c,d))continue;
   if(v!==12&&world.zoneAt(d.x,d.y).theme==='forest'&&drawForestProp(c,d))continue;
+  if(drawRegionalSolidProp(c,d,world.zoneAt(d.x,d.y)))continue;
   if(v===12){drawForestTree(c,d,'trunk');}
   else if(v===0){line(c,x+14,y+27,x+15,y-11,p[3],2);poly(c,[[x+15,y-10],[x+41,y-5],[x+15,y+6]],p[1]);}
   else if(v===1){for(let i=0;i<4;i++){line(c,x+4+i*7,y+26,x+5+i*7,y+8,p[3]);rect(c,x+3+i*7,y+6,4,3,d.chapter%2?'#d5bbad':'#e6dfbd');}}
@@ -160,7 +166,7 @@ export function drawPilgrimDecor(c,world,bounds){
  }
 }
 export function drawPilgrimOutlook(c,world,hero,width,height){
- const z=world.zoneAt(hero.px,hero.py);if(!['ridge','capital','citadel','monolith'].includes(z.theme))return;
+ const z=world.zoneAt(hero.px,hero.py);if(!['capital','citadel','monolith'].includes(z.theme))return;
  const opacity=Math.max(0,Math.min(1,(22-Math.hypot(hero.px-z.cx,hero.py-z.cy))/10));if(!opacity)return;
  const p=z.palette,scale=z.theme==='ridge'?.3:z.theme==='capital'?.7:z.theme==='citadel'?1:.45,base=Math.min(height*.2,140);
  c.save();c.globalAlpha=opacity;const fade=c.createLinearGradient(0,0,0,base+33);fade.addColorStop(0,p[0]+'e0');fade.addColorStop(1,p[0]+'00');rect(c,0,0,width,base+33,fade);
