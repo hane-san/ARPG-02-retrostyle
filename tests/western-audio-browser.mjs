@@ -3,7 +3,7 @@ export async function checkWesternAudio(browser,origin,{samples=false}={}){
  const page=await browser.newPage();try{
   await page.goto(origin+'/music.js');
   const reports=[];mkdirSync('test-results/western',{recursive:true});
-  for(const [key,id,phase] of [['bell',45,1],['box',45,2],['mountain',49,1],['terrace',48,2],['azure',49,2]]){
+  for(const [key,id,phase] of [['bell',45,1],['box',45,2],['mountain',49,1],['terrace',48,2],['azure',49,2],['reeds',51,1],['mesa',51,2],['port',52,1],['coast',52,2]]){
    const r=await page.evaluate(async({id,phase,samples})=>{
     const {buildTrack,scheduleNote}=await import('./music.js'),{renderMusicLoop}=await import('./music-loop.js');
     const track=buildTrack(id,phase),at=performance.now(),buffer=await renderMusicLoop(track,scheduleNote),pcm=buffer.getChannelData(0);

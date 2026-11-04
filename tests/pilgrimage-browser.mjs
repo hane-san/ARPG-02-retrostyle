@@ -16,7 +16,9 @@ export async function checkPilgrimage(browser,origin){
   CanvasRenderingContext2D.prototype.scale=function(x,y){if(this.canvas.id==='worldCanvas'){next=true;window.pilgrimZoom=x;}return scale.call(this,x,y);};
   CanvasRenderingContext2D.prototype.translate=function(x,y){if(next&&this.canvas.id==='worldCanvas'){next=false;window.pilgrimCamera={x:-x,y:-y};window.pilgrimFrames.push({x:-x,y:-y,zoom:window.pilgrimZoom});}return translate.call(this,x,y);};
  },{w:PILGRIM_W,h:PILGRIM_H});
- await page.goto(origin+'/');await page.waitForSelector('.journey-menu');
+ // Keep the exact #96/#101 framing regression on the explicit former camera.
+ // Western/southeast itineraries and the composed-camera checks use the default.
+ await page.goto(origin+'/?camera=directional');await page.waitForSelector('.journey-menu');
  assert.equal(await page.locator('#zoneName').textContent(),'白い船着場');
  assert.equal(await page.locator('.journey-tool').count(),4);
  const arches=world.sites.filter(s=>s.form==='arch');
@@ -36,8 +38,8 @@ export async function checkPilgrimage(browser,origin){
   return vistas.map(v=>{const canvas=document.createElement('canvas');drawJourneyPanorama(canvas,v.kind);const d=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data,colours=new Set();for(let i=0;i<d.length;i+=4)colours.add(d[i]+','+d[i+1]+','+d[i+2]);return {w:canvas.width,h:canvas.height,colours:colours.size};});
  },WONDER_VISTAS);
  for(const v of newVistas){assert.deepEqual([v.w,v.h],[480,252]);assert.ok(v.colours>8,'every new vista draws its landscape');}
- await page.locator('#mapBtn').click();assert.equal(await page.locator('#zoneList button').count(),29);await page.locator('#mapPanel [data-close]').click();
- await page.locator('#soundBtn').click();assert.equal(await page.locator('#trackSelect option').count(),102);assert.equal(await page.locator('#musicToggle').textContent(),'OFF');assert.equal(await page.locator('#sfxToggle').textContent(),'ON');await page.locator('#musicPanel [data-close]').click();
+ await page.locator('#mapBtn').click();assert.equal(await page.locator('#zoneList button').count(),33);await page.locator('#mapPanel [data-close]').click();
+ await page.locator('#soundBtn').click();assert.equal(await page.locator('#trackSelect option').count(),106);assert.equal(await page.locator('#musicToggle').textContent(),'OFF');assert.equal(await page.locator('#sfxToggle').textContent(),'ON');await page.locator('#musicPanel [data-close]').click();
  await page.clock.install();
  async function settle(){for(let i=0;i<75;i++){await page.clock.runFor(1000);assert.deepEqual(errors,[],'walking must retain its rendering loop');if(await page.locator('#worldCanvas').getAttribute('aria-busy')==='false')return;}throw Error('walk did not settle');}
  async function position(){await page.locator('#mapBtn').click();const p=await page.evaluate(()=>window.pilgrimPosition);await page.locator('#mapPanel [data-close]').click();return {x:Math.round(p.x),y:Math.round(p.y)};}
@@ -226,7 +228,7 @@ export async function checkPilgrimage(browser,origin){
  for(const [width,height] of [[320,568],[844,390]]){
   const page=await browser.newPage({viewport:{width,height},isMobile:true,hasTouch:true}),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(origin+'/?journey=1');await page.waitForSelector('.journey-menu');
-  await page.locator('#mapBtn').click();assert.equal(await page.locator('#zoneList button').count(),29);
+  await page.locator('#mapBtn').click();assert.equal(await page.locator('#zoneList button').count(),33);
   for(const e of await page.locator('#zoneList button').all()){await e.scrollIntoViewIfNeeded();const r=await e.boundingBox();assert.ok(r.width>=44&&r.height>=44);}
   await page.locator('#mapPanel [data-close]').click();await page.keyboard.press('ArrowRight');await page.waitForTimeout(300);
   assert.deepEqual(errors,[]);await page.close();

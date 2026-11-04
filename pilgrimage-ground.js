@@ -1,8 +1,10 @@
 // Visual/material identity only. Never changes walkability or pathfinding.
 export function pilgrimMaterial(world,x,y){
  const tile=world.tileAt(x,y),theme=world.zoneAt(x,y).theme;
- if(tile==='west-bridge')return 'wood';
- if(tile==='west-stair'||['west-cliff','west-mountain','west-glass'].includes(theme))return 'stone';
+ if(tile==='se-boardwalk'||tile==='west-bridge')return 'wood';
+ if(tile==='se-stonebridge'||tile==='se-stair'||theme==='se-mesa'||theme==='se-coast'||tile==='west-stair'||['west-cliff','west-mountain','west-glass'].includes(theme))return 'stone';
+ if(theme==='se-marsh'&&tile!=='=')return 'grass';
+ if(theme==='se-port'&&tile!=='=')return 'grass';
  if(theme==='west-shoal')return 'sand';
  if(['west-grass','west-azure','west-lane','west-dots','west-terrace'].includes(theme)&&tile!=='=')return 'grass';
  if(tile==='+'||world.siteAt?.(x,y)?.form?.startsWith('forest-'))return 'wood';

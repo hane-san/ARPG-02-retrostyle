@@ -30,7 +30,7 @@ test('western light advances only during visible cliff time, never backwards or 
  for(let i=1;i<=900;i++)c.update(900000+i*200,true);assert.equal(c.phase,1);
 });
 test('all twelve pieces develop for 60–120 seconds with independent melodic answers and orchestration',()=>{
- assert.equal(MUSIC_LIBRARY.length,51);const fingerprints=new Set();
+ assert.equal(MUSIC_LIBRARY.length,53);const fingerprints=new Set();
  for(let i=45;i<51;i++)for(const phase of [1,2]){const score=MUSIC_LIBRARY[i],p=phase===1?score.ally:score.hostile,t=buildTrack(i,phase);assert.notDeepEqual(p.a,p.b);assert.equal(p.a.length,16);assert.ok(t.seconds>=60&&t.seconds<=120);fingerprints.add(JSON.stringify([p.a,p.b,p.chords,p.meter,p.lead,p.arp]));for(let section=0;section<4;section++)assert.ok(t.events.some(e=>e.beat>=section*p.meter*8&&e.beat<(section+1)*p.meter*8));}
  assert.equal(fingerprints.size,12);
  const d=createJourneyMusicDirector({settleMs:650,minHoldMs:1600});assert.equal(d.update('pilgrim-19',0),'pilgrim-19');assert.equal(d.update('pilgrim-20',1700),null);assert.equal(d.update('pilgrim-19',1800),null);assert.equal(d.update('pilgrim-20',1900),null);assert.equal(d.update('pilgrim-20',2549),null);assert.equal(d.update('pilgrim-20',2550),'pilgrim-20');assert.equal(d.update('pilgrim-20',5000),null);

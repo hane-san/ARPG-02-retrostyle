@@ -1,3 +1,4 @@
+import {drawLandscapeFeet,drawLandscapeCanopies} from './landscape-objects.js';
 import {westernAt} from './western-world.js';
 import {createWesternLight,drawWesternSky,drawWesternWeather} from './western-art.js';
 import {createPilgrimTrails,drawPilgrimTrails,pilgrimStepTile} from './pilgrimage-ground.js';
@@ -29,7 +30,7 @@ import {installJourneyUI} from './journey-ui.js';
 import {createJourneyFoley} from './journey-foley.js';
 import {journeySoundSources} from './journey-curios.js';
 import {createAmbienceDirector} from './journey-ambience.js';
-import {resolveGameMode} from './game-mode.js';
+import {resolveGameMode,useComposedCamera} from './game-mode.js';
 import {createJourneyCamera,journeyCameraScene,easeJourneyCamera,easeJourneyFollowCamera,createPilgrimageFollower} from './journey-camera.js';
 import {createDeadzonePilgrimageFollower} from './journey-deadzone-camera.js';
 import {createTyper} from './dialogue-typer.js';
@@ -44,8 +45,8 @@ const JOURNEY_MODE=gameMode==='journey';
 const modeParams=new URLSearchParams(window.location.search);
 const PREVIOUS_ATLAS=modeParams.get('atlas')==='previous'||modeParams.get('maze')==='turns';
 const PILGRIMAGE_MODE=JOURNEY_MODE&&!PREVIOUS_ATLAS;
-// A/B camera trial: original directional follow is still the default.
-const DEADZONE_CAMERA_TRIAL=PILGRIMAGE_MODE&&modeParams.get('camera')==='deadzone';
+// #108 adopts the composed follower; ?camera=directional keeps the former one.
+const DEADZONE_CAMERA_TRIAL=PILGRIMAGE_MODE&&useComposedCamera(window.location.search);
 const mazeTrial=JOURNEY_MODE?createMazeTrial(PILGRIMAGE_MODE?'':window.location.search):null;
 const PROTOTYPE_MODE=gameMode==='prototype';
 const worlds={tidal:JOURNEY_MODE?null:PROTOTYPE_MODE?makePrototypeWorld():makeWorld(),silk:null,journey:JOURNEY_MODE?(PILGRIMAGE_MODE?makePilgrimageWorld():makeJourneyWorld()):null};
@@ -110,9 +111,9 @@ if(JOURNEY_MODE){
  if(PILGRIMAGE_MODE){
   const compare=document.createElement('p');compare.className='secondary camera-trial-links';
   compare.append('カメラ比較試作：',document.createElement('br'));
-  for(const [href,label] of [['./','通常の追従'],['./?camera=deadzone','デッドゾーン（画面を落ち着かせる）']]){
+  for(const [href,label,composed] of [['./','落ち着いた追従（標準）',true],['./?camera=directional','以前の追従（比較）',false]]){
    const link=document.createElement('a');link.href=href;link.textContent=label;
-   if(DEADZONE_CAMERA_TRIAL===href.includes('deadzone'))link.setAttribute('aria-current','page');
+   if(DEADZONE_CAMERA_TRIAL===composed)link.setAttribute('aria-current','page');
    compare.append(link,document.createTextNode('　'));
   }
   compare.append(document.createElement('br'),'比較切替では再読込され、現在の旅の位置は引き継がれません。');
@@ -486,7 +487,7 @@ function paint(t){
  for(const b of BRIDGES)
   if(b.x1<=right&&b.x2>=left&&b.y1<=bottom&&b.y2>=top)bridgeArt(ctx,b,t);
  if(PILGRIMAGE_MODE)drawPilgrimTrails(ctx,pilgrimTrails.visible(t),t);
- if(PILGRIMAGE_MODE)drawPilgrimDecor(ctx,world,{left,right,top,bottom});
+ if(PILGRIMAGE_MODE){drawPilgrimDecor(ctx,world,{left,right,top,bottom});drawLandscapeFeet(ctx,world,{left,right,top,bottom});}
  else if(JOURNEY_MODE)drawJourneyAtmosphere(ctx,{left,right,top,bottom},t);
  // Landmarks marking the portals at the far end of each bridge.
  for(const portal of world.transitions||[]){
@@ -511,7 +512,7 @@ function paint(t){
   objects.push({y:n.y+.5,render:()=>drawNpc(ctx,n,t)});
  objects.push({y:hero.py+.7,render:()=>drawHero(ctx,t)});
  objects.sort((a,b)=>a.y-b.y);for(const obj of objects)obj.render();
- if(PILGRIMAGE_MODE)drawForestCanopies(ctx,world,{left,right,top,bottom},hero);
+ if(PILGRIMAGE_MODE){drawForestCanopies(ctx,world,{left,right,top,bottom},hero);drawLandscapeCanopies(ctx,world,{left,right,top,bottom},hero);}
  drawDestination(ctx,t);
  ctx.restore();
  const vignette=ctx.createRadialGradient(screen.w*.5,screen.h*.48,screen.h*.2,screen.w*.5,screen.h*.5,Math.max(screen.w,screen.h)*.75);

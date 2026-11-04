@@ -1,7 +1,7 @@
 import {limitCamera} from './camera-limits.js';
 import {pilgrimageForwardLead} from './journey-camera.js';
 
-// Issue #104: optional comparison camera, not a replacement for the live default.
+// Issue #104 trial, selected as the current pilgrimage's default in #108.
 // A stable dead zone makes each small outdoor scene feel composed without
 // breaking the continuous journey. Nothing in this director changes zoom.
 export function deadzoneThreshold(viewport,axis,tile=32){
