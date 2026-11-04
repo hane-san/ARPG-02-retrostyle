@@ -1,3 +1,6 @@
+import {CORE_SKY_STUDIES} from './landscape-sky.js';
+import {extendPilgrimageBanks} from './pilgrimage-landforms.js';
+import {TRIAL_WAYSTONE} from './trial-travel.js';
 import {roundLandscapeTips} from './landscape-geometry.js';
 import {SOUTHEAST_STUDIES,SOUTHEAST_SITES,SOUTHEAST_NPCS,carveSoutheast} from './southeast-world.js';
 import {plantLandscapeObjects} from './landscape-objects.js';
@@ -21,7 +24,7 @@ const chapterData=[
  [0,'白い船着場','帰りの舟を、ここに結ぶ','harbour',['#b6c9bc','#e2dcc5','#729ba6','#8a9e92'],'30:1','13:1'],
  [2,'輪を結ぶ森市','木陰の軒に、色布と笑い声が揺れる','forest',['#a8bd91','#ebd7ad','#7aa99b','#718f72'],'18:1','32:1'],
  [5,'水を渡す庭','三つの溝へ、同じ水を分ける','garden',['#a6c5b7','#dce1c9','#74a7a4','#7b9c91'],'42:1','23:1'],
- [8,'赤い裂け目の街道','岩の切れ目に、空が残る','canyon',['#c6ac9b','#ead2b1','#92a5aa','#a08b85'],'36:1','36:2'],
+ [8,'赤い裂け目の街道','岩の切れ目に、空が残る','canyon',['#c6ac9b','#ead2b1','#92a5aa','#a08b85'],'53:2','36:1','36:2'],
  [11,'雲の上の水尺','高さだけが、水を覚えている','ridge',['#bdcbd0','#e7dfcf','#8ba7bb','#929eaa'],'41:2','27:1'],
  [14,'間を測る列石','石よりも、石と石の間が大きい','monolith',['#a5b7b7','#d1d2c0','#819d9e','#6d7d87'],'43:1','7:2'],
  [17,'水の失せた七段','同じ器の底を、今は歩ける','dry',['#d2c7ad','#eee0bd','#a2b4ad','#aaa58e'],'42:2','27:2'],
@@ -36,7 +39,7 @@ export const PILGRIM_ZONES=chapterData.map(([at,name,sub,theme,palette,...music]
  const point=PILGRIM_ROUTE[at];return {id:'pilgrim-'+i,index:i,at,name,chartName:['船着場','森市','水庭','裂け目','雲上','列石','七段','白い舟','宿道','分水嶺','閉殿','帝都','最後の器'][i],sub,theme,palette,music:[...new Set([...music,'29:1','23:2'])].slice(0,3),cx:point.x,cy:point.y,label:i===0?{x:point.x-3,y:point.y-19}:i===9?{x:point.x+40,y:point.y+13}:i===12?{x:point.x-20,y:point.y+16}:{x:point.x+9,y:point.y-7}};
 });
 const chapter=i=>{let n=0;for(let k=1;k<PILGRIM_ZONES.length;k++)if(i>=PILGRIM_ZONES[k].at)n=k;return n;};
-export const PILGRIM_BLOCKED=new Set(['L','~','X','pil-wall','west-wall','west-sky','se-wall']);
+export const PILGRIM_BLOCKED=new Set(['L','~','X','pil-wall','west-wall','west-sky','se-wall','pil-sky']);
 export const PILGRIM_START={...PILGRIM_ROUTE[0]};
 const names=['船着場の待合','森市の輪の台','水を渡す三つの器','風を通す裂け門','雲上の水尺','間を測る巨石','水を失った七段','高い桟橋の影','青い灯の宿','静かな分水器','扉のない受水殿','帝都の外郭門','最後の大きな器'];
 const forms=['tea','forest-wheel','garden','arch','stairs','monolith','garden','pier','tea','wheel','sealed','gate','citadel'];
@@ -86,7 +89,7 @@ for(const [k,d] of DETOURS.entries()){
 }
 // Integrate old twilight and shore studies rather than duplicating their regions.
 for(const z of WEST_STUDIES){const meta=westernZone(z);if(z.index<PILGRIM_ZONES.length){const old=PILGRIM_ZONES[z.index];Object.assign(old,meta,{theme:old.theme});}else PILGRIM_ZONES.push(meta);}
-PILGRIM_SITES.push(...WEST_SITES,...SOUTHEAST_SITES);PILGRIM_NPCS.push(...WEST_NPCS,...SOUTHEAST_NPCS);
+PILGRIM_SITES.push(...WEST_SITES,...SOUTHEAST_SITES,TRIAL_WAYSTONE);PILGRIM_NPCS.push(...WEST_NPCS,...SOUTHEAST_NPCS);
 PILGRIM_ZONES.push(...SOUTHEAST_STUDIES);
 const hash=(x,y)=>{let n=Math.imul(x+117,374761393)^Math.imul(y+59,668265263);n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967295;};
 export function makePilgrimageWorld(){
@@ -121,7 +124,11 @@ export function makePilgrimageWorld(){
  carveDetours({tiles,regions,w,h,inside,set:(x,y,t)=>{tiles[y][x]=t;},zoneIndex:DETOUR_ZONE_START,isOpen:(x,y)=>tiles[y][x]!=='X'&&tiles[y][x]!=='L'});
  carveWestern({tiles,regions,w,h});
  carveSoutheast({tiles,regions,w,h});
+ extendPilgrimageBanks({tiles,regions,routeDistance,w,h,sites:PILGRIM_SITES,zones:PILGRIM_ZONES});
  roundLandscapeTips(tiles,w,h,[...PILGRIM_NPCS,...PILGRIM_SITES.map(s=>s.entrance)]);
+ // Open only previously blocked air at the cloud ridge. Existing floors and
+ // every original lake tile remain unchanged; foreground chunks mask the view.
+ for(const z of CORE_SKY_STUDIES)for(let y=z.y;y<=z.y+z.h;y++)for(let x=z.x;x<=z.x+z.w;x++)if(tiles[y][x]==='X')tiles[y][x]='pil-sky';
  // The same market colour and selection cover its western approach and all shops.
  for(let y=24;y<=50;y++)for(let x=125;x<=157;x++)if(!PILGRIM_BLOCKED.has(tiles[y][x]))regions[y*w+x]=1;
  // Real architectural collision: solid piers, open floors, and legal doorsteps.

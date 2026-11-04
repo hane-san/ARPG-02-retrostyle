@@ -32,5 +32,5 @@ test('all previous 102 pieces retain exact score data and event output; four new
  // main 3641c15, before #108. This also protects the first 12 western pieces.
  assert.equal(hash(JSON.stringify(MUSIC_LIBRARY.slice(0,51))),'086c3f82b2fd40be65d54bc959eb96c72ec4223ca4d9725415f2d13c4395d806');
  assert.equal(hash(JSON.stringify(Array.from({length:51},(_,i)=>[buildTrack(i,1),buildTrack(i,2)]))),'9e1f4cb2616be41bb3a4d81e87affb56723999f91282084dbe001f24285afc43');
- assert.equal(MUSIC_LIBRARY.length*2,106);const identities=new Set();for(const id of [51,52])for(const phase of [1,2]){const t=buildTrack(id,phase),p=MUSIC_LIBRARY[id][phase===1?'ally':'hostile'];assert.ok(t.seconds>=60&&t.seconds<=120);assert.notDeepEqual(p.a,p.b);identities.add(JSON.stringify([p.a,p.b,p.chords,p.meter,p.lead]));}assert.equal(identities.size,4);
+ assert.equal(MUSIC_LIBRARY.length*2,110);const identities=new Set();for(const id of [51,52])for(const phase of [1,2]){const t=buildTrack(id,phase),p=MUSIC_LIBRARY[id][phase===1?'ally':'hostile'];assert.ok(t.seconds>=60&&t.seconds<=120);assert.notDeepEqual(p.a,p.b);identities.add(JSON.stringify([p.a,p.b,p.chords,p.meter,p.lead]));}assert.equal(identities.size,4);
 });

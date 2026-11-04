@@ -1,3 +1,4 @@
+import {ENERGY_SCORES,buildEnergyTrack,scheduleEnergyNote} from './energy-music.js';
 import {SOUTHEAST_SCORES} from './southeast-music.js';
 import {WESTERN_SCORES,buildWesternTrack,scheduleWesternNote} from './western-music.js';
 import {IMPERIAL_SCORES} from './imperial-music.js';
@@ -1328,11 +1329,12 @@ export const BONUS_SCORES=[
 // The original 68 pieces (34 scores, two moods each) keep their numbers; later additions
 // append after them so every saved or listed 'score:phase' reference stays valid.
 export const ORIGINAL_SCORE_COUNT=34;
-export const MUSIC_LIBRARY=[...SCORES,...BONUS_SCORES,...EXTRA_SCORES,...SILK_SCORES,...GROK_SCORES,...UNEASY_SCORES,...STEPPE_SCORES,...IMPERIAL_SCORES,...WESTERN_SCORES,...SOUTHEAST_SCORES];
-export const IMPERIAL_SCORE_START=MUSIC_LIBRARY.length-IMPERIAL_SCORES.length-WESTERN_SCORES.length-SOUTHEAST_SCORES.length;
+export const MUSIC_LIBRARY=[...SCORES,...BONUS_SCORES,...EXTRA_SCORES,...SILK_SCORES,...GROK_SCORES,...UNEASY_SCORES,...STEPPE_SCORES,...IMPERIAL_SCORES,...WESTERN_SCORES,...SOUTHEAST_SCORES,...ENERGY_SCORES];
+export const IMPERIAL_SCORE_START=MUSIC_LIBRARY.length-IMPERIAL_SCORES.length-WESTERN_SCORES.length-SOUTHEAST_SCORES.length-ENERGY_SCORES.length;
 const degree=(root,scale,n)=>root+12*Math.floor(n/7)+scale[((n%7)+7)%7];
 export function buildTrack(mapId,phase=1){
  const score=MUSIC_LIBRARY[mapId]||SCORES[0],side=phase===1?'ally':'hostile',part=score[side],bar=score.meter,length=bar*32;
+ if(score.energy)return buildEnergyTrack(mapId,phase,score);
  if(score.western)return buildWesternTrack(mapId,phase,score);
  const rhythm=part.rhythm||(bar===3?[.5,.5,.5,.5,1,.5,.5,2]:[1,.5,.5,1,1,1,1,2]),events=[];
  const push=(beat,duration,n,voice,velocity,pan=0)=>events.push({beat,duration,midi:degree(score.root,part.scale,n),voice,velocity,pan});
@@ -1353,6 +1355,7 @@ export function buildTrack(mapId,phase=1){
 // Shared by realtime playback and deterministic OfflineAudioContext verification.
 // Keep the gain envelope continuous: stepping a sounding oscillator's gain creates a click.
 export function scheduleNote(context,destination,event,time,secondsPerBeat){
+ if(event.voice==='pulse')return scheduleEnergyNote(context,destination,event,time,secondsPerBeat,holdEnvelopeAt);
  if(['bell','box','piano','reed','pluck'].includes(event.voice))return scheduleWesternNote(context,destination,event,time,secondsPerBeat,holdEnvelopeAt);
  const duration=Math.max(.035,event.duration*secondsPerBeat),gain=context.createGain(),filter=context.createBiquadFilter(),osc=context.createOscillator();
  const frequency=440*2**((event.midi-69)/12),isPad=event.voice==='pad',plucked=event.voice==='harp',drum=event.voice==='drum';

@@ -1,3 +1,5 @@
+import {CORE_SKY_STUDIES,drawLandscapeSky} from './landscape-sky.js';
+import {TRIAL_WAYSTONE,createTrialBag,placeTrialTraveller} from './trial-travel.js';
 import {drawLandscapeFeet,drawLandscapeCanopies} from './landscape-objects.js';
 import {westernAt} from './western-world.js';
 import {createWesternLight,drawWesternSky,drawWesternWeather} from './western-art.js';
@@ -52,7 +54,7 @@ const PROTOTYPE_MODE=gameMode==='prototype';
 const worlds={tidal:JOURNEY_MODE?null:PROTOTYPE_MODE?makePrototypeWorld():makeWorld(),silk:null,journey:JOURNEY_MODE?(PILGRIMAGE_MODE?makePilgrimageWorld():makeJourneyWorld()):null};
 let currentWorldId=JOURNEY_MODE?'journey':'tidal',world=worlds[currentWorldId];
 // Small art pieces are things to inspect, not places: they never inflate the discovery count (Issue #51).
-const isCurio=site=>site.kind==='art';
+const isCurio=site=>site.kind==='art'||site.kind==='trial';
 const DISCOVERY_TOTAL=JOURNEY_MODE||PROTOTYPE_MODE?world.sites.filter(s=>!isCurio(s)).length:TIDAL_SITES.length+SILK_SITES.length;
 let W=world.w,H=world.h,ZONES=world.zones,SITES=world.sites,NPCS=world.npcs,BRIDGES=world.bridges;
 const storage={
@@ -76,6 +78,7 @@ const journeyView=JOURNEY_MODE?createJourneyView(stage,world):null;
 let panTarget=null;
 let screen={w:1,h:1,dpr:1},last=0,zoneId='',noticeTimer=0,dialogue=null,readingPress=null;
 const westernLight=createWesternLight();
+const trialBag=PILGRIMAGE_MODE?createTrialBag(world):null;let trialUsed=false;
 const discovered=new Set(),visitedZones=new Set(),cache=new Map(),CHUNK=16,MAX_CHUNKS=42;
 const palette={'~':'#497d93','.':'#8d9f7c',',':'#cbbc96',f:'#567864','=':'#baa986','+':'#ae987a',s:'#98b0b0',n:'#576d88',p:'#b7a993','#':'#58605d',M:'#9eb88a',A:'#aa986e',R:'#7f9188',F:'#3e6559',G:'#73a49e',P:'#d1d4c5',C:'#77adb7',D:'#d2b78e',T:'#bc856d',Q:'#789e9f',B:'#496d78',K:'#424563',E:'#528eae'};
 // The previous two worlds remain explicitly available; the grassland journey is the current entrance.
@@ -118,6 +121,12 @@ if(JOURNEY_MODE){
   }
   compare.append(document.createElement('br'),'比較切替では再読込され、現在の旅の位置は引き継がれません。');
   $('helpPanel').querySelector('.sheet').append(compare);
+  const trialHelp=document.createElement('p');trialHelp.className='secondary';trialHelp.textContent='船着場の待合のそばに、試遊用の道標があります。19の土地からランダムに選び、着いた先で普通に歩けます。';
+  const back=document.createElement('button');back.id='trialHelpReturn';back.className='line-btn';back.textContent='試遊の道標へ戻る';back.hidden=true;back.addEventListener('click',()=>performTrialWarp({id:'pilgrim-0',name:'白い船着場',...TRIAL_WAYSTONE.entrance}));
+  $('helpPanel').querySelector('.sheet').append(trialHelp,back);
+  const actions=document.createElement('div');actions.id='trialActions';actions.className='trial-actions';actions.hidden=true;actions.setAttribute('role','group');actions.setAttribute('aria-label','試遊の移動');
+  for(const [action,id,text] of [['random','trialJump','ランダムに飛ぶ'],['return','trialReturn','船着場に戻る']]){const button=document.createElement('button');button.id=id;button.dataset.trialAction=action;button.textContent=text;actions.append(button);}
+  $('dialogue').append(actions);
  }
  const mazeHelp=document.createElement('p');mazeHelp.className='secondary';
  mazeHelp.innerHTML='<strong>迷路の歩き方を比べる</strong><br>'+
@@ -291,8 +300,8 @@ function chunk(cx,cy){
  const key=cx+','+cy;
  if(cache.has(key)){const value=cache.get(key);cache.delete(key);cache.set(key,value);return value;}
  const cvs=document.createElement('canvas');cvs.width=CHUNK*TILE;cvs.height=CHUNK*TILE;
- // Sky openings need transparent chunks; original terrain keeps opaque canvases.
- const c=cvs.getContext('2d',{alpha:PILGRIMAGE_MODE&&cy*CHUNK>=288});c.imageSmoothingEnabled=false;
+ // Both western skies and the northern cloud ridge need transparent chunks.
+ const c=cvs.getContext('2d',{alpha:PILGRIMAGE_MODE});c.imageSmoothingEnabled=false;
  c.translate(-cx*CHUNK*TILE,-cy*CHUNK*TILE);
  for(let y=cy*CHUNK;y<Math.min(H,(cy+1)*CHUNK);y++)
   for(let x=cx*CHUNK;x<Math.min(W,(cx+1)*CHUNK);x++)paintTile(c,x,y,world.tileAt(x,y));
@@ -479,7 +488,7 @@ function paint(t){
   top=Math.max(0,Math.floor((camera.y-screen.h/(2*camera.zoom))/TILE)-3),
   right=Math.min(W-1,Math.ceil((camera.x+screen.w/(2*camera.zoom))/TILE)+3),
   bottom=Math.min(H-1,Math.ceil((camera.y+screen.h/(2*camera.zoom))/TILE)+3);
- if(PILGRIMAGE_MODE)drawWesternSky(ctx,camera,screen,westernLight.phase);
+ if(PILGRIMAGE_MODE){drawWesternSky(ctx,camera,screen,westernLight.phase,reduceMotion.matches?0:t);for(const z of CORE_SKY_STUDIES)drawLandscapeSky(ctx,z,camera,screen,0,reduceMotion.matches?0:t);}
  for(let cy=Math.floor(top/CHUNK);cy<=Math.floor(bottom/CHUNK);cy++)
   for(let cx=Math.floor(left/CHUNK);cx<=Math.floor(right/CHUNK);cx++)
    ctx.drawImage(chunk(cx,cy),cx*CHUNK*TILE,cy*CHUNK*TILE);
@@ -586,6 +595,7 @@ function onArrive(){
  if(!obj)return;
  if(obj.kind==='npc'){openDialogue(obj.item.name,obj.item.role,JOURNEY_MODE?obj.item.lines:(currentWorldId==='silk'?SILK_TALK:TALK)[obj.item.id]||obj.item.lines);return;}
  if(obj.kind==='site'){
+  if(PILGRIMAGE_MODE&&obj.item.id===TRIAL_WAYSTONE.id){openTrialTravel();return;}
   const fresh=!isCurio(obj.item)&&!discovered.has(obj.item.id);
   if(fresh){discovered.add(obj.item.id);updateDiscoveries();if(!PILGRIMAGE_MODE)sfx.play('heal');}
   if(JOURNEY_MODE){
@@ -603,6 +613,24 @@ function onArrive(){
     '森から港へ、4つの場所を巡りました。小さな旅はここでひと区切り。まだ歩いていても大丈夫です。':''
   ]);
  }
+}
+function openTrialTravel(arrived=null){
+ if(!PILGRIMAGE_MODE)return;
+ openDialogue(arrived?'試遊：'+arrived.name:TRIAL_WAYSTONE.name,'試遊用の移動',[arrived?'案内を閉じると、ここから歩き出せます。別の土地へ飛ぶこともできます。':'19の土地から行き先を選びます。ひと巡りするまで、同じ土地ばかり続きません。']);
+ dialogue.trial=true;$('dialogueNext').hidden=true;$('trialActions').hidden=false;
+ $('trialReturn').hidden=!trialUsed||Math.hypot(hero.x-TRIAL_WAYSTONE.entrance.x,hero.y-TRIAL_WAYSTONE.entrance.y)<1;
+ placeJourneyDialogue();
+}
+function performTrialWarp(target){
+ if(!PILGRIMAGE_MODE)return;
+ closeDialogue();closePanels(false);journeyView?.close();cancelCameraGesture();readingPress=null;
+ placeTrialTraveller(world,hero,target);pilgrimageFollow.reset();panTarget=null;
+ const now=performance.now();let scene=journeyCameraScene(world,hero,journeyCamera.scene);
+ if(reduceMotion.matches&&['journey-reveal','journey-monument'].includes(scene))scene='journey-scenic-wide';
+ camera.zoom=journeyCamera.arrive(scene,now);camera.x=(hero.x+.5)*TILE;camera.y=(hero.y+.5)*TILE;confineCamera(camera.x,camera.y,.08);
+ journeyMusic.arrive(target.id,now);imperialQuiet=pilgrimQuiet(world,{x:hero.x,y:hero.y});
+ $('trackSelect').value=pickJourneyArrivalTrack(target.id);applyTrack();zoneId='';updateZone();syncTravelState();lastPaint=-Infinity;
+ trialUsed=true;$('trialHelpReturn').hidden=false;openTrialTravel(target);canvas.focus({preventScroll:true});
 }
 function walkToNpc(n){
  let best=null,lowest=Infinity;
@@ -639,6 +667,7 @@ function handleTap(e){
  const handle=pilgrimPlayHandle(world,p);
  if(handle){startWalk(handle.entrance,{kind:'site',item:handle});return;}
  const site=world.siteAt(p.x,p.y)||pilgrimArtHit(world,p);
+ if(PILGRIMAGE_MODE&&site?.id===TRIAL_WAYSTONE.id){startWalk(site.entrance,{kind:'site',item:site});return;}
  if(pilgrimFloor(world,site,p)||imperialWalkableFloor(world,site,p)){startWalk(p);return;}
  if(site){startWalk(site.entrance,{kind:'site',item:site});return;}
  const bridge=world.bridgeAt(p.x,p.y);
@@ -674,6 +703,7 @@ function dialogueInput(){
 }
 function openDialogue(name,role,lines){
  dialogue={name,role,lines:lines.filter(Boolean),index:0,openedAt:performance.now()};
+ if($('trialActions'))$('trialActions').hidden=true;$('dialogueNext').hidden=false;
  $('dialogueName').textContent=name;$('dialogueRole').textContent=role;
  showDialoguePage();
  $('dialogueNext').innerHTML=JOURNEY_MODE?(dialogue.lines.length===1?'とじる <span>×</span>':'つづき <span>›</span>'):'タップしてつづく <span>›</span>';
@@ -689,7 +719,7 @@ function placeJourneyDialogue(){
  const cardHeight=card.getBoundingClientRect().height;
  card.classList.toggle('journey-dialogue-above',heroY>screen.h-cardHeight-42&&heroY>cardHeight+50);
 }
-function closeDialogue(){dialogue=null;$('dialogue').classList.add('hidden');}
+function closeDialogue(){dialogue=null;$('dialogue').classList.add('hidden');if($('trialActions'))$('trialActions').hidden=true;$('dialogueNext').hidden=false;}
 function advanceDialogue(){
  if(!dialogue)return;
  dialogue.index++;
@@ -716,6 +746,8 @@ document.addEventListener('click',e=>{
  e.preventDefault();e.stopImmediatePropagation();
  if(e.target.closest('#dialogueClose')){closeDialogue();return;}
  if(performance.now()-dialogue.openedAt<180)return;
+ const action=e.target.closest('[data-trial-action]');
+ if(dialogue.trial&&action){performTrialWarp(action.dataset.trialAction==='return'?{id:'pilgrim-0',name:'白い船着場',...TRIAL_WAYSTONE.entrance}:trialBag.next(world.zoneAt(hero.x,hero.y).id));return;}
  dialogueInput();
 },true);
 
@@ -884,6 +916,7 @@ canvas.addEventListener('dragstart',e=>e.preventDefault());
 window.addEventListener('keydown',e=>{
  if(e.key==='Escape'){closeDialogue();closePanels();journeyView?.close(true);return;}
  if(dialogue){
+  if(dialogue.trial&&e.target.closest?.('[data-trial-action]')&&['Enter',' '].includes(e.key))return;
   if(e.key==='Enter'||e.key===' '){e.preventDefault();dialogueInput();return;}
   if(JOURNEY_MODE&&['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d'].includes(e.key))closeDialogue();
   else return;

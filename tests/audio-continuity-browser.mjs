@@ -22,7 +22,7 @@ export async function checkAudioContinuity(browser,origin){
     return (await rendered).getChannelData(0);
    }
    const results=[];
-   for(const voice of ['pad','harp','flute','bell','box','piano','reed','pluck']){
+   for(const voice of ['pad','harp','flute','bell','box','piano','reed','pluck','pulse']){
     const reference=await render(voice);
     for(const fallback of [false,true]){
      const actual=await render(voice,true,fallback);
@@ -38,7 +38,7 @@ export async function checkAudioContinuity(browser,origin){
    assert.ok(result.beforeError<1e-6,'stopping preserves every sample before release: '+JSON.stringify(result));
    assert.equal(result.tail,0,'retired notes end without being revived by later stop calls');
   }
-  console.log('BGM continuity PCM passed: pad/harp/flute, native and fallback, unchanged pre-release waveform and silent retirement.');
+  console.log('BGM continuity PCM passed: nine voices including pulse, native and fallback, unchanged pre-release waveform and silent retirement.');
   return results;
  }finally{await page.close();}
 }

@@ -1,15 +1,15 @@
 import {landscapeShape,landscapeNoise,segmentDistance} from './landscape-geometry.js';
 
 export const SOUTHEAST_STUDIES=[
- {key:'mesa',index:29,name:'赤砂の風窓台地',chartName:'風窓台地',x:250,y:290,w:218,h:125,cx:366,cy:366,music:['51:2'],palette:['#c5a589','#ead2ac','#9eb9b5','#967963'],sub:'地層を回り込むと、岩の窓に次の空が見える',cameraScene:'journey-scenic-wide'},
+ {key:'mesa',index:29,name:'赤砂の風窓台地',chartName:'風窓台地',x:250,y:290,w:218,h:125,cx:366,cy:366,music:['54:1'],palette:['#c5a589','#ead2ac','#9eb9b5','#967963'],sub:'地層を回り込むと、岩の窓に次の空が見える',cameraScene:'journey-scenic-wide'},
  {key:'port',index:30,name:'木陰の河港街',chartName:'河港街',x:250,y:430,w:218,h:140,cx:410,cy:506,music:['52:1'],palette:['#a9b99a','#ead6ad','#83b3b6','#618578'],sub:'舟と木陰、開いた食堂へつながる両岸の道'},
  {key:'marsh',index:31,name:'潮風の葦原',chartName:'葦原',x:246,y:574,w:223,h:138,cx:359,cy:648,music:['51:1'],palette:['#a7b9a6','#e2d8b5','#8bafb3','#698d86'],sub:'板道が水の枝を渡り、葦の穂先だけが揺れる'},
  {key:'coast',index:32,name:'潮の石橋海岸',chartName:'石橋海岸',x:246,y:724,w:224,h:98,cx:405,cy:779,music:['52:2'],palette:['#c3c7bb','#eee1c5','#8cabbc','#879a9a'],sub:'潮だまりの向こう、大きな岩の橋が海へ続く',cameraScene:'journey-scenic-wide'}
 ].map(z=>({...z,id:'pilgrim-'+z.index,theme:'se-'+z.key,at:Infinity,western:true,southeast:true,label:{x:z.cx,y:z.cy+8}}));
 export const southeastAt=(x,y)=>x<242||y<288?undefined:SOUTHEAST_STUDIES.find(z=>x>=z.x&&x<=z.x+z.w&&y>=z.y&&y<=z.y+z.h);
-export const portRiver=y=>410+12*Math.sin((y-430)*.035);
-export const marshRiver=y=>397-(y-574)*.45+18*Math.sin((y-574)*.04);
-export const coastShore=y=>422-(y-724)*.5+10*Math.sin((y-724)*.04);
+export const portRiver=y=>410+15*Math.sin((y-430)*.035)+4*Math.sin((y-430)*.083);
+export const marshRiver=y=>397-(y-574)*.45+17*Math.sin((y-574)*.04)+4*Math.sin((y-574)*.09);
+export const coastShore=y=>422-(y-724)*.5+12*Math.sin((y-724)*.04)+4*Math.sin((y-724)*.11);
 const site=(key,name,form,x,y,w,h,entrance,solid,desc,sound)=>({id:'se-'+key,kind:'pilgrimage',name,form:'se-'+form,x,y,w,h,entrance,solid,blocking:false,artTop:7,chapter:({mesa:29,port:30,marsh:31,coast:32}[key.split('-')[0]]),desc,aside:'手前の足元と、向こうへ抜ける道を見比べられる。',sound});
 const pillars=(w,h)=>[{x:0,y:h-2,w:2,h:2},{x:w-2,y:h-2,w:2,h:2}];
 export const SOUTHEAST_SITES=[
@@ -39,8 +39,8 @@ export const SOUTHEAST_WALKS=[
  {region:29,points:[[238,365],[270,380],[303,378],[335,389],[366,366],[423,386],[438,420]]},
  {region:30,points:[[438,420],[443,450],[432,487],[410,506],[391,529],[363,548],[320,554],[238,549]],bridge:'se-boardwalk'},
  {region:30,points:[[238,477],[278,467],[321,486],[375,487],[432,487]],bridge:'se-boardwalk'},
- {region:30,points:[[378,482],[389,487],[403,502],[410,506]]},
- {region:30,points:[[381,518],[391,519],[410,506]]},
+ {region:30,points:[[378,482],[389,487],[403,502],[410,506]],bridge:'se-boardwalk'},
+ {region:30,points:[[381,518],[391,519],[410,506]],bridge:'se-boardwalk'},
  {region:30,points:[[432,497],[433,500],[439,519],[422,547]],bridge:'se-boardwalk'},
  {region:30,points:[[422,547],[432,567],[432,587],[422,620]],bridge:'se-boardwalk'},
  {region:31,points:[[363,548],[347,577],[329,606],[300,626],[322,646],[336,654],[359,648],[383,648],[422,620]],bridge:'se-boardwalk'},
@@ -68,7 +68,7 @@ export function carveSoutheast({tiles,regions,w,h}){
    const shape=landscapeShape(z,x,y);if(shape>1.18)continue;
    let t=shape<1?'se-ground':'se-wall';
    if(z.key==='port'&&Math.abs(x-portRiver(y))<5.5)t='L';
-   if(z.key==='marsh'&&(Math.abs(x-marshRiver(y))<6.5||Math.abs(x-marshRiver(y)+55)<2.8||landscapeNoise(x+30,y,18)>.7))t='L';
+   if(z.key==='marsh'&&(Math.abs(x-marshRiver(y))<6.5||Math.abs(x-marshRiver(y)+55+7*Math.sin(y*.055))<2.7+.8*Math.sin(y*.09)||landscapeNoise(x+30,y,18)>.7))t='L';
    if(z.key==='marsh'&&x>440&&shape>.7)t='L';
    if(z.key==='coast'){
     if(x>coastShore(y)||((x-355)/9)**2+((y-766)/6)**2<1)t='L';

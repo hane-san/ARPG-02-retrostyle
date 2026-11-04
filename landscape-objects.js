@@ -5,13 +5,13 @@ const types={cliff:'rock',glass:'flower',grass:'flower',impression:'willow',dots
 export function plantLandscapeObjects(tiles,regions,occupied,w,walkable,sites,npcs){
  const props=[];
  for(const z of [...WEST_STUDIES,...SOUTHEAST_STUDIES])for(let y=z.y+3;y<z.y+z.h-2;y+=3)for(let x=z.x+3;x<z.x+z.w-2;x+=3){
-  const seed=hash(x,y),xx=x+Math.floor(seed*3),yy=y+Math.floor(hash(y,x)*3),kind=types[z.key];
-  if(seed>.46||landscapeNoise(xx,yy,13)<.49||!walkable(xx,yy)||!['west-ground','se-ground'].includes(tiles[yy][xx]))continue;
+  const seed=hash(x,y),xx=x+Math.floor(seed*3),yy=y+Math.floor(hash(y,x)*3),kind=types[z.key]==='rock'&&seed>.25?'boulder':types[z.key];
+  if(seed>.57||landscapeNoise(xx,yy,13)<.44||!walkable(xx,yy)||!['west-ground','se-ground'].includes(tiles[yy][xx]))continue;
   if(sites.some(s=>xx>=s.x-2&&xx<s.x+s.w+2&&yy>=s.y-2&&yy<s.y+s.h+3)||npcs.some(n=>Math.hypot(xx-n.x,yy-n.y)<4)||Math.hypot(xx-z.cx,yy-z.cy)<5)continue;
   // Solid feet only in a roomy clearing: never narrow a corridor or a stair.
   let room=true;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)if(!walkable(xx+dx,yy+dy)||!['west-ground','se-ground'].includes(tiles[yy+dy]?.[xx+dx]))room=false;
-  const solid=room&&['rock','willow','pine','cypress'].includes(kind);
-  if(!room&&['willow','pine','cypress','rock'].includes(kind))continue;
+  const solid=room&&['rock','boulder','willow','pine','cypress'].includes(kind);
+  if(!room&&['willow','pine','cypress','rock','boulder'].includes(kind))continue;
   if(solid)occupied[yy*w+xx]=1;
   props.push({x:xx,y:yy,kind,seed,solid,palette:z.palette,chapter:regions[yy*w+xx]});
  }
@@ -38,7 +38,9 @@ export function drawLandscapeFeet(c,world,bounds){
   const x=d.x*32,y=d.y*32,[g,l,,s]=d.palette;
   if(d.solid){E(c,x+23,y+26,31,9,s+'33');}
   if(['willow','pine','cypress'].includes(d.kind)){
-   c.fillStyle='#796f58';c.fillRect(x+7,y-48,19,80);L(c,x+13,y-28,x-9,y-63,'#796f58',7);L(c,x+21,y-33,x+39,y-80,'#796f58',6);c.fillStyle=l+'55';c.fillRect(x+9,y-22,3,48);
+   c.fillStyle='#796f58';c.fillRect(x+7,y-48,19,80);L(c,x+13,y-28,x-9,y-63,'#796f58',7);L(c,x+21,y-33,x+39,y-80,'#796f58',6);c.fillStyle=l+'55';c.fillRect(x+9,y-22,3,48);for(let j=0;j<4;j++)L(c,x+11+j%2*5,y-12+j*10,x+19,y-18+j*10,s+'77',1);L(c,x+12,y+24,x+2,y+31,'#796f58',3);L(c,x+21,y+26,x+30,y+32,'#796f58',3);
+  }else if(d.kind==='boulder'){
+   P(c,[[x,y+31],[x+1,y+2],[x+8,y-12],[x+23,y-17],[x+31,y-4],[x+32,y+31]],s);P(c,[[x+1,y+2],[x+8,y-12],[x+23,y-17],[x+20,y+12],[x+3,y+25]],g);L(c,x+7,y-10,x+23,y-16,l,2);L(c,x+19,y-9,x+14,y+7,s+'aa',2);L(c,x+14,y+7,x+24,y+12,s+'aa',1);
   }else if(d.kind==='rock'){
    // The whole polygon foot fits the single occupied tile; height is art only.
    P(c,[[x,y+31],[x+2,y-9],[x+12,y-27-d.seed*17],[x+29,y-12],[x+32,y+31]],s);P(c,[[x+2,y-9],[x+12,y-27-d.seed*17],[x+18,y+26],[x,y+31]],g);L(c,x+4,y-8,x+12,y-27-d.seed*17,l,2);
@@ -64,6 +66,7 @@ export function drawLandscapeCanopies(c,world,bounds,hero){
    for(let j=0;j<12;j++)L(c,x-72+j*13,y-104+(j%3)*9,x-63+j*12,y-25+(j%4)*8,g,5);
    for(let j=0;j<6;j++)L(c,x-49+j*17,y-116,x-37+j*17,y-95,l+'66',3);
   }
+  for(let j=0;j<8;j++){const xx=x-34+(j*19)%68,yy=y-115+(j*13)%61;L(c,xx,yy,xx+8,yy-4,l+'66',2);}
   c.restore();
  }
 }

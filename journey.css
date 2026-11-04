@@ -99,3 +99,9 @@
 /* A tall atlas must keep its close control reachable even after choosing a distant land. */
 .journey-mode .map-sheet{scroll-padding-top:64px}
 .journey-mode .map-sheet .sheet-head{position:sticky;top:0;z-index:2;background:var(--journey-paper);padding-block:7px}
+
+/* Trial controls appear only after investigating the explicit waystone. */
+.journey-mode #dialogueNext[hidden],.trial-actions[hidden],#trialReturn[hidden],#trialHelpReturn[hidden]{display:none}
+.trial-actions:not([hidden]){display:flex;gap:8px;margin-top:8px}
+.trial-actions button{flex:1;min-height:44px;padding:7px 9px;border:1px solid #b6c9b8;border-radius:9px;background:#dae5d5;color:#3f645e;font-size:13px}
+.journey-mode .dialogue:has(.trial-actions:not([hidden])){max-height:min(62dvh,300px)}
