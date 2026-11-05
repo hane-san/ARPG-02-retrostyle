@@ -5,7 +5,7 @@ import {drawLandscapeFeet,drawLandscapeCanopies} from './landscape-objects.js';
 import {drawRegionalGroundDetail} from './regional-detail.js';
 import {drawSrpgUnit} from './sprite-srpg.js';
 import {drawVillager} from './sprite-villager.js';
-import {fixedLayout,fixedExitMarker} from './fixed-screens.js';
+import {fixedLayout,fixedExitMarker,FIXED_ROOMS} from './fixed-screens.js';
 
 export const FIXED_SOURCE=WEST_STUDIES.find(z=>z.key==='village');
 const P=(c,p,col)=>{c.fillStyle=col;c.beginPath();p.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();};
@@ -47,7 +47,7 @@ function background(c,room,w,h,layout,time){
  // The distant valley remains separate from the connected walking ground.
  const mist=c.createLinearGradient(0,horizon,0,h);mist.addColorStop(0,'#d9e1ce22');mist.addColorStop(1,'#c4d1b455');R(c,0,horizon,w,h-horizon,mist);
 }
-function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0}={}){
+function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,guides=false}={}){
  const {w,h}=screen,l=fixedLayout(w,h),{sx,sy,proxy,trees}=materialWorld(room),s=l.scale;
  const left=Math.max(0,Math.floor((-64-offsetX/s)/32)),right=Math.min(14,Math.ceil((544-offsetX/s)/32)),top=Math.max(0,Math.floor((-128-offsetY/s)/32)),bottom=Math.min(14,Math.ceil((544-offsetY/s)/32));
  c.save();c.translate(offsetX,offsetY);
@@ -73,25 +73,26 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0}=
  for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++)if(room.tileAt(x,y)==='w'){R(c,x*32+5,y*32+15+Math.sin(time/1600+x)*2,17,1,'#dbe6db88');}
  if(room.house?.landmark){R(c,6*32,5*32,5*32,4,'#e1dcc2');for(let i=0;i<4;i++)R(c,(6+i)*32,5*32+4,2,24,'#b7c5af');}
  if(room.returnStone){const {x,y}=room.returnStone;c.strokeStyle='#f1e6c5';c.lineWidth=3;c.beginPath();c.ellipse((x+.5)*32,(y+.5)*32,20,10,0,0,Math.PI*2);c.stroke();P(c,[[x*32+16,y*32+7],[x*32+22,y*32+16],[x*32+16,y*32+23],[x*32+10,y*32+16]],'#77a7ae');c.font=`${Math.max(14,11/s)}px system-ui`;c.textAlign='center';c.fillStyle='#3e646d';c.fillText('帰りの道標',(x+.5)*32,(y+1.3)*32);}
+ if(guides)drawExitStones(c,room,l.scale);
  drawLandscapeFeet(c,trees,{left:0,right:14,top:0,bottom:14});
  const objects=room.npcs.map(n=>({y:n.y+.5,paint:()=>drawVillager(c,n.x*32,n.y*32,n.color)}));
  if(room.house)objects.push({y:room.house.y+room.house.h,paint:()=>{drawFixedHouse(c,room.house);if(!room.house.landmark){c.strokeStyle='#8c9e92';c.lineWidth=1;c.beginPath();c.moveTo(2*32,8*32);c.lineTo(5.5*32,8*32);c.stroke();for(let i=0;i<4;i++)R(c,(2.2+i*.7)*32,8*32,14,19,['#b8c9c3','#dfc9ab','#a7bac0'][i%3]);}}});
  if(hero)objects.push({y:hero.py+.7,paint:()=>{c.save();c.beginPath();c.rect(0,0,480,480);c.clip();c.translate(0,hero.moving&&time!==0?-Math.abs(Math.sin(hero.stride*9))*1.5:0);drawSrpgUnit(c,{x:hero.px,y:hero.py,team:'ally',acted:false,type:'sword'});R(c,hero.px*32+8,hero.py*32+13,15,3,'#b8d9dc');R(c,hero.px*32+7,hero.py*32+16,5,7,'#7dbac5');c.restore();}});
- objects.sort((a,b)=>a.y-b.y);objects.forEach(o=>o.paint());drawLandscapeCanopies(c,trees,{left:0,right:14,top:0,bottom:14},hero||{px:-100,py:-100});
+ objects.sort((a,b)=>a.y-b.y);objects.forEach(o=>o.paint());drawLandscapeCanopies(c,guides?{...trees,npcs:[...trees.npcs,...Object.keys(room.connections).map(fixedExitMarker)]}:trees,{left:0,right:14,top:0,bottom:14},hero||{px:-100,py:-100});
  if(destination){c.strokeStyle='#fff1c5';c.lineWidth=2;c.beginPath();c.ellipse((destination.x+.5)*32,(destination.y+.5)*32,10,6,0,0,Math.PI*2);c.stroke();}
  // A small edge gap reads as the continuing road, without a development HUD.
  c.restore();c.restore();
 }
 
 // Low road stones and direction plaques belong to the walkable ground.
-function drawExitStones(c,room,l,ox,oy,rooms){
- c.save();c.translate(l.x+ox,l.y+oy);c.scale(l.scale,l.scale);
+function drawExitStones(c,room,scale){
+ c.save();
  for(const [d,id] of Object.entries(room.connections)){
   const m=fixedExitMarker(d),a=d==='N'?-Math.PI/2:d==='S'?Math.PI/2:d==='W'?Math.PI:0;
   c.save();c.translate((m.x+.5)*32,(m.y+.5)*32);c.rotate(a);
   for(const step of [0,21])P(c,[[step-7,-7],[step+2,0],[step-7,7],[step-3,0]],'#698d87');
   c.restore();
-  const text=rooms.find(r=>r.id===id)?.chartName||'',font=Math.max(14,12/l.scale),x=(m.x+.5)*32,y=(m.y+.5)*32+font+10;
+  const text=FIXED_ROOMS.find(r=>r.id===id)?.chartName||'',font=Math.max(14,12/scale),x=(m.x+.5)*32,y=(m.y+.5)*32+font+10;
   c.font=`${font}px system-ui`;c.textAlign='center';const w=c.measureText(text+'へ').width+12;
   R(c,x-w/2,y-font,w,font+5,'#eee6cded');c.fillStyle='#3b6468';c.fillText(text+'へ',x,y);
  }
@@ -113,7 +114,7 @@ export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[r
  for(const r of [...rooms.filter(r=>r.id!==room.id),room]){if(!visible.has(r.id))continue;const ox=(r.col-cx)*stride,oy=(r.row-cy)*stride;
   c.save();c.beginPath();c.rect(l.x+ox,l.y+oy-128*l.scale,l.width,l.height+128*l.scale);c.clip();
   const person=transition&&[room.id,transition.to.id].includes(r.id)?transitionTraveller(room,transition,r,p):r.id===room.id?hero:null;
-  terrain(c,r,person,screen,time,{offsetX:ox,offsetY:oy,destination:r===room?destination:null});if(r.id===room.id)drawExitStones(c,r,l,ox,oy,rooms);c.restore();
+  terrain(c,r,person,screen,time,{offsetX:ox,offsetY:oy,destination:r===room?destination:null,guides:r.id===room.id});c.restore();
  }
  c.restore();
  c.save();c.globalCompositeOperation='destination-in';const fog=c.createLinearGradient(0,l.y-128*l.scale,0,l.y-48*l.scale);fog.addColorStop(0,'#0000');fog.addColorStop(1,'#000');c.fillStyle=fog;c.fillRect(0,0,screen.w,screen.h);c.restore();
