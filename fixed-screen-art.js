@@ -64,7 +64,7 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0}=
   const t=room.tileAt(x,y),gx=room.col*15+x,gy=room.row*15+y,p=fixedClimate(gx,gy);
   if(['g','=','s','b'].includes(t)){
    R(c,x*32,y*32,32,32,(t==='g'?p.ground:p.road)+'99');
-   if(t==='g'&&gy<15){P(c,[[x*32+3,y*32+24],[x*32+12,y*32+10],[x*32+25,y*32+22]],p.stone);R(c,x*32+8,y*32+24,18,1,'#edf0d255');}
+   if(t==='g'&&gy<15&&Math.sin(gx*.31+gy*.17)+Math.sin(gx*.11-gy*.41)>.55){const n=(gx*13+gy*7)%9;P(c,[[x*32+3+n/2,y*32+24],[x*32+10+n,y*32+10+n/2],[x*32+25-n/2,y*32+22]],p.stone);R(c,x*32+8,y*32+24,18,1,'#edf0d255');}
    else if(t==='g'){for(let i=0;i<3;i++){const xx=x*32+5+(gx*7+gy*11+i*9)%23,yy=y*32+7+i*7;R(c,xx,yy,1,4,'#6f98726a');if((gx+gy+i)%5===0)R(c,xx-1,yy,3,2,gy>30?'#e9d5a5':'#dae8ce');}}
    if(t==='s')for(let j=0;j<4;j++)R(c,x*32,y*32+j*8,32,1,'#768c8c88');
    if(t==='b')for(let j=0;j<4;j++)R(c,x*32+j*8,y*32,1,32,'#7b8e8188');
