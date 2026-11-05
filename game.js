@@ -1,4 +1,6 @@
 import {CORE_SKY_STUDIES,drawLandscapeSky} from './landscape-sky.js';
+import {createFixedScreenView} from './fixed-screen-view.js';
+import {FIXED_CUE} from './fixed-screens.js';
 import {TRIAL_WAYSTONE,createTrialBag,placeTrialTraveller} from './trial-travel.js';
 import {drawLandscapeFeet,drawLandscapeCanopies} from './landscape-objects.js';
 import {westernAt} from './western-world.js';
@@ -79,6 +81,12 @@ let panTarget=null;
 let screen={w:1,h:1,dpr:1},last=0,zoneId='',noticeTimer=0,dialogue=null,readingPress=null;
 const westernLight=createWesternLight();
 const trialBag=PILGRIMAGE_MODE?createTrialBag(world):null;let trialUsed=false;
+let fixedOrigin=null;
+const fixedTrial=PILGRIMAGE_MODE?createFixedScreenView({stage,paused:()=>!!dialogue||isPanelOpen()||document.hidden,
+ audible:()=>sfx.enabled&&sfx.volume>0,onAmbient:(levels,events)=>sfx.ambience(levels,events),
+ onPlace:r=>{$('zoneName').textContent=r.name;$('zoneSub').textContent=r.role;},
+ onTalk:(name,lines)=>openDialogue(name,'空の枝道の暮らし',lines),onReturn:returnFromFixed,
+ onRead:()=>{if(dialogue)dialogueInput();},onStep:(d,t)=>sfx.step(d,t)}):null;
 const discovered=new Set(),visitedZones=new Set(),cache=new Map(),CHUNK=16,MAX_CHUNKS=42;
 const palette={'~':'#497d93','.':'#8d9f7c',',':'#cbbc96',f:'#567864','=':'#baa986','+':'#ae987a',s:'#98b0b0',n:'#576d88',p:'#b7a993','#':'#58605d',M:'#9eb88a',A:'#aa986e',R:'#7f9188',F:'#3e6559',G:'#73a49e',P:'#d1d4c5',C:'#77adb7',D:'#d2b78e',T:'#bc856d',Q:'#789e9f',B:'#496d78',K:'#424563',E:'#528eae'};
 // The previous two worlds remain explicitly available; the grassland journey is the current entrance.
@@ -125,8 +133,11 @@ if(JOURNEY_MODE){
   const back=document.createElement('button');back.id='trialHelpReturn';back.className='line-btn';back.textContent='試遊の道標へ戻る';back.hidden=true;back.addEventListener('click',()=>performTrialWarp({id:'pilgrim-0',name:'白い船着場',...TRIAL_WAYSTONE.entrance}));
   $('helpPanel').querySelector('.sheet').append(trialHelp,back);
   const actions=document.createElement('div');actions.id='trialActions';actions.className='trial-actions';actions.hidden=true;actions.setAttribute('role','group');actions.setAttribute('aria-label','試遊の移動');
-  for(const [action,id,text] of [['random','trialJump','ランダムに飛ぶ'],['return','trialReturn','船着場に戻る']]){const button=document.createElement('button');button.id=id;button.dataset.trialAction=action;button.textContent=text;actions.append(button);}
+  for(const [action,id,text] of [['random','trialJump','ランダムに飛ぶ'],['return','trialReturn','船着場に戻る'],['fixed','fixedEnter','空の枝道へ（画面切替）']]){const button=document.createElement('button');button.id=id;button.dataset.trialAction=action;button.textContent=text;actions.append(button);}
   $('dialogue').append(actions);
+  const fixedHelp=document.createElement('p');fixedHelp.className='secondary fixed-help';fixedHelp.hidden=true;fixedHelp.textContent='ここは、景色ごとに画面が切り替わる比較用の枝道です。見えている道をタップし、端へ続く道から隣へ渡れます。地図にはつながる道が描かれています。入口の帰りの道標か、下のボタンから元の場所へ戻れます。元の世界では、いつもの歩き方に戻ります。';
+  const fixedReturn=document.createElement('button');fixedReturn.id='fixedReturn';fixedReturn.className='line-btn';fixedReturn.textContent='元の場所へ戻る';fixedReturn.hidden=true;fixedReturn.addEventListener('click',returnFromFixed);$('helpPanel').querySelector('.sheet').append(fixedHelp,fixedReturn);
+  const fixedHelpEnter=document.createElement('button');fixedHelpEnter.id='fixedHelpEnter';fixedHelpEnter.className='line-btn';fixedHelpEnter.textContent='空の枝道へ（画面切替）';fixedHelpEnter.addEventListener('click',enterFixed);$('helpPanel').querySelector('.sheet').append(fixedHelpEnter);
  }
  const mazeHelp=document.createElement('p');mazeHelp.className='secondary';
  mazeHelp.innerHTML='<strong>迷路の歩き方を比べる</strong><br>'+
@@ -157,6 +168,7 @@ function confineCamera(x=camera.x,y=camera.y,margin=.65){
 }
 // Glide back with the drag easing; a one-frame jump of a whole screen loses the traveller.
 function centerCamera(){
+ if(fixedTrial?.active){fixedTrial.canvas.focus({preventScroll:true});return;}
  // Travel is always guided by the route camera, including from the atlas.
  if(hero.path.length){panTarget=null;return;}
  if(PILGRIMAGE_MODE)pilgrimageFollow.reset();
@@ -178,11 +190,12 @@ function toast(message){
  notice.classList.add('show');
  clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>notice.classList.remove('show'),2300);
 }
-function resize(){
+function resize(options={}){
  const r=stage.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1);
  screen={w:r.width,h:r.height,dpr};
  canvas.width=Math.max(1,Math.round(r.width*dpr));canvas.height=Math.max(1,Math.round(r.height*dpr));
- confineCamera();
+ if(fixedTrial?.active)fixedTrial.resize(screen);else confineCamera(camera.x,camera.y,options?.preserveFrame ? .08 : .65);
+ if(fixedTrial&&!fixedTrial.active)fixedTrial.resize(screen);
  if(JOURNEY_MODE&&dialogue)placeJourneyDialogue();
 }
 const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):null;
@@ -577,6 +590,7 @@ function switchWorld(id,spawn){
 }
 
 function startWalk(target,arrival=null,source='field'){
+ if(fixedTrial?.active)return;
  if(!world.walkable(target.x,target.y)){toast('ここには歩いて行けません。道や橋を選んでください。');return;}
  // Start from the next occupied grid cell instead of instantly teleporting away.
  // A portal crosses worlds on arrival, so only a route ending there may use it.
@@ -622,7 +636,7 @@ function openTrialTravel(arrived=null){
  placeJourneyDialogue();
 }
 function performTrialWarp(target){
- if(!PILGRIMAGE_MODE)return;
+ if(!PILGRIMAGE_MODE||fixedTrial?.active)return;
  closeDialogue();closePanels(false);journeyView?.close();cancelCameraGesture();readingPress=null;
  placeTrialTraveller(world,hero,target);pilgrimageFollow.reset();panTarget=null;
  const now=performance.now();let scene=journeyCameraScene(world,hero,journeyCamera.scene);
@@ -631,6 +645,29 @@ function performTrialWarp(target){
  journeyMusic.arrive(target.id,now);imperialQuiet=pilgrimQuiet(world,{x:hero.x,y:hero.y});
  $('trackSelect').value=pickJourneyArrivalTrack(target.id);applyTrack();zoneId='';updateZone();syncTravelState();lastPaint=-Infinity;
  trialUsed=true;$('trialHelpReturn').hidden=false;openTrialTravel(target);canvas.focus({preventScroll:true});
+}
+function enterFixed(){
+ if(!fixedTrial||fixedTrial.active||!world.walkable(hero.x,hero.y))return;
+ fixedOrigin={world,position:{x:hero.x,y:hero.y},camera:{...camera},track:$('trackSelect').value,quiet:imperialQuiet,mapTitle:$('atlasTitle').textContent,mapText:$('mapPanel').querySelector('p.secondary').textContent};
+ closeDialogue();closePanels(false);journeyView?.close();cancelCameraGesture();readingPress=null;
+ Object.assign(hero,{px:hero.x,py:hero.y,path:[],arrival:null,moving:false});syncTravelState();
+ $('atlasTitle').textContent='空の枝道';$('mapPanel').querySelector('p.secondary').textContent='つながる道をたどる。隣の地名を選ぶと、出口まで歩きます。';
+ $('trackSelect').value=FIXED_CUE;imperialQuiet=false;applyTrack();
+ document.querySelector('.fixed-help').hidden=false;$('fixedReturn').hidden=false;fixedTrial.resize(screen);fixedTrial.enter();
+}
+function returnFromFixed(){
+ if(!fixedTrial?.active||!fixedOrigin)return;
+ const origin=fixedOrigin;if(world!==origin.world||!world.walkable(origin.position.x,origin.position.y))throw Error('Unsafe fixed-screen return');
+ fixedTrial.leave();closeDialogue();closePanels(false);cancelCameraGesture();readingPress=null;
+ Object.assign(hero,{...origin.position,px:origin.position.x,py:origin.position.y,path:[],arrival:null,moving:false,stride:0});
+ Object.assign(camera,origin.camera);pilgrimageFollow.reset();panTarget=null;
+ $('atlasTitle').textContent=origin.mapTitle;$('mapPanel').querySelector('p.secondary').textContent=origin.mapText;document.querySelector('.fixed-help').hidden=true;$('fixedReturn').hidden=true;
+ // Both normal directors were paused, not replaced. Preserve any pending
+ // regional change instead of accepting a new region with an old saved cue.
+ $('trackSelect').value=origin.track;imperialQuiet=origin.quiet;applyTrack();zoneId='';updateZone();syncTravelState();rebuildZoneList();fixedOrigin=null;
+ // A return can occur inside the sample's animation frame. Redraw now so an
+ // orientation-cleared original canvas cannot flash black until the next RAF.
+ resize({preserveFrame:true});const now=performance.now();paint(now);lastPaint=now;lastPaintCamera={...camera};canvas.focus({preventScroll:true});
 }
 function walkToNpc(n){
  let best=null,lowest=Infinity;
@@ -715,7 +752,7 @@ function placeJourneyDialogue(){
  const card=$('dialogue');
  // Keep the people visible without moving the camera when conversation starts.
  // A traveller near the lower edge needs the reading card on the opposite side.
- const heroY=screen.h/2+((hero.py+.5)*TILE-camera.y)*camera.zoom;
+ const heroY=fixedTrial?.active?fixedTrial.projectHero().y:screen.h/2+((hero.py+.5)*TILE-camera.y)*camera.zoom;
  const cardHeight=card.getBoundingClientRect().height;
  card.classList.toggle('journey-dialogue-above',heroY>screen.h-cardHeight-42&&heroY>cardHeight+50);
 }
@@ -740,13 +777,14 @@ document.addEventListener('click',e=>{
   // An adjacent NPC opens on pointerup; its following click belongs to the
   // same gesture and must not immediately dismiss the newly opened card.
   // Field taps arrive through the canvas pointerup instead; ignore their click.
-  if(e.target===canvas)return;
+  if(e.target===canvas||e.target===fixedTrial?.canvas)return;
   closeDialogue();return;
  }
  e.preventDefault();e.stopImmediatePropagation();
  if(e.target.closest('#dialogueClose')){closeDialogue();return;}
  if(performance.now()-dialogue.openedAt<180)return;
  const action=e.target.closest('[data-trial-action]');
+ if(dialogue.trial&&action?.dataset.trialAction==='fixed'){enterFixed();return;}
  if(dialogue.trial&&action){performTrialWarp(action.dataset.trialAction==='return'?{id:'pilgrim-0',name:'白い船着場',...TRIAL_WAYSTONE.entrance}:trialBag.next(world.zoneAt(hero.x,hero.y).id));return;}
  dialogueInput();
 },true);
@@ -780,6 +818,7 @@ function updateMove(dt){
 let lastPaint=-Infinity,lastPaintCamera={x:camera.x,y:camera.y,zoom:camera.zoom};
 function animate(time){
  const dt=last?Math.min(.07,(time-last)/1000):0;last=time;
+ if(fixedTrial?.active){updateDialogue(dt);westernLight.update(time,false,document.hidden);ambience?.update({x:hero.px,y:hero.py},time,false);fixedTrial.frame(time,reduceMotion.matches);requestAnimationFrame(animate);return;}
  updateMove(dt);updateDialogue(dt);
  if(PILGRIMAGE_MODE)westernLight.update(time,westernAt(hero.px,hero.py)?.key==='cliff',document.hidden);
  if(ambience){
@@ -922,6 +961,7 @@ window.addEventListener('keydown',e=>{
   else return;
  }
  if(isPanelOpen())return;
+ if(fixedTrial?.active){sfx.unlock();music.unlock();fixedTrial.key(e);return;}
  const dirs={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]};
  const d=dirs[e.key];if(!d)return;
  e.preventDefault();sfx.unlock();music.unlock();
@@ -945,7 +985,7 @@ function showPanel(id){
   $({mapPanel:'mapBtn',musicPanel:'soundBtn',helpPanel:'helpBtn'}[id]).setAttribute('aria-expanded','true');
   $(id).querySelector('[data-close]').focus({preventScroll:true});
  }
- if(id==='mapPanel'){rebuildZoneList();drawMinimap();if(PILGRIMAGE_MODE)$(id).querySelector('.sheet').scrollTop=0;}
+ if(id==='mapPanel'){if(fixedTrial?.active)fixedTrial.drawMap(mini,$('zoneList'));else{rebuildZoneList();drawMinimap();}if(PILGRIMAGE_MODE)$(id).querySelector('.sheet').scrollTop=0;}
 }
 $('mapBtn').addEventListener('click',()=>showPanel('mapPanel'));
 $('soundBtn').addEventListener('click',()=>showPanel('musicPanel'));
@@ -1004,6 +1044,7 @@ function drawMinimap(){
  c.strokeStyle='#244658';c.lineWidth=2;c.stroke();
 }
 mini.addEventListener('click',e=>{
+ if(fixedTrial?.active){fixedTrial.mapTap(e.clientX,e.clientY,mini);closePanels();return;}
  const r=mini.getBoundingClientRect();
  // At subpixel tile sizes, integer mouse coordinates denote a whole CSS pixel.
  // Use its centre rather than systematically choosing the upper-left neighbour.

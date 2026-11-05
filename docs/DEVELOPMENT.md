@@ -119,3 +119,11 @@ Codex/GPT等が作ったPRをClaude Codeが受け取るときの手順（競合�
 新ファイルは`landscape-sky.js`／`regional-detail.js`／`pilgrimage-landforms.js`／`energy-music.js`／`trial-travel.js`。試遊のカメラ・音楽同期は既存ディレクタの`arrive`で明示リセットする。普通の`update`は以前の待ち時間と処理を保つ。テストから主人公を移すAPIは追加せず、ブラウザ検査も実際の道標ボタンを使う。元の徒歩回帰はワープで置き換えない。
 
 `sky-trial-energy.test.mjs`で旧106曲・安全な19候補・袋の繰り返し・リセット・全空セル・地形を検査。`sky-trial-browser.mjs`は三サイズで全候補、帰還、歩行再開、OFFと音量、Reduced Motion、実Canvasの空を検査する。新pulseは既存のPCM停止連続性試験へ加える。音楽の緩急は全長PCMの導入／山場のRMSでも測る。成果物はCIの`sky-trial/`、`western/`へ。
+
+## #112 固定画面の開発・統合
+
+制作者は本件をmain統合まで依頼し、より円滑な方法も許可した。本件は作業ブランチ→PR→最新head rules/browser→通常マージ→main CI／Pagesを選び、直push・auto-merge・Settings変更は行わない。[技術計画](FIXED-SCREEN-BRANCHES.md)を参照。
+
+`fixed-screens.js`／`fixed-screen-art.js`／`fixed-screen-view.js`は独立領域だけに適用。元世界の保存・再生成をせず、メモリ上に保持して休止する。既存A*・再経路・描画素材・音を再利用。古い入力と経路は復帰させず、通常ディレクタは上書きしない。サンプルをテスト用の主人公座標変更APIとして使わない。
+
+`fixed-screens.test.mjs`と`fixed-screens-browser.mjs`をcheck/browserへ追加。既存の全回帰を残し、画面内カメラ不動・全接続・分岐・連打・キー継続・回転・複数の復帰元・BGM native継続・旧モード不変を検査する。実施結果はPR、画像とJSONは`fixed-screens/`へ。実機・実耳・独立監査は別に記録する。

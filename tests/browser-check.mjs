@@ -1,4 +1,5 @@
 import {checkSkyTrial} from './sky-trial-browser.mjs';
+import {checkFixedScreens} from './fixed-screens-browser.mjs';
 import {checkWesternAudio} from './western-audio-browser.mjs';
 import {checkWestern} from './western-browser.mjs';
 import {checkPilgrimage} from './pilgrimage-browser.mjs';
@@ -105,6 +106,7 @@ async function main(){
  await checkPortalRoutes(page,origin);
  await checkCameraInput(page,origin);
  await checkWesternAudio(browser,origin);
+ await checkFixedScreens(browser,origin);
  await checkSkyTrial(browser,origin);
  await checkWestern(browser,origin);
  await checkPilgrimage(browser,origin);
