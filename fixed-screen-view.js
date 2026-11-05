@@ -1,5 +1,5 @@
 import {createFixedJourney,fixedLayout,gatePoint} from './fixed-screens.js';
-import {drawFixedRoom,FIXED_SOURCE} from './fixed-screen-art.js';
+import {drawFixedRoom,releaseFixedArt,FIXED_SOURCE} from './fixed-screen-art.js';
 import {pickJourneyTap} from './journey-tap.js';
 import {createAmbienceDirector} from './journey-ambience.js';
 
@@ -36,7 +36,7 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
  const view={
   get active(){return state.active;},get transitioning(){return !!state.transition;},canvas,
   enter(){cancel();held.clear();latched.clear();state.enter();canvas.hidden=false;document.body.classList.add('fixed-sample');const r=stage.getBoundingClientRect();view.resize({...screen,w:r.width,h:r.height});last=null;paintAt=-Infinity;canvas.focus({preventScroll:true});},
-  leave(){state.leave();water.update({x:0,y:0},performance.now(),false);onAmbient([],[]);cancel();held.clear();latched.clear();canvas.hidden=true;canvas.setAttribute('aria-busy','false');canvas.width=canvas.height=1;document.body.classList.remove('fixed-sample');},
+  leave(){releaseFixedArt(c);state.leave();water.update({x:0,y:0},performance.now(),false);onAmbient([],[]);cancel();held.clear();latched.clear();canvas.hidden=true;canvas.setAttribute('aria-busy','false');canvas.width=canvas.height=1;document.body.classList.remove('fixed-sample');},
   resize(value){screen={...value};cancel();if(state.active){canvas.width=Math.max(1,Math.round(screen.w*screen.dpr));canvas.height=Math.max(1,Math.round(screen.h*screen.dpr));state.finishTransition();}paintAt=-Infinity;},
   projectHero(){return project({x:state.hero.px,y:state.hero.py});},
   key(e){
@@ -51,10 +51,7 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
    canvas.setAttribute('aria-busy',String(!!state.transition||state.hero.path.length>0));
    const frame=state.transition?1000/60:state.hero.moving?1000/45:1000/24;if(now-paintAt<frame)return;paintAt=now;
    c.setTransform(screen.dpr,0,0,screen.dpr,0,0);c.fillStyle='#b6d5d7';c.fillRect(0,0,screen.w,screen.h);
-   if(state.transition){const t=state.transition,u=Math.min(1,t.elapsed/t.duration),p=u*u*(3-2*u),x=t.direction==='E'?1:t.direction==='W'?-1:0,y=t.direction==='S'?1:t.direction==='N'?-1:0;
-    drawFixedRoom(c,t.from,t.hero,screen,reduced?0:now,{offsetX:-x*p*screen.w,offsetY:-y*p*screen.h});
-    drawFixedRoom(c,t.to,{...t.landing,px:t.landing.x,py:t.landing.y,moving:false},screen,reduced?0:now,{offsetX:x*(1-p)*screen.w,offsetY:y*(1-p)*screen.h});
-   }else drawFixedRoom(c,state.room,state.hero,screen,reduced?0:now,{destination:state.hero.path.at(-1)});
+   drawFixedRoom(c,state.room,state.hero,screen,reduced?0:now,{rooms:state.rooms,transition:state.transition,destination:state.hero.path.at(-1)});
   },
   drawMap(mini,zoneList){
    mini.width=540;mini.height=540;mini.style.aspectRatio='1';mini.style.setProperty('--atlas-aspect',1);const g=mini.getContext('2d'),s=mini.width/45;g.clearRect(0,0,mini.width,mini.height);g.fillStyle='#c9dce0';g.fillRect(0,0,mini.width,mini.height);

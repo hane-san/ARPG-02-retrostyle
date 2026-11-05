@@ -32,7 +32,7 @@ test('a single short slide blocks taps, holds on pause, and commits one correspo
  const s=createFixedJourney();s.enter();s.walkTo(gatePoint('N'));for(let i=0;i<1500&&!s.transition;i++)s.update(.016);
  assert.equal(s.transition.direction,'N');assert.equal(s.transition.duration,FIXED_SLIDE_MS);const gen=s.generation;
  assert.equal(s.walkTo({x:2,y:8}),false);for(let i=0;i<40;i++)s.update(.07,{paused:true});assert.equal(s.transition.elapsed,0);
- for(let i=0;i<3;i++)s.update(.08);assert.equal(s.room.id,'hearth');s.update(.04);assert.equal(s.room.id,'cypresses');assert.equal(s.generation,gen+1);assert.deepEqual([s.hero.x,s.hero.y],[7,13]);assert.equal(s.transition,null);
+ for(let i=0;i<6;i++)s.update(.08);assert.equal(s.room.id,'hearth');s.update(.08);assert.equal(s.room.id,'cypresses');assert.equal(s.generation,gen+1);assert.deepEqual([s.hero.x,s.hero.y],[7,13]);assert.equal(s.transition,null);
  s.walkTo(gatePoint('N'));for(let i=0;i<1500&&!s.transition;i++)s.update(.016);s.finishTransition();assert.equal(s.room.id,'ascent');assert.equal(s.hero.path.length,0);s.update(.08);assert.equal(s.transition,null);
 });
 test('rerouting finishes the occupied step, never enters water, and interior taps cannot escape through a gate',()=>{
@@ -50,4 +50,23 @@ test('one isotropic layout fits real portrait/landscape stages and every old pie
  assert.equal(FIXED_CUE,'47:2');assert.equal(MUSIC_LIBRARY.length*2,110);
  assert.equal(hash(MUSIC_LIBRARY),'ecae882fc6257b7350efc2d3ba62356b2d7c343ffc0c46bd22b2046618d7c037');
  assert.equal(hash(MUSIC_LIBRARY.map((_,i)=>[buildTrack(i,1),buildTrack(i,2)])),'679e4bedd1375819274e78f6582644bcf120cdd312bfe896a5bbba29ab7645ee');
+});
+
+test('variable width seams match every lane and material, with safe arrivals across their full width',()=>{
+ const rooms=makeFixedRooms(),widths=new Set();
+ for(const r of rooms)for(const [d,id] of Object.entries(r.connections)){
+  const to=rooms.find(a=>a.id===id),dir=FIXED_DIRECTIONS[d];widths.add(r.seams[d].width);
+  let lanes=0;
+  for(let j=0;j<15;j++){
+   const p=d==='N'?{x:j,y:0}:d==='S'?{x:j,y:14}:d==='W'?{x:0,y:j}:{x:14,y:j};
+   const q={x:dir.dx?dir.dx>0?0:14:j,y:dir.dy?dir.dy>0?0:14:j};
+   assert.equal(r.walkable(p.x,p.y),to.walkable(q.x,q.y),r.id+' '+d+' lane '+j);
+   if(r.walkable(p.x,p.y)){
+    lanes++;assert.equal(r.tileAt(p.x,p.y),to.tileAt(q.x,q.y));
+    assert.ok(to.walkable(q.x+dir.dx,q.y+dir.dy),'all lane arrivals stay inside on a real floor');
+   }
+  }
+  assert.equal(lanes,r.seams[d].width);
+ }
+ assert.deepEqual([...widths].sort(),[1,3,5,7]);
 });

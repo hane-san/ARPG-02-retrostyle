@@ -10,9 +10,9 @@ export async function checkFixedScreens(browser,origin){
   p.on('pageerror',e=>errors.push(e.message));
   await p.addInitScript(()=>{
    const P=CanvasRenderingContext2D.prototype,scale=P.scale,translate=P.translate,fill=P.fillRect,arc=P.arc;let next=false;
-   P.scale=function(x,y){const r=scale.call(this,x,y);if(this.canvas.id==='worldCanvas'){window.fixedBaseZoom=x;next=true;}if(this.canvas.id==='fixedCanvas'){const m=this.getTransform(),d=this.canvas.width/this.canvas.clientWidth;window.fixedFrame={a:m.a/d,d:m.d/d,x:m.e/d,y:m.f/d};}return r;};
+   P.scale=function(x,y){const r=scale.call(this,x,y);if(this.canvas.id==='worldCanvas'){window.fixedBaseZoom=x;next=true;}if(this.canvas.id==='fixedTerrainCanvas'){const m=this.getTransform(),d=document.querySelector('#fixedCanvas').width/document.querySelector('#fixedCanvas').clientWidth;window.fixedFrame={a:m.a/d,d:m.d/d,x:m.e/d,y:m.f/d};}return r;};
    P.translate=function(x,y){if(next&&this.canvas.id==='worldCanvas'){window.fixedBaseEye={x:-x,y:-y};next=false;}return translate.call(this,x,y);};
-   P.fillRect=function(x,y,w,h){if(this.fillStyle==='#b8d9dc'&&w===15&&h===3){const key=this.canvas.id==='worldCanvas'?'fixedBaseHero':this.canvas.id==='fixedCanvas'?'fixedHero':null;if(key)window[key]={x:(x-8)/32,y:(y-13)/32};}return fill.call(this,x,y,w,h);};
+   P.fillRect=function(x,y,w,h){if(this.fillStyle==='#b8d9dc'&&w===15&&h===3){const key=this.canvas.id==='worldCanvas'?'fixedBaseHero':this.canvas.id==='fixedTerrainCanvas'?'fixedHero':null;if(key)window[key]={x:(x-8)/32,y:(y-13)/32};}return fill.call(this,x,y,w,h);};
    P.arc=function(x,y,r,...args){if(this.canvas.id==='miniMap'&&this.fillStyle==='#fae5a1'&&document.body.classList.contains('fixed-sample'))window.fixedChartHero={x:x/this.canvas.width*45-.5,y:y/this.canvas.height*45-.5};return arc.call(this,x,y,r,...args);};
    const Native=window.AudioContext||window.webkitAudioContext;if(Native){const create=Native.prototype.createBufferSource;Native.prototype.createBufferSource=function(){const s=create.call(this),start=s.start.bind(s);s.start=(...a)=>{if(s.loop){window.fixedMusicStarts=(window.fixedMusicStarts||0)+1;window.fixedMusicSeconds=s.buffer?.duration;}return start(...a);};return s;};}
   });
