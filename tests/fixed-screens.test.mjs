@@ -96,7 +96,7 @@ test('visible continuations and 44px narrow openings select only a legal connect
     const a=screen(q),target=fixedExitTarget(r,a.x,a.y,l);assert.ok(target);assert.equal(r.gateAt(target.x,target.y).direction,d);
    }
    const mark=screen(fixedExitMarker(d)),labelY=mark.y+Math.max(14*l.scale,12)/2+10*l.scale;assert.ok(fixedExitTarget(r,mark.x,labelY,l));
-   if(r.seams[d].width===1)for(const delta of [-21,21]){
+   if(r.seams[d].width===1)for(const delta of [-21,21,-tile,tile]){
     const a=screen(g);if(v.dy)a.x+=delta;else a.y+=delta;
     const target=fixedExitTarget(r,a.x,a.y,l);assert.ok(target);assert.equal(r.gateAt(target.x,target.y).direction,d);
    }

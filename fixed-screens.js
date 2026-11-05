@@ -33,7 +33,7 @@ export function fixedExitTarget(room,x,y,l){
   const m=fixedExitMarker(d),mx=l.x+(m.x+.5)*tile,my=l.y+(m.y+.5)*tile;
   const name=FIXED_ROOMS.find(r=>r.id===room.connections[d]).chartName,font=Math.max(14*l.scale,12),labelY=my+font/2+10*l.scale,labelWidth=Math.max(44,(name.length+1)*font+12*l.scale);
   const label=Math.abs(x-mx)<=labelWidth/2&&Math.abs(y-labelY)<=22;
-  if((near&&Math.abs(across-7.5)*tile<=Math.max(22,(half+.5)*tile))||Math.hypot(x-mx,y-my)<=22||label){
+  if((near&&Math.abs(across-7.5)*tile<=Math.max(22,half===0?tile*1.15:0,(half+.5)*tile))||Math.hypot(x-mx,y-my)<=22||label){
    const j=Math.max(7-half,Math.min(7+half,Math.floor(across))),p=gatePoint(d);
    return vertical?{x:j,y:p.y}:{x:p.x,y:j};
   }
