@@ -43,7 +43,7 @@ export async function checkFixedScreens(browser,origin){
   let slideSeen=false;
   async function exit(d,stress=false){
    const before=current,next=rooms.find(r=>r.id===before.connections[d]),f=await frame();let injected=false;assert.ok(next);
-   await sample.tap({position:await point(gatePoint(d))});let arrived=false;
+   const approach=width===390?{...gatePoint(d)}:gatePoint(d);if(width===390){if(d==='N')approach.y--;if(d==='S')approach.y++;if(d==='W')approach.x=-.75;if(d==='E')approach.x=14.75;}const exitTap=await point(approach);if(width===320&&before.seams[d].width===1){if(d==='N'||d==='S')exitTap.x+=18;else exitTap.y+=18;}await sample.tap({position:exitTap});let arrived=false;
    for(let i=0;i<160;i++){
     await p.clock.runFor(80);const a=await frame();assert.ok(Math.abs(a.a-f.a)<1e-9&&Math.abs(a.d-f.d)<1e-9,'no transition zoom');const name=await p.locator('#zoneName').textContent();
     if(!reduced&&name===before.name&&(Math.abs(a.x-f.x)>1||Math.abs(a.y-f.y)>1)){
@@ -54,6 +54,7 @@ export async function checkFixedScreens(browser,origin){
    }
    assert.ok(arrived,'real field exit '+before.id+' '+d);current=next;await p.clock.runFor(400);assert.equal(await sample.getAttribute('aria-busy'),'false');const a=await frame();assert.deepEqual(a,initial,'every room keeps the common frame');
    const landing=await position();assert.ok(landing.x>=1&&landing.x<=13&&landing.y>=1&&landing.y<=13);const stay={...landing};await p.clock.runFor(600);assert.deepEqual(await position(),stay,'no automatic return loop');
+   await sample.tap({position:await point(stay)});await p.clock.runFor(350);assert.equal(await p.locator('#zoneName').textContent(),current.name,'self tap beside an exit must not bounce');assert.deepEqual(await position(),stay);
    if(injected){await p.keyboard.down('ArrowDown');await p.clock.runFor(500);assert.equal(await p.locator('#zoneName').textContent(),current.name);assert.deepEqual(await position(),stay,'a key pressed during the slide remains suppressed');await p.keyboard.up('ArrowDown');}
    assert.equal(await p.locator('#trackSelect').inputValue(),'47:2');if(width===390)assert.equal(await p.evaluate(()=>window.fixedMusicStarts),starts,'room changes must never restart the native loop');
    if(current.id==='bridge'){const here=await position();await sample.tap({position:await point({x:9,y:4})});await p.clock.runFor(600);assert.deepEqual(await position(),here,'water remains a real collision surface');}

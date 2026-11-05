@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {makeFixedRooms,createFixedJourney,fixedLayout,gatePoint,FIXED_DIRECTIONS,FIXED_SLIDE_MS,FIXED_CUE} from '../fixed-screens.js';
+import {makeFixedRooms,createFixedJourney,fixedLayout,gatePoint,FIXED_DIRECTIONS,FIXED_SLIDE_MS,FIXED_CUE,fixedExitTarget,fixedExitMarker} from '../fixed-screens.js';
 import {MUSIC_LIBRARY,buildTrack} from '../music.js';
 import {transitionTraveller} from '../fixed-screen-art.js';
 const hash=x=>createHash('sha256').update(JSON.stringify(x)).digest('hex');
@@ -84,5 +84,24 @@ test('a transition paints one continuous world-space traveller across both board
    assert.ok(Math.abs(f.px+from.col*15-(from.col*15+a.x+(to.col*15+b.x-from.col*15-a.x)*p))<1e-9);
    assert.ok(Math.abs(f.py+from.row*15-(from.row*15+a.y+(to.row*15+b.y-from.row*15-a.y)*p))<1e-9);
   }
+ }
+});
+
+test('visible continuations and 44px narrow openings select only a legal connected exit',()=>{
+ for(const [w,h] of [[320,477],[390,753],[430,841],[844,316]]){
+  const l=fixedLayout(w,h),tile=32*l.scale,screen=p=>({x:l.x+(p.x+.5)*tile,y:l.y+(p.y+.5)*tile});
+  for(const r of makeFixedRooms())for(const d of Object.keys(r.connections)){
+   const v=FIXED_DIRECTIONS[d],g=gatePoint(d);
+   for(const q of [g,{x:g.x+v.dx,y:g.y+v.dy},fixedExitMarker(d)]){
+    const a=screen(q),target=fixedExitTarget(r,a.x,a.y,l);assert.ok(target);assert.equal(r.gateAt(target.x,target.y).direction,d);
+   }
+   const mark=screen(fixedExitMarker(d)),labelY=mark.y+Math.max(14*l.scale,12)/2+10*l.scale;assert.ok(fixedExitTarget(r,mark.x,labelY,l));
+   if(r.seams[d].width===1)for(const delta of [-21,21]){
+    const a=screen(g);if(v.dy)a.x+=delta;else a.y+=delta;
+    const target=fixedExitTarget(r,a.x,a.y,l);assert.ok(target);assert.equal(r.gateAt(target.x,target.y).direction,d);
+   }
+  }
+  const r=makeFixedRooms()[0];for(const q of [{x:7,y:14},{x:0,y:14},{x:7,y:-8}]){const a=screen(q);assert.equal(fixedExitTarget(r,a.x,a.y,l),null);}
+  const bridge=makeFixedRooms().find(r=>r.id==='bridge'),water=screen({x:9,y:4});assert.equal(fixedExitTarget(bridge,water.x,water.y,l),null);
  }
 });

@@ -5,7 +5,7 @@ import {drawLandscapeFeet,drawLandscapeCanopies} from './landscape-objects.js';
 import {drawRegionalGroundDetail} from './regional-detail.js';
 import {drawSrpgUnit} from './sprite-srpg.js';
 import {drawVillager} from './sprite-villager.js';
-import {fixedLayout} from './fixed-screens.js';
+import {fixedLayout,fixedExitMarker} from './fixed-screens.js';
 
 export const FIXED_SOURCE=WEST_STUDIES.find(z=>z.key==='village');
 const P=(c,p,col)=>{c.fillStyle=col;c.beginPath();p.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();};
@@ -83,6 +83,21 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0}=
  c.restore();c.restore();
 }
 
+// Low road stones and direction plaques belong to the walkable ground.
+function drawExitStones(c,room,l,ox,oy,rooms){
+ c.save();c.translate(l.x+ox,l.y+oy);c.scale(l.scale,l.scale);
+ for(const [d,id] of Object.entries(room.connections)){
+  const m=fixedExitMarker(d),a=d==='N'?-Math.PI/2:d==='S'?Math.PI/2:d==='W'?Math.PI:0;
+  c.save();c.translate((m.x+.5)*32,(m.y+.5)*32);c.rotate(a);
+  for(const step of [0,21])P(c,[[step-7,-7],[step+2,0],[step-7,7],[step-3,0]],'#698d87');
+  c.restore();
+  const text=rooms.find(r=>r.id===id)?.chartName||'',font=Math.max(14,12/l.scale),x=(m.x+.5)*32,y=(m.y+.5)*32+font+10;
+  c.font=`${font}px system-ui`;c.textAlign='center';const w=c.measureText(text+'へ').width+12;
+  R(c,x-w/2,y-font,w,font+5,'#eee6cded');c.fillStyle='#3b6468';c.fillText(text+'へ',x,y);
+ }
+ c.restore();
+}
+
 // The camera moves by one walking board, not one browser viewport. The same
 // world-space terrain is visible on both sides, through a stable terrain window.
 const layers=new WeakMap();
@@ -98,7 +113,7 @@ export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[r
  for(const r of [...rooms.filter(r=>r.id!==room.id),room]){if(!visible.has(r.id))continue;const ox=(r.col-cx)*stride,oy=(r.row-cy)*stride;
   c.save();c.beginPath();c.rect(l.x+ox,l.y+oy-128*l.scale,l.width,l.height+128*l.scale);c.clip();
   const person=transition&&[room.id,transition.to.id].includes(r.id)?transitionTraveller(room,transition,r,p):r.id===room.id?hero:null;
-  terrain(c,r,person,screen,time,{offsetX:ox,offsetY:oy,destination:r===room?destination:null});c.restore();
+  terrain(c,r,person,screen,time,{offsetX:ox,offsetY:oy,destination:r===room?destination:null});if(r.id===room.id)drawExitStones(c,r,l,ox,oy,rooms);c.restore();
  }
  c.restore();
  c.save();c.globalCompositeOperation='destination-in';const fog=c.createLinearGradient(0,l.y-128*l.scale,0,l.y-48*l.scale);fog.addColorStop(0,'#0000');fog.addColorStop(1,'#000');c.fillStyle=fog;c.fillRect(0,0,screen.w,screen.h);c.restore();
