@@ -76,7 +76,7 @@ export async function checkFixedScreens(browser,origin){
   }
   if(width===320){
    // Enter during an ordinary in-flight step: return to the last safe cell.
-   await p.keyboard.press('ArrowRight');await p.clock.runFor(60);await enterFromHelp();await sample.tap({position:await point({x:7,y:12})});await p.clock.runFor(1000);const a=await baseSnapshot();assert.equal(await sample.isVisible(),false);assert.deepEqual(a.hero,saved.hero);assert.equal(await p.locator('#worldCanvas').getAttribute('aria-busy'),'false');
+   await p.keyboard.press('ArrowRight');await p.clock.runFor(60);await enterFromHelp();await p.keyboard.press('ArrowDown');await p.clock.runFor(600);assert.deepEqual(await position(),{x:7,y:12});assert.equal(await sample.isVisible(),true);await sample.tap({position:await point({x:7,y:12})});await p.clock.runFor(1000);const a=await baseSnapshot();assert.equal(await sample.isVisible(),false);assert.deepEqual(a.hero,saved.hero);assert.equal(await p.locator('#worldCanvas').getAttribute('aria-busy'),'false');
   }
   const tools=await p.locator('.journey-tool').evaluateAll(a=>a.map(b=>{const r=b.getBoundingClientRect();return {w:r.width,h:r.height};}));assert.ok(tools.every(r=>r.w>=44&&r.h>=44));assert.deepEqual(errors,[]);await ctx.close();console.log(`Fixed screens ${width}x${height}: eight rooms, branch, held framing, field gates, slide input, BGM and safe return passed.`);
  }
