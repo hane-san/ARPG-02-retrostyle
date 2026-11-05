@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {makeFixedRooms,createFixedJourney,fixedLayout,gatePoint,FIXED_DIRECTIONS,FIXED_SLIDE_MS,FIXED_CUE} from '../fixed-screens.js';
 import {MUSIC_LIBRARY,buildTrack} from '../music.js';
+import {transitionTraveller} from '../fixed-screen-art.js';
 const hash=x=>createHash('sha256').update(JSON.stringify(x)).digest('hex');
 function settle(s){for(let i=0;i<1500;i++){s.update(.016);if(!s.hero.path.length&&!s.transition)return;}throw Error('fixed journey never settled');}
 function cross(s,d,reduced=false){const old=s.room,to=old.connections[d];assert.ok(to);assert.ok(s.walkTo(gatePoint(d)));for(let i=0;i<1500&&s.room===old;i++)s.update(.016,{reduced});assert.equal(s.room.id,to);assert.equal(s.hero.path.length,0);assert.equal(s.room.gateAt(s.hero.x,s.hero.y),null);}
@@ -69,4 +70,18 @@ test('variable width seams match every lane and material, with safe arrivals acr
   assert.equal(lanes,r.seams[d].width);
  }
  assert.deepEqual([...widths].sort(),[1,3,5,7]);
+});
+
+test('a transition paints one continuous world-space traveller across both board clips',()=>{
+ const rooms=makeFixedRooms();
+ for(const from of rooms)for(const [d,id] of Object.entries(from.connections)){
+  const to=rooms.find(r=>r.id===id),dir=FIXED_DIRECTIONS[d],a=gatePoint(d),b={x:dir.dx?dir.dx>0?1:13:a.x,y:dir.dy?dir.dy>0?1:13:a.y};
+  const t={to,hero:{...a,px:a.x,py:a.y},landing:b};
+  for(const p of [0,.05,.25,.5,.75,.95,1]){
+   const f=transitionTraveller(from,t,from,p),g=transitionTraveller(from,t,to,p);
+   assert.ok(Math.abs(f.px+from.col*15-g.px-to.col*15)<1e-9);
+   assert.ok(Math.abs(f.py+from.row*15-g.py-to.row*15)<1e-9);
+   assert.ok(Math.abs(f.px+from.col*15-(from.col*15+a.x+(to.col*15+b.x-from.col*15-a.x)*p))<1e-9);
+  }
+ }
 });

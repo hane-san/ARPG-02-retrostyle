@@ -76,7 +76,7 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0}=
  drawLandscapeFeet(c,trees,{left:0,right:14,top:0,bottom:14});
  const objects=room.npcs.map(n=>({y:n.y+.5,paint:()=>drawVillager(c,n.x*32,n.y*32,n.color)}));
  if(room.house)objects.push({y:room.house.y+room.house.h,paint:()=>{drawFixedHouse(c,room.house);if(!room.house.landmark){c.strokeStyle='#8c9e92';c.lineWidth=1;c.beginPath();c.moveTo(2*32,8*32);c.lineTo(5.5*32,8*32);c.stroke();for(let i=0;i<4;i++)R(c,(2.2+i*.7)*32,8*32,14,19,['#b8c9c3','#dfc9ab','#a7bac0'][i%3]);}}});
- if(hero)objects.push({y:hero.py+.7,paint:()=>{c.save();c.translate(0,hero.moving&&time!==0?-Math.abs(Math.sin(hero.stride*9))*1.5:0);drawSrpgUnit(c,{x:hero.px,y:hero.py,team:'ally',acted:false,type:'sword'});R(c,hero.px*32+8,hero.py*32+13,15,3,'#b8d9dc');R(c,hero.px*32+7,hero.py*32+16,5,7,'#7dbac5');c.restore();}});
+ if(hero)objects.push({y:hero.py+.7,paint:()=>{c.save();c.beginPath();c.rect(0,0,480,480);c.clip();c.translate(0,hero.moving&&time!==0?-Math.abs(Math.sin(hero.stride*9))*1.5:0);drawSrpgUnit(c,{x:hero.px,y:hero.py,team:'ally',acted:false,type:'sword'});R(c,hero.px*32+8,hero.py*32+13,15,3,'#b8d9dc');R(c,hero.px*32+7,hero.py*32+16,5,7,'#7dbac5');c.restore();}});
  objects.sort((a,b)=>a.y-b.y);objects.forEach(o=>o.paint());drawLandscapeCanopies(c,trees,{left:0,right:14,top:0,bottom:14},hero||{px:-100,py:-100});
  if(destination){c.strokeStyle='#fff1c5';c.lineWidth=2;c.beginPath();c.ellipse((destination.x+.5)*32,(destination.y+.5)*32,10,6,0,0,Math.PI*2);c.stroke();}
  // A small edge gap reads as the continuing road, without a development HUD.
@@ -97,10 +97,18 @@ export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[r
  const visible=new Set([room.id,...Object.values(room.connections),...(transition?[transition.to.id,...Object.values(transition.to.connections)]:[])]);
  for(const r of [...rooms.filter(r=>r.id!==room.id),room]){if(!visible.has(r.id))continue;const ox=(r.col-cx)*stride,oy=(r.row-cy)*stride;
   c.save();c.beginPath();c.rect(l.x+ox,l.y+oy-128*l.scale,l.width,l.height+128*l.scale);c.clip();
-  const person=r.id===room.id?hero:transition&&r.id===transition.to.id?{...transition.landing,px:transition.landing.x,py:transition.landing.y,moving:false}:null;
+  const person=transition&&[room.id,transition.to.id].includes(r.id)?transitionTraveller(room,transition,r,p):r.id===room.id?hero:null;
   terrain(c,r,person,screen,time,{offsetX:ox,offsetY:oy,destination:r===room?destination:null});c.restore();
  }
  c.restore();
  c.save();c.globalCompositeOperation='destination-in';const fog=c.createLinearGradient(0,l.y-128*l.scale,0,l.y-48*l.scale);fog.addColorStop(0,'#0000');fog.addColorStop(1,'#000');c.fillStyle=fog;c.fillRect(0,0,screen.w,screen.h);c.restore();
  skyContext.drawImage(layer,0,0,screen.w,screen.h);
+}
+
+// Both board clips paint portions of the same traveller at one world position.
+export function transitionTraveller(from,transition,room,p){
+ const a=transition.hero,b=transition.landing,to=transition.to;
+ const x=from.col*15+a.px+(to.col*15+b.x-from.col*15-a.px)*p-room.col*15;
+ const y=from.row*15+a.py+(to.row*15+b.y-from.row*15-a.py)*p-room.row*15;
+ return {...a,x,y,px:x,py:y,moving:false};
 }

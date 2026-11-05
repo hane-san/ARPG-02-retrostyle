@@ -9,10 +9,10 @@ export async function checkFixedScreens(browser,origin){
   const reduced=width===320,ctx=await browser.newContext({viewport:{width,height},isMobile:true,hasTouch:true,deviceScaleFactor:1,reducedMotion:reduced?'reduce':'no-preference'}),p=await ctx.newPage(),errors=[];
   p.on('pageerror',e=>errors.push(e.message));
   await p.addInitScript(()=>{
-   const P=CanvasRenderingContext2D.prototype,scale=P.scale,translate=P.translate,fill=P.fillRect,arc=P.arc;let next=false;
+   const P=CanvasRenderingContext2D.prototype,scale=P.scale,translate=P.translate,fill=P.fillRect,arc=P.arc,clear=P.clearRect;P.clearRect=function(...a){if(this.canvas.id==='fixedTerrainCanvas')window.fixedActors=[];return clear.apply(this,a);};let next=false;
    P.scale=function(x,y){const r=scale.call(this,x,y);if(this.canvas.id==='worldCanvas'){window.fixedBaseZoom=x;next=true;}if(this.canvas.id==='fixedTerrainCanvas'){const m=this.getTransform(),d=document.querySelector('#fixedCanvas').width/document.querySelector('#fixedCanvas').clientWidth;window.fixedFrame={a:m.a/d,d:m.d/d,x:m.e/d,y:m.f/d};}return r;};
    P.translate=function(x,y){if(next&&this.canvas.id==='worldCanvas'){window.fixedBaseEye={x:-x,y:-y};next=false;}return translate.call(this,x,y);};
-   P.fillRect=function(x,y,w,h){if(this.fillStyle==='#b8d9dc'&&w===15&&h===3){const key=this.canvas.id==='worldCanvas'?'fixedBaseHero':this.canvas.id==='fixedTerrainCanvas'?'fixedHero':null;if(key)window[key]={x:(x-8)/32,y:(y-13)/32};}return fill.call(this,x,y,w,h);};
+   P.fillRect=function(x,y,w,h){if(this.fillStyle==='#b8d9dc'&&w===15&&h===3){const key=this.canvas.id==='worldCanvas'?'fixedBaseHero':this.canvas.id==='fixedTerrainCanvas'?'fixedHero':null;if(key)window[key]={x:(x-8)/32,y:(y-13)/32};if(this.canvas.id==='fixedTerrainCanvas'){const m=this.getTransform();(window.fixedActors||=[]).push({x:m.a*x+m.e,y:m.d*y+m.f});}}return fill.call(this,x,y,w,h);};
    P.arc=function(x,y,r,...args){if(this.canvas.id==='miniMap'&&this.fillStyle==='#fae5a1'&&document.body.classList.contains('fixed-sample'))window.fixedChartHero={x:x/this.canvas.width*45-.5,y:y/this.canvas.height*45-.5};return arc.call(this,x,y,r,...args);};
    const Native=window.AudioContext||window.webkitAudioContext;if(Native){const create=Native.prototype.createBufferSource;Native.prototype.createBufferSource=function(){const s=create.call(this),start=s.start.bind(s);s.start=(...a)=>{if(s.loop){window.fixedMusicStarts=(window.fixedMusicStarts||0)+1;window.fixedMusicSeconds=s.buffer?.duration;}return start(...a);};return s;};}
   });
@@ -47,7 +47,7 @@ export async function checkFixedScreens(browser,origin){
    for(let i=0;i<160;i++){
     await p.clock.runFor(80);const a=await frame();assert.ok(Math.abs(a.a-f.a)<1e-9&&Math.abs(a.d-f.d)<1e-9,'no transition zoom');const name=await p.locator('#zoneName').textContent();
     if(!reduced&&name===before.name&&(Math.abs(a.x-f.x)>1||Math.abs(a.y-f.y)>1)){
-     slideSeen=true;
+     slideSeen=true;const actors=await p.evaluate(()=>window.fixedActors||[]);assert.equal(actors.length,2);assert.ok(Math.hypot(actors[0].x-actors[1].x,actors[0].y-actors[1].y)<.01,'both board clips paint the same single world-space traveller');
      if(stress){await p.screenshot({path:`test-results/fixed-screens/${width}x${height}-slide.png`});for(let j=0;j<8;j++)await sample.tap({position:{x:stage.width*.4,y:stage.height*.7}});await p.keyboard.down('ArrowDown');stress=false;injected=true;}
     }
     if(name===next.name){arrived=true;break;}
