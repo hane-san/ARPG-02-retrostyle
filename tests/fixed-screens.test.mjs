@@ -82,6 +82,7 @@ test('a transition paints one continuous world-space traveller across both board
    assert.ok(Math.abs(f.px+from.col*15-g.px-to.col*15)<1e-9);
    assert.ok(Math.abs(f.py+from.row*15-g.py-to.row*15)<1e-9);
    assert.ok(Math.abs(f.px+from.col*15-(from.col*15+a.x+(to.col*15+b.x-from.col*15-a.x)*p))<1e-9);
+   assert.ok(Math.abs(f.py+from.row*15-(from.row*15+a.y+(to.row*15+b.y-from.row*15-a.y)*p))<1e-9);
   }
  }
 });
