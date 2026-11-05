@@ -1,4 +1,4 @@
-import {createFixedJourney,fixedLayout,gatePoint} from './fixed-screens.js';
+import {createFixedJourney,fixedLayout,gatePoint,fixedExitTarget} from './fixed-screens.js';
 import {drawFixedRoom,releaseFixedArt,FIXED_SOURCE} from './fixed-screen-art.js';
 import {pickJourneyTap} from './journey-tap.js';
 import {createAmbienceDirector} from './journey-ambience.js';
@@ -20,10 +20,11 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
   const pick=pickJourneyTap({tap:{x,y},toScreen:(x,y)=>project({x,y}),npcs:room.npcs,hero:{px:hero.px,py:hero.py,walking:hero.path.length>0},zoom:l.scale,tile:32});
   if(pick?.kind==='stop'){state.stop();return;}if(pick?.kind==='npc'){npc(pick.item);return;}
   if(room.returnStone){const p=project(room.returnStone),h=project({x:hero.px,y:hero.py}),d=Math.hypot(x-p.x,y-p.y),onStone=hero.x===room.returnStone.x&&hero.y===room.returnStone.y;if(d<=22&&(onStone||d+1<Math.hypot(x-h.x,y-h.y))){inspect(room.returnStone,'return');return;}}
+  const self=project({x:hero.px,y:hero.py});if(!hero.path.length&&Math.hypot(x-self.x,y-self.y)<Math.min(14,32*l.scale*.45))return;
   const p={x:Math.floor((x-l.x)/(32*l.scale)),y:Math.floor((y-l.y)/(32*l.scale))};
   const house=room.house;
   if(house&&p.x>=house.x&&p.x<house.x+house.w&&p.y>=house.y&&p.y<house.y+house.h){inspect({...house,name:house.landmark?'青い屋根の家':'窓の開いた家',lines:[house.landmark?'下から見ていた屋根の下に、洗った器が並んでいる。窓の向こうを、風が通り抜ける。':'軒下には、干したばかりの布が揺れている。']},'talk');return;}
-  state.walkTo(p);
+  state.walkTo(fixedExitTarget(room,x,y,l)||p);
  }
  function cancel(){const ids=[...contacts];contact=null;contacts.clear();multiple=false;for(const id of ids){cancelled.add(id);if(canvas.hasPointerCapture(id))canvas.releasePointerCapture(id);}while(cancelled.size>32)cancelled.delete(cancelled.values().next().value);}
  document.addEventListener('pointerdown',e=>cancelled.delete(e.pointerId),true);

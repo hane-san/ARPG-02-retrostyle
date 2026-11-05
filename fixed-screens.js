@@ -22,6 +22,24 @@ const gates=Object.fromEntries(FIXED_ROOMS.map(r=>[r.id,{}]));
 export const FIXED_SEAMS=Object.fromEntries(FIXED_ROOMS.map(r=>[r.id,{}]));
 links.forEach(([a,d,b],i)=>{const seam={width:widths[i],surface:'='};gates[a][d]=b;gates[b][FIXED_DIRECTIONS[d].back]=a;FIXED_SEAMS[a][d]=seam;FIXED_SEAMS[b][FIXED_DIRECTIONS[d].back]=seam;});
 export const gatePoint=d=>d==='N'?{x:7,y:0}:d==='S'?{x:7,y:14}:d==='W'?{x:0,y:7}:{x:14,y:7};
+export const fixedExitMarker=d=>d==='N'?{x:7,y:2}:d==='S'?{x:7,y:12}:d==='W'?{x:2,y:7}:{x:12,y:7};
+// Interpret only connected openings, in CSS pixels. The path still ends at a
+// legal boundary tile; visible neighbor terrain never teleports the traveller.
+export function fixedExitTarget(room,x,y,l){
+ const tile=32*l.scale,tx=(x-l.x)/tile,ty=(y-l.y)/tile;
+ for(const d of Object.keys(room.connections)){
+  const half=(room.seams[d].width-1)/2,vertical=d==='N'||d==='S',across=vertical?tx:ty,along=vertical?ty:tx;
+  const near=d==='N'||d==='W'?along>=-4&&along<=1.5:along>=13.5&&along<=19;
+  const m=fixedExitMarker(d),mx=l.x+(m.x+.5)*tile,my=l.y+(m.y+.5)*tile;
+  const name=FIXED_ROOMS.find(r=>r.id===room.connections[d]).chartName,font=Math.max(14*l.scale,12),labelY=my+font/2+10*l.scale,labelWidth=Math.max(44,(name.length+1)*font+12*l.scale);
+  const label=Math.abs(x-mx)<=labelWidth/2&&Math.abs(y-labelY)<=22;
+  if((near&&Math.abs(across-7.5)*tile<=Math.max(22,half===0?tile*1.15:0,(half+.5)*tile))||Math.hypot(x-mx,y-my)<=22||label){
+   const j=Math.max(7-half,Math.min(7+half,Math.floor(across))),p=gatePoint(d);
+   return vertical?{x:j,y:p.y}:{x:p.x,y:j};
+  }
+ }
+ return null;
+}
 const contains=(p,x,y)=>{let inside=false;for(let i=0,j=p.length-1;i<p.length;j=i++)if((p[i][1]>y)!==(p[j][1]>y)&&x<(p[j][0]-p[i][0])*(y-p[i][1])/(p[j][1]-p[i][1])+p[i][0])inside=!inside;return inside;};
 const distance=(x,y,pts)=>Math.min(...pts.slice(1).map((p,i)=>segmentDistance(x,y,pts[i],p)));
 const floor=t=>['g','=','s','b'].includes(t);
@@ -37,6 +55,11 @@ export function makeFixedRooms(){
   for(const d of Object.keys(connections))for(let j=7-(FIXED_SEAMS[def.id][d].width-1)/2;j<=7+(FIXED_SEAMS[def.id][d].width-1)/2;j++)for(let k=0;k<=2;k++){
    const x=d==='N'||d==='S'?j:d==='W'?k:14-k,y=d==='E'||d==='W'?j:d==='N'?k:14-k;
    tiles[y][x]='=';
+  }
+  // A three-tile landing funnels into a one-tile pass. Keep the boundary narrow.
+  for(const d of Object.keys(connections))if(FIXED_SEAMS[def.id][d].width===1)for(let j=6;j<=8;j++)for(let k=1;k<=3;k++){
+   const x=d==='N'||d==='S'?j:d==='W'?k:14-k,y=d==='E'||d==='W'?j:d==='N'?k:14-k;
+   tiles[y][x]=d==='N'||d==='S'?'s':'=';
   }
   for(const [x,y] of def.stairs||[])if(floor(tiles[y][x]))tiles[y][x]='s';
   if(def.house)for(let y=def.house.y;y<def.house.y+def.house.h;y++)for(let x=def.house.x;x<def.house.x+def.house.w;x++)tiles[y][x]='h';
