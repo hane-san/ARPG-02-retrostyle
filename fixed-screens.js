@@ -3,7 +3,7 @@ import {routeJourneyWalk} from './journey-world.js';
 import {segmentDistance} from './landscape-geometry.js';
 
 // An independent comparison area. These cells never replace the pilgrimage.
-export const FIXED_SIZE=15,FIXED_TILE=32,FIXED_CUE='47:2',FIXED_SLIDE_MS=280;
+export const FIXED_SIZE=15,FIXED_TILE=32,FIXED_CUE='47:2',FIXED_SLIDE_MS=560;
 export const FIXED_DIRECTIONS={N:{dx:0,dy:-1,back:'S'},E:{dx:1,dy:0,back:'W'},S:{dx:0,dy:1,back:'N'},W:{dx:-1,dy:0,back:'E'}};
 const definition=(id,col,row,name,chartName,role,polygon,roads,trees,extra={})=>({id,col,row,name,chartName,role,polygon,roads,trees,...extra});
 export const FIXED_ROOMS=[
@@ -11,14 +11,16 @@ export const FIXED_ROOMS=[
  definition('cypresses',0,1,'糸杉の分かれ道','糸杉','目印を木々で隠し、登りと水辺への選択を作る。',[[3,0],[11,1],[13,4],[14,10],[11,14],[4,14],[1,10],[1,5]],[[[7,14],[7,11],[6,8],[7,4],[7,0]],[[6,8],[10,9],[14,7]]],[[3,4],[10,4],[2,9],[11,12],[4,12]]),
  definition('ascent',0,0,'青い屋根への坂','坂道','小さく登る。段の向こうに同じ屋根が再び見える。',[[4,1],[9,1],[12,3],[14,5],[14,11],[10,13],[6,14],[2,10],[2,5]],[[[7,14],[7,11],[5,9],[5,6],[9,5],[12,7],[14,7]]],[[2,6],[11,10]],{stairs:[[5,5],[6,5],[7,5],[8,5],[4,8],[5,8],[6,8]]}),
  definition('windway',1,0,'風の渡り道','風道','静かに通り抜ける間。高庭の全景をまだ渡さない。',[[0,5],[4,3],[9,4],[14,5],[14,10],[10,12],[5,11],[0,10]],[[[0,7],[4,7],[7,9],[11,8],[14,7]]],[[4,10],[10,5]]),
- definition('highgarden',2,0,'窓の開いた高庭','高庭','見てきた青屋根の足元へ着く。暮らしの尺度が分かる。',[[2,2],[11,1],[14,4],[13,11],[10,14],[4,14],[1,10],[0,5]],[[[0,7],[4,7],[7,9],[7,14]],[[7,9],[10,7],[11,5]]],[[2,4],[12,10]],{house:{x:9,y:2,w:5,h:3,entrance:{x:11,y:5},landmark:true},npc:{x:4,y:10,name:'器を干す人',lines:['洗った器は、こっちの日なたへ。乾いたら窓辺に戻すの。','下の集落からは、この屋根だけ見えるんだって。']}}),
+ definition('highgarden',2,0,'窓の開いた高庭','高庭','見てきた青屋根の足元へ着く。暮らしの尺度が分かる。',[[2,2],[11,1],[14,4],[13,11],[10,14],[4,14],[1,10],[0,5]],[[[0,7],[4,7],[7,9],[7,14]],[[7,9],[10,7],[11,5]]],[[2,4],[12,10]],{house:{x:9,y:2,w:5,h:3,entrance:{x:11,y:5},landmark:true},water:[[[11,5],[10,9],[10,14]]],npc:{x:4,y:10,name:'器を干す人',lines:['洗った器は、こっちの日なたへ。乾いたら窓辺に戻すの。','下の集落からは、この屋根だけ見えるんだって。']}}),
  definition('rill',2,1,'水音の降り道','下り道','高庭を後ろにして下る。流れを橋で越え、道の高さを変える。',[[4,0],[11,1],[13,5],[12,12],[7,13],[2,11],[0,9],[0,5]],[[[7,0],[7,4],[10,6],[10,9],[6,10],[3,8],[0,7]]],[[3,3],[12,5]],{water:[[[10,0],[8,5],[8,9],[11,14]]],stairs:[[6,2],[7,2],[8,2],[3,8],[4,8]]}),
- definition('bridge',1,1,'橋のたもと','橋','登りの道と水辺を結ぶ分岐。短い周回も選べる。',[[3,1],[11,1],[14,4],[14,11],[10,13],[6,14],[2,12],[0,9],[0,4]],[[[0,7],[4,7],[7,8],[11,7],[14,7]],[[7,8],[7,11],[7,14]]],[[3,3],[12,11]],{water:[[[9,0],[9,5],[9,10],[8,14]]]}),
- definition('homewind',1,2,'帰り風の並木','帰り並木','寄り道を終えて集落へ回る。屋根と木立を帰路の角度で見る。',[[3,0],[11,1],[13,6],[11,12],[7,13],[2,11],[0,9],[0,4]],[[[7,0],[7,3],[5,6],[3,7],[0,7]],[[7,3],[11,3],[12,6]]],[[3,3],[10,10],[5,10]],{water:[[[8,0],[10,4],[12,8]]]})
+ definition('bridge',1,1,'橋のたもと','橋','登りの道と水辺を結ぶ分岐。短い周回も選べる。',[[3,1],[11,1],[14,4],[14,11],[10,13],[6,14],[2,12],[0,9],[0,4]],[[[0,7],[4,7],[7,8],[11,7],[14,7]],[[7,8],[7,11],[7,14]]],[[3,3],[12,11]],{water:[[[9,0],[9,5],[9,10],[11,14]]]}),
+ definition('homewind',1,2,'帰り風の並木','帰り並木','寄り道を終えて集落へ回る。屋根と木立を帰路の角度で見る。',[[3,0],[11,1],[13,6],[11,12],[7,13],[2,11],[0,9],[0,4]],[[[7,0],[7,3],[5,6],[3,7],[0,7]],[[7,3],[11,3],[12,6]]],[[3,3],[10,10],[5,10]],{water:[[[11,0],[10,4],[12,8]]]})
 ];
 const links=[['hearth','N','cypresses'],['cypresses','N','ascent'],['ascent','E','windway'],['windway','E','highgarden'],['highgarden','S','rill'],['rill','W','bridge'],['bridge','W','cypresses'],['bridge','S','homewind'],['homewind','W','hearth']];
+const widths=[5,1,3,7,5,3,1,3,5];
 const gates=Object.fromEntries(FIXED_ROOMS.map(r=>[r.id,{}]));
-for(const [a,d,b] of links){gates[a][d]=b;gates[b][FIXED_DIRECTIONS[d].back]=a;}
+export const FIXED_SEAMS=Object.fromEntries(FIXED_ROOMS.map(r=>[r.id,{}]));
+links.forEach(([a,d,b],i)=>{const seam={width:widths[i],surface:'='};gates[a][d]=b;gates[b][FIXED_DIRECTIONS[d].back]=a;FIXED_SEAMS[a][d]=seam;FIXED_SEAMS[b][FIXED_DIRECTIONS[d].back]=seam;});
 export const gatePoint=d=>d==='N'?{x:7,y:0}:d==='S'?{x:7,y:14}:d==='W'?{x:0,y:7}:{x:14,y:7};
 const contains=(p,x,y)=>{let inside=false;for(let i=0,j=p.length-1;i<p.length;j=i++)if((p[i][1]>y)!==(p[j][1]>y)&&x<(p[j][0]-p[i][0])*(y-p[i][1])/(p[j][1]-p[i][1])+p[i][0])inside=!inside;return inside;};
 const distance=(x,y,pts)=>Math.min(...pts.slice(1).map((p,i)=>segmentDistance(x,y,pts[i],p)));
@@ -32,17 +34,16 @@ export function makeFixedRooms(){
    if(def.roads.some(p=>distance(x,y,p)<=1.1))tiles[y][x]=tiles[y][x]==='w'?'b':'=';
    if((x===0||x===14||y===0||y===14)&&tiles[y][x]!=='w')tiles[y][x]=' ';
   }
-  for(const d of Object.keys(connections))for(let j=6;j<=8;j++)for(let k=0;k<=2;k++){
+  for(const d of Object.keys(connections))for(let j=7-(FIXED_SEAMS[def.id][d].width-1)/2;j<=7+(FIXED_SEAMS[def.id][d].width-1)/2;j++)for(let k=0;k<=2;k++){
    const x=d==='N'||d==='S'?j:d==='W'?k:14-k,y=d==='E'||d==='W'?j:d==='N'?k:14-k;
-   tiles[y][x]=tiles[y][x]==='w'?'b':'=';
+   tiles[y][x]='=';
   }
-  if(connections.N){for(const x of [5,9])for(let y=0;y<2;y++)tiles[y][x]='#';for(let y=0;y<3;y++)for(let x=6;x<=8;x++)if(tiles[y][x]!=='b')tiles[y][x]='s';}
   for(const [x,y] of def.stairs||[])if(floor(tiles[y][x]))tiles[y][x]='s';
   if(def.house)for(let y=def.house.y;y<def.house.y+def.house.h;y++)for(let x=def.house.x;x<def.house.x+def.house.w;x++)tiles[y][x]='h';
   for(const [x,y] of def.trees)tiles[y][x]='t';
-  const room={...def,w:15,h:15,tiles,connections,findPath:silkPath,journey:true,npcs:def.npc?[{...def.npc,color:'#748d93'}]:[],
+  const room={...def,w:15,h:15,tiles,connections,seams:FIXED_SEAMS[def.id],findPath:silkPath,journey:true,npcs:def.npc?[{...def.npc,color:'#748d93'}]:[],
    tileAt:(x,y)=>tiles[y]?.[x]??' ',walkable:(x,y)=>Number.isInteger(x)&&Number.isInteger(y)&&floor(tiles[y]?.[x]),
-   gateAt(x,y){for(const d of Object.keys(connections)){const p=gatePoint(d);if((d==='N'||d==='S')?y===p.y&&Math.abs(p.x-x)<=1:x===p.x&&Math.abs(p.y-y)<=1)return {direction:d,to:connections[d]};}return null;}
+   gateAt(x,y){for(const d of Object.keys(connections)){const p=gatePoint(d);if((d==='N'||d==='S')?y===p.y&&Math.abs(p.x-x)<=(FIXED_SEAMS[def.id][d].width-1)/2:x===p.x&&Math.abs(p.y-y)<=(FIXED_SEAMS[def.id][d].width-1)/2)return {direction:d,to:connections[d]};}return null;}
   };
   return room;
  });

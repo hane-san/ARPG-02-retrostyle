@@ -12,6 +12,8 @@ const P=(c,p,col)=>{c.fillStyle=col;c.beginPath();p.forEach(([x,y],i)=>i?c.lineT
 const R=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h);};
 const tag=t=>({g:'west-ground','=':'=',s:'west-stair',b:'west-bridge',w:'L',t:'west-ground',h:'west-ground','#':'west-wall'}[t]||'west-sky');
 const renderData=new WeakMap();
+const mix=(a,b,t)=>{const c=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16));return '#'+c(a).map((v,i)=>Math.round(v+(c(b)[i]-v)*Math.max(0,Math.min(1,t))).toString(16).padStart(2,'0')).join('');};
+export function fixedClimate(x,y){const east=Math.max(0,Math.min(1,x/45)),south=Math.max(0,Math.min(1,y/45));return {ground:mix(mix('#b8bdad','#a5c4b7',east),mix('#c4c8a7','#b0c8b0',east),south),road:mix('#d4d1ba','#ede0b9',south),sky:mix('#9fc4d4','#c0d7cf',south),stone:mix('#a3b4b4','#d1cbb4',south)};}
 function materialWorld(room){
  if(renderData.has(room))return renderData.get(room);
  const sx=130+room.col*30,sy=382+room.row*14;
@@ -37,42 +39,68 @@ function background(c,room,w,h,layout,time){
   const xx=(i+.4)*w/5+(room.col-1)*9*s,yy=horizon+10*s+Math.sin(i*2)*17*s;
   c.save();c.globalAlpha=.32;c.translate(xx,yy);c.scale(s*.19,s*.19);drawFixedHouse(c,{x:0,y:-3,w:4,h:3});c.restore();
  }
- if(room.id!=='highgarden'){
+ if(Math.hypot(room.col-2,room.row)>.01){
   const dx=2*15+11-(room.col*15+7),dy=4-(room.row*15+7),d=Math.hypot(dx,dy),size=s/(1+d/18),x=w/2+dx*4.2*s,base=horizon+12*s;
-  c.save();c.globalAlpha=Math.min(.88,.38+22/(d+30));c.translate(x,base);c.scale(size,size);drawFixedHouse(c,{x:-2.5,y:-3,w:5,h:3,landmark:true});c.restore();
+  c.save();c.globalAlpha=Math.min(.88,.38+22/(d+30))*Math.min(1,Math.hypot(room.col-2,room.row));c.translate(x,base);c.scale(size,size);drawFixedHouse(c,{x:-2.5,y:-3,w:5,h:3,landmark:true});c.restore();
  }
- // Ground beyond the traversable island belongs to the distant valley.
+ const air=c.createLinearGradient(0,0,0,horizon);air.addColorStop(0,fixedClimate(room.col*15+7,room.row*15+7).sky+'44');air.addColorStop(1,'#f4e6c222');R(c,0,0,w,horizon,air);
+ // The distant valley remains separate from the connected walking ground.
  const mist=c.createLinearGradient(0,horizon,0,h);mist.addColorStop(0,'#d9e1ce22');mist.addColorStop(1,'#c4d1b455');R(c,0,horizon,w,h-horizon,mist);
 }
-export function drawFixedRoom(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0}={}){
+function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0}={}){
  const {w,h}=screen,l=fixedLayout(w,h),{sx,sy,proxy,trees}=materialWorld(room),s=l.scale;
- c.save();c.translate(offsetX,offsetY);c.beginPath();c.rect(0,0,w,h);c.clip();background(c,room,w,h,l,time);
+ const left=Math.max(0,Math.floor((-64-offsetX/s)/32)),right=Math.min(14,Math.ceil((544-offsetX/s)/32)),top=Math.max(0,Math.floor((-128-offsetY/s)/32)),bottom=Math.min(14,Math.ceil((544-offsetY/s)/32));
+ c.save();c.translate(offsetX,offsetY);
  c.save();c.translate(l.x,l.y);c.scale(s,s);c.imageSmoothingEnabled=false;
  // Vertical cliff feet are separate from the grid top; the sky remains outside.
- for(let y=14;y>=0;y--)for(let x=0;x<15;x++)if(room.tileAt(x,y)!==' '&&room.tileAt(x,y)!=='w'&&room.tileAt(x,y+1)===' '){R(c,x*32,y*32+28,32,42,'#7f9691');R(c,x*32,y*32+28,32,4,'#d4dac1');R(c,x*32+7,y*32+38,2,19,'#b3c3b080');}
+ for(let y=bottom;y>=top;y--)for(let x=left;x<=right;x++)if(room.tileAt(x,y)!==' '&&room.tileAt(x,y)!=='w'&&room.tileAt(x,y+1)===' '&&!(y===14&&room.connections.S&&room.gateAt(x,y))){R(c,x*32,y*32+28,32,42,'#7f9691');R(c,x*32,y*32+28,32,4,'#d4dac1');R(c,x*32+7,y*32+38,2,19,'#b3c3b080');}
  c.save();c.translate(-sx*32,-sy*32);
- for(let y=0;y<15;y++)for(let x=0;x<15;x++){
+ for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++){
   const t=room.tileAt(x,y);if(t===' ')continue;
   drawWesternTile(c,x+sx,y+sy,tag(t),proxy);drawRegionalGroundDetail(c,x+sx,y+sy,tag(t),proxy);
  }
  c.restore();
- if(room.connections.N){
-  // The north road disappears under a real rock notch at the walking edge;
-  // it must not end as a cut-off rectangle in the open sky.
-  P(c,[[5*32,64],[5*32,-11],[6*32,-32],[6*32,55]],'#7e9693');
-  P(c,[[9*32,55],[9*32,-32],[10*32,-8],[10*32,64]],'#7e9693');
-  P(c,[[5*32,-11],[6*32,-32],[8*32,-37],[10*32,-8],[9*32,4],[6*32,4]],'#a5b7aa');
-  P(c,[[6*32,-22],[8*32,-27],[9*32,-12],[6*32,-8]],'#d7ddc3');
+ for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++){
+  const t=room.tileAt(x,y),gx=room.col*15+x,gy=room.row*15+y,p=fixedClimate(gx,gy);
+  if(['g','=','s','b'].includes(t)){
+   R(c,x*32,y*32,32,32,(t==='g'?p.ground:p.road)+'99');
+   if(t==='g'&&gy<15){P(c,[[x*32+3,y*32+24],[x*32+12,y*32+10],[x*32+25,y*32+22]],p.stone);R(c,x*32+8,y*32+24,18,1,'#edf0d255');}
+   else if(t==='g'){for(let i=0;i<3;i++){const xx=x*32+5+(gx*7+gy*11+i*9)%23,yy=y*32+7+i*7;R(c,xx,yy,1,4,'#6f98726a');if((gx+gy+i)%5===0)R(c,xx-1,yy,3,2,gy>30?'#e9d5a5':'#dae8ce');}}
+   if(t==='s')for(let j=0;j<4;j++)R(c,x*32,y*32+j*8,32,1,'#768c8c88');
+   if(t==='b')for(let j=0;j<4;j++)R(c,x*32+j*8,y*32,1,32,'#7b8e8188');
+  }
  }
- for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(room.tileAt(x,y)==='w'){R(c,x*32+5,y*32+15+Math.sin(time/1600+x)*2,17,1,'#dbe6db88');}
+ for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++)if(room.tileAt(x,y)==='w'){R(c,x*32+5,y*32+15+Math.sin(time/1600+x)*2,17,1,'#dbe6db88');}
  if(room.house?.landmark){R(c,6*32,5*32,5*32,4,'#e1dcc2');for(let i=0;i<4;i++)R(c,(6+i)*32,5*32+4,2,24,'#b7c5af');}
  if(room.returnStone){const {x,y}=room.returnStone;c.strokeStyle='#f1e6c5';c.lineWidth=3;c.beginPath();c.ellipse((x+.5)*32,(y+.5)*32,20,10,0,0,Math.PI*2);c.stroke();P(c,[[x*32+16,y*32+7],[x*32+22,y*32+16],[x*32+16,y*32+23],[x*32+10,y*32+16]],'#77a7ae');c.font=`${Math.max(14,11/s)}px system-ui`;c.textAlign='center';c.fillStyle='#3e646d';c.fillText('帰りの道標',(x+.5)*32,(y+1.3)*32);}
  drawLandscapeFeet(c,trees,{left:0,right:14,top:0,bottom:14});
  const objects=room.npcs.map(n=>({y:n.y+.5,paint:()=>drawVillager(c,n.x*32,n.y*32,n.color)}));
  if(room.house)objects.push({y:room.house.y+room.house.h,paint:()=>{drawFixedHouse(c,room.house);if(!room.house.landmark){c.strokeStyle='#8c9e92';c.lineWidth=1;c.beginPath();c.moveTo(2*32,8*32);c.lineTo(5.5*32,8*32);c.stroke();for(let i=0;i<4;i++)R(c,(2.2+i*.7)*32,8*32,14,19,['#b8c9c3','#dfc9ab','#a7bac0'][i%3]);}}});
- objects.push({y:hero.py+.7,paint:()=>{c.save();c.translate(0,hero.moving&&time!==0?-Math.abs(Math.sin(hero.stride*9))*1.5:0);drawSrpgUnit(c,{x:hero.px,y:hero.py,team:'ally',acted:false,type:'sword'});R(c,hero.px*32+8,hero.py*32+13,15,3,'#b8d9dc');R(c,hero.px*32+7,hero.py*32+16,5,7,'#7dbac5');c.restore();}});
- objects.sort((a,b)=>a.y-b.y);objects.forEach(o=>o.paint());drawLandscapeCanopies(c,trees,{left:0,right:14,top:0,bottom:14},hero);
+ if(hero)objects.push({y:hero.py+.7,paint:()=>{c.save();c.translate(0,hero.moving&&time!==0?-Math.abs(Math.sin(hero.stride*9))*1.5:0);drawSrpgUnit(c,{x:hero.px,y:hero.py,team:'ally',acted:false,type:'sword'});R(c,hero.px*32+8,hero.py*32+13,15,3,'#b8d9dc');R(c,hero.px*32+7,hero.py*32+16,5,7,'#7dbac5');c.restore();}});
+ objects.sort((a,b)=>a.y-b.y);objects.forEach(o=>o.paint());drawLandscapeCanopies(c,trees,{left:0,right:14,top:0,bottom:14},hero||{px:-100,py:-100});
  if(destination){c.strokeStyle='#fff1c5';c.lineWidth=2;c.beginPath();c.ellipse((destination.x+.5)*32,(destination.y+.5)*32,10,6,0,0,Math.PI*2);c.stroke();}
  // A small edge gap reads as the continuing road, without a development HUD.
  c.restore();c.restore();
+}
+
+// The camera moves by one walking board, not one browser viewport. The same
+// world-space terrain is visible on both sides, through a stable terrain window.
+const layers=new WeakMap();
+export function releaseFixedArt(c){const layer=layers.get(c);if(layer)layer.width=layer.height=1;}
+export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[room],transition=null}={}){
+ const l=fixedLayout(screen.w,screen.h),stride=480*l.scale;
+ const u=transition?Math.min(1,transition.elapsed/transition.duration):0,p=u*u*u*(u*(u*6-15)+10);
+ const cx=room.col+(transition?transition.to.col-room.col:0)*p,cy=room.row+(transition?transition.to.row-room.row:0)*p;
+ background(c,{...room,col:cx,row:cy},screen.w,screen.h,l,time);
+ let layer=layers.get(c);if(!layer){layer=document.createElement('canvas');layer.id='fixedTerrainCanvas';layers.set(c,layer);}const dpr=screen.dpr||1;if(layer.width!==Math.round(screen.w*dpr)||layer.height!==Math.round(screen.h*dpr)){layer.width=Math.round(screen.w*dpr);layer.height=Math.round(screen.h*dpr);}const ground=layer.getContext('2d');ground.setTransform(dpr,0,0,dpr,0,0);ground.clearRect(0,0,screen.w,screen.h);const skyContext=c;c=ground;
+ c.save();c.beginPath();c.rect(l.x-64*l.scale,l.y-128*l.scale,l.width+128*l.scale,l.height+192*l.scale);c.clip();
+ const visible=new Set([room.id,...Object.values(room.connections),...(transition?[transition.to.id,...Object.values(transition.to.connections)]:[])]);
+ for(const r of [...rooms.filter(r=>r.id!==room.id),room]){if(!visible.has(r.id))continue;const ox=(r.col-cx)*stride,oy=(r.row-cy)*stride;
+  c.save();c.beginPath();c.rect(l.x+ox,l.y+oy-128*l.scale,l.width,l.height+128*l.scale);c.clip();
+  const person=r.id===room.id?hero:transition&&r.id===transition.to.id?{...transition.landing,px:transition.landing.x,py:transition.landing.y,moving:false}:null;
+  terrain(c,r,person,screen,time,{offsetX:ox,offsetY:oy,destination:r===room?destination:null});c.restore();
+ }
+ c.restore();
+ c.save();c.globalCompositeOperation='destination-in';const fog=c.createLinearGradient(0,l.y-128*l.scale,0,l.y-48*l.scale);fog.addColorStop(0,'#0000');fog.addColorStop(1,'#000');c.fillStyle=fog;c.fillRect(0,0,screen.w,screen.h);c.restore();
+ skyContext.drawImage(layer,0,0,screen.w,screen.h);
 }
