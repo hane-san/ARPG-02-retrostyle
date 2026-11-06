@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {mkdirSync,writeFileSync} from 'node:fs';
-import {makeFixedRooms,gatePoint} from '../fixed-screens.js';
+import {makeFixedRooms,gatePoint,fixedChartSize} from '../fixed-screens.js';
 import {buildTrack} from '../music.js';
 
 export async function checkFixedScreens(browser,origin){
@@ -8,14 +8,14 @@ export async function checkFixedScreens(browser,origin){
  for(const [width,height] of [[320,568],[390,844],[430,932],[844,390]]){
   const reduced=width===320,ctx=await browser.newContext({viewport:{width,height},isMobile:true,hasTouch:true,deviceScaleFactor:1,reducedMotion:reduced?'reduce':'no-preference'}),p=await ctx.newPage(),errors=[];
   p.on('pageerror',e=>errors.push(e.message));
-  await p.addInitScript(()=>{
+  await p.addInitScript(chart=>{
    const P=CanvasRenderingContext2D.prototype,scale=P.scale,translate=P.translate,fill=P.fillRect,arc=P.arc,clear=P.clearRect;P.clearRect=function(...a){if(this.canvas.id==='fixedTerrainCanvas')window.fixedActors=[];return clear.apply(this,a);};let next=false;
    P.scale=function(x,y){const r=scale.call(this,x,y);if(this.canvas.id==='worldCanvas'){window.fixedBaseZoom=x;next=true;}if(this.canvas.id==='fixedTerrainCanvas'){const m=this.getTransform(),d=document.querySelector('#fixedCanvas').width/document.querySelector('#fixedCanvas').clientWidth;window.fixedFrame={a:m.a/d,d:m.d/d,x:m.e/d,y:m.f/d};}return r;};
    P.translate=function(x,y){if(next&&this.canvas.id==='worldCanvas'){window.fixedBaseEye={x:-x,y:-y};next=false;}return translate.call(this,x,y);};
    P.fillRect=function(x,y,w,h){if(this.fillStyle==='#b8d9dc'&&w===15&&h===3){const key=this.canvas.id==='worldCanvas'?'fixedBaseHero':this.canvas.id==='fixedTerrainCanvas'?'fixedHero':null;if(key)window[key]={x:(x-8)/32,y:(y-13)/32};if(this.canvas.id==='fixedTerrainCanvas'){const m=this.getTransform();(window.fixedActors||=[]).push({x:m.a*x+m.e,y:m.d*y+m.f});}}return fill.call(this,x,y,w,h);};
-   P.arc=function(x,y,r,...args){if(this.canvas.id==='miniMap'&&this.fillStyle==='#fae5a1'&&document.body.classList.contains('fixed-sample'))window.fixedChartHero={x:x/this.canvas.width*45-.5,y:y/this.canvas.height*45-.5};return arc.call(this,x,y,r,...args);};
+   P.arc=function(x,y,r,...args){if(this.canvas.id==='miniMap'&&this.fillStyle==='#fae5a1'&&document.body.classList.contains('fixed-sample'))window.fixedChartHero={x:x/this.canvas.width*chart.w-.5,y:y/this.canvas.height*chart.h-.5};return arc.call(this,x,y,r,...args);};
    const Native=window.AudioContext||window.webkitAudioContext;if(Native){const create=Native.prototype.createBufferSource;Native.prototype.createBufferSource=function(){const s=create.call(this),start=s.start.bind(s);s.start=(...a)=>{if(s.loop){window.fixedMusicStarts=(window.fixedMusicStarts||0)+1;window.fixedMusicSeconds=s.buffer?.duration;}return start(...a);};return s;};}
-  });
+  },fixedChartSize());
   await p.goto(origin+'/');await p.waitForFunction(()=>window.fixedBaseEye&&window.fixedBaseHero);await p.clock.install();await p.clock.pauseAt(await p.evaluate(()=>Date.now()+100));
   const sample=p.locator('#fixedCanvas');let current=rooms[0];
   const baseSnapshot=()=>p.evaluate(()=>({hero:window.fixedBaseHero,eye:window.fixedBaseEye,zoom:window.fixedBaseZoom,track:document.querySelector('#trackSelect').value}));

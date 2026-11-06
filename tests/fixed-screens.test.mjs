@@ -7,8 +7,8 @@ import {transitionTraveller} from '../fixed-screen-art.js';
 const hash=x=>createHash('sha256').update(JSON.stringify(x)).digest('hex');
 function settle(s){for(let i=0;i<1500;i++){s.update(.016);if(!s.hero.path.length&&!s.transition)return;}throw Error('fixed journey never settled');}
 function cross(s,d,reduced=false){const old=s.room,to=old.connections[d];assert.ok(to);assert.ok(s.walkTo(gatePoint(d)));for(let i=0;i<1500&&s.room===old;i++)s.update(.016,{reduced});assert.equal(s.room.id,to);assert.equal(s.hero.path.length,0);assert.equal(s.room.gateAt(s.hero.x,s.hero.y),null);}
-test('eight authored rooms have connected floors, real obstacles and reciprocal cardinal edge gates',()=>{
- const rooms=makeFixedRooms();assert.equal(rooms.length,8);assert.equal(new Set(rooms.map(r=>r.col+','+r.row)).size,8);
+test('all 33 authored rooms have connected floors, real obstacles and reciprocal cardinal edge gates',()=>{
+ const rooms=makeFixedRooms();assert.equal(rooms.length,33);assert.equal(new Set(rooms.map(r=>r.col+','+r.row)).size,33);
  for(const r of rooms){
   assert.equal(r.w,15);assert.equal(r.h,15);const q=[gatePoint(Object.keys(r.connections)[0])],seen=new Set(q.map(p=>p.x+','+p.y));
   for(let i=0;i<q.length;i++)for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const p={x:q[i].x+dx,y:q[i].y+dy},key=p.x+','+p.y;if(r.walkable(p.x,p.y)&&!seen.has(key)){seen.add(key);q.push(p);}}

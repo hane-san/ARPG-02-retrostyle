@@ -127,3 +127,7 @@ Codex/GPT等が作ったPRをClaude Codeが受け取るときの手順（競合�
 `fixed-screens.js`／`fixed-screen-art.js`／`fixed-screen-view.js`は独立領域だけに適用。元世界の保存・再生成をせず、メモリ上に保持して休止する。既存A*・再経路・描画素材・音を再利用。古い入力と経路は復帰させず、通常ディレクタは上書きしない。サンプルをテスト用の主人公座標変更APIとして使わない。
 
 `fixed-screens.test.mjs`と`fixed-screens-browser.mjs`をcheck/browserへ追加。既存の全回帰を残し、画面内カメラ不動・全接続・分岐・連打・キー継続・回転・複数の復帰元・BGM native継続・旧モード不変を検査する。実施結果はPR、画像とJSONは`fixed-screens/`へ。実機・実耳・独立監査は別に記録する。
+
+## #120 景観の広域移植
+
+制作者から通常PRマージまで明示委任。`fixed-journey-data.js`/`fixed-journey-art.js`で33画面/21地域へ拡張。旧8画面の移動状態・遷移・入力処理を利用し、元solidと描画を同じ縮尺で配置。地図は寸法算出、音はcue/quietが変わる到着時のみ通知し同地域の再始動を防ぐ。`fixed-grand.test.mjs`/`fixed-grand-browser.mjs`を既存rules/browserへ追加、旧回帰は残す。4サイズで全33画面のフィールド歩行・18建築の調べ口、390縦でnative音楽bufferの往復切替を確認する。[技術計画・台帳](FIXED-GRAND-JOURNEY.md)。実機/実耳/独立監査は別検証。
