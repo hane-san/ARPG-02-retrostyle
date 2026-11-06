@@ -84,6 +84,7 @@ const trialBag=PILGRIMAGE_MODE?createTrialBag(world):null;let trialUsed=false;
 let fixedOrigin=null;
 const fixedTrial=PILGRIMAGE_MODE?createFixedScreenView({stage,paused:()=>!!dialogue||isPanelOpen()||document.hidden,
  audible:()=>sfx.enabled&&sfx.volume>0,onAmbient:(levels,events)=>sfx.ambience(levels,events),
+ onCue:(cue,quiet)=>{trackSelect.value=cue;imperialQuiet=quiet;applyTrack();},
  onPlace:r=>{$('zoneName').textContent=r.name;$('zoneSub').textContent=r.role;},
  onTalk:(name,lines)=>openDialogue(name,'空の枝道の暮らし',lines),onReturn:returnFromFixed,
  onRead:()=>{if(dialogue)dialogueInput();},onStep:(d,t)=>sfx.step(d,t)}):null;
@@ -135,7 +136,7 @@ if(JOURNEY_MODE){
   const actions=document.createElement('div');actions.id='trialActions';actions.className='trial-actions';actions.hidden=true;actions.setAttribute('role','group');actions.setAttribute('aria-label','試遊の移動');
   for(const [action,id,text] of [['random','trialJump','ランダムに飛ぶ'],['return','trialReturn','船着場に戻る'],['fixed','fixedEnter','空の枝道へ（画面切替）']]){const button=document.createElement('button');button.id=id;button.dataset.trialAction=action;button.textContent=text;actions.append(button);}
   $('dialogue').append(actions);
-  const fixedHelp=document.createElement('p');fixedHelp.className='secondary fixed-help';fixedHelp.hidden=true;fixedHelp.textContent='ここは、景色ごとに画面が切り替わる比較用の枝道です。見えている道をタップし、端へ続く道から隣へ渡れます。地図にはつながる道が描かれています。入口の帰りの道標か、下のボタンから元の場所へ戻れます。元の世界では、いつもの歩き方に戻ります。';
+  const fixedHelp=document.createElement('p');fixedHelp.className='secondary fixed-help';fixedHelp.hidden=true;fixedHelp.textContent='ここは、景色ごとに画面が切り替わる比較用の枝道です。見えている道をタップし、端へ続く道から隣へ渡れます。帰り並木の東から、水の庭・森市・雪嶺・帝門・海岸へ旅が続きます。地図にはつながる道が描かれています。入口の帰りの道標か、下のボタンから元の場所へ戻れます。元の世界では、いつもの歩き方に戻ります。';
   const fixedReturn=document.createElement('button');fixedReturn.id='fixedReturn';fixedReturn.className='line-btn';fixedReturn.textContent='元の場所へ戻る';fixedReturn.hidden=true;fixedReturn.addEventListener('click',returnFromFixed);$('helpPanel').querySelector('.sheet').append(fixedHelp,fixedReturn);
   const fixedHelpEnter=document.createElement('button');fixedHelpEnter.id='fixedHelpEnter';fixedHelpEnter.className='line-btn';fixedHelpEnter.textContent='空の枝道へ（画面切替）';fixedHelpEnter.addEventListener('click',enterFixed);$('helpPanel').querySelector('.sheet').append(fixedHelpEnter);
  }
