@@ -1,3 +1,4 @@
+import {checkFixedAtlas} from './fixed-atlas-browser.mjs';
 import {checkSkyTrial} from './sky-trial-browser.mjs';
 import {checkFixedGrandJourney} from './fixed-grand-browser.mjs';
 import {checkFixedScreens} from './fixed-screens-browser.mjs';
@@ -27,6 +28,8 @@ import {checkMusicUnderLoad} from './music-load-browser.mjs';
 import {checkAudioContinuity} from './audio-continuity-browser.mjs';
 
 const origin='http://127.0.0.1:4173';
+const group=process.env.BROWSER_GROUP||'all';
+assert.ok(['all','core','landscapes','journey','fixed','atlas'].includes(group),'unknown browser test group');
 const server=spawn('python3',['-m','http.server','4173','--bind','127.0.0.1'],{
  cwd:process.cwd(),stdio:'ignore'
 });
@@ -48,6 +51,10 @@ async function main(){
  page.on('pageerror',e=>errors.push(e.message));
  page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status()+' '+r.url());});
  page.on('requestfailed',r=>{if(r.failure()?.errorText!=='net::ERR_ABORTED')errors.push('Request '+r.url()+': '+r.failure()?.errorText);});
+ if(group==='fixed'){await checkFixedScreens(browser,origin);await checkFixedGrandJourney(browser,origin);return;}
+ if(group==='atlas'){await checkFixedAtlas(browser,origin);return;}
+ if(group==='landscapes'){await checkSkyTrial(browser,origin);await checkWestern(browser,origin);await checkPilgrimage(browser,origin);await checkDeadzoneCamera(browser,origin);await checkImperialStudies(page,origin);return;}
+ if(group==='journey'){await checkJourney(page,origin);await checkJourneyTaps(browser,origin);await checkJourneyFlow(browser,origin);await checkJourneyTargets(browser,origin);await checkJourneyMotion(browser,origin);await checkMazeTrial(browser,origin);await checkJourneyFoley(browser,origin);return;}
  const response=await page.goto(origin+'/?mode=classic',{waitUntil:'load'});
  assert.ok(response?.ok(),'static entry point must serve');
  await page.waitForSelector('#worldCanvas');
@@ -107,8 +114,10 @@ async function main(){
  await checkPortalRoutes(page,origin);
  await checkCameraInput(page,origin);
  await checkWesternAudio(browser,origin);
+ if(group==='all'){
  await checkFixedScreens(browser,origin);
  await checkFixedGrandJourney(browser,origin);
+ await checkFixedAtlas(browser,origin);
  await checkSkyTrial(browser,origin);
  await checkWestern(browser,origin);
  await checkPilgrimage(browser,origin);
@@ -121,6 +130,7 @@ async function main(){
  await checkJourneyMotion(browser,origin);
  await checkMazeTrial(browser,origin);
  await checkJourneyFoley(browser,origin);
+ }
  await checkAudioContinuity(browser,origin);
  await checkMusicUnderLoad(browser,origin);
  if(errors.length)throw new Error('JavaScript browser errors: '+errors.join(' | '));
@@ -133,7 +143,7 @@ async function main(){
  await checkLayout(browser,origin);
  console.log('Browser smoke passed: default mobile exploration, 68 original tracks plus additions, mainland bridge, compact two-zone walk.');
 }
-try{await main();}
+try{await main();if(errors.length)throw new Error('JavaScript browser errors: '+errors.join(' | '));console.log('Browser group passed: '+group);}
 catch(err){
  if(page)try{
   mkdirSync('test-results',{recursive:true});

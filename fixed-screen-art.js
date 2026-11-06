@@ -65,7 +65,7 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
  }
  c.restore();
  for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++){
-  const t=room.tileAt(x,y),gx=room.col*15+x,gy=room.row*15+y,p=fixedClimate(gx,gy);
+  const t=room.tileAt(x,y),gx=room.col*15+x,gy=room.row*15+y,p=room.sourceIndex===undefined?fixedClimate(gx,gy):null;
   if(room.sourceIndex===undefined&&['g','=','s','b'].includes(t)){
    R(c,x*32,y*32,32,32,(t==='g'?p.ground:p.road)+'99');
    if(t==='g'&&gy<15&&Math.sin(gx*.31+gy*.17)+Math.sin(gx*.11-gy*.41)>.55){const n=(gx*13+gy*7)%9;P(c,[[x*32+3+n/2,y*32+24],[x*32+10+n,y*32+10+n/2],[x*32+25-n/2,y*32+22]],p.stone);R(c,x*32+8,y*32+24,18,1,'#edf0d255');}
@@ -81,7 +81,7 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
  const market=room.sourceIndex===1;
  if(market)for(const d of trees.landscapeObjects)drawForestTree(c,d,'trunk');else drawLandscapeFeet(c,trees,{left:0,right:14,top:0,bottom:14});
  const objects=room.npcs.map(n=>({y:n.y+.5,paint:()=>drawVillager(c,n.x*32,n.y*32,n.color)}));
- if(room.site)objects.push({y:room.site.y+room.site.h,paint:()=>journeySite(c,room.site,time)});
+ for(const site of [room.site,...room.props||[]].filter(Boolean))objects.push({y:site.y+site.h,paint:()=>journeySite(c,site,time)});
  if(room.house)objects.push({y:room.house.y+room.house.h,paint:()=>{drawFixedHouse(c,room.house);if(!room.house.landmark){c.strokeStyle='#8c9e92';c.lineWidth=1;c.beginPath();c.moveTo(2*32,8*32);c.lineTo(5.5*32,8*32);c.stroke();for(let i=0;i<4;i++)R(c,(2.2+i*.7)*32,8*32,14,19,['#b8c9c3','#dfc9ab','#a7bac0'][i%3]);}}});
  if(hero)objects.push({y:hero.py+.7,paint:()=>{c.save();c.beginPath();c.rect(0,0,480,480);c.clip();c.translate(0,hero.moving&&time!==0?-Math.abs(Math.sin(hero.stride*9))*1.5:0);drawSrpgUnit(c,{x:hero.px,y:hero.py,team:'ally',acted:false,type:'sword'});R(c,hero.px*32+8,hero.py*32+13,15,3,'#b8d9dc');R(c,hero.px*32+7,hero.py*32+16,5,7,'#7dbac5');c.restore();}});
  objects.sort((a,b)=>a.y-b.y);objects.forEach(o=>o.paint());if(market)for(const d of trees.landscapeObjects){c.save();if((hero&&Math.abs(hero.px-d.x)<3&&hero.py<d.y+.5&&hero.py>d.y-5)||Object.keys(room.connections).map(fixedExitMarker).some(m=>Math.hypot(m.x-d.x,m.y-d.y)<4))c.globalAlpha=.24;drawForestTree(c,d,'canopy');c.restore();}else drawLandscapeCanopies(c,guides?{...trees,npcs:[...trees.npcs,...Object.keys(room.connections).map(fixedExitMarker)]}:trees,{left:0,right:14,top:0,bottom:14},hero||{px:-100,py:-100});

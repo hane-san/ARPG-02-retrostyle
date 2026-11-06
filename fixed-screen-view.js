@@ -23,7 +23,7 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
   if(room.returnStone){const p=project(room.returnStone),h=project({x:hero.px,y:hero.py}),d=Math.hypot(x-p.x,y-p.y),onStone=hero.x===room.returnStone.x&&hero.y===room.returnStone.y;if(d<=22&&(onStone||d+1<Math.hypot(x-h.x,y-h.y))){inspect(room.returnStone,'return');return;}}
   const self=project({x:hero.px,y:hero.py});if(!hero.path.length&&Math.hypot(x-self.x,y-self.y)<Math.min(14,32*l.scale*.45))return;
   const p={x:Math.floor((x-l.x)/(32*l.scale)),y:Math.floor((y-l.y)/(32*l.scale))};
-  if(room.site&&room.tileAt(p.x,p.y)==='h'){inspect(room.site,'talk');return;}
+  if(room.tileAt(p.x,p.y)==='h'){const site=[room.site,...room.props||[]].filter(Boolean).filter(s=>p.x>=s.x&&p.x<s.x+s.w&&p.y>=s.y&&p.y<s.y+s.h).sort((a,b)=>a.w-b.w)[0];if(site){inspect(site,'talk');return;}}
   const house=room.house;
   if(house&&p.x>=house.x&&p.x<house.x+house.w&&p.y>=house.y&&p.y<house.y+house.h){inspect({...house,name:house.landmark?'青い屋根の家':'窓の開いた家',lines:[house.landmark?'下から見ていた屋根の下に、洗った器が並んでいる。窓の向こうを、風が通り抜ける。':'軒下には、干したばかりの布が揺れている。']},'talk');return;}
   state.walkTo(fixedExitTarget(room,x,y,l)||p);
@@ -58,9 +58,9 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
   },
   drawMap(mini,zoneList){
    const chart=fixedChartSize();mini.width=810;mini.height=mini.width*chart.h/chart.w;mini.style.aspectRatio=String(chart.w/chart.h);mini.style.setProperty('--atlas-aspect',chart.w/chart.h);const g=mini.getContext('2d'),s=mini.width/chart.w;g.clearRect(0,0,mini.width,mini.height);g.fillStyle='#c9dce0';g.fillRect(0,0,mini.width,mini.height);
-   const fontScale=mini.width/Math.max(1,mini.getBoundingClientRect().width);
-   for(const r of state.rooms){const palette=fixedSource(r.sourceIndex??23).palette;for(let y=0;y<15;y++)for(let x=0;x<15;x++){const t=r.tileAt(x,y);if(t===' ')continue;g.fillStyle=t==='w'?palette[2]:['h','t','d'].includes(t)?palette[3]:['=','s','b'].includes(t)?palette[1]:palette[0];g.fillRect((r.col*15+x)*s,(r.row*15+y)*s,s+.3,s+.3);}g.font=`${12*fontScale}px system-ui`;g.textAlign='center';g.lineWidth=3*fontScale;g.strokeStyle='#edf0e1';g.strokeText(r.chartName.slice(0,2),(r.col*15+7.5)*s,(r.row*15+4)*s);g.fillStyle='#3d646c';g.fillText(r.chartName.slice(0,2),(r.col*15+7.5)*s,(r.row*15+4)*s);}
-   g.fillStyle='#fae5a1';g.strokeStyle='#395f6b';g.lineWidth=2;g.beginPath();g.arc((state.room.col*15+state.hero.px+.5)*s,(state.room.row*15+state.hero.py+.5)*s,6,0,Math.PI*2);g.fill();g.stroke();
+   const mapWidth=Math.max(1,mini.getBoundingClientRect().width),fontScale=mini.width/mapWidth,font=Math.min(11,Math.max(8,(mapWidth/10-3)/2));
+   for(const r of state.rooms){const palette=fixedSource(r.sourceIndex??23).palette;for(let y=0;y<15;y++)for(let x=0;x<15;x++){const t=r.tileAt(x,y);if(t===' ')continue;g.fillStyle=t==='w'?palette[2]:['h','t','d'].includes(t)?palette[3]:['=','s','b'].includes(t)?palette[1]:palette[0];g.fillRect((r.col*15+x)*s,(r.row*15+y)*s,s+.3,s+.3);}g.font=`${font*fontScale}px system-ui`;g.textAlign='center';g.lineWidth=2*fontScale;g.strokeStyle='#edf0e1';g.strokeText(r.chartName.slice(0,2),(r.col*15+7.5)*s,(r.row*15+4)*s);g.fillStyle='#3d646c';g.fillText(r.chartName.slice(0,2),(r.col*15+7.5)*s,(r.row*15+4)*s);}
+   g.fillStyle='#fae5a1';g.strokeStyle='#395f6b';g.lineWidth=2*fontScale;g.beginPath();g.arc((state.room.col*15+state.hero.px+.5)*s,(state.room.row*15+state.hero.py+.5)*s,4.5*fontScale,0,Math.PI*2);g.fill();g.stroke();
    zoneList.replaceChildren();for(const [d,id] of Object.entries(state.room.connections)){const b=document.createElement('button');b.dataset.fixedExit=d;b.textContent=state.rooms.find(r=>r.id===id).name+'へ';b.addEventListener('click',()=>{state.walkTo(gatePoint(d));document.querySelector('#mapPanel [data-close]').click();});zoneList.append(b);}
   },
   mapTap(x,y,mini){const r=mini.getBoundingClientRect(),chart=fixedChartSize(),wx=(x-r.left)/r.width*chart.w,wy=(y-r.top)/r.height*chart.h,col=Math.floor(wx/15),row=Math.floor(wy/15),target=state.rooms.find(a=>a.col===col&&a.row===row);if(!target)return;if(target===state.room)state.walkTo({x:Math.floor(wx)%15,y:Math.floor(wy)%15});else{const d=Object.keys(state.room.connections).find(d=>state.room.connections[d]===target.id);if(d)state.walkTo(gatePoint(d));}}

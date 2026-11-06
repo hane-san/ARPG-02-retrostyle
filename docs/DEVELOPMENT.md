@@ -131,3 +131,9 @@ Codex/GPT等が作ったPRをClaude Codeが受け取るときの手順（競合�
 ## #120 景観の広域移植
 
 制作者から通常PRマージまで明示委任。`fixed-journey-data.js`/`fixed-journey-art.js`で33画面/21地域へ拡張。旧8画面の移動状態・遷移・入力処理を利用し、元solidと描画を同じ縮尺で配置。地図は寸法算出、音はcue/quietが変わる到着時のみ通知し同地域の再始動を防ぐ。`fixed-grand.test.mjs`/`fixed-grand-browser.mjs`を既存rules/browserへ追加、旧回帰は残す。4サイズで全33画面のフィールド歩行・18建築の調べ口、390縦でnative音楽bufferの往復切替を確認する。[技術計画・台帳](FIXED-GRAND-JOURNEY.md)。実機/実耳/独立監査は別検証。
+
+## #122 100枚・多様な空の開発
+
+`fixed-atlas-data.js`は作者配置の67枚と接続、`fixed-sky.js`は11種類の元々独自の空の描画を担当。既存のsource物体生成を共有し、複数物体/調べ口と一画面15×15を保つ。全100枚の物理的な床/橋/固体/NPC/着地を検査し、見た目だけの続きや道を塞ぐ小物を作らない。[台帳/技術計画](FIXED-HUNDRED-ATLAS.md)。
+
+`npm run test:browser`は未指定なら全検査。CIでは`BROWSER_GROUP=core|landscapes|journey|fixed|atlas`の5実行へ分割し、既存全回帰＋新100枚を維持。`browser_checks`のmatrixが全成功した場合だけ、名前`browser`の集約ジョブが成功する。fail-fastはfalseで全グループの証跡を残す。artifactは`atlas-browser-evidence-<group>`。これはworkflowファイルの実行分割でありrepository Settingsの変更ではない。

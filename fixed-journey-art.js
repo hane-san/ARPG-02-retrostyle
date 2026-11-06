@@ -1,3 +1,4 @@
+import {drawFixedSky,FIXED_SKIES} from './fixed-sky.js';
 import {WEST_STUDIES} from './western-world.js';
 import {fixedSource} from './fixed-journey-data.js';
 import {drawPilgrimTile,drawPilgrimSite} from './pilgrimage-art.js';
@@ -10,7 +11,7 @@ export function journeyMaterial(room){
  const z=fixedSource(room.sourceIndex),sx=z.cx-7,sy=z.cy-7;
  const tag=t=>z.southeast?({s:'se-stair',b:room.land==='shore'?'se-stonebridge':'se-boardwalk',w:'L','#':'se-wall','=':'='}[t]||'se-ground'):z.western?({s:'west-stair',b:'west-bridge',w:'L','#':'west-wall','=':'='}[t]||'west-ground'):({s:'=',b:'+',w:'L','#':'X','=':'='}[t]||'.');
  const proxy={tileAt:(x,y)=>tag(room.tileAt(x-sx,y-sy)),walkable:(x,y)=>room.walkable(x-sx,y-sy),zoneAt:()=>z};
- const kind=room.sourceIndex===17?'pine':room.land==='forest'?'willow':room.land==='marsh'?'willow':room.land==='shore'?'rock':'cypress';
+ const kind=room.sourceIndex===17?'pine':room.sourceIndex===27?'cypress':room.land==='forest'?'willow':room.land==='marsh'?'willow':room.land==='shore'?'rock':'cypress';
  const landscapeObjects=room.trees.map(([x,y],i)=>({x,y,kind,seed:.2+i*.1,solid:true,palette:z.palette}));
  if(['meadow','terrace','marsh','shore'].includes(room.land))for(let y=3;y<13;y+=3)for(let x=2;x<13;x+=4)if(room.tileAt(x,y)==='g')landscapeObjects.push({x,y,kind:room.land==='marsh'?'reed':'flower',seed:(x+y)%7/7,solid:false,palette:z.palette});
  const trees={landscapeObjects,npcs:room.npcs};
@@ -23,6 +24,7 @@ export function journeyTile(c,room,x,y){
   const xx=(x+sx)*32,yy=(y+sy)*32;R(c,xx,yy,32,32,z.palette[3]);R(c,xx+5,yy,22,32,'#aa9f89');
   for(let i=0;i<3;i++)R(c,xx+7,yy+6+i*10,17,1,'#e3d6ae77');R(c,xx,yy,3,32,z.palette[1]);R(c,xx+29,yy,3,32,z.palette[1]);
  }
+ const light=FIXED_SKIES[room.sky];if(light?.light){c.save();c.globalAlpha*=light.strength;R(c,(x+sx)*32,(y+sy)*32,32,32,light.light);c.restore();}
  if(t==='s'&&!z.western)for(let j=0;j<4;j++){R(c,(x+sx)*32,(y+sy)*32+j*8,32,2,z.palette[1]);R(c,(x+sx)*32,(y+sy)*32+j*8+2,32,1,z.palette[3]);}
 }
 export function journeySite(c,site,time){
@@ -35,9 +37,10 @@ export function journeyBackground(c,room,w,h,l,time){
  const source=fixedSource(room.sourceIndex),z=WEST_STUDIES.find(z=>z.index===room.sourceIndex),profile=z&&skyGeometry(z)?z:WEST_STUDIES.find(z=>z.key==='azure');
  const coreSkies={forest:['#72969d','#b5cabb','#eadbc1'],garden:['#689eaf','#bddbd2','#f0e6c5'],dry:['#8d9caf','#d5cec3','#f0d8b2'],salt:['#8caec2','#d2dedb','#f1e6c7'],conifer:['#768eab','#b4c8cf','#d4ded6'],monolith:['#617f98','#a2b9c2','#d2d3bf'],capital:['#6b879c','#b8c6c5','#e5dfc5'],sealed:['#758393','#b4bdc1','#dedccd']};
  const horizon=l.y+32*l.scale*2.6,colors=coreSkies[source.theme]||skyPalette(profile.key),grad=c.createLinearGradient(0,0,0,Math.max(horizon,1));
- colors.forEach((col,i)=>grad.addColorStop(i/(colors.length-1),col));R(c,0,0,w,h,grad);
+ const authored=!!room.sky;
+ if(authored)drawFixedSky(c,room,w,h,l,time);else{colors.forEach((col,i)=>grad.addColorStop(i/(colors.length-1),col));R(c,0,0,w,h,grad);
  const zoom=l.scale*.9,g=skyGeometry(profile),camera={x:(profile.cx+.5)*32+(room.col-5)*35,y:g.horizon-(horizon-h/2)/zoom,zoom};
- c.save();if(!z||!skyGeometry(z))c.globalAlpha*=.45;c.translate(w/2,h/2);c.scale(zoom,zoom);c.translate(-camera.x,-camera.y);drawLandscapeSky(c,profile,camera,{w,h},0,time);c.restore();
+ c.save();if(!z||!skyGeometry(z))c.globalAlpha*=.45;c.translate(w/2,h/2);c.scale(zoom,zoom);c.translate(-camera.x,-camera.y);drawLandscapeSky(c,profile,camera,{w,h},0,time);c.restore();}
  const water=['shore','river','marsh'].includes(room.land),salt=room.land==='salt',mountain=room.land==='ridge';
  const skyTint=c.createLinearGradient(0,0,0,h);skyTint.addColorStop(0,source.palette[2]+'12');skyTint.addColorStop(1,source.palette[0]+'66');R(c,0,0,w,h,skyTint);
  for(let layer=0;layer<3;layer++){

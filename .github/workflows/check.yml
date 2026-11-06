@@ -17,8 +17,12 @@ jobs:
           node-version: '22'
       - name: Verify JavaScript, pathfinding, camera and sound rules
         run: npm run check
-  browser:
-    name: browser
+  browser_checks:
+    name: browser (${{ matrix.group }})
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [core, landscapes, journey, fixed, atlas]
     runs-on: ubuntu-latest
     timeout-minutes: 50
     steps:
@@ -34,13 +38,25 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Run mobile-viewport smoke tests
+        env:
+          BROWSER_GROUP: ${{ matrix.group }}
         run: npm run test:browser
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: atlas-browser-evidence
+          name: atlas-browser-evidence-${{ matrix.group }}
           path: |
             test-results/**/*.png
             test-results/**/*.json
           if-no-files-found: ignore
           retention-days: 7
+  browser:
+    name: browser
+    runs-on: ubuntu-latest
+    needs: browser_checks
+    if: always()
+    steps:
+      - name: Require every browser group to pass
+        env:
+          BROWSER_RESULT: ${{ needs.browser_checks.result }}
+        run: test "$BROWSER_RESULT" = success

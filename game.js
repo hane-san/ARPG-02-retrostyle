@@ -136,7 +136,7 @@ if(JOURNEY_MODE){
   const actions=document.createElement('div');actions.id='trialActions';actions.className='trial-actions';actions.hidden=true;actions.setAttribute('role','group');actions.setAttribute('aria-label','試遊の移動');
   for(const [action,id,text] of [['random','trialJump','ランダムに飛ぶ'],['return','trialReturn','船着場に戻る'],['fixed','fixedEnter','空の枝道へ（画面切替）']]){const button=document.createElement('button');button.id=id;button.dataset.trialAction=action;button.textContent=text;actions.append(button);}
   $('dialogue').append(actions);
-  const fixedHelp=document.createElement('p');fixedHelp.className='secondary fixed-help';fixedHelp.hidden=true;fixedHelp.textContent='ここは、景色ごとに画面が切り替わる比較用の枝道です。見えている道をタップし、端へ続く道から隣へ渡れます。帰り並木の東から、水の庭・森市・雪嶺・帝門・海岸へ旅が続きます。地図にはつながる道が描かれています。入口の帰りの道標か、下のボタンから元の場所へ戻れます。元の世界では、いつもの歩き方に戻ります。';
+  const fixedHelp=document.createElement('p');fixedHelp.className='secondary fixed-help';fixedHelp.hidden=true;fixedHelp.textContent='ここは、景色ごとに画面が切り替わる比較用の枝道です。見えている道をタップし、端へ続く道から隣へ渡れます。帰り並木の東や水段の西から、森市・段畑・雪嶺・夕空の入江へ旅が続きます。地図にはつながる道が描かれています。入口の帰りの道標か、下のボタンから元の場所へ戻れます。元の世界では、いつもの歩き方に戻ります。';
   const fixedReturn=document.createElement('button');fixedReturn.id='fixedReturn';fixedReturn.className='line-btn';fixedReturn.textContent='元の場所へ戻る';fixedReturn.hidden=true;fixedReturn.addEventListener('click',returnFromFixed);$('helpPanel').querySelector('.sheet').append(fixedHelp,fixedReturn);
   const fixedHelpEnter=document.createElement('button');fixedHelpEnter.id='fixedHelpEnter';fixedHelpEnter.className='line-btn';fixedHelpEnter.textContent='空の枝道へ（画面切替）';fixedHelpEnter.addEventListener('click',enterFixed);$('helpPanel').querySelector('.sheet').append(fixedHelpEnter);
  }
