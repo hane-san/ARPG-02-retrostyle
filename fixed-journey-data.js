@@ -35,13 +35,14 @@ const shape={
  court:[[1,1],[12,1],[14,5],[13,12],[9,14],[2,13],[0,8]]
 };
 export function fixedSource(index){return PILGRIM_ZONES[index];}
-function object(id){if(!id)return null;const source=PILGRIM_SITES.find(s=>s.id===id);if(!source)throw Error('Unknown ported site '+id);
+export function fixedObject(id,options={}){if(!id)return null;const source=PILGRIM_SITES.find(s=>s.id===id);if(!source)throw Error('Unknown ported site '+id);
  const width=source.form==='gate'?11:source.form==='monolith'?8:['boat','bowl','gauge'].includes(source.form)?4:source.form.startsWith('forest-')?7:9;
- const scale=width/source.w,x=source.form==='gate'?2:3,y=source.form==='west-glass'?4:source.form==='se-kitchen'?3:1;
- return {...source,x,y,sourceId:id,sourceW:source.w,sourceH:source.h,scale,w:width,h:source.h*scale,entrance:{x:7,y:9},lines:[source.desc||'道は建物の脇にも続いている。',source.aside||'戻る道から見ると、さっきの形が少し違って見える。']};
+ const x=source.form==='gate'?2:3,y=source.form==='west-glass'?4:source.form==='se-kitchen'?3:1;
+ const size=options.width??width,factor=size/source.w;
+ return {...source,x:options.x??x,y:options.y??y,sourceId:id,sourceW:source.w,sourceH:source.h,scale:factor,w:size,h:source.h*factor,entrance:options.entrance||{x:7,y:9},lines:[source.desc||'道は建物の脇にも続いている。',source.aside||'戻る道から見ると、さっきの形が少し違って見える。']};
 }
 export const FIXED_EXPANSION=specs.map(([id,col,row,sourceIndex,name,chartName,role,land,site],i)=>{
- const source=fixedSource(sourceIndex),siteObject=object(site);
+ const source=fixedSource(sourceIndex),siteObject=fixedObject(site);
  const roads=[[[7,0],[7,5],[6,7],[7,10],[7,14]],[[0,7],[4,8],[7,9],[11,8],[14,7]]];
  if(land==='shore')roads.splice(0,roads.length,[[7,0],[6,4],[8,8],[7,11],[7,14]],[[0,7],[4,9],[7,11],[11,9],[14,7]]);
  if(land==='forest')roads.splice(0,roads.length,[[7,0],[6,3],[8,7],[7,10],[7,14]],[[0,7],[3,8],[7,9],[11,8],[14,7]]);
