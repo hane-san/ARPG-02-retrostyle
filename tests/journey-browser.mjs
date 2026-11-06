@@ -332,6 +332,9 @@ export async function checkJourney(page,origin){
  assert.ok(await page.getByRole('link',{name:'小さな旅を試す（台場ミニ版）'}).isVisible());
  await page.getByRole('link',{name:'以前の広い世界を歩く'}).click();
  await page.waitForFunction(()=>document.querySelector('#worldTitle').textContent==='潮環群島');
+ // Classic's title and OFF button already exist in the initial HTML. Wait for
+ // the module to populate its library before asserting restored preferences.
+ await page.waitForFunction(total=>document.querySelector('#trackSelect')?.options.length===total,MUSIC_LIBRARY.length*2);
  assert.ok(await page.locator('.topbar').isVisible(),'default UI remains intact');
  assert.equal(await page.locator('.journey-menu').count(),0);
  assert.equal(await page.locator('#sfxVolumeRange').count(),0,'journey sound controls do not leak into default mode');
