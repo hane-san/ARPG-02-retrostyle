@@ -28,8 +28,8 @@ export function drawFixedHouse(c,house){
  drawWesternSite(c,{...house,form:'west-home',chapter:23},0);
  if(house.landmark){const x=house.x*32,y=house.y*32,w=house.w*32;P(c,[[x-7,y+2],[x+w*.5,y-35],[x+w+7,y+2]],'#92adb9');R(c,x+w*.7,y-25,12,24,'#b8c9c8');R(c,x+w*.7-2,y-28,16,5,'#78959f');}
 }
-function background(c,room,w,h,layout,time,next=null,p=0){
- if(room.sourceIndex!==undefined)return journeyBackground(c,room,w,h,layout,time,next,p);
+function background(c,room,w,h,layout,time){
+ if(room.sourceIndex!==undefined)return journeyBackground(c,room,w,h,layout,time);
  const {scale:s,y}=layout,source=FIXED_SOURCE,g=skyGeometry(source),horizon=y+32*s*2.6;
  R(c,0,0,w,h,'#a6cad2');
  const zoom=s*.9,camera={x:(source.cx+.5)*32+(room.col-1)*85,y:g.horizon-(horizon-h/2)/zoom,zoom};
@@ -114,8 +114,11 @@ export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[r
  const u=transition?Math.min(1,transition.elapsed/transition.duration):0,p=u*u*u*(u*(u*6-15)+10);
  const cx=room.col+(transition?transition.to.col-room.col:0)*p,cy=room.row+(transition?transition.to.row-room.row:0)*p;
  background(c,{...room,col:cx,row:cy},screen.w,screen.h,l,time);
- if(transition){c.save();c.globalAlpha=p;background(c,{...transition.to,col:cx,row:cy},screen.w,screen.h,l,time);c.restore();}
- let layer=layers.get(c);if(!layer){layer=document.createElement('canvas');layer.id='fixedTerrainCanvas';layers.set(c,layer);}const dpr=screen.dpr||1;if(layer.width!==Math.round(screen.w*dpr)||layer.height!==Math.round(screen.h*dpr)){layer.width=Math.round(screen.w*dpr);layer.height=Math.round(screen.h*dpr);}const ground=layer.getContext('2d');ground.setTransform(dpr,0,0,dpr,0,0);ground.clearRect(0,0,screen.w,screen.h);const skyContext=c;c=ground;
+ let layer=layers.get(c);if(!layer){layer=document.createElement('canvas');layer.id='fixedTerrainCanvas';layers.set(c,layer);}const dpr=screen.dpr||1;if(layer.width!==Math.round(screen.w*dpr)||layer.height!==Math.round(screen.h*dpr)){layer.width=Math.round(screen.w*dpr);layer.height=Math.round(screen.h*dpr);}const ground=layer.getContext('2d');ground.setTransform(dpr,0,0,dpr,0,0);
+ // Sky renderers own their cloud alpha. Fade the completed sky, using the
+ // terrain buffer before clearing it, so no cloud can bypass the transition.
+ if(transition){background(ground,{...transition.to,col:cx,row:cy},screen.w,screen.h,l,time);c.save();c.globalAlpha=p;c.drawImage(layer,0,0,screen.w,screen.h);c.restore();}
+ ground.clearRect(0,0,screen.w,screen.h);const skyContext=c;c=ground;
  c.save();c.beginPath();c.rect(l.x-64*l.scale,l.y-128*l.scale,l.width+128*l.scale,l.height+192*l.scale);c.clip();
  const visible=new Set([room.id,...Object.values(room.connections),...(transition?[transition.to.id,...Object.values(transition.to.connections)]:[])]);
  for(const r of [...rooms.filter(r=>r.id!==room.id),room]){if(!visible.has(r.id))continue;const ox=(r.col-cx)*stride,oy=(r.row-cy)*stride;

@@ -13,6 +13,12 @@ export async function checkFixedGrandJourney(browser,origin){
    const Native=window.AudioContext||window.webkitAudioContext;if(Native){const create=Native.prototype.createBufferSource;Native.prototype.createBufferSource=function(){const s=create.call(this),start=s.start.bind(s);s.start=(...args)=>{if(s.loop){window.grandStarts=(window.grandStarts||0)+1;window.grandSeconds=s.buffer?.duration;}return start(...args);};return s;};}
   });
   await p.goto(origin+'/');await p.locator('#helpBtn').click();await p.locator('#fixedHelpEnter').click();const canvas=p.locator('#fixedCanvas');await canvas.waitFor({state:'visible'});await p.clock.install();await p.clock.pauseAt(await p.evaluate(()=>Date.now()+100));await p.clock.runFor(500);
+  if(width===390)assert.equal(await p.evaluate(async()=>{
+   const {drawFixedRoom}=await import('./fixed-screen-art.js'),{makeFixedRooms,fixedLayout}=await import('./fixed-screens.js'),rooms=makeFixedRooms(),from=rooms.find(r=>r.id==='wet-temple'),to=rooms.find(r=>r.id==='glass-court'),screen={w:390,h:753,dpr:1},height=Math.floor(fixedLayout(390,753).y-128*fixedLayout(390,753).scale-8);
+   const render=(room,transition=null)=>{const c=document.createElement('canvas');c.width=390;c.height=753;const ctx=c.getContext('2d');drawFixedRoom(ctx,room,{px:7,py:9,stride:0},screen,1000,{rooms,transition});return ctx.getImageData(0,0,390,height).data;};
+   const t={to,hero:{px:7,py:0},landing:{x:7,y:13},duration:560,elapsed:0};
+   const same=(a,b)=>a.every((v,i)=>v===b[i]);return same(render(from),render(from,t))&&same(render(to),render(from,{...t,elapsed:560}));
+  }),true,'the whole sky, including internally translucent clouds, respects both fade endpoints');
   const stage=await canvas.boundingBox(),l=fixedLayout(stage.width,stage.height),point=t=>({x:l.x+(t.x+.5)*32*l.scale,y:l.y+(t.y+.5)*32*l.scale});let current=rooms[0],starts=0;const visited=new Set([current.id]);
   async function audioReady(room,changed){
    if(width!==390)return;
