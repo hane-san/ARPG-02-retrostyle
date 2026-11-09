@@ -1,3 +1,5 @@
+import {FIXED_START,FIXED_GEOGRAPHY_LINKS,composeFixedGeography,geographySeam,seamLanes,seamTile,faultCell,connectFixedLand} from './fixed-geography.js';
+export {FIXED_START} from './fixed-geography.js';
 import {FIXED_ATLAS,FIXED_ATLAS_LINKS} from './fixed-atlas-data.js';
 import {FIXED_EXPANSION,FIXED_EXPANSION_LINKS} from './fixed-journey-data.js';
 import {silkPath} from './silk-world.js';
@@ -19,28 +21,31 @@ export const FIXED_ROOMS=[
  definition('homewind',1,2,'帰り風の並木','帰り並木','寄り道を終えて集落へ回る。屋根と木立を帰路の角度で見る。',[[3,0],[11,1],[13,6],[11,12],[7,13],[2,11],[0,9],[0,4]],[[[7,0],[7,3],[5,6],[3,7],[0,7]],[[7,3],[11,3],[12,6]]],[[3,3],[10,10],[5,10]],{water:[[[11,0],[10,4],[12,8]]]})
 ];
 FIXED_ROOMS.push(...FIXED_EXPANSION,...FIXED_ATLAS);
+composeFixedGeography(FIXED_ROOMS);
+export const FIXED_START_CUE=FIXED_ROOMS.find(r=>r.id===FIXED_START.room).cue;
 export const fixedChartSize=()=>({w:(Math.max(...FIXED_ROOMS.map(r=>r.col))+1)*15,h:(Math.max(...FIXED_ROOMS.map(r=>r.row))+1)*15});
 const links=[['hearth','N','cypresses'],['cypresses','N','ascent'],['ascent','E','windway'],['windway','E','highgarden'],['highgarden','S','rill'],['rill','W','bridge'],['bridge','W','cypresses'],['bridge','S','homewind'],['homewind','W','hearth']];
 const widths=[5,1,3,7,5,3,1,3,5];
-links.push(...FIXED_EXPANSION_LINKS,...FIXED_ATLAS_LINKS);
+links.push(...FIXED_EXPANSION_LINKS,...FIXED_ATLAS_LINKS,...FIXED_GEOGRAPHY_LINKS);
 while(widths.length<links.length)widths.push([3,5,3,1][(widths.length-9)%4]);
 const gates=Object.fromEntries(FIXED_ROOMS.map(r=>[r.id,{}]));
 export const FIXED_SEAMS=Object.fromEntries(FIXED_ROOMS.map(r=>[r.id,{}]));
-links.forEach(([a,d,b],i)=>{const seam={width:widths[i],surface:'='};gates[a][d]=b;gates[b][FIXED_DIRECTIONS[d].back]=a;FIXED_SEAMS[a][d]=seam;FIXED_SEAMS[b][FIXED_DIRECTIONS[d].back]=seam;});
-export const gatePoint=d=>d==='N'?{x:7,y:0}:d==='S'?{x:7,y:14}:d==='W'?{x:0,y:7}:{x:14,y:7};
-export const fixedExitMarker=d=>d==='N'?{x:7,y:2}:d==='S'?{x:7,y:12}:d==='W'?{x:2,y:7}:{x:12,y:7};
+links.forEach(([a,d,b],i)=>{const seam=geographySeam(FIXED_ROOMS.find(r=>r.id===a),d,FIXED_ROOMS.find(r=>r.id===b),widths[i]);gates[a][d]=b;gates[b][FIXED_DIRECTIONS[d].back]=a;FIXED_SEAMS[a][d]=seam;FIXED_SEAMS[b][FIXED_DIRECTIONS[d].back]=seam;});
+export const gatePoint=(d,room)=>{const j=room?.seams[d]?.center??7;return d==='N'?{x:j,y:0}:d==='S'?{x:j,y:14}:d==='W'?{x:0,y:j}:{x:14,y:j};};
+export const fixedExitMarker=(d,room)=>{const p=gatePoint(d,room);return {...p,x:d==='W'?2:d==='E'?12:p.x,y:d==='N'?2:d==='S'?12:p.y};};
 // Interpret only connected openings, in CSS pixels. The path still ends at a
 // legal boundary tile; visible neighbor terrain never teleports the traveller.
 export function fixedExitTarget(room,x,y,l){
  const tile=32*l.scale,tx=(x-l.x)/tile,ty=(y-l.y)/tile;
  for(const d of Object.keys(room.connections)){
-  const half=(room.seams[d].width-1)/2,vertical=d==='N'||d==='S',across=vertical?tx:ty,along=vertical?ty:tx;
+  const seam=room.seams[d],vertical=d==='N'||d==='S',across=vertical?tx:ty,along=vertical?ty:tx;
   const near=d==='N'||d==='W'?along>=-4&&along<=1.5:along>=13.5&&along<=19;
-  const m=fixedExitMarker(d),mx=l.x+(m.x+.5)*tile,my=l.y+(m.y+.5)*tile;
+  const m=fixedExitMarker(d,room),mx=l.x+(m.x+.5)*tile,my=l.y+(m.y+.5)*tile;
   const name=FIXED_ROOMS.find(r=>r.id===room.connections[d]).chartName,font=Math.max(14*l.scale,12),labelY=my+font/2+10*l.scale,labelWidth=Math.max(44,(name.length+1)*font+12*l.scale);
   const label=Math.abs(x-mx)<=labelWidth/2&&Math.abs(y-labelY)<=22;
-  if((near&&Math.abs(across-7.5)*tile<=Math.max(22,half===0?tile*1.15:0,(half+.5)*tile))||Math.hypot(x-mx,y-my)<=22||label){
-   const j=Math.max(7-half,Math.min(7+half,Math.floor(across))),p=gatePoint(d);
+  const band=seam.bands.find(([lo,hi])=>near&&Math.abs(across-(lo+hi+1)/2)*tile<=Math.max(22,lo===hi?tile*1.15:0,(hi-lo+1)/2*tile));
+  if(band||Math.hypot(x-mx,y-my)<=Math.min(22,tile*.45)||label){
+   const [lo,hi]=band||seam.bands.find(([lo,hi])=>seam.center>=lo&&seam.center<=hi),j=Math.max(lo,Math.min(hi,Math.floor(across))),p=gatePoint(d,room);
    return vertical?{x:j,y:p.y}:{x:p.x,y:j};
   }
  }
@@ -58,10 +63,11 @@ export function makeFixedRooms(){
    if(def.roads.some(p=>distance(x,y,p)<=1.1))tiles[y][x]=['w','d'].includes(tiles[y][x])?'b':'=';
    if((x===0||x===14||y===0||y===14)&&!['w','d'].includes(tiles[y][x]))tiles[y][x]=' ';
   }
-  for(const d of Object.keys(connections))for(let j=7-(FIXED_SEAMS[def.id][d].width-1)/2;j<=7+(FIXED_SEAMS[def.id][d].width-1)/2;j++)for(let k=0;k<=2;k++){
+  for(const d of Object.keys(connections))for(const j of seamLanes(FIXED_SEAMS[def.id][d]))for(let k=0;k<=2;k++){
    const x=d==='N'||d==='S'?j:d==='W'?k:14-k,y=d==='E'||d==='W'?j:d==='N'?k:14-k;
-   tiles[y][x]='=';
+   tiles[y][x]=seamTile(FIXED_SEAMS[def.id][d],j);
   }
+  if(def.atlas)for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(faultCell(def,x,y))tiles[y][x]='r';
   // A three-tile landing funnels into a one-tile pass. Keep the boundary narrow.
   for(const d of Object.keys(connections))if(FIXED_SEAMS[def.id][d].width===1)for(let j=6;j<=8;j++)for(let k=1;k<=3;k++){
    const x=d==='N'||d==='S'?j:d==='W'?k:14-k,y=d==='E'||d==='W'?j:d==='N'?k:14-k;
@@ -69,12 +75,21 @@ export function makeFixedRooms(){
   }
   for(const [x,y] of def.stairs||[])if(floor(tiles[y][x]))tiles[y][x]='s';
   if(def.house)for(let y=def.house.y;y<def.house.y+def.house.h;y++)for(let x=def.house.x;x<def.house.x+def.house.w;x++)tiles[y][x]='h';
-  for(const [x,y] of def.trees)tiles[y][x]='t';
+  let trees=def.trees;
+  if(!def.atlas)for(const [x,y]of trees)tiles[y][x]='t';
   for(const site of [def.site,...def.props||[]].filter(Boolean))for(const a of site.solid||[])for(let y=Math.floor(site.y+a.y*site.scale);y<Math.ceil(site.y+(a.y+a.h)*site.scale);y++)for(let x=Math.floor(site.x+a.x*site.scale);x<Math.ceil(site.x+(a.x+a.w)*site.scale);x++)if(tiles[y]?.[x]!==undefined)tiles[y][x]='h';
   for(const [x,y] of def.maintenanceBridge||[])tiles[y][x]='b';
-  const room={cue:FIXED_CUE,...def,w:15,h:15,tiles,connections,seams:FIXED_SEAMS[def.id],findPath:silkPath,journey:true,npcs:def.npc?[{color:'#748d93',...def.npc}]:[],
+  if(def.atlas){
+   trees=[];
+   for(const [tx,ty]of def.trees){const candidates=[];for(let y=2;y<13;y++)for(let x=2;x<13;x++){
+    const entrance=Object.keys(connections).some(d=>{const j=d==='N'||d==='S'?x:y,k=d==='N'?y:d==='S'?14-y:d==='W'?x:14-x;return k<=2&&seamLanes(FIXED_SEAMS[def.id][d]).includes(j);});
+    if(tiles[y][x]==='g'&&!entrance&&!(def.npc?.x===x&&def.npc?.y===y))candidates.push([x,y]);
+   }candidates.sort((a,b)=>Math.hypot(a[0]-tx,a[1]-ty)-Math.hypot(b[0]-tx,b[1]-ty));if(!candidates.length)throw Error(def.id+': no tree clearing');const p=candidates[0];trees.push(p);tiles[p[1]][p[0]]='t';}
+  }
+  if(def.atlas){try{connectFixedLand(tiles,floor);}catch(e){throw Error(def.id+': '+e.message);}}
+  const room={cue:FIXED_CUE,...def,w:15,h:15,trees,tiles,connections,seams:FIXED_SEAMS[def.id],findPath:silkPath,journey:true,npcs:def.npc?[{color:'#748d93',...def.npc}]:[],
    tileAt:(x,y)=>tiles[y]?.[x]??' ',walkable:(x,y)=>Number.isInteger(x)&&Number.isInteger(y)&&floor(tiles[y]?.[x]),
-   gateAt(x,y){for(const d of Object.keys(connections)){const p=gatePoint(d);if((d==='N'||d==='S')?y===p.y&&Math.abs(p.x-x)<=(FIXED_SEAMS[def.id][d].width-1)/2:x===p.x&&Math.abs(p.y-y)<=(FIXED_SEAMS[def.id][d].width-1)/2)return {direction:d,to:connections[d]};}return null;}
+   gateAt(x,y){if(!floor(tiles[y]?.[x]))return null;for(const d of Object.keys(connections)){const p=gatePoint(d,this),j=d==='N'||d==='S'?x:y;if((d==='N'||d==='S'?y===p.y:x===p.x)&&seamLanes(FIXED_SEAMS[def.id][d]).includes(j))return {direction:d,to:connections[d]};}return null;}
   };
   const approach=site=>{if(room.walkable(site.entrance.x,site.entrance.y))return site;const points=[];for(let y=1;y<14;y++)for(let x=1;x<14;x++)if(room.walkable(x,y))points.push({x,y});points.sort((a,b)=>Math.hypot(a.x-site.entrance.x,a.y-site.entrance.y)-Math.hypot(b.x-site.entrance.x,b.y-site.entrance.y));return {...site,entrance:points[0]};};
   if(room.site)room.site=approach(room.site);room.props=(def.props||[]).map(approach);
@@ -87,7 +102,7 @@ export function fixedLayout(width,height){
 }
 const traveller=p=>({x:p.x,y:p.y,px:p.x,py:p.y,path:[],arrival:null,moving:false,stride:0,face:'up'});
 export function createFixedJourney({onRoom=()=>{},onStep=()=>{},onTalk=()=>{},onReturn=()=>{},onTransition=()=>{}}={}){
- const rooms=makeFixedRooms();let active=false,room=rooms[0],hero=traveller({x:7,y:11}),transition=null,generation=0;
+ const rooms=makeFixedRooms();let active=false,room=rooms.find(r=>r.id===FIXED_START.room),hero=traveller(FIXED_START),transition=null,generation=0;
  function finish(){if(!transition)return;room=transition.to;hero=traveller(transition.landing);transition=null;generation++;onRoom(room);}
  function cross(gate,reduced){
   const dir=FIXED_DIRECTIONS[gate.direction],to=rooms.find(r=>r.id===gate.to),p={x:dir.dx?dir.dx>0?1:13:hero.x,y:dir.dy?dir.dy>0?1:13:hero.y};
@@ -98,7 +113,7 @@ export function createFixedJourney({onRoom=()=>{},onStep=()=>{},onTalk=()=>{},on
  }
  return {
   get active(){return active;},get room(){return room;},get hero(){return hero;},get transition(){return transition;},get generation(){return generation;},rooms,
-  enter(){room=rooms[0];hero=traveller({x:7,y:11});transition=null;active=true;generation++;onRoom(room);},
+  enter(){room=rooms.find(r=>r.id===FIXED_START.room);hero=traveller(FIXED_START);transition=null;active=true;generation++;onRoom(room);},
   leave(){active=false;transition=null;hero.path=[];hero.arrival=null;hero.moving=false;generation++;},
   finishTransition:finish,
   walkTo(target,arrival=null){

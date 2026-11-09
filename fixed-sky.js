@@ -22,7 +22,7 @@ export function drawFixedSky(c,room,w,h,l,time){
  const p=FIXED_SKIES[room.sky];if(!p)return false;const col=room.skyAnchor?.x??room.col,row=room.skyAnchor?.y??room.row,s=l.scale,horizon=l.y+32*s*2.6,gradient=c.createLinearGradient(0,0,0,horizon+25*s);
  p.colors.forEach((col,i)=>gradient.addColorStop([0,.27,.58,.82,1][i],col));R(c,0,0,w,h,gradient);
  if(p.stars)for(let i=0;i<44;i++){const x=((i*131+Math.floor(col)*37)%997)/997*w,y=((i*67+Math.floor(row)*29)%277)/277*horizon*.69;R(c,x,y,i%9===0?2:1,i%9===0?2:1,p.moon?'#e5e6db99':'#f5e7d75c');}
- const sunX=w*(p.moon?.77:col%2>.5?.29:.68),sunY=horizon*(p.moon?.29:p.sun?.78:.34),radius=(p.moon?11:p.sun?19:10)*s;
+ const sunX=w*(room.skyline?.28+col*.045:p.moon?.77:col%2>.5?.29:.68),sunY=horizon*(p.moon?.29:p.sun?.78:.34),radius=(p.moon?11:p.sun?19:10)*s;
  const glow=c.createRadialGradient(sunX,sunY,radius,sunX,sunY,Math.max(60,w*.37));glow.addColorStop(0,(p.sun||'#f6efd5')+(p.moon?'19':'66'));glow.addColorStop(1,p.colors[3]+'00');R(c,sunX-w*.4,sunY-w*.4,w*.8,w*.8,glow);
  if(!p.fog){c.fillStyle=p.sun||'#f2efdc';c.beginPath();c.arc(sunX,sunY,radius,0,Math.PI*2);c.fill();}
  for(let layer=0;layer<3;layer++)for(let i=0;i<4;i++){
@@ -34,6 +34,21 @@ export function drawFixedSky(c,room,w,h,l,time){
    const peaks=[];for(let i=-1;i<=9;i++){const x=i*w/8,crest=(45+(Math.sin(i*2.3+layer*.7+col*.09)+1)*40)*s;peaks.push([x,horizon-crest+layer*20*s]);}P(c,[[0,h],...peaks,[w,h]],['#a9c6d1','#8baebf','#789cae'][layer]);
    if(layer===0)for(let i=1;i<peaks.length-1;i++){const [x,y]=peaks[i];P(c,[[x-w/22,y+21*s],[x,y],[x+w/24,y+24*s],[x+4*s,y+15*s]],'#edf0df');}
   }
+ }
+ if(room.skyline){
+  // A shared northern range and long wind-torn cloud bands. Features use
+  // atlas bearings so the same peaks recur, rather than a pasted scenic card.
+  for(let layer=0;layer<2;layer++){
+   const points=[[0,horizon+18*s]];
+   for(let i=-1;i<=70;i++){const x=i*w/68,bearing=col+x/w,peak=Math.pow(Math.max(0,Math.cos(bearing*1.21+.7)+Math.sin(bearing*3.7)*.32),2),height=(30+peak*61+Math.sin(bearing*8.7)*9)*s;points.push([x,horizon-height+layer*23*s]);}
+   points.push([w,horizon+28*s]);P(c,points,layer===0?'#a6bfce88':'#759aa58c');
+   c.save();c.strokeStyle=layer===0?'#eef0df99':'#c9dad580';c.lineWidth=1.4*s;c.beginPath();points.slice(1,-1).forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();c.restore();
+  }
+  for(let i=0;i<3;i++){
+   const y=horizon*(.11+i*.105),drift=Math.sin(time/170000+i)*w*.018;c.save();c.globalAlpha=.25-i*.045;c.fillStyle=p.cloud;c.beginPath();c.moveTo(-w*.12+drift,y);c.bezierCurveTo(w*.17,y-10*s,w*.41,y+19*s,w*.73,y+5*s);c.bezierCurveTo(w*.91,y+1*s,w*1.03,y+5*s,w*1.12,y+10*s);c.bezierCurveTo(w*.73,y+17*s,w*.39,y+8*s,-w*.12+drift,y+4*s);c.fill();c.restore();
+  }
+  // Tiny distant gliders establish scale without filling the quiet sky.
+  c.save();c.strokeStyle=p.shade+'99';c.lineWidth=Math.max(.6,s);for(let i=0;i<3;i++){const x=w*(.22+i*.047)+Math.sin(time/45000)*5,y=horizon*.46+i*3*s;c.beginPath();c.moveTo(x-3*s,y);c.quadraticCurveTo(x,y-3*s,x+2*s,y);c.quadraticCurveTo(x+4*s,y-2*s,x+6*s,y);c.stroke();}c.restore();
  }
  if(p.fog)for(let i=0;i<3;i++){const yy=horizon*(.6+i*.16),fog=c.createLinearGradient(0,yy-17,0,yy+26);fog.addColorStop(0,p.cloud+'00');fog.addColorStop(.5,p.cloud+'66');fog.addColorStop(1,p.cloud+'00');R(c,0,yy-17,w,43,fog);}
  return true;

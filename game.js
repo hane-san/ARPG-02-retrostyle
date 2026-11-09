@@ -1,6 +1,6 @@
 import {CORE_SKY_STUDIES,drawLandscapeSky} from './landscape-sky.js';
 import {createFixedScreenView} from './fixed-screen-view.js';
-import {FIXED_CUE} from './fixed-screens.js';
+import {FIXED_START_CUE} from './fixed-screens.js';
 import {TRIAL_WAYSTONE,createTrialBag,placeTrialTraveller} from './trial-travel.js';
 import {drawLandscapeFeet,drawLandscapeCanopies} from './landscape-objects.js';
 import {westernAt} from './western-world.js';
@@ -136,7 +136,7 @@ if(JOURNEY_MODE){
   const actions=document.createElement('div');actions.id='trialActions';actions.className='trial-actions';actions.hidden=true;actions.setAttribute('role','group');actions.setAttribute('aria-label','試遊の移動');
   for(const [action,id,text] of [['random','trialJump','ランダムに飛ぶ'],['return','trialReturn','船着場に戻る'],['fixed','fixedEnter','空の枝道へ（画面切替）']]){const button=document.createElement('button');button.id=id;button.dataset.trialAction=action;button.textContent=text;actions.append(button);}
   $('dialogue').append(actions);
-  const fixedHelp=document.createElement('p');fixedHelp.className='secondary fixed-help';fixedHelp.hidden=true;fixedHelp.textContent='ここは、景色ごとに画面が切り替わる比較用の枝道です。見えている道をタップし、端へ続く道から隣へ渡れます。帰り並木の東や水段の西から、森市・段畑・雪嶺・夕空の入江へ旅が続きます。地図にはつながる道が描かれています。入口の帰りの道標か、下のボタンから元の場所へ戻れます。元の世界では、いつもの歩き方に戻ります。';
+  const fixedHelp=document.createElement('p');fixedHelp.className='secondary fixed-help';fixedHelp.hidden=true;fixedHelp.textContent='ここは、景色ごとに画面が切り替わる比較用の枝道です。見えている道をタップし、端へ続く道から隣へ渡れます。中央の分水庭から、西は水路、北は乾いた器、東は石壁、南は畑へ。裂け目では、見える対岸へ上側から回れます。最北の道には広い空が続きます。地図にはつながる道が描かれています。分水庭か旧集落の帰りの道標、または下のボタンから元の場所へ戻れます。元の世界では、いつもの歩き方に戻ります。';
   const fixedReturn=document.createElement('button');fixedReturn.id='fixedReturn';fixedReturn.className='line-btn';fixedReturn.textContent='元の場所へ戻る';fixedReturn.hidden=true;fixedReturn.addEventListener('click',returnFromFixed);$('helpPanel').querySelector('.sheet').append(fixedHelp,fixedReturn);
   const fixedHelpEnter=document.createElement('button');fixedHelpEnter.id='fixedHelpEnter';fixedHelpEnter.className='line-btn';fixedHelpEnter.textContent='空の枝道へ（画面切替）';fixedHelpEnter.addEventListener('click',enterFixed);$('helpPanel').querySelector('.sheet').append(fixedHelpEnter);
  }
@@ -653,7 +653,7 @@ function enterFixed(){
  closeDialogue();closePanels(false);journeyView?.close();cancelCameraGesture();readingPress=null;
  Object.assign(hero,{px:hero.x,py:hero.y,path:[],arrival:null,moving:false});syncTravelState();
  $('atlasTitle').textContent='空の枝道';$('mapPanel').querySelector('p.secondary').textContent='つながる道をたどる。隣の地名を選ぶと、出口まで歩きます。';
- $('trackSelect').value=FIXED_CUE;imperialQuiet=false;applyTrack();
+ $('trackSelect').value=FIXED_START_CUE;imperialQuiet=false;applyTrack();
  document.querySelector('.fixed-help').hidden=false;$('fixedReturn').hidden=false;fixedTrial.resize(screen);fixedTrial.enter();
 }
 function returnFromFixed(){

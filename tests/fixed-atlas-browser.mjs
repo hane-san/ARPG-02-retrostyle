@@ -1,13 +1,14 @@
+import {fixedRoute} from './fixed-route.mjs';
 import assert from 'node:assert/strict';
 import {mkdirSync,writeFileSync} from 'node:fs';
-import {makeFixedRooms,fixedLayout,gatePoint} from '../fixed-screens.js';
+import {makeFixedRooms,fixedLayout,gatePoint,FIXED_START} from '../fixed-screens.js';
 import {buildTrack} from '../music.js';
 // Actual field taps traverse the retained journey, the eastern escarpment,
 // then the six southern transects. There is no hero-position setter.
 export async function checkFixedAtlas(browser,origin){
  const rooms=makeFixedRooms(),reports=[];mkdirSync('test-results/fixed-atlas',{recursive:true});
  const old=['N','N','E','E','S','W','S','E','E','N','N','E','E','E','E','E','E','S','S','S','N','N','N','W','S','W','W','W','W','W','S','E','E','E','E','E','S','W','W','W','W','W','N','W','W','W'];
- const route=[...old,'E','E','S','W','W','S'];
+ const route=[...fixedRoute(FIXED_START.room,'hearth'),...old,'E','E','S','W','W','S'];
  for(let row=4;row<=9;row++){route.push(...Array(9).fill(row%2===0?'E':'W'));if(row<9)route.push('S');}
  for(const [width,height] of [[390,844],[320,568],[430,932],[844,390]]){
   const context=await browser.newContext({viewport:{width,height},isMobile:true,hasTouch:true,deviceScaleFactor:1}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
@@ -23,7 +24,7 @@ export async function checkFixedAtlas(browser,origin){
     for(const from of rooms.filter(r=>r.atlas)){if(profiles.has(from.sky))continue;profiles.add(from.sky);const to=rooms.find(r=>r.id===Object.values(from.connections)[0]),t={to,hero:{px:7,py:0},landing:{x:7,y:13},duration:560,elapsed:0},a=render(from),start=render(from,t),b=render(to),end=render(from,{...t,elapsed:560});out.push({profile:from.sky,start:a.every((v,i)=>v===start[i]),end:b.every((v,i)=>v===end[i]),top:[...a.slice(0,3)]});}return out;
    });assert.equal(sky.length,11);assert.ok(sky.every(p=>p.start&&p.end),'all authored sky fades respect both endpoints');assert.ok(new Set(sky.map(p=>p.top.join(','))).size>=10,'distinct authored sky colours');
   }
-  const stage=await canvas.boundingBox(),l=fixedLayout(stage.width,stage.height),point=p=>({x:l.x+(p.x+.5)*32*l.scale,y:l.y+(p.y+.5)*32*l.scale});let current=rooms[0],starts=0;const seen=new Set([current.id]),cues=new Set([current.cue]),inspected=new Set();
+  const stage=await canvas.boundingBox(),l=fixedLayout(stage.width,stage.height),point=p=>({x:l.x+(p.x+.5)*32*l.scale,y:l.y+(p.y+.5)*32*l.scale});let current=rooms.find(r=>r.id===FIXED_START.room),starts=0;const seen=new Set([current.id]),cues=new Set([current.cue]),inspected=new Set();
   await page.locator('#soundBtn').click();assert.equal(await page.locator('#musicToggle').textContent(),'OFF');assert.equal(await page.locator('#sfxToggle').textContent(),'ON');const volumes=[await page.locator('#volumeRange').inputValue(),await page.locator('#sfxVolumeRange').inputValue()];if(width===390)await page.locator('#musicToggle').click();await page.locator('#musicPanel [data-close]').click();
   async function audio(room,changed){
    if(width!==390||room.quiet)return;
@@ -33,7 +34,7 @@ export async function checkFixedAtlas(browser,origin){
   }
   await audio(current,true);
   for(const direction of route){
-   const before=current,next=rooms.find(r=>r.id===before.connections[direction]);assert.ok(next,before.id+' '+direction);await canvas.tap({position:point(gatePoint(direction))});let arrived=false;
+   const before=current,next=rooms.find(r=>r.id===before.connections[direction]);assert.ok(next,before.id+' '+direction);await canvas.tap({position:point(gatePoint(direction,before))});let arrived=false;
    for(let i=0;i<160;i++){await page.clock.runFor(100);if(await page.locator('#zoneName').textContent()===next.name){arrived=true;break;}}
    assert.ok(arrived,'real field gate '+before.id+' '+direction);current=next;seen.add(current.id);cues.add(current.cue);await page.clock.runFor(250);assert.equal(await canvas.getAttribute('aria-busy'),'false');assert.equal(await page.locator('#trackSelect').inputValue(),current.cue);
    const actor=await page.evaluate(()=>window.atlasActor);assert.ok(Math.abs(actor.a-l.scale)<1e-6&&Math.abs(actor.d-l.scale)<1e-6);assert.ok(Math.abs(actor.x-l.x)<1e-4&&Math.abs(actor.y-l.y)<1e-4,'common fixed composition');assert.ok(current.walkable(Math.round(actor.hx),Math.round(actor.hy)));assert.equal(current.gateAt(Math.round(actor.hx),Math.round(actor.hy)),null);await audio(current,current.cue!==before.cue||!!current.quiet!==!!before.quiet);
@@ -44,7 +45,7 @@ export async function checkFixedAtlas(browser,origin){
     }
     inspected.add(current.id);
    }
-   if(current.atlas)await page.screenshot({path:`test-results/fixed-atlas/${width}x${height}-${current.id}.png`});
+   if(current.atlas||current.row===0)await page.screenshot({path:`test-results/fixed-atlas/${width}x${height}-${current.id}.png`});
    reports.push({viewport:`${width}x${height}`,from:before.id,to:current.id,direction,source:current.sourceIndex??23,cue:current.cue,sky:current.sky||'original',scale:l.scale,nativeSeconds:width===390?await page.evaluate(()=>window.atlasSeconds):null});
   }
   assert.equal(seen.size,100,'all hundred screens in one continuous trip');assert.equal(cues.size,new Set(rooms.map(r=>r.cue)).size);if(width===390)assert.equal(inspected.size,67);
