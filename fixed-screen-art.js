@@ -1,3 +1,4 @@
+import {drawFixedSky} from './fixed-sky.js';
 import {journeyMaterial,journeyTile,journeySite,journeyBackground} from './fixed-journey-art.js';
 import {drawForestTree} from './forest-market-art.js';
 import {WEST_STUDIES} from './western-world.js';
@@ -31,9 +32,10 @@ export function drawFixedHouse(c,house){
 function background(c,room,w,h,layout,time){
  if(room.sourceIndex!==undefined)return journeyBackground(c,room,w,h,layout,time);
  const {scale:s,y}=layout,source=FIXED_SOURCE,g=skyGeometry(source),horizon=y+32*s*2.6;
- R(c,0,0,w,h,'#a6cad2');
+ const authored=drawFixedSky(c,room,w,h,layout,time);
+ if(!authored){R(c,0,0,w,h,'#a6cad2');
  const zoom=s*.9,camera={x:(source.cx+.5)*32+(room.col-1)*85,y:g.horizon-(horizon-h/2)/zoom,zoom};
- c.save();c.translate(w/2,h/2);c.scale(zoom,zoom);c.translate(-camera.x,-camera.y);drawLandscapeSky(c,source,camera,{w,h},0,time);c.restore();
+ c.save();c.translate(w/2,h/2);c.scale(zoom,zoom);c.translate(-camera.x,-camera.y);drawLandscapeSky(c,source,camera,{w,h},0,time);c.restore();}
  // Shared terrain coordinates and roof: the same destination changes scale,
  // bearing and occlusion as the traveller goes round the two connected loops.
  for(let layer=0;layer<3;layer++){
@@ -57,10 +59,13 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
  c.save();c.translate(offsetX,offsetY);
  c.save();c.translate(l.x,l.y);c.scale(s,s);c.imageSmoothingEnabled=false;
  // Vertical cliff feet are separate from the grid top; the sky remains outside.
- for(let y=bottom;y>=top;y--)for(let x=left;x<=right;x++)if(room.tileAt(x,y)!==' '&&room.tileAt(x,y)!=='w'&&room.tileAt(x,y+1)===' '&&!(y===14&&room.connections.S&&room.gateAt(x,y))){R(c,x*32,y*32+28,32,42,'#7f9691');R(c,x*32,y*32+28,32,4,'#d4dac1');R(c,x*32+7,y*32+38,2,19,'#b3c3b080');}
+ for(let y=bottom;y>=top;y--)for(let x=left;x<=right;x++)if(![' ','w','r'].includes(room.tileAt(x,y))&&[' ','r'].includes(room.tileAt(x,y+1))&&!(y===14&&room.connections.S&&room.gateAt(x,y))){R(c,x*32,y*32+28,32,42,'#7f9691');R(c,x*32,y*32+28,32,4,'#d4dac1');R(c,x*32+7,y*32+38,2,19,'#b3c3b080');}
+ for(let yy=top;yy<=bottom;yy++)for(let xx=left;xx<=right;xx++)if(room.tileAt(xx,yy)==='r'){
+  const depth=c.createLinearGradient(0,yy*32,0,yy*32+32);depth.addColorStop(0,'#405969');depth.addColorStop(1,'#7f9fa8');R(c,xx*32,yy*32,32,32,depth);R(c,xx*32+8,yy*32+14,15,1,'#bed0c355');
+ }
  c.save();c.translate(-sx*32,-sy*32);
  for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++){
-  const t=room.tileAt(x,y);if(t===' ')continue;
+  const t=room.tileAt(x,y);if(t===' '||t==='r')continue;
   if(room.sourceIndex!==undefined)journeyTile(c,room,x,y);else{drawWesternTile(c,x+sx,y+sy,tag(t),proxy);drawRegionalGroundDetail(c,x+sx,y+sy,tag(t),proxy);}
  }
  c.restore();
@@ -75,8 +80,13 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
   }
  }
  for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++)if(room.tileAt(x,y)==='w'){R(c,x*32+5,y*32+15+Math.sin(time/1600+x)*2,17,1,'#dbe6db88');}
+ for(const [d,seam] of Object.entries(room.seams))if(seam.ground)for(const [lo,hi]of seam.bands)for(let j=lo;j<=hi;j++)for(let k=0;k<3;k++){
+  const xx=d==='N'||d==='S'?j:d==='W'?k:14-k,yy=d==='E'||d==='W'?j:d==='N'?k:14-k;
+  if(room.walkable(xx,yy)){c.save();c.globalAlpha*=k===0?.64:k===1?.3:.1;R(c,xx*32,yy*32,32,32,seam.ground);c.restore();}
+ }
  if(room.house?.landmark){R(c,6*32,5*32,5*32,4,'#e1dcc2');for(let i=0;i<4;i++)R(c,(6+i)*32,5*32+4,2,24,'#b7c5af');}
  if(room.returnStone){const {x,y}=room.returnStone;c.strokeStyle='#f1e6c5';c.lineWidth=3;c.beginPath();c.ellipse((x+.5)*32,(y+.5)*32,20,10,0,0,Math.PI*2);c.stroke();P(c,[[x*32+16,y*32+7],[x*32+22,y*32+16],[x*32+16,y*32+23],[x*32+10,y*32+16]],'#77a7ae');c.font=`${Math.max(14,11/s)}px system-ui`;c.textAlign='center';c.fillStyle='#3e646d';c.fillText('帰りの道標',(x+.5)*32,(y+1.3)*32);}
+ const guidePoints=Object.entries(room.seams).flatMap(([d,seam])=>seam.bands.map(([lo,hi])=>{const m=fixedExitMarker(d,room),j=(lo+hi)/2;return {x:d==='N'||d==='S'?j:m.x,y:(d==='E'||d==='W'?j:m.y)+.8};}));
  if(guides)drawExitStones(c,room,l.scale);
  const market=room.sourceIndex===1;
  if(market)for(const d of trees.landscapeObjects)drawForestTree(c,d,'trunk');else drawLandscapeFeet(c,trees,{left:0,right:14,top:0,bottom:14});
@@ -84,7 +94,7 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
  for(const site of [room.site,...room.props||[]].filter(Boolean))objects.push({y:site.y+site.h,paint:()=>journeySite(c,site,time)});
  if(room.house)objects.push({y:room.house.y+room.house.h,paint:()=>{drawFixedHouse(c,room.house);if(!room.house.landmark){c.strokeStyle='#8c9e92';c.lineWidth=1;c.beginPath();c.moveTo(2*32,8*32);c.lineTo(5.5*32,8*32);c.stroke();for(let i=0;i<4;i++)R(c,(2.2+i*.7)*32,8*32,14,19,['#b8c9c3','#dfc9ab','#a7bac0'][i%3]);}}});
  if(hero)objects.push({y:hero.py+.7,paint:()=>{c.save();c.beginPath();c.rect(0,0,480,480);c.clip();c.translate(0,hero.moving&&time!==0?-Math.abs(Math.sin(hero.stride*9))*1.5:0);drawSrpgUnit(c,{x:hero.px,y:hero.py,team:'ally',acted:false,type:'sword'});R(c,hero.px*32+8,hero.py*32+13,15,3,'#b8d9dc');R(c,hero.px*32+7,hero.py*32+16,5,7,'#7dbac5');c.restore();}});
- objects.sort((a,b)=>a.y-b.y);objects.forEach(o=>o.paint());if(market)for(const d of trees.landscapeObjects){c.save();if((hero&&Math.abs(hero.px-d.x)<3&&hero.py<d.y+.5&&hero.py>d.y-5)||Object.keys(room.connections).map(fixedExitMarker).some(m=>Math.hypot(m.x-d.x,m.y-d.y)<4))c.globalAlpha=.24;drawForestTree(c,d,'canopy');c.restore();}else drawLandscapeCanopies(c,guides?{...trees,npcs:[...trees.npcs,...Object.keys(room.connections).map(fixedExitMarker)]}:trees,{left:0,right:14,top:0,bottom:14},hero||{px:-100,py:-100});
+ objects.sort((a,b)=>a.y-b.y);objects.forEach(o=>o.paint());if(market)for(const d of trees.landscapeObjects){c.save();if((hero&&Math.abs(hero.px-d.x)<3&&hero.py<d.y+.5&&hero.py>d.y-5)||guidePoints.some(m=>Math.abs(m.x-d.x)<3&&m.y<d.y+.5&&m.y>d.y-7.5))c.globalAlpha=.24;drawForestTree(c,d,'canopy');c.restore();}else drawLandscapeCanopies(c,guides?{...trees,npcs:[...trees.npcs,...guidePoints]}:trees,{left:0,right:14,top:0,bottom:14},hero||{px:-100,py:-100});
  if(destination){c.strokeStyle='#fff1c5';c.lineWidth=2;c.beginPath();c.ellipse((destination.x+.5)*32,(destination.y+.5)*32,10,6,0,0,Math.PI*2);c.stroke();}
  // A small edge gap reads as the continuing road, without a development HUD.
  c.restore();c.restore();
@@ -94,10 +104,11 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
 function drawExitStones(c,room,scale){
  c.save();
  for(const [d,id] of Object.entries(room.connections)){
-  const m=fixedExitMarker(d),a=d==='N'?-Math.PI/2:d==='S'?Math.PI/2:d==='W'?Math.PI:0;
-  c.save();c.translate((m.x+.5)*32,(m.y+.5)*32);c.rotate(a);
-  for(const step of [0,21])P(c,[[step-7,-7],[step+2,0],[step-7,7],[step-3,0]],'#698d87');
-  c.restore();
+  const m=fixedExitMarker(d,room),a=d==='N'?-Math.PI/2:d==='S'?Math.PI/2:d==='W'?Math.PI:0;
+  for(const [lo,hi]of room.seams[d].bands){const j=(lo+hi)/2,mark={x:d==='N'||d==='S'?j:m.x,y:d==='E'||d==='W'?j:m.y};
+   c.save();c.translate((mark.x+.5)*32,(mark.y+.5)*32);c.rotate(a);
+   for(const step of [0,21])P(c,[[step-7,-7],[step+2,0],[step-7,7],[step-3,0]],'#698d87');c.restore();
+  }
   const text=FIXED_ROOMS.find(r=>r.id===id)?.chartName||'',font=Math.max(14,12/scale),x=(m.x+.5)*32,y=(m.y+.5)*32+font+10;
   c.font=`${font}px system-ui`;c.textAlign='center';const w=c.measureText(text+'へ').width+12;
   R(c,x-w/2,y-font,w,font+5,'#eee6cded');c.fillStyle='#3b6468';c.fillText(text+'へ',x,y);
@@ -120,7 +131,7 @@ export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[r
  if(transition){background(ground,{...transition.to,col:cx,row:cy},screen.w,screen.h,l,time);c.save();c.globalAlpha=p;c.drawImage(layer,0,0,screen.w,screen.h);c.restore();}
  ground.clearRect(0,0,screen.w,screen.h);const skyContext=c;c=ground;
  c.save();c.beginPath();c.rect(l.x-64*l.scale,l.y-128*l.scale,l.width+128*l.scale,l.height+192*l.scale);c.clip();
- const visible=new Set([room.id,...Object.values(room.connections),...(transition?[transition.to.id,...Object.values(transition.to.connections)]:[])]);
+ const visible=new Set(rooms.filter(r=>Math.abs(r.col-cx)<=1.01&&Math.abs(r.row-cy)<=1.01).map(r=>r.id));
  for(const r of [...rooms.filter(r=>r.id!==room.id),room]){if(!visible.has(r.id))continue;const ox=(r.col-cx)*stride,oy=(r.row-cy)*stride;
   c.save();c.beginPath();c.rect(l.x+ox,l.y+oy-128*l.scale,l.width,l.height+128*l.scale);c.clip();
   const person=transition&&[room.id,transition.to.id].includes(r.id)?transitionTraveller(room,transition,r,p):r.id===room.id?hero:null;

@@ -1,3 +1,4 @@
+import {walkFixedState} from './fixed-route.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {makeFixedRooms,createFixedJourney,gatePoint,fixedChartSize} from '../fixed-screens.js';
@@ -9,9 +10,9 @@ test('the expanded journey reaches all 100 rooms from the retained entrance and 
  for(let i=0;i<q.length;i++)for(const id of Object.values(q[i].connections))if(!seen.has(id)){seen.add(id);q.push(rooms.find(r=>r.id===id));}
  assert.equal(seen.size,100);assert.deepEqual(fixedChartSize(),{w:150,h:150});
  assert.equal(new Set(rooms.map(r=>r.sourceIndex??23)).size,33);assert.equal(new Set(rooms.filter(r=>!r.atlas).map(r=>r.cue)).size,21);
- const s=createFixedJourney();s.enter();
+ const s=createFixedJourney();s.enter();walkFixedState(s,'hearth');
  const route=['E','E','E','N','N','E','E','E','E','E','S','W','W','W','W','W','S','E','E','E','E','E','S','W','W','W','W','W','N','W','W','W'];
- for(const d of route){const id=s.room.connections[d];assert.ok(s.walkTo(gatePoint(d)));for(let i=0;i<1500&&s.room.id!==id;i++)s.update(.016);assert.equal(s.room.id,id);assert.equal(s.hero.path.length,0);assert.equal(s.room.gateAt(s.hero.x,s.hero.y),null);}
+ for(const d of route){const id=s.room.connections[d];assert.ok(s.walkTo(gatePoint(d,s.room)));for(let i=0;i<1500&&s.room.id!==id;i++)s.update(.016);assert.equal(s.room.id,id);assert.equal(s.hero.path.length,0);assert.equal(s.room.gateAt(s.hero.x,s.hero.y),null);}
  assert.equal(s.room.id,'hearth');
 });
 test('ported building collision uses exactly the same uniform source transform as its art and keeps an accessible doorstep',()=>{

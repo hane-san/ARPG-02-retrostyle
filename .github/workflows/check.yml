@@ -8,7 +8,7 @@ permissions:
 jobs:
   rules:
     name: rules
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 7
     steps:
       - uses: actions/checkout@v5
@@ -23,7 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         group: [core, landscapes, journey, fixed, atlas]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 50
     steps:
       - uses: actions/checkout@v5
@@ -52,7 +52,7 @@ jobs:
           retention-days: 7
   browser:
     name: browser
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: browser_checks
     if: always()
     steps:

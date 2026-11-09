@@ -137,3 +137,9 @@ Codex/GPT等が作ったPRをClaude Codeが受け取るときの手順（競合�
 `fixed-atlas-data.js`は作者配置の67枚と接続、`fixed-sky.js`は11種類の元々独自の空の描画を担当。既存のsource物体生成を共有し、複数物体/調べ口と一画面15×15を保つ。全100枚の物理的な床/橋/固体/NPC/着地を検査し、見た目だけの続きや道を塞ぐ小物を作らない。[台帳/技術計画](FIXED-HUNDRED-ATLAS.md)。
 
 `npm run test:browser`は未指定なら全検査。CIでは`BROWSER_GROUP=core|landscapes|journey|fixed|atlas`の5実行へ分割し、既存全回帰＋新100枚を維持。`browser_checks`のmatrixが全成功した場合だけ、名前`browser`の集約ジョブが成功する。fail-fastはfalseで全グループの証跡を残す。artifactは`atlas-browser-evidence-<group>`。これはworkflowファイルの実行分割でありrepository Settingsの変更ではない。
+
+## #124 連続地理の実装
+
+`fixed-geography.js`が共有band/offsetと世界座標の裂け目、中央開始を定義。新地形だけ内側空地を最小限接続し、水/溝/裂け目/solidを救済床にしない。全レーンを実移動処理で往復し、描画/タップ/地図の中心も同じ定義を参照する。`fixed-geography.test.mjs`と`fixed-geography-browser.mjs`を追加。browser atlasグループへ新地理4サイズ検査を追加し、全100枚と旧8/33枚は保持。旧入口への前段も通常Canvas入力で歩く。[技術計画](FIXED-CONNECTED-GEOGRAPHY.md)。
+
+#124のCI実行で`ubuntu-latest`がUbuntu26.04へ移り、Playwright1.57.0がChromiumインストール前に失敗することを確認。checksの実行OSを対応済みUbuntu24.04へ明示固定し、同じNode22/Playwright版・全5グループ・集約条件で再検査する。検査の省略やrepository Settings変更はしない。
