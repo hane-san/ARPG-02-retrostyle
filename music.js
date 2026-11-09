@@ -1383,10 +1383,18 @@ export function scheduleNote(context,destination,event,time,secondsPerBeat){
 }
 // Short overlap and scheduled lookahead avoid audible gaps on busy mobile render frames.
 export const MUSIC_TRANSITION={fade:.24,silence:0};
+// Board-to-board changes (the fixed sky branches) ask for a prompt but soft
+// crossfade: the outgoing piece dips while the next one is prepared, then the
+// two overlap. Long ambient pieces keep their slower default elsewhere.
+export const MUSIC_QUICK={fadeIn:.7,fadeOut:.9,duck:.42,duckSeconds:.45};
 export const MUSIC_SCHEDULER={lookAheadSeconds:1.25,intervalMs:50,maxEventsPerPump:480};
+// Level of a linear gain ramp at a time, and a hold that never jumps when the
+// browser lacks cancelAndHoldAtTime.
+export function rampLevel(r,now){return r.seconds<=0?r.to:r.from+(r.to-r.from)*Math.max(0,Math.min(1,(now-r.start)/r.seconds));}
+function holdRampAt(param,now,r){const level=rampLevel(r,now);if(typeof param.cancelAndHoldAtTime==='function'){try{param.cancelAndHoldAtTime(now);return level;}catch{}}param.cancelScheduledValues(now);param.setValueAtTime(level,now);return level;}
 export function createMusic(storage){
  if(arguments.length===0)try{storage=globalThis.localStorage;}catch{}
- let enabled=false,volume=.32,context=null,master=null,bus=null,timer=null,track=null,key=null,currentSource=null,requested=null,preview=null,index=0,start=0,scheduled=0,serial=0,starts=0,busFadeStart=0,activeFade=MUSIC_TRANSITION.fade;
+ let enabled=false,volume=.32,context=null,master=null,bus=null,timer=null,track=null,key=null,currentSource=null,requested=null,preview=null,index=0,start=0,scheduled=0,serial=0,starts=0,busFadeStart=0,activeFade=MUSIC_TRANSITION.fade,busRamp=null,quick=false;
  const voices=new Set(),retired=new Set();
  const Offline=globalThis.OfflineAudioContext||globalThis.webkitOfflineAudioContext;
  const loops=createMusicLoopCache((score,alive)=>renderMusicLoop(score,scheduleNote,Offline,alive));
@@ -1395,14 +1403,14 @@ export function createMusic(storage){
  function stop(fade=activeFade){
   serial++;pending=null;loops.cancel();if(timer!==null){clearInterval(timer);timer=null;}const now=context?.currentTime||0;
   if(bus)try{
-   holdFadeAt(bus.gain,now,busFadeStart,activeFade);
+   if(busRamp)holdRampAt(bus.gain,now,busRamp);else holdFadeAt(bus.gain,now,busFadeStart,activeFade);
    bus.gain.linearRampToValueAtTime(0,now+fade);
   }catch{}
   // All future notes are already connected to the retiring bus. Fade that bus,
   // then release its oscillators; never abruptly drop a sounding note.
   if(bufferSource){const old=bufferSource;bufferSource=null;try{old.stop(now+fade+.02);}catch{}}
   for(const v of voices)v.stop(now+fade);voices.clear();
-  if(bus){const old=bus;const cleanup=setTimeout(()=>{old.disconnect();retired.delete(cleanup);},Math.max(700,(fade+.1)*1000));retired.add(cleanup);}bus=null;busFadeStart=0;key=null;currentSource=null;index=0;
+  if(bus){const old=bus;const cleanup=setTimeout(()=>{old.disconnect();retired.delete(cleanup);},Math.max(700,(fade+.1)*1000));retired.add(cleanup);}bus=null;busFadeStart=0;busRamp=null;key=null;currentSource=null;index=0;
  }
  function pump(){
   if(!context||context.state!=='running'||!bus||!track||(!enabled&&!preview))return;
@@ -1421,10 +1429,10 @@ export function createMusic(storage){
   return preview||(enabled&&requested?.status==='playing'?requested:null);
  }
  function begin(target,next,source,buffer){
-  const fade=Math.max(activeFade,target.mapId>=45?1.2:MUSIC_TRANSITION.fade);stop(fade);activeFade=fade;track=buildTrack(target.mapId,target.phase);key=next;currentSource=source;
+  const fade=quick?MUSIC_QUICK.fadeIn:Math.max(activeFade,target.mapId>=45?1.2:MUSIC_TRANSITION.fade);stop(quick?MUSIC_QUICK.fadeOut:fade);activeFade=fade;track=buildTrack(target.mapId,target.phase);key=next;currentSource=source;
   bus=context.createGain();
   const now=context.currentTime;
-  bus.gain.setValueAtTime(0,now);bus.gain.linearRampToValueAtTime(1,now+fade);busFadeStart=now;
+  bus.gain.setValueAtTime(0,now);bus.gain.linearRampToValueAtTime(1,now+fade);busFadeStart=now;busRamp={from:0,to:1,start:now,seconds:fade};
   bus.connect(master);start=now+.02;
   if(buffer){
    bufferSource=context.createBufferSource();bufferSource.buffer=buffer;bufferSource.loop=true;bufferSource.connect(bus);
@@ -1439,13 +1447,19 @@ export function createMusic(storage){
   const next=`${target.mapId}:${target.phase===1?'ally':'hostile'}`,source=preview?'preview':'game';
   const request=next+':'+source;
   if(next===key&&currentSource===source){
-   if(pending){serial++;pending=null;loops.cancel();}return;
+   if(pending){serial++;pending=null;loops.cancel();}
+   // Came straight back before the other piece was ready: lift the dip again.
+   if(bus&&busRamp&&busRamp.to<1)try{const now=context.currentTime,level=holdRampAt(bus.gain,now,busRamp);bus.gain.linearRampToValueAtTime(1,now+MUSIC_QUICK.fadeIn);busRamp={from:level,to:1,start:now,seconds:MUSIC_QUICK.fadeIn};}catch{}
+   return;
   }
   if(pending===request)return;
   if(!bufferRendering){begin(target,next,source,null);return;}
   // Leave the current music playing until the requested loop is ready.
   // A stale completion after OFF / hidden / another selection cannot restart it.
   pending=request;const token=++serial;
+  // A quick change answers at once: the current piece dips (from whatever
+  // level it is at, so nothing jumps) while the next loop is prepared.
+  if(quick&&bus&&context)try{const now=context.currentTime,level=busRamp?rampLevel(busRamp,now):1,to=Math.min(level,MUSIC_QUICK.duck);holdRampAt(bus.gain,now,busRamp||{from:1,to:1,start:now,seconds:0});bus.gain.linearRampToValueAtTime(to,now+MUSIC_QUICK.duckSeconds);busRamp={from:level,to,start:now,seconds:MUSIC_QUICK.duckSeconds};}catch{}
   loops.get(next,buildTrack(target.mapId,target.phase)).then(buffer=>{
    if(!buffer||destroyed||token!==serial||globalThis.document?.hidden||context?.state!=='running')return;
    begin(target,next,source,buffer);
@@ -1461,8 +1475,16 @@ export function createMusic(storage){
    if(context.state==='running')activate();else{const token=serial;context.resume().then(()=>{if(token===serial)activate();}).catch(()=>{});}
   }catch{/* Music never blocks input or phase resolution. */}
  }
- function setScene(mapId,phase,status='playing'){
-  requested={mapId,phase,status};if(preview)return;if(status!=='playing'){if(key||pending)stop();return;}try{if(enabled)activate();}catch{stop();}
+ function setScene(mapId,phase,status='playing',{quick:fast=false}={}){
+  quick=!!fast;requested={mapId,phase,status};if(preview)return;if(status!=='playing'){if(key||pending)stop(quick?MUSIC_QUICK.fadeOut:activeFade);return;}try{if(enabled)activate();}catch{stop();}
+ }
+ // Prepare a likely next loop (the board the traveller is walking out to)
+ // without touching what plays now. Never displaces a loop already requested.
+ function prepare(mapId,phase){
+  if(destroyed||!bufferRendering||!enabled||preview||pending||!context||context.state!=='running')return false;
+  if(!Number.isInteger(mapId)||mapId<0||mapId>=MUSIC_LIBRARY.length)return false;
+  const next=`${mapId}:${phase===1?'ally':'hostile'}`;if(next===key)return false;
+  try{loops.get(next,buildTrack(mapId,phase)).catch(()=>{});return true;}catch{return false;}
  }
  function setEnabled(value){enabled=!!value;try{storage?.setItem('field-command-music',String(enabled));}catch{}
   if(enabled)unlock();else if(!preview)stop();return enabled;
@@ -1487,5 +1509,5 @@ export function createMusic(storage){
   }else if((enabled||preview)&&context)unlock();
  };
  globalThis.document?.addEventListener('visibilitychange',visibility);
- return {unlock,setScene,setEnabled,setVolume,playPreview,stopPreview,get enabled(){return enabled;},get volume(){return volume;},snapshot:()=>({enabled,volume,scene:key,preview:preview?`${preview.mapId}:${preview.phase===1?'ally':'hostile'}`:null,title:track?.title||null,state:context?.state||'locked',scheduled,starts,voices:voices.size,renderer,preparing:pending!==null,cachedLoops:loops.size}),destroy(){destroyed=true;preview=null;stop();loops.destroy();if(suspendTask!==null)clearTimeout(suspendTask);globalThis.document?.removeEventListener('visibilitychange',visibility);for(const t of retired)clearTimeout(t);retired.clear();if(context&&context.state!=='closed')context.close().catch(()=>{});}};
+ return {unlock,setScene,prepare,setEnabled,setVolume,playPreview,stopPreview,get enabled(){return enabled;},get volume(){return volume;},snapshot:()=>({enabled,volume,scene:key,preview:preview?`${preview.mapId}:${preview.phase===1?'ally':'hostile'}`:null,title:track?.title||null,state:context?.state||'locked',scheduled,starts,voices:voices.size,renderer,preparing:pending!==null,cachedLoops:loops.size}),destroy(){destroyed=true;preview=null;stop();loops.destroy();if(suspendTask!==null)clearTimeout(suspendTask);globalThis.document?.removeEventListener('visibilitychange',visibility);for(const t of retired)clearTimeout(t);retired.clear();if(context&&context.state!=='closed')context.close().catch(()=>{});}};
 }

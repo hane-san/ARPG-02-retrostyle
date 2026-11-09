@@ -56,22 +56,26 @@ export async function renderMusicLoop(track, note, Offline=globalThis.OfflineAud
 // Serialize expensive preparations and keep only two finished tracks in memory.
 // Superseded selections are skipped before allocating an OfflineAudioContext.
 export function createMusicLoopCache(render){
- const cache=new Map();let chain=Promise.resolve(),latest=0,disposed=false;
+ // The latest requested key is the one worth finishing. Asking again for the
+ // key that is already being prepared joins that work instead of restarting it
+ // (a destination prepared ahead of arrival is then picked up when needed).
+ const cache=new Map(),inflight=new Map();let chain=Promise.resolve(),wanted=null,disposed=false;
  return {
   async get(key,track){
-   const ticket=++latest;
+   wanted=key;
    if(cache.has(key)){const buffer=cache.get(key);cache.delete(key);cache.set(key,buffer);return buffer;}
+   if(inflight.has(key))return inflight.get(key);
    const task=chain.then(async()=>{
-    if(disposed||ticket!==latest)return null;
-    const buffer=await render(track,()=>!disposed&&ticket===latest);
-    if(!buffer||disposed||ticket!==latest)return null;
+    if(disposed||wanted!==key)return null;
+    const buffer=await render(track,()=>!disposed&&wanted===key);
+    if(!buffer||disposed||wanted!==key)return null;
     cache.set(key,buffer);while(cache.size>2)cache.delete(cache.keys().next().value);
     return buffer;
-   });
-   chain=task.catch(()=>{});return task;
+   }).finally(()=>{if(inflight.get(key)===task)inflight.delete(key);});
+   inflight.set(key,task);chain=task.catch(()=>{});return task;
   },
-  cancel(){latest++;},
-  destroy(){disposed=true;latest++;cache.clear();},
+  cancel(){wanted=null;},
+  destroy(){disposed=true;wanted=null;cache.clear();inflight.clear();},
   get size(){return cache.size;}
  };
 }

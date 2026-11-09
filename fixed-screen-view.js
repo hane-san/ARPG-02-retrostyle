@@ -5,7 +5,7 @@ import {pickJourneyTap} from './journey-tap.js';
 import {createAmbienceDirector} from './journey-ambience.js';
 
 // Own canvas and room-local state: the original world stays intact and paused.
-export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,onTalk,onReturn,onStep,onRead,onCue}){
+export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,onTalk,onReturn,onStep,onRead,onCue,onPrepare=()=>{}}){
  const canvas=document.createElement('canvas');canvas.id='fixedCanvas';canvas.width=canvas.height=1;canvas.hidden=true;canvas.tabIndex=0;canvas.setAttribute('aria-label','空の枝道');canvas.setAttribute('aria-busy','false');stage.append(canvas);
  const c=canvas.getContext('2d',{alpha:false});let screen={w:1,h:1,dpr:1},last=null,paintAt=-Infinity,contact=null,multiple=false,lastCue=null,lastQuiet=false;
  const contacts=new Set(),held=new Set(),latched=new Set(),cancelled=new Set();
@@ -20,8 +20,14 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
   // Append rather than re-route, so a turn never doubles back mid-tile.
   if(hero.path.length){hero.path.push(next);hero.moving=true;}else state.walkTo(next);
  }
- const state=createFixedJourney({onRoom:r=>{canvas.setAttribute('aria-label','空の枝道：'+r.name);onPlace(r);if(r.cue!==lastCue||!!r.quiet!==lastQuiet){lastCue=r.cue;lastQuiet=!!r.quiet;onCue(r.cue,lastQuiet);}paintAt=-Infinity;},onTalk,onReturn,
-  onStep:(d,t)=>onStep(d,t==='b'?'+':t==='s'||state.room.land==='stone'||state.room.land==='ridge'?'study-stone':state.room.land==='salt'||state.room.land==='shore'||state.room.dry?'study-silt':t==='g'?'g':'='),onTransition:()=>{held.forEach(k=>latched.add(k));cancel();}});
+ // The next board's music is asked for as the slide begins, so its loop is
+ // prepared and crossfaded while the screen moves rather than after it.
+ // While walking out through an exit, the destination's loop is prepared.
+ let prepared=null;
+ function prepareExit(){const end=state.hero.path.at(-1),gate=end&&state.room.gateAt(end.x,end.y);if(!gate)return;const to=state.rooms.find(r=>r.id===gate.to);if(!to||to.cue===lastCue&&!!to.quiet===lastQuiet||prepared===to.id)return;prepared=to.id;onPrepare(to.cue,!!to.quiet);}
+ const cue=r=>{prepared=null;if(r.cue!==lastCue||!!r.quiet!==lastQuiet){lastCue=r.cue;lastQuiet=!!r.quiet;onCue(r.cue,lastQuiet);}};
+ const state=createFixedJourney({onRoom:r=>{canvas.setAttribute('aria-label','空の枝道：'+r.name);onPlace(r);cue(r);paintAt=-Infinity;},onTalk,onReturn,
+  onStep:(d,t)=>onStep(d,t==='b'?'+':t==='s'||state.room.land==='stone'||state.room.land==='ridge'?'study-stone':state.room.land==='salt'||state.room.land==='shore'||state.room.dry?'study-silt':t==='g'?'g':'='),onTransition:()=>{held.forEach(k=>latched.add(k));cancel();if(state.transition)cue(state.transition.to);}});
  const water=createAmbienceDirector(state.rooms.flatMap(r=>{const kind=r.dry?'stone':r.quiet?'echo':r.land==='forest'?'wood':r.land==='ridge'?'wind':r.water?'drip':null;return kind?[{id:'fixed-ambient-'+r.id,kind,x:r.col*15+9,y:r.row*15+7}]:[];}));
  const layout=()=>fixedLayout(screen.w,screen.h),project=p=>{const l=layout();return {x:l.x+(p.x+.5)*32*l.scale,y:l.y+(p.y+.5)*32*l.scale};};
  function inspect(item,kind){const p=item.entrance||item;state.walkTo(p,{kind,name:item.name,lines:item.lines});}
@@ -66,7 +72,7 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
    state.walkTo({x:hero.x+d[0],y:hero.y+d[1]});
   },
   frame(now,reduced){
-   const dt=last===null?0:(now-last)/1000;last=now;if(state.active)steer();state.update(dt,{paused:paused(),reduced});
+   const dt=last===null?0:(now-last)/1000;last=now;if(state.active){steer();prepareExit();}state.update(dt,{paused:paused(),reduced});
    if(!state.active)return;
    const sound=water.update({x:state.room.col*15+state.hero.px,y:state.room.row*15+state.hero.py},now,!paused()&&!state.transition&&audible());onAmbient(sound.levels,sound.events);
    canvas.setAttribute('aria-busy',String(!!state.transition||state.hero.path.length>0));

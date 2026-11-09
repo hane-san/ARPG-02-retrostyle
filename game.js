@@ -84,7 +84,8 @@ const trialBag=PILGRIMAGE_MODE?createTrialBag(world):null;let trialUsed=false;
 let fixedOrigin=null;
 const fixedTrial=PILGRIMAGE_MODE?createFixedScreenView({stage,paused:()=>!!dialogue||isPanelOpen()||document.hidden,
  audible:()=>sfx.enabled&&sfx.volume>0,onAmbient:(levels,events)=>sfx.ambience(levels,events),
- onCue:(cue,quiet)=>{trackSelect.value=cue;imperialQuiet=quiet;applyTrack();},
+ onCue:(cue,quiet)=>{trackSelect.value=cue;imperialQuiet=quiet;applyTrack({quick:true});},
+ onPrepare:(cue,quiet)=>{if(quiet||!music.enabled)return;const [id,phase]=cue.split(':').map(Number);music.prepare(id,phase);},
  onPlace:r=>{$('zoneName').textContent=r.name;$('zoneSub').textContent=r.role;},
  onTalk:(name,lines)=>openDialogue(name,'空の枝道の暮らし',lines),onReturn:returnFromFixed,
  onRead:()=>{if(dialogue)dialogueInput();},onStep:(d,t)=>sfx.step(d,t)}):null;
@@ -1096,9 +1097,9 @@ let chosen=storage.getItem('selected-track')||'3:1';
 if(![...trackSelect.options].some(o=>o.value===chosen))chosen='3:1';
 trackSelect.value=chosen;
 function chosenTrack(){const parts=trackSelect.value.split(':').map(Number);return {id:parts[0],phase:parts[1]};}
-function applyTrack(){
+function applyTrack(options={}){
  const p=chosenTrack();saveTrack();
- if(music.enabled){music.setScene(p.id,p.phase,imperialQuiet?'quiet':'playing');music.unlock();}
+ if(music.enabled){music.setScene(p.id,p.phase,imperialQuiet?'quiet':'playing',options);music.unlock();}
  $('nowPlaying').textContent=music.enabled?(imperialQuiet?'この場所では、音楽が静まります':'再生中：'+MUSIC_LIBRARY[p.id][p.phase===1?'ally':'hostile'].title):'音楽は停止中';
 }
 function syncMusic(){
