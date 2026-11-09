@@ -24,3 +24,10 @@ test('OFF cancels an unfinished loop without caching its late result',async()=>{
  const pending=cache.get('a','a');await Promise.resolve();cache.cancel();complete('late');
  assert.equal(await pending,null);assert.equal(cache.size,0);
 });
+test('asking again for the loop being prepared joins it instead of restarting it',async()=>{
+ const releases=[];let renders=0;
+ const cache=createMusicLoopCache(async(track,alive)=>{renders++;await new Promise(resolve=>releases.push(resolve));return alive()?track:null;});
+ const ahead=cache.get('next','next');await Promise.resolve();const needed=cache.get('next','next');
+ await new Promise(resolve=>setImmediate(resolve));releases.shift()();
+ assert.equal(await needed,'next');assert.equal(await ahead,'next');assert.equal(renders,1);assert.equal(await cache.get('next','x'),'next');
+});
