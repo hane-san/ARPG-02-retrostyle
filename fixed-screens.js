@@ -33,6 +33,34 @@ export const FIXED_SEAMS=Object.fromEntries(FIXED_ROOMS.map(r=>[r.id,{}]));
 links.forEach(([a,d,b],i)=>{const seam=geographySeam(FIXED_ROOMS.find(r=>r.id===a),d,FIXED_ROOMS.find(r=>r.id===b),widths[i]);gates[a][d]=b;gates[b][FIXED_DIRECTIONS[d].back]=a;FIXED_SEAMS[a][d]=seam;FIXED_SEAMS[b][FIXED_DIRECTIONS[d].back]=seam;});
 export const gatePoint=(d,room)=>{const j=room?.seams[d]?.center??7;return d==='N'?{x:j,y:0}:d==='S'?{x:j,y:14}:d==='W'?{x:0,y:j}:{x:14,y:j};};
 export const fixedExitMarker=(d,room)=>{const p=gatePoint(d,room);return {...p,x:d==='W'?2:d==='E'?12:p.x,y:d==='N'?2:d==='S'?12:p.y};};
+// One shared plaque geometry for drawing and tapping, in board pixels. The
+// type stays at least about 13 CSS px. A plaque that would sit on the return
+// waystone moves to whichever side of it is clear of the other plaques, and
+// the waystone's own name takes the opposite side.
+const overlaps=(a,b)=>Math.abs(a.x-b.x)<(a.w+b.w)/2+6&&Math.abs(a.y-b.y)<(a.h+b.h)/2+4;
+export function fixedGuideLayout(room,scale){
+ const font=Math.max(16,13.5/scale),clamp=p=>({...p,x:Math.max(p.w/2+4,Math.min(480-p.w/2-4,p.x))}),labels={};
+ for(const d of Object.keys(room.connections)){
+  const m=fixedExitMarker(d,room),name=(FIXED_ROOMS.find(r=>r.id===room.connections[d])?.chartName||'')+'へ';
+  labels[d]=clamp({d,name,x:(m.x+.5)*32,y:(m.y+.5)*32+font*.5+14,w:name.length*font+16,h:font+10,font,shifted:false});
+ }
+ const stone=room.returnStone;let stoneLabel=null;
+ if(stone){
+  const sx=(stone.x+.5)*32,sy=(stone.y+.5)*32,sw=5*Math.max(14,12/scale)+14,sh=Math.max(14,12/scale)+8;
+  stoneLabel={x:sx,y:sy+14+sh/2,w:sw,h:sh,font:Math.max(14,12/scale)};
+  for(const label of Object.values(labels)){
+   if(!(Math.abs(sx-label.x)<label.w/2+64&&Math.abs(sy-label.y)<label.h+30))continue;
+   const others=Object.values(labels).filter(o=>o!==label),side=[1,-1].map(k=>clamp({...label,x:sx+k*(label.w/2+52),y:sy+4,shifted:true}));
+   const pick=side.find(p=>!others.some(o=>overlaps(p,o)))||side[0];Object.assign(label,pick);
+   stoneLabel=clamp({...stoneLabel,x:sx+(pick.x>sx?-1:1)*(sw/2+30),y:sy+4});
+  }
+ }
+ // Side plaques flip above their arrows when they would touch another plaque.
+ for(const label of Object.values(labels))if(!label.shifted&&(label.d==='E'||label.d==='W')&&Object.values(labels).some(o=>o!==label&&overlaps(label,o))||stoneLabel&&!label.shifted&&overlaps(label,stoneLabel))label.y-=label.font+28;
+ return {labels,stone:stoneLabel};
+}
+export const fixedExitLabel=(d,room,scale)=>fixedGuideLayout(room,scale).labels[d];
+
 // Interpret only connected openings, in CSS pixels. The path still ends at a
 // legal boundary tile; visible neighbor terrain never teleports the traveller.
 export function fixedExitTarget(room,x,y,l){
@@ -41,8 +69,8 @@ export function fixedExitTarget(room,x,y,l){
   const seam=room.seams[d],vertical=d==='N'||d==='S',across=vertical?tx:ty,along=vertical?ty:tx;
   const near=d==='N'||d==='W'?along>=-4&&along<=1.5:along>=13.5&&along<=19;
   const m=fixedExitMarker(d,room),mx=l.x+(m.x+.5)*tile,my=l.y+(m.y+.5)*tile;
-  const name=FIXED_ROOMS.find(r=>r.id===room.connections[d]).chartName,font=Math.max(14*l.scale,12),labelY=my+font/2+10*l.scale,labelWidth=Math.max(44,(name.length+1)*font+12*l.scale);
-  const label=Math.abs(x-mx)<=labelWidth/2&&Math.abs(y-labelY)<=22;
+  const plate=fixedExitLabel(d,room,l.scale),px=l.x+plate.x*l.scale,py=l.y+plate.y*l.scale,oldY=my+Math.max(14*l.scale,12)/2+10*l.scale;
+  const label=Math.abs(x-px)<=Math.max(44,plate.w*l.scale)/2&&Math.abs(y-py)<=Math.max(22,plate.h*l.scale/2+4)||!plate.shifted&&Math.abs(x-mx)<=22&&Math.abs(y-oldY)<=22;
   const band=seam.bands.find(([lo,hi])=>near&&Math.abs(across-(lo+hi+1)/2)*tile<=Math.max(22,lo===hi?tile*1.15:0,(hi-lo+1)/2*tile));
   if(band||Math.hypot(x-mx,y-my)<=Math.min(22,tile*.45)||label){
    const [lo,hi]=band||seam.bands.find(([lo,hi])=>seam.center>=lo&&seam.center<=hi),j=Math.max(lo,Math.min(hi,Math.floor(across))),p=gatePoint(d,room);

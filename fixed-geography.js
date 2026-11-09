@@ -27,7 +27,7 @@ export function composeFixedGeography(defs){
  const centre=defs.find(r=>r.id===FIXED_START.room);
  centre.name='旅支度の分水庭';centre.chartName='旅支度';centre.role='中央の旅支度。西の水路、北の乾いた器、東の石壁、南の畑へ出発する。';
  centre.returnStone={x:7,y:12};
- centre.npc={x:6,y:11,name:'道具を洗う人',color:'#819f9b',lines:['西は水路、北は乾いた器の道。東の石壁は、南の畑から回っても行けるよ。','空を広く見たい日は、北の縁まで。帰りの道標はこの庭にも残しておくね。']};
+ centre.npc={x:5,y:11,name:'道具を洗う人',color:'#819f9b',lines:['西は水路、北は乾いた器の道。東の石壁は、南の畑から回っても行けるよ。','空を広く見たい日は、北の縁まで。帰りの道標はこの庭にも残しておくね。']};
 }
 const hexMix=(a,b)=>'#'+[1,3,5].map(i=>Math.round((parseInt(a.slice(i,i+2),16)+parseInt(b.slice(i,i+2),16))/2).toString(16).padStart(2,'0')).join('');
 export function geographySeam(a,d,b,oldWidth){

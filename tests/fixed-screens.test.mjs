@@ -2,7 +2,7 @@ import {walkFixedState} from './fixed-route.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {makeFixedRooms,createFixedJourney,fixedLayout,gatePoint,FIXED_DIRECTIONS,FIXED_SLIDE_MS,FIXED_CUE,fixedExitTarget,fixedExitMarker} from '../fixed-screens.js';
+import {makeFixedRooms,createFixedJourney,fixedLayout,gatePoint,FIXED_DIRECTIONS,FIXED_SLIDE_MS,FIXED_CUE,fixedExitTarget,fixedExitMarker,fixedExitLabel,fixedGuideLayout} from '../fixed-screens.js';
 import {MUSIC_LIBRARY,buildTrack} from '../music.js';
 import {transitionTraveller} from '../fixed-screen-art.js';
 const hash=x=>createHash('sha256').update(JSON.stringify(x)).digest('hex');
@@ -96,7 +96,8 @@ test('visible continuations and 44px narrow openings select only a legal connect
    for(const q of [g,{x:g.x+v.dx,y:g.y+v.dy},fixedExitMarker(d,r)]){
     const a=screen(q),target=fixedExitTarget(r,a.x,a.y,l);assert.ok(target);assert.equal(r.gateAt(target.x,target.y).direction,d);
    }
-   const mark=screen(fixedExitMarker(d,r)),labelY=mark.y+Math.max(14*l.scale,12)/2+10*l.scale;assert.ok(fixedExitTarget(r,mark.x,labelY,l));
+   const plate=fixedExitLabel(d,r,l.scale),labelTap=fixedExitTarget(r,l.x+plate.x*l.scale,l.y+plate.y*l.scale,l);assert.ok(labelTap);assert.equal(r.gateAt(labelTap.x,labelTap.y).direction,d);
+   const mark=screen(fixedExitMarker(d,r)),labelY=mark.y+Math.max(14*l.scale,12)/2+10*l.scale;if(!plate.shifted)assert.ok(fixedExitTarget(r,mark.x,labelY,l));
    if(r.seams[d].width===1)for(const delta of [-21,21,-tile,tile]){
     const a=screen(g);if(v.dy)a.x+=delta;else a.y+=delta;
     const target=fixedExitTarget(r,a.x,a.y,l);assert.ok(target);assert.equal(r.gateAt(target.x,target.y).direction,d);
@@ -104,5 +105,18 @@ test('visible continuations and 44px narrow openings select only a legal connect
   }
   const r=makeFixedRooms()[0];for(const q of [{x:7,y:14},{x:0,y:14},{x:7,y:-8}]){const a=screen(q);assert.equal(fixedExitTarget(r,a.x,a.y,l),null);}
   const bridge=makeFixedRooms().find(r=>r.id==='bridge'),water=screen({x:9,y:4});assert.equal(fixedExitTarget(bridge,water.x,water.y,l),null);
+ }
+});
+
+test('exit plaques stay legible, inside the board and clear of each other and the return waystone',()=>{
+ const hit=(a,b)=>Math.abs(a.x-b.x)<(a.w+b.w)/2&&Math.abs(a.y-b.y)<(a.h+b.h)/2;
+ for(const [w,h] of [[320,477],[390,753],[430,841],[844,316]]){
+  const l=fixedLayout(w,h);
+  for(const r of makeFixedRooms()){
+   const g=fixedGuideLayout(r,l.scale),plates=Object.values(g.labels);
+   for(const p of plates){assert.ok(p.font*l.scale>=13,'plaque type stays readable '+r.id);assert.ok(p.x-p.w/2>=0&&p.x+p.w/2<=480,'plaque inside board '+r.id+' '+p.d);}
+   for(let i=0;i<plates.length;i++)for(let j=i+1;j<plates.length;j++)assert.ok(!hit(plates[i],plates[j]),'plaques overlap in '+r.id+' '+plates[i].d+plates[j].d+' at '+w);
+   if(g.stone)for(const p of plates)assert.ok(!hit(p,g.stone),'plaque covers the waystone name in '+r.id+' at '+w);
+  }
  }
 });
