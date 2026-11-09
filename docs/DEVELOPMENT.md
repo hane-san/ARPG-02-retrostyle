@@ -141,3 +141,5 @@ Codex/GPT等が作ったPRをClaude Codeが受け取るときの手順（競合�
 ## #124 連続地理の実装
 
 `fixed-geography.js`が共有band/offsetと世界座標の裂け目、中央開始を定義。新地形だけ内側空地を最小限接続し、水/溝/裂け目/solidを救済床にしない。全レーンを実移動処理で往復し、描画/タップ/地図の中心も同じ定義を参照する。`fixed-geography.test.mjs`と`fixed-geography-browser.mjs`を追加。browser atlasグループへ新地理4サイズ検査を追加し、全100枚と旧8/33枚は保持。旧入口への前段も通常Canvas入力で歩く。[技術計画](FIXED-CONNECTED-GEOGRAPHY.md)。
+
+#124のCI実行で`ubuntu-latest`がUbuntu26.04へ移り、Playwright1.57.0がChromiumインストール前に失敗することを確認。checksの実行OSを対応済みUbuntu24.04へ明示固定し、同じNode22/Playwright版・全5グループ・集約条件で再検査する。検査の省略やrepository Settings変更はしない。
