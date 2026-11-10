@@ -113,3 +113,22 @@
 .fixed-sample #vistaBtn{display:none}
 .fixed-sample #fixedHelpEnter,.fixed-sample #trialHelpReturn{display:none}
 .fixed-sample #helpPanel .sheet>p:not(.fixed-help){display:none}
+
+/* UI comfort pass (2026-11-10, producer request): every control a finger meets is at least 44px, and the small print is a
+   size larger. Layout, sheets and the dock keep their places; only sizes of controls and text change. */
+.journey-mode .close{min-width:44px;min-height:44px;font-size:22px}
+.journey-mode .pill-toggle{min-width:72px;min-height:44px;font-size:13px}
+.journey-mode #trackSelect{min-height:44px}
+.journey-tool span{font-size:11px}
+.journey-mode .sheet p.secondary{font-size:12px}
+.journey-mode .toggle-row small{font-size:11px}
+.journey-mode .now-playing{font-size:12px!important}
+.journey-mode .zone-grid button{font-size:12px}
+.journey-mode .dialogue-top small{font-size:10px}
+.journey-mode .dialogue p{font-size:14px;line-height:1.8}
+.journey-mode .dialogue>button{font-size:12px;min-height:36px}
+.journey-mode .dialogue-top button{min-width:44px;min-height:44px}
+.journey-mode .dialogue-top button::after{inset:-3px}
+.vista-card p{font-size:12px}
+.vista-heading button{min-width:44px;min-height:44px}
+@media(max-width:350px){.journey-mode .zone-grid button{font-size:11px}.journey-tool span{font-size:10px}}
