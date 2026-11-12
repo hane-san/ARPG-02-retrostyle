@@ -6,6 +6,7 @@
 // person off: every placement is kept only if the whole floor stays connected.
 // There is no item, score, quest or saved state. Solid pieces use their own
 // tile 'o', so a building's foot ('h') is never mistaken for a bush.
+import {seamLanes} from './fixed-geography.js';
 const SKIP=new Set(['watershed-wheel','white-flower-road','cairn-turn','sealed-court']);
 const seedOf=id=>{let h=2166136261;for(const ch of id)h=Math.imul(h^ch.charCodeAt(0),16777619);return h>>>0;};
 function random(seed){let s=seed||1;return ()=>{s^=s<<13;s^=s>>>17;s^=s<<5;return ((s>>>0)%100000)/100000;};}
@@ -19,17 +20,21 @@ const GLINTS={
 };
 const family=land=>['forest'].includes(land)?'forest':['meadow','terrace'].includes(land)?'meadow':land==='village'?'village':['canal','river','pond','marsh','shore'].includes(land)?'water':['salt','dry'].includes(land)?'dry':'stone';
 const ARROWS={N:'↑',E:'→',S:'↓',W:'←'};
-// The usable interior keeps clear of every edge band, where lanes and
-// landings are. A placed cell also keeps a step away from roads.
-const interior=(x,y)=>x>=3&&x<=11&&y>=3&&y<=11;
+// The usable interior keeps clear of the outer two rows, and of every lane
+// and landing reaching four cells (0-3) in from its edge. A placed cell also keeps a step away from roads.
+const interior=(x,y)=>x>=2&&x<=12&&y>=2&&y<=12;
 export function placeFixedFeatures(room,tiles,floor,names){
  if(SKIP.has(room.id)||room.sourceIndex===undefined)return [];
  const rnd=random(seedOf(room.id)),fam=family(room.land),features=[],key=(x,y)=>x+','+y;
  const keep=new Set();
  const mark=(p,r=1)=>{if(!p)return;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++)keep.add(key(p.x+dx,p.y+dy));};
- for(const s of [room.site,...(room.props||[])].filter(Boolean))mark(s.entrance,1);
+ for(const s of [room.site,...(room.props||[])].filter(Boolean)){mark(s.entrance,1);
+  // Nothing goes inside or right beside a building, gate or piece of equipment.
+  for(let y=Math.floor(s.y)-1;y<Math.ceil(s.y+s.h)+1;y++)for(let x=Math.floor(s.x)-1;x<Math.ceil(s.x+s.w)+1;x++)keep.add(key(x,y));}
+ if(room.house)for(let y=room.house.y-1;y<=room.house.y+room.house.h;y++)for(let x=room.house.x-1;x<=room.house.x+room.house.w;x++)keep.add(key(x,y));
  for(const n of room.npcs)mark(n,1);
  if(room.returnStone)mark(room.returnStone,1);
+ for(const [d,seam] of Object.entries(room.seams||{}))for(const j of seamLanes(seam))for(let k=0;k<=3;k++)for(const o of [0]){const x=d==='N'||d==='S'?j+o:d==='W'?k:14-k,y=d==='E'||d==='W'?j+o:d==='N'?k:14-k;keep.add(key(x,y));}
  const at=(x,y)=>tiles[y]?.[x];
  const open=(x,y)=>interior(x,y)&&at(x,y)==='g'&&!keep.has(key(x,y));
  const nearRoad=(x,y)=>[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>['=','s','b'].includes(at(x+dx,y+dy)));
@@ -49,15 +54,15 @@ export function placeFixedFeatures(room,tiles,floor,names){
   if(!connected()){cells.forEach(([x,y],i)=>tiles[y][x]=old[i]);return false;}
   cells.forEach(([x,y])=>mark({x,y},0));features.push({...feature,cells});return true;
  }
- const pickCell=(test=open)=>{const c=[];for(let y=3;y<=11;y++)for(let x=3;x<=11;x++)if(test(x,y))c.push([x,y]);return c.length?c[Math.floor(rnd()*c.length)]:null;};
+ const pickCell=(test=open)=>{const c=[];for(let y=2;y<=12;y++)for(let x=2;x<=12;x++)if(test(x,y))c.push([x,y]);return c.length?c[Math.floor(rnd()*c.length)]:null;};
  // 1. Stepping stones: a short stream crossing that offers a second way.
  if(fam==='water'){
   const runs=[];
-  for(let y=3;y<=11;y++)for(let x=3;x<=11;x++)for(const [dx,dy] of [[1,0],[0,1]])for(const len of [1,2]){
+  for(let y=2;y<=12;y++)for(let x=2;x<=12;x++)for(const [dx,dy] of [[1,0],[0,1]])for(const len of [1,2,3]){
    const cells=Array.from({length:len},(_,i)=>[x+dx*i,y+dy*i]);
    if(!cells.every(([cx,cy])=>interior(cx,cy)&&at(cx,cy)==='w'))continue;
    const a=[x-dx,y-dy],b=[x+dx*len,y+dy*len];
-   if(at(...a)==='g'&&at(...b)==='g'&&!keep.has(key(...a))&&!keep.has(key(...b)))runs.push(cells);
+   if(['g','='].includes(at(...a))&&['g','='].includes(at(...b))&&!keep.has(key(...a))&&!keep.has(key(...b)))runs.push(cells);
   }
   if(runs.length){const cells=runs[Math.floor(rnd()*runs.length)];cells.forEach(([x,y])=>tiles[y][x]='k');features.push({kind:'stones',cells});}
  }
@@ -88,7 +93,7 @@ export function placeFixedFeatures(room,tiles,floor,names){
    if(trySolid([c],{kind:'sign',seed:rnd(),name:'道しるべ',lines}))break;}
  }
  // 6. The glint: walkable, quiet, and only a line of text when looked at.
- const pool=GLINTS[fam],glint=nook&&tiles[nook[1]][nook[0]]==='g'?nook:pickCell((x,y)=>open(x,y)&&!nearRoad(x,y));
+ const pool=GLINTS[fam],glint=nook&&tiles[nook[1]][nook[0]]==='g'?nook:pickCell((x,y)=>open(x,y)&&!nearRoad(x,y))||pickCell(open);
  if(glint){features.push({kind:'glint',cells:[glint],x:glint[0],y:glint[1],name:'小さな発見',lines:[pool[Math.floor(rnd()*pool.length)]],seed:rnd()});}
  // Flower beds or a ring of stones on open ground are ground detail only.
  const deco=fam==='dry'||fam==='stone'?'ring':fam==='water'?'lilies':'flowers';

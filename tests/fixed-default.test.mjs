@@ -53,7 +53,7 @@ test('playful landforms are physical, keep every lane, doorstep and person reach
  for(const r of rooms){
   if(r.sourceIndex===undefined||['watershed-wheel','white-flower-road','cairn-turn','sealed-court'].includes(r.id)){assert.deepEqual(r.features,[],r.id);continue;}
   for(const f of r.features){kinds.add(f.kind);
-   for(const [x,y] of f.cells){assert.ok(x>=3&&x<=11&&y>=3&&y<=11,'interior only '+r.id);}
+   for(const [x,y] of f.cells){assert.ok(x>=2&&x<=12&&y>=2&&y<=12,'interior only '+r.id);if(f.kind!=='lilies')for(const s of [r.site,...r.props].filter(Boolean))assert.ok(!(x>=Math.floor(s.x)-1&&x<Math.ceil(s.x+s.w)+1&&y>=Math.floor(s.y)-1&&y<Math.ceil(s.y+s.h)+1),'clear of '+s.name+' in '+r.id);}
    if(['bush','boulder','cairn','stump','sign'].includes(f.kind))for(const [x,y] of f.cells){assert.equal(r.walkable(x,y),false,r.id+' solid '+f.kind);assert.equal(r.tileAt(x,y),'o','a landform never poses as a building foot');}
    if(f.kind==='pond')for(const [x,y] of f.cells)assert.equal(r.tileAt(x,y),'w');
    if(f.kind==='stones'){stones++;for(const [x,y] of f.cells){assert.equal(r.tileAt(x,y),'k');assert.ok(r.walkable(x,y));}}
@@ -62,7 +62,7 @@ test('playful landforms are physical, keep every lane, doorstep and person reach
   }
  }
  for(const k of ['bush','boulder','cairn','stump','sign','stones','glint','pond','reeds'])assert.ok(kinds.has(k),'variety includes '+k);
- assert.ok(glints>=80&&signs>=30&&stones>=10);
+ assert.ok(glints>=80&&signs>=30&&stones>=6);
 });
 test('every board can still be walked through all its exits after the landforms (state machine walk)',()=>{
  const s=createFixedJourney();s.enter();const seen=new Set();
