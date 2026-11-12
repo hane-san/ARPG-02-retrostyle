@@ -18,7 +18,7 @@ export async function checkJourneyTaps(browser,origin){
    return fill.call(this,x,y,w,h);
   };
  });
- await page.goto(origin+'/',{waitUntil:'load'});
+ await page.goto(origin+'/?walk=1',{waitUntil:'load'});
  await page.waitForFunction(()=>document.querySelector('#zoneName')?.textContent==='白い船着場');
 
  // Every closing button answers a finger 22px from its centre in each direction.

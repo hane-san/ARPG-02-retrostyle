@@ -35,7 +35,7 @@ export async function checkLayout(browser,origin){
      return translate.call(this,x,y);
     };
    });
-   await page.goto(origin+'/'+query);await page.waitForSelector('#worldCanvas');await page.waitForTimeout(300);
+   await page.goto(origin+'/'+(query||'?walk=1'));await page.waitForSelector('#worldCanvas');await page.waitForTimeout(300);
    assert.deepEqual(await smallTargets(page,'.nav-btn,.dock button'),[],'header/dock controls reach 44px: '+tag);
    await page.locator('#soundBtn').click();await page.waitForTimeout(150);
    const sheet=await page.locator('#musicPanel .sheet').boundingBox();

@@ -16,7 +16,7 @@ export async function checkSkyTrial(browser,origin){
    proto.arc=function(x,y,r,...a){if(this.canvas.id==='miniMap'&&this.fillStyle==='#fae5a1')window.trialPosition={x:Math.round(x/this.canvas.width*w-.5),y:Math.round(y/this.canvas.height*h-.5)};return arc.call(this,x,y,r,...a);};
    const Native=window.AudioContext||window.webkitAudioContext;if(Native){const create=Native.prototype.createBufferSource;Native.prototype.createBufferSource=function(){const s=create.call(this),start=s.start.bind(s);s.start=(...args)=>{if(s.loop){window.trialLoopSeconds=s.buffer?.duration;window.trialMusicStarts=(window.trialMusicStarts||0)+1;}return start(...args);};return s;};}
   },{w:world.w,h:world.h});
-  await p.goto(origin+'/');await p.waitForFunction(()=>window.trialEye);await p.clock.install();
+  await p.goto(origin+'/?walk=1');await p.waitForFunction(()=>window.trialEye);await p.clock.install();
   await p.locator('#soundBtn').click();assert.equal(await p.locator('#musicToggle').textContent(),'OFF');assert.equal(await p.locator('#sfxToggle').textContent(),'ON');assert.equal(await p.locator('#trackSelect option').count(),110);
   const volume=await p.locator('#volumeRange').inputValue();if(width===390)await p.locator('#musicToggle').click();await p.locator('#musicPanel [data-close]').click();
   const point=await p.evaluate(()=>{const r=document.querySelector('#worldCanvas').getBoundingClientRect();return {x:r.width/2+(26.5*32-window.trialEye.x)*window.trialZoom,y:r.height/2+(105.5*32-window.trialEye.y)*window.trialZoom};});
@@ -52,7 +52,7 @@ export async function checkSkyTrial(browser,origin){
   await context.close();
  }
  // The sky itself has the same pixels at the same world coordinates on rotation.
- const p=await browser.newPage();await p.goto(origin+'/');const sky=await p.evaluate(async()=>{
+ const p=await browser.newPage();await p.goto(origin+'/?walk=1');const sky=await p.evaluate(async()=>{
   const {WEST_STUDIES}=await import('./western-world.js'),{drawLandscapeSky,skyWorldWindow}=await import('./landscape-sky.js'),z=WEST_STUDIES[0],b=skyWorldWindow(z),camera={x:(z.cx+.5)*32,y:b.y+b.h-270,zoom:.6};
   function sample(width,height,phase){const c=document.createElement('canvas');c.width=width;c.height=height;const g=c.getContext('2d');g.translate(width/2,height/2);g.scale(camera.zoom,camera.zoom);g.translate(-camera.x,-camera.y);drawLandscapeSky(g,z,camera,{w:width,h:height},phase,0);return [...g.getImageData(width/2-48,height/2-48,96,96).data];}
   const a=sample(600,400,0),rotated=sample(800,600,0),dusk=sample(600,400,1);let difference=0,rotationMax=0,rotationSum=0;for(let i=0;i<a.length;i++){const delta=Math.abs(a[i]-rotated[i]);rotationMax=Math.max(rotationMax,delta);rotationSum+=delta;if(i%4!==3)difference+=Math.abs(a[i]-dusk[i]);}return {rotationMax,rotationMean:rotationSum/a.length,dayDuskDifference:difference/(96*96*3)};

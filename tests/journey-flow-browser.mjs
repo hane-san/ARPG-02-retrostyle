@@ -19,7 +19,7 @@ export async function checkJourneyFlow(browser,origin){
    CanvasRenderingContext2D.prototype.scale=function(x,y){if(this.canvas.id==='worldCanvas'){next=true;window.flowZoom=x;}return scale.call(this,x,y);};
    CanvasRenderingContext2D.prototype.translate=function(x,y){if(next&&this.canvas.id==='worldCanvas'){next=false;window.flowCamera={x:-x,y:-y};}return translate.call(this,x,y);};
   });
-  await page.goto(origin+'/',{waitUntil:'load'});
+  await page.goto(origin+'/?walk=1',{waitUntil:'load'});
   await page.waitForFunction(()=>document.querySelector('#zoneName')?.textContent==='白い船着場'&&window.flowCamera);
   const busy=async()=>await page.locator('#worldCanvas').getAttribute('aria-busy')==='true';
   const tapTile=async t=>{

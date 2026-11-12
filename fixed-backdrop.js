@@ -1,0 +1,114 @@
+import {fixedSource} from './fixed-journey-data.js';
+import {FIXED_SKIES} from './fixed-sky.js';
+// Producer request 2026-11-12, portrait first: the walkable board and its
+// objects stand in front, and the place itself lies behind them. Cells of a
+// board outside its walkable land become that land's natural surroundings
+// (canopy, tall grass, fields, sea, scree, paving) instead of empty sky, and
+// beyond the boards a layered panorama of the region fills the portrait sky.
+// Everything here is static scenery: no collision, no state.
+const R=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h);};
+const E=(c,x,y,rx,ry,col)=>{c.fillStyle=col;c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fill();};
+const P=(c,pts,col)=>{c.fillStyle=col;c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();};
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+export const mix=(a,b,t)=>'#'+hex(a).map((v,i)=>Math.round(v+(hex(b)[i]-v)*Math.max(0,Math.min(1,t))).toString(16).padStart(2,'0')).join('');
+const noise=(x,y,k=0)=>{const s=Math.sin(x*127.1+y*311.7+k*74.7)*43758.5453;return s-Math.floor(s);};
+// The surroundings each land type sits in.
+export function surroundingKind(room){
+ const land=room.land||'village';
+ if(land==='forest')return 'canopy';
+ if(land==='shore')return 'sea';
+ if(land==='marsh')return 'marsh';
+ if(land==='terrace')return 'fields';
+ if(land==='ridge')return room.sky==='glacier'||room.sky==='violet'?'snowscree':'scree';
+ if(land==='salt')return 'saltflat';
+ if(land==='dry')return 'dryrock';
+ if(land==='stone')return 'paving';
+ if(land==='village')return 'garden';
+ return 'grass';
+}
+const paletteOf=room=>room.sourceIndex===undefined?['#b8c4a6','#ddd6bd','#7fa5ad','#83988a']:fixedSource(room.sourceIndex).palette;
+function colours(room,kind){
+ const p=paletteOf(room);
+ return {
+  canopy:['#2f5444','#43705a','#6b9670',mix(p[0],'#2c4a3c',.55)],
+  grass:[mix(p[0],'#5f8d58',.5),mix(p[0],'#77a265',.45),mix(p[0],'#a6c58a',.3),'#4d7a4c'],
+  garden:[mix(p[0],'#5c8a5b',.45),mix(p[0],'#7aa66e',.4),'#a7c98d','#3e6a4b'],
+  fields:[mix(p[0],'#7d9f5c',.5),mix(p[0],'#b9b56d',.45),mix(p[2],'#6fa3b0',.3),'#5f7f4a'],
+  sea:[mix(p[2],'#3f7a98',.55),mix(p[2],'#5f99b2',.45),'#e9f1ea',mix(p[2],'#2f5f7d',.6)],
+  marsh:[mix(p[2],'#4f8486',.45),mix(p[0],'#7e9e66',.4),'#5f7f4d','#9db37a'],
+  scree:[mix(p[3],'#6f706c',.45),mix(p[1],'#9a9b94',.45),mix(p[1],'#d9d6c8',.3),'#5b5f60'],
+  snowscree:[mix(p[3],'#76829a',.4),mix(p[1],'#a9b2c2',.4),'#eef1ea','#5d6680'],
+  saltflat:[mix(p[1],'#d9d2bf',.5),mix(p[1],'#ebe6d7',.4),'#f7f3e8','#b9ae95'],
+  dryrock:[mix(p[3],'#a58f6c',.45),mix(p[1],'#c8b28a',.45),'#e5d4ae','#8c7556'],
+  paving:[mix(p[3],'#8e9592',.45),mix(p[1],'#b4b6aa',.45),'#d9d8cb','#6e7673']
+ }[kind];
+}
+const floor=t=>['g','=','s','b','k','h','o','t','w','d'].includes(t);
+// One static cell of surroundings, in board pixels (32 per tile).
+function cell(c,room,kind,col,x,y){
+ const gx=Math.round(room.col)*15+x,gy=Math.round(room.row)*15+y,X=x*32,Y=y*32,n=noise(gx,gy);
+ const [d,m,l,a]=col;
+ R(c,X,Y,32,32,m);
+ if(kind==='canopy'){R(c,X,Y,32,32,d);}
+ else if(kind==='grass'||kind==='garden'){for(let i=0;i<6;i++){const tx=X+3+noise(gx,gy,i)*26,ty=Y+4+noise(gx,gy,i+9)*24;R(c,tx,ty,1,5,d);R(c,tx+2,ty+1,1,4,a);}if(kind==='garden'&&n<.3)for(let i=0;i<4;i++)R(c,X+5+noise(gx,gy,i+3)*22,Y+5+noise(gx,gy,i+5)*22,2,2,['#f1d3dd','#f4ecb0','#ffffff','#c9b8e8'][i]);}
+ else if(kind==='fields'){const band=(gy%3);R(c,X,Y,32,32,band===0?m:band===1?d:mix(m,l,.5));for(let i=0;i<4;i++)R(c,X,Y+4+i*8,32,1,band===1?mix(d,'#3f5a33',.4):mix(m,'#8a8a4c',.35));if(band===2&&n<.5)R(c,X,Y+30,32,2,l);}
+ else if(kind==='sea'){R(c,X,Y,32,32,d);for(let i=0;i<2;i++){const wy=Y+8+i*14+noise(gx,gy,i)*4;R(c,X+4+noise(gx,gy,i+2)*10,wy,12+noise(gx,gy,i+4)*8,1,mix(m,'#ffffff',.35));}}
+ else if(kind==='marsh'){R(c,X,Y,32,32,d);if(n<.6)for(let i=0;i<5;i++){const rx=X+6+i*4+noise(gx,gy,i)*3;c.strokeStyle=i%2?l:a;c.lineWidth=1.4;c.beginPath();c.moveTo(rx,Y+26);c.lineTo(rx+(i%2?1:-1),Y+12+noise(gx,gy,i+6)*6);c.stroke();}else R(c,X+7,Y+15,14,1,mix(d,'#ffffff',.3));}
+ else if(kind==='scree'||kind==='snowscree'){for(let i=0;i<5;i++){const sx=X+3+noise(gx,gy,i)*24,sy=Y+3+noise(gx,gy,i+7)*24;E(c,sx,sy+1,3+noise(gx,gy,i+3)*3,2,d);E(c,sx,sy,2.6+noise(gx,gy,i+3)*2.6,1.7,l);}if(kind==='snowscree'&&n<.55)E(c,X+16,Y+16,12,7,'#eef1eacc');R(c,X+2,Y+20,10,1,d);}
+ else if(kind==='saltflat'){c.strokeStyle=a+'99';c.lineWidth=1;c.beginPath();c.moveTo(X,Y+8+n*10);c.lineTo(X+12,Y+14);c.lineTo(X+20,Y+6+n*6);c.lineTo(X+32,Y+12);c.moveTo(X+12,Y+14);c.lineTo(X+15,Y+32);c.stroke();}
+ else if(kind==='dryrock'){R(c,X,Y+22,32,10,mix(m,d,.4));R(c,X,Y+21,32,1,l);if(n<.4)E(c,X+10+n*12,Y+13,5,3.5,d);}
+ else if(kind==='paving'){R(c,X,Y,32,32,m);R(c,X,Y,32,1,d);R(c,X,Y+16,32,1,d);R(c,X+(gy%2?8:20),Y,1,16,d);R(c,X+(gy%2?22:6),Y+16,1,16,d);if(n<.12){E(c,X+16,Y+24,9,4,'#40474455');R(c,X+10,Y+4,12,20,l);R(c,X+9,Y+2,14,4,d);}}
+}
+// Canopy crowns overflow their own cells, so they are painted after the
+// ground pass of the surroundings and before the walkable land.
+function crowns(c,room,col,cells){
+ const [d,m,l]=col;cells.sort((a,b)=>a[1]-b[1]);
+ for(const [x,y] of cells){const gx=Math.round(room.col)*15+x,gy=Math.round(room.row)*15+y;
+  for(let k=0;k<2;k++){const cx=x*32+8+noise(gx,gy,k)*16,cy=y*32+8+noise(gx,gy,k+4)*16,r=13+noise(gx,gy,k+8)*6;E(c,cx+2,cy+4,r,r*.86,'#1f3a2e88');E(c,cx,cy,r,r*.86,d);E(c,cx-2,cy-2,r*.78,r*.66,m);E(c,cx-4,cy-5,r*.38,r*.3,l);}
+ }
+}
+const caches=new Map(),CACHE_LIMIT=14,RES=2;
+// A static 15 x 15 surroundings layer per board, cached for the visible few.
+export function surroundingsLayer(room){
+ const key=room.id;if(caches.has(key)){const v=caches.get(key);caches.delete(key);caches.set(key,v);return v;}
+ if(typeof document==='undefined')return null;
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=480*RES;const c=canvas.getContext('2d');c.scale(RES,RES);
+ const kind=surroundingKind(room),col=colours(room,kind),voids=[];
+ for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(room.tileAt(x,y)===' '&&!(room.skyline&&y<3&&kind!=='canopy'))voids.push([x,y]);
+ for(const [x,y] of voids)cell(c,room,kind,col,x,y);
+ // A soft lip where the surroundings meet the walkable land.
+ for(const [x,y] of voids)for(const [dx,dy,side] of [[0,-1,'top'],[0,1,'bottom'],[-1,0,'left'],[1,0,'right']]){
+  if(!floor(room.tileAt(x+dx,y+dy)))continue;const X=x*32,Y=y*32,edge=kind==='sea'?col[2]:kind==='canopy'?null:mix(col[0],'#000000',.15);if(!edge)continue;
+  c.save();c.globalAlpha=kind==='sea'?.7:.45;if(side==='top')R(c,X,Y,32,2,edge);if(side==='bottom')R(c,X,Y+30,32,2,edge);if(side==='left')R(c,X,Y,2,32,edge);if(side==='right')R(c,X+30,Y,2,32,edge);c.restore();
+  if(kind==='grass'||kind==='garden'||kind==='fields'||kind==='marsh')for(let i=0;i<4;i++){const t=noise(x,y,i+20)*28+2;const tx=side==='left'?X+1:side==='right'?X+29:X+t,ty=side==='top'?Y+1:side==='bottom'?Y+27:Y+t;R(c,tx,ty,2,4,col[3]);}
+ }
+ if(kind==='canopy')crowns(c,room,col,voids);
+ caches.set(key,canvas);while(caches.size>CACHE_LIMIT)caches.delete(caches.keys().next().value);
+ return canvas;
+}
+export function drawSurroundings(c,room){const layer=surroundingsLayer(room);if(layer)c.drawImage(layer,0,0,480,480);}
+// Whether the old floating-island cliff faces still belong under the land.
+export function keepsCliffFaces(room){return room.land==='ridge'||!!room.skyline;}
+// The region beyond the boards, from far to near, in front of the sky.
+export function drawPanorama(c,room,w,h,l,time){
+ const s=l.scale,top=l.y-128*s,horizon=Math.max(24*s,top*.58),kind=surroundingKind(room),col=colours(room,kind),sky=FIXED_SKIES[room.sky],haze=sky?sky.colors[3]:'#e6e3d0',far=mix(col[1],haze,.62),mid=mix(col[0],haze,.38),near=mix(col[0],haze,.12);
+ const bearing=(room.col||0)*.37+(room.row||0)*.11,ridge=(i,amp,freq,phase)=>{const t=i*freq+bearing+phase;return horizon-amp*s*(.5+.3*Math.sin(t)+.16*Math.sin(t*2.3+phase*1.7)+.09*Math.sin(t*5.1+phase*2.9)+.06*Math.cos(t*.43+phase));};
+ // Each band is lit from above and settles into its own colour lower down,
+ // so the layers read as land in air rather than as flat stripes.
+ const band=(base,amp,freq,phase,fill)=>{const pts=[[0,h]];let peak=h;for(let i=0;i<=64;i++){const y=base+(ridge(i*.75,amp,freq,phase)-horizon);peak=Math.min(peak,y);pts.push([i*w/64,y]);}pts.push([w,h]);const g=c.createLinearGradient(0,peak,0,peak+Math.max(30*s,amp*1.6*s));g.addColorStop(0,mix(fill,haze,.28));g.addColorStop(1,fill);P(c,pts,g);};
+ // Far: mountains, a sea line or a long low rise, depending on the land.
+ if(kind==='sea'||kind==='marsh'){{const g=c.createLinearGradient(0,horizon,0,top);g.addColorStop(0,mix(far,haze,.35));g.addColorStop(1,far);R(c,0,horizon,w,h-horizon,g);}for(let i=0;i<9;i++)R(c,((i*97+time/1300)%(w+80))-40,horizon+(6+i*9)*s,w*.18,1,mix(far,'#ffffff',.45));band(horizon+4*s,10,.21,1.3,mix(far,haze,.25));}
+ else if(kind==='scree'||kind==='snowscree'){band(horizon,64,.33,.4,far);const pts=[];for(let i=0;i<=48;i++)pts.push([i*w/48,ridge(i,64,.33,.4)]);c.save();c.strokeStyle=kind==='snowscree'?'#f3f4ebcc':mix(far,'#ffffff',.4);c.lineWidth=1.6*s;c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();c.restore();}
+ else band(horizon,kind==='canopy'?26:18,.24,.8,far);
+ // Mid: the land's own texture at a distance.
+ const midBase=horizon+(top-horizon)*.42;
+ band(midBase,kind==='scree'||kind==='snowscree'?34:14,.29,2.1,mid);
+ if(kind==='canopy')for(let i=0;i<26;i++){const x=(i+.5)*w/26+Math.sin(i*1.7+bearing)*6*s,y=midBase+(4+Math.sin(i*2.3)*5)*s,r=(9+Math.sin(i*3.1)*3)*s;E(c,x,y,r,r*.85,mix('#3f6b52',haze,.35));E(c,x-2*s,y-2*s,r*.55,r*.45,mix('#6d9a72',haze,.35));}
+ if(kind==='fields'||kind==='grass'||kind==='garden')for(let i=0;i<5;i++){const y=midBase+(6+i*7)*s;R(c,0,y,w,2*s,mix(i%2?col[1]:col[0],haze,.3));}
+ if(kind==='garden'||room.sourceIndex===undefined)for(let i=0;i<6;i++){const x=(i+.4)*w/6+Math.sin(i*2+bearing)*10*s,y=midBase+(8+Math.sin(i*1.3)*4)*s,u=9*s;R(c,x-u,y-u*.6,u*2,u*1.2,mix('#e9e0cc',haze,.35));P(c,[[x-u*1.2,y-u*.6],[x,y-u*1.5],[x+u*1.2,y-u*.6]],mix('#7c97a3',haze,.35));}
+ if(kind==='paving')for(let i=-3;i<=4;i++){const x=w*.5+i*30*s,y=midBase+6*s;R(c,x,y-26*s,14*s,26*s,mix('#c1c5bb',haze,.4));R(c,x-2*s,y-30*s,18*s,5*s,mix('#dadbd0',haze,.4));}
+ if(kind==='saltflat'||kind==='dryrock')for(let i=0;i<4;i++){const x=(i+.5)*w/4+Math.sin(i*2.1+bearing)*20*s,y=midBase+4*s,u=(12+i%2*8)*s;P(c,[[x-u*1.6,y],[x-u,y-u],[x+u,y-u*.9],[x+u*1.5,y]],mix(kind==='dryrock'?'#b48e6e':'#d8cdb7',haze,.35));}
+ // Near: the surroundings colour itself, meeting the neighbouring boards.
+ band(top+2*s,9,.31,3.3,near);
+ R(c,0,top+16*s,w,h,near);
+}

@@ -132,3 +132,8 @@
 .vista-card p{font-size:12px}
 .vista-heading button{min-width:44px;min-height:44px}
 @media(max-width:350px){.journey-mode .zone-grid button{font-size:11px}.journey-tool span{font-size:10px}}
+
+/* 2026-11-12: the screen-switching journey is the default. Its own help leads;
+   notes about the connected world return when that world is shown. */
+.fixed-sample #helpPanel .walk-help,.fixed-sample #fixedHelpEnter,.fixed-sample #trialHelpReturn{display:none}
+.fixed-sample #helpPanel .fixed-help{font-size:14px;line-height:1.8;color:inherit}

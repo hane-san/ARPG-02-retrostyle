@@ -1,4 +1,5 @@
 import {checkFixedGeography} from './fixed-geography-browser.mjs';
+import {checkFixedDefault} from './fixed-default-browser.mjs';
 import {checkFixedAtlas} from './fixed-atlas-browser.mjs';
 import {checkSkyTrial} from './sky-trial-browser.mjs';
 import {checkFixedGrandJourney} from './fixed-grand-browser.mjs';
@@ -52,7 +53,7 @@ async function main(){
  page.on('pageerror',e=>errors.push(e.message));
  page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status()+' '+r.url());});
  page.on('requestfailed',r=>{if(r.failure()?.errorText!=='net::ERR_ABORTED')errors.push('Request '+r.url()+': '+r.failure()?.errorText);});
- if(group==='fixed'){await checkFixedScreens(browser,origin);await checkFixedGrandJourney(browser,origin);return;}
+ if(group==='fixed'){await checkFixedDefault(browser,origin);await checkFixedScreens(browser,origin);await checkFixedGrandJourney(browser,origin);return;}
  if(group==='atlas'){await checkFixedGeography(browser,origin);await checkFixedAtlas(browser,origin);return;}
  if(group==='landscapes'){await checkSkyTrial(browser,origin);await checkWestern(browser,origin);await checkPilgrimage(browser,origin);await checkDeadzoneCamera(browser,origin);await checkImperialStudies(page,origin);return;}
  if(group==='journey'){await checkJourney(page,origin);await checkJourneyTaps(browser,origin);await checkJourneyFlow(browser,origin);await checkJourneyTargets(browser,origin);await checkJourneyMotion(browser,origin);await checkMazeTrial(browser,origin);await checkJourneyFoley(browser,origin);return;}
@@ -116,6 +117,7 @@ async function main(){
  await checkCameraInput(page,origin);
  await checkWesternAudio(browser,origin);
  if(group==='all'){
+ await checkFixedDefault(browser,origin);
  await checkFixedScreens(browser,origin);
  await checkFixedGrandJourney(browser,origin);
  await checkFixedGeography(browser,origin);

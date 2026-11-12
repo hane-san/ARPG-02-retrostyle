@@ -3,13 +3,14 @@ import {WEST_STUDIES} from './western-world.js';
 import {fixedSource} from './fixed-journey-data.js';
 import {drawPilgrimTile,drawPilgrimSite} from './pilgrimage-art.js';
 import {drawLandscapeSky,skyGeometry,skyPalette} from './landscape-sky.js';
+import {drawPanorama} from './fixed-backdrop.js';
 const R=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h);};
 const P=(c,p,col)=>{c.fillStyle=col;c.beginPath();p.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();};
 const cache=new WeakMap();
 export function journeyMaterial(room){
  if(cache.has(room))return cache.get(room);
  const z=fixedSource(room.sourceIndex),sx=z.cx-7,sy=z.cy-7;
- const tag=t=>z.southeast?({s:'se-stair',b:room.land==='shore'?'se-stonebridge':'se-boardwalk',w:'L','#':'se-wall','=':'='}[t]||'se-ground'):z.western?({s:'west-stair',b:'west-bridge',w:'L','#':'west-wall','=':'='}[t]||'west-ground'):({s:'=',b:'+',w:'L','#':'X','=':'='}[t]||'.');
+ const tag=t=>z.southeast?({s:'se-stair',b:room.land==='shore'?'se-stonebridge':'se-boardwalk',w:'L',k:'L','#':'se-wall','=':'='}[t]||'se-ground'):z.western?({s:'west-stair',b:'west-bridge',w:'L',k:'L','#':'west-wall','=':'='}[t]||'west-ground'):({s:'=',b:'+',w:'L',k:'L','#':'X','=':'='}[t]||'.');
  const proxy={tileAt:(x,y)=>tag(room.tileAt(x-sx,y-sy)),walkable:(x,y)=>room.walkable(x-sx,y-sy),zoneAt:()=>z};
  const kind=room.sourceIndex===17?'pine':room.sourceIndex===27?'cypress':room.land==='forest'?'willow':room.land==='marsh'?'willow':room.land==='shore'?'rock':'cypress';
  const landscapeObjects=room.trees.map(([x,y],i)=>({x,y,kind,seed:.2+i*.1,solid:true,palette:z.palette}));
@@ -41,19 +42,13 @@ export function journeyBackground(c,room,w,h,l,time){
  if(authored)drawFixedSky(c,room,w,h,l,time);else{colors.forEach((col,i)=>grad.addColorStop(i/(colors.length-1),col));R(c,0,0,w,h,grad);
  const zoom=l.scale*.9,g=skyGeometry(profile),camera={x:(profile.cx+.5)*32+(room.col-5)*35,y:g.horizon-(horizon-h/2)/zoom,zoom};
  c.save();if(!z||!skyGeometry(z))c.globalAlpha*=.45;c.translate(w/2,h/2);c.scale(zoom,zoom);c.translate(-camera.x,-camera.y);drawLandscapeSky(c,profile,camera,{w,h},0,time);c.restore();}
- const water=['shore','river','marsh'].includes(room.land),salt=room.land==='salt',mountain=room.land==='ridge';
- const skyTint=c.createLinearGradient(0,0,0,h);skyTint.addColorStop(0,source.palette[2]+'12');skyTint.addColorStop(1,source.palette[0]+'66');R(c,0,0,w,h,skyTint);
- for(let layer=0;layer<3;layer++){
-  const points=[[0,h]];
-  for(let i=0;i<=48;i++){const x=i*w/48,t=i*.17+room.col*.15,rough=mountain?Math.abs(Math.sin(t*1.8))*56:Math.sin(t*.9)*20;points.push([x,horizon+(20+layer*26-rough-Math.sin(t*2+layer)*12)*l.scale]);}
-  points.push([w,h]);P(c,points,[source.palette[2]+'88',source.palette[0]+'cc',source.palette[3]+'66'][layer]);
- }
- if(water||salt){R(c,0,horizon+30*l.scale,w,h,water?source.palette[2]+'bb':'#e8e1cdcc');for(let i=0;i<11;i++)R(c,(i*71+time/900)%w,horizon+(40+i*19)*l.scale,w*.14,1,'#e8e9db66');}
- if(room.land==='forest')for(let i=0;i<13;i++){const x=(i+.3)*w/13,base=horizon+60*l.scale,hh=(40+i%4*12)*l.scale;c.save();c.globalAlpha*=.23;P(c,[[x-13*l.scale,base],[x,base-hh],[x+15*l.scale,base]],source.palette[3]);c.restore();}
+ // The region beyond the boards: far, middle and near land in front of the sky.
+ drawPanorama(c,room,w,h,l,time);
+ const panoramaHorizon=Math.max(24*l.scale,(l.y-128*l.scale)*.58),panoramaMid=panoramaHorizon+((l.y-128*l.scale)-panoramaHorizon)*.42;
  // The imperial wall is seen over the plain and through the mountain saddle,
  // then becomes the actual solid gate in capital-gate. Repeat its human doors.
  if(['azure-plain','monolith-court','mountain-pass','snow-cliff','capital-gate','sealed-court'].includes(room.id)){
-  const size=l.scale*(room.id==='capital-gate'?.8:room.id==='azure-plain'?.25:.43),base=horizon+34*l.scale;
+  const size=l.scale*(room.id==='capital-gate'?.8:room.id==='azure-plain'?.25:.43),base=panoramaMid+4*l.scale;
   c.save();c.globalAlpha*=.34;c.translate(w*.56,base);c.scale(size,size);
   for(let i=-4;i<=5;i++){R(c,i*68,-80,48,80,'#aab9b7');R(c,i*68+8,-98,32,18,'#d6d8cb');R(c,i*68+16,-25,12,25,'#839ba2');}c.restore();
  }
