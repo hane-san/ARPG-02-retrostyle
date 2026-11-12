@@ -4,7 +4,8 @@
 // that names the exits, and a quiet glint to look at. They are physical where
 // they look solid, and they never cut a lane, a landing, a doorstep or a
 // person off: every placement is kept only if the whole floor stays connected.
-// There is no item, score, quest or saved state.
+// There is no item, score, quest or saved state. Solid pieces use their own
+// tile 'o', so a building's foot ('h') is never mistaken for a bush.
 const SKIP=new Set(['watershed-wheel','white-flower-road','cairn-turn','sealed-court']);
 const seedOf=id=>{let h=2166136261;for(const ch of id)h=Math.imul(h^ch.charCodeAt(0),16777619);return h>>>0;};
 function random(seed){let s=seed||1;return ()=>{s^=s<<13;s^=s>>>17;s^=s<<5;return ((s>>>0)%100000)/100000;};}
@@ -44,7 +45,7 @@ export function placeFixedFeatures(room,tiles,floor,names){
  }
  function trySolid(cells,feature){
   if(!cells.every(([x,y])=>open(x,y)))return false;
-  const old=cells.map(([x,y])=>tiles[y][x]);cells.forEach(([x,y])=>tiles[y][x]=feature.tile||'h');
+  const old=cells.map(([x,y])=>tiles[y][x]);cells.forEach(([x,y])=>tiles[y][x]=feature.tile||'o');
   if(!connected()){cells.forEach(([x,y],i)=>tiles[y][x]=old[i]);return false;}
   cells.forEach(([x,y])=>mark({x,y},0));features.push({...feature,cells});return true;
  }

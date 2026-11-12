@@ -54,7 +54,7 @@ test('playful landforms are physical, keep every lane, doorstep and person reach
   if(r.sourceIndex===undefined||['watershed-wheel','white-flower-road','cairn-turn','sealed-court'].includes(r.id)){assert.deepEqual(r.features,[],r.id);continue;}
   for(const f of r.features){kinds.add(f.kind);
    for(const [x,y] of f.cells){assert.ok(x>=3&&x<=11&&y>=3&&y<=11,'interior only '+r.id);}
-   if(['bush','boulder','cairn','stump','sign'].includes(f.kind))for(const [x,y] of f.cells){assert.equal(r.walkable(x,y),false,r.id+' solid '+f.kind);assert.equal(r.tileAt(x,y),'h');}
+   if(['bush','boulder','cairn','stump','sign'].includes(f.kind))for(const [x,y] of f.cells){assert.equal(r.walkable(x,y),false,r.id+' solid '+f.kind);assert.equal(r.tileAt(x,y),'o','a landform never poses as a building foot');}
    if(f.kind==='pond')for(const [x,y] of f.cells)assert.equal(r.tileAt(x,y),'w');
    if(f.kind==='stones'){stones++;for(const [x,y] of f.cells){assert.equal(r.tileAt(x,y),'k');assert.ok(r.walkable(x,y));}}
    if(f.kind==='glint'){glints++;assert.ok(r.walkable(f.x,f.y),r.id+' glint is stepped onto');assert.equal(featureAt(r,f.x,f.y),f);assert.ok(f.lines[0].length>8);assert.equal(r.gateAt(f.x,f.y),null);}

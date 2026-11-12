@@ -43,7 +43,7 @@ function colours(room,kind){
   paving:[mix(p[3],'#8e9592',.45),mix(p[1],'#b4b6aa',.45),'#d9d8cb','#6e7673']
  }[kind];
 }
-const floor=t=>['g','=','s','b','k','h','t','w','d'].includes(t);
+const floor=t=>['g','=','s','b','k','h','o','t','w','d'].includes(t);
 // One static cell of surroundings, in board pixels (32 per tile).
 function cell(c,room,kind,col,x,y){
  const gx=Math.round(room.col)*15+x,gy=Math.round(room.row)*15+y,X=x*32,Y=y*32,n=noise(gx,gy);
