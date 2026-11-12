@@ -3,9 +3,12 @@ import {drawFixedRoom,releaseFixedArt} from './fixed-screen-art.js';
 import {fixedSource} from './fixed-journey-data.js';
 import {pickJourneyTap} from './journey-tap.js';
 import {createAmbienceDirector} from './journey-ambience.js';
+import {createAreaPlaylists,areaPieceSeconds} from './fixed-areas.js';
+import {buildTrack} from './music.js';
+import {featureAt} from './fixed-features.js';
 
 // Own canvas and room-local state: the original world stays intact and paused.
-export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,onTalk,onReturn,onStep,onRead,onCue,onPrepare=()=>{}}){
+export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,onTalk,onReturn,onStep,onRead,onCue,onPrepare=()=>{},onRotate=()=>{},listening=()=>false}){
  const canvas=document.createElement('canvas');canvas.id='fixedCanvas';canvas.width=canvas.height=1;canvas.hidden=true;canvas.tabIndex=0;canvas.setAttribute('aria-label','空の枝道');canvas.setAttribute('aria-busy','false');stage.append(canvas);
  const c=canvas.getContext('2d',{alpha:false});let screen={w:1,h:1,dpr:1},last=null,paintAt=-Infinity,contact=null,multiple=false,lastCue=null,lastQuiet=false;
  const contacts=new Set(),held=new Set(),latched=new Set(),cancelled=new Set();
@@ -24,8 +27,19 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
  // prepared and crossfaded while the screen moves rather than after it.
  // While walking out through an exit, the destination's loop is prepared.
  let prepared=null;
- function prepareExit(){const end=state.hero.path.at(-1),gate=end&&state.room.gateAt(end.x,end.y);if(!gate)return;const to=state.rooms.find(r=>r.id===gate.to);if(!to||to.cue===lastCue&&!!to.quiet===lastQuiet||prepared===to.id)return;prepared=to.id;onPrepare(to.cue,!!to.quiet);}
- const cue=r=>{prepared=null;if(r.cue!==lastCue||!!r.quiet!==lastQuiet){lastCue=r.cue;lastQuiet=!!r.quiet;onCue(r.cue,lastQuiet);}};
+ // Music belongs to an area of neighbouring boards. Inside one area, board
+ // changes never change the piece; after two loops of actual listening the
+ // area's playlist moves on with an ordinary, unhurried crossfade.
+ const playlists=createAreaPlaylists(),loopSeconds=new Map();let lastArea=null,areaClock=0;
+ const areaCue=r=>playlists.cue(r.area)||r.cue;
+ const pieceSeconds=cue=>{if(!loopSeconds.has(cue)){const [id,phase]=cue.split(':').map(Number);loopSeconds.set(cue,buildTrack(id,phase).seconds);}return loopSeconds.get(cue);};
+ function prepareExit(){const end=state.hero.path.at(-1),gate=end&&state.room.gateAt(end.x,end.y);if(!gate)return;const to=state.rooms.find(r=>r.id===gate.to);if(!to||areaCue(to)===lastCue&&!!to.quiet===lastQuiet||prepared===to.id)return;prepared=to.id;onPrepare(areaCue(to),!!to.quiet);}
+ const cue=r=>{prepared=null;if(r.area!==lastArea){lastArea=r.area;areaClock=0;}const next=areaCue(r);if(next!==lastCue||!!r.quiet!==lastQuiet){lastCue=next;lastQuiet=!!r.quiet;onCue(next,lastQuiet);}};
+ function rotate(dt){
+  if(!state.active||state.transition||paused()||lastQuiet||!listening()||!lastArea)return;
+  areaClock+=dt;if(areaClock<areaPieceSeconds(pieceSeconds(lastCue)))return;
+  areaClock=0;const next=playlists.advance(lastArea);if(next&&next!==lastCue){lastCue=next;onRotate(next);}
+ }
  const state=createFixedJourney({onRoom:r=>{canvas.setAttribute('aria-label','空の枝道：'+r.name);onPlace(r);cue(r);paintAt=-Infinity;},onTalk,onReturn,
   onStep:(d,t)=>onStep(d,t==='b'?'+':t==='s'||state.room.land==='stone'||state.room.land==='ridge'?'study-stone':state.room.land==='salt'||state.room.land==='shore'||state.room.dry?'study-silt':t==='g'?'g':'='),onTransition:()=>{held.forEach(k=>latched.add(k));cancel();if(state.transition)cue(state.transition.to);}});
  const water=createAmbienceDirector(state.rooms.flatMap(r=>{const kind=r.dry?'stone':r.quiet?'echo':r.land==='forest'?'wood':r.land==='ridge'?'wind':r.water?'drip':null;return kind?[{id:'fixed-ambient-'+r.id,kind,x:r.col*15+9,y:r.row*15+7}]:[];}));
@@ -40,6 +54,9 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
   if(room.returnStone){const p=project(room.returnStone),h=project({x:hero.px,y:hero.py}),d=Math.hypot(x-p.x,y-p.y),onStone=hero.x===room.returnStone.x&&hero.y===room.returnStone.y;if(d<=22&&(onStone||d+1<Math.hypot(x-h.x,y-h.y))){inspect(room.returnStone,'return');return;}}
   const self=project({x:hero.px,y:hero.py});if(!hero.path.length&&Math.hypot(x-self.x,y-self.y)<Math.min(14,32*l.scale*.45))return;
   const p={x:Math.floor((x-l.x)/(32*l.scale)),y:Math.floor((y-l.y)/(32*l.scale))};
+  // A signpost is read from a neighbouring cell; a glint is stepped onto.
+  const found=featureAt(room,p.x,p.y);
+  if(found){const arrival={kind:'talk',name:found.name,lines:found.lines};if(found.kind==='glint'){if(state.walkTo({x:found.x,y:found.y},arrival))return;}else{const [fx,fy]=found.cells[0],steps=[[0,1],[1,0],[-1,0],[0,-1]].map(([dx,dy])=>({x:fx+dx,y:fy+dy})).filter(q=>room.walkable(q.x,q.y)).sort((a,b)=>Math.hypot(a.x-hero.x,a.y-hero.y)-Math.hypot(b.x-hero.x,b.y-hero.y));for(const q of steps)if(state.walkTo(q,arrival))return;}}
   if(room.tileAt(p.x,p.y)==='h'){const site=[room.site,...room.props||[]].filter(Boolean).filter(s=>p.x>=s.x&&p.x<s.x+s.w&&p.y>=s.y&&p.y<s.y+s.h).sort((a,b)=>a.w-b.w)[0];if(site){inspect(site,'talk');return;}}
   const house=room.house;
   if(house&&p.x>=house.x&&p.x<house.x+house.w&&p.y>=house.y&&p.y<house.y+house.h){inspect({...house,name:house.landmark?'青い屋根の家':'窓の開いた家',lines:[house.landmark?'下から見ていた屋根の下に、洗った器が並んでいる。窓の向こうを、風が通り抜ける。':'軒下には、干したばかりの布が揺れている。']},'talk');return;}
@@ -54,8 +71,8 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
  window.addEventListener('blur',()=>{cancel();held.clear();latched.clear();});document.addEventListener('visibilitychange',()=>{if(document.hidden){cancel();held.clear();latched.clear();}});
  window.addEventListener('keyup',e=>{held.delete(e.key);latched.delete(e.key);});
  const view={
-  get active(){return state.active;},get transitioning(){return !!state.transition;},canvas,
-  enter(){cancel();held.clear();latched.clear();lastCue=null;lastQuiet=false;state.enter();canvas.hidden=false;document.body.classList.add('fixed-sample');const r=stage.getBoundingClientRect();view.resize({...screen,w:r.width,h:r.height});last=null;paintAt=-Infinity;canvas.focus({preventScroll:true});},
+  get active(){return state.active;},get areaCue(){return lastCue;},get transitioning(){return !!state.transition;},canvas,
+  enter(){cancel();held.clear();latched.clear();lastCue=null;lastQuiet=false;lastArea=null;areaClock=0;state.enter();canvas.hidden=false;document.body.classList.add('fixed-sample');const r=stage.getBoundingClientRect();view.resize({...screen,w:r.width,h:r.height});last=null;paintAt=-Infinity;canvas.focus({preventScroll:true});},
   leave(){releaseFixedArt(c);state.leave();water.update({x:0,y:0},performance.now(),false);onAmbient([],[]);cancel();held.clear();latched.clear();canvas.hidden=true;canvas.setAttribute('aria-busy','false');canvas.width=canvas.height=1;document.body.classList.remove('fixed-sample');},
   resize(value){screen={...value};cancel();if(state.active){canvas.width=Math.max(1,Math.round(screen.w*screen.dpr));canvas.height=Math.max(1,Math.round(screen.h*screen.dpr));state.finishTransition();}paintAt=-Infinity;},
   projectHero(){return project({x:state.hero.px,y:state.hero.py});},
@@ -72,7 +89,7 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
    state.walkTo({x:hero.x+d[0],y:hero.y+d[1]});
   },
   frame(now,reduced){
-   const dt=last===null?0:(now-last)/1000;last=now;if(state.active){steer();prepareExit();}state.update(dt,{paused:paused(),reduced});
+   const dt=last===null?0:(now-last)/1000;last=now;if(state.active){steer();prepareExit();rotate(Math.min(dt,.25));}state.update(dt,{paused:paused(),reduced});
    if(!state.active)return;
    const sound=water.update({x:state.room.col*15+state.hero.px,y:state.room.row*15+state.hero.py},now,!paused()&&!state.transition&&audible());onAmbient(sound.levels,sound.events);
    canvas.setAttribute('aria-busy',String(!!state.transition||state.hero.path.length>0));

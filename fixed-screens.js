@@ -3,6 +3,8 @@ export {FIXED_START} from './fixed-geography.js';
 import {FIXED_ATLAS,FIXED_ATLAS_LINKS} from './fixed-atlas-data.js';
 import {FIXED_EXPANSION,FIXED_EXPANSION_LINKS} from './fixed-journey-data.js';
 import {silkPath} from './silk-world.js';
+import {applyFixedAreas} from './fixed-areas.js';
+import {placeFixedFeatures} from './fixed-features.js';
 import {routeJourneyWalk} from './journey-world.js';
 import {segmentDistance} from './landscape-geometry.js';
 
@@ -22,6 +24,7 @@ export const FIXED_ROOMS=[
 ];
 FIXED_ROOMS.push(...FIXED_EXPANSION,...FIXED_ATLAS);
 composeFixedGeography(FIXED_ROOMS);
+applyFixedAreas(FIXED_ROOMS);
 export const FIXED_START_CUE=FIXED_ROOMS.find(r=>r.id===FIXED_START.room).cue;
 export const fixedChartSize=()=>({w:(Math.max(...FIXED_ROOMS.map(r=>r.col))+1)*15,h:(Math.max(...FIXED_ROOMS.map(r=>r.row))+1)*15});
 const links=[['hearth','N','cypresses'],['cypresses','N','ascent'],['ascent','E','windway'],['windway','E','highgarden'],['highgarden','S','rill'],['rill','W','bridge'],['bridge','W','cypresses'],['bridge','S','homewind'],['homewind','W','hearth']];
@@ -81,8 +84,9 @@ export function fixedExitTarget(room,x,y,l){
 }
 const contains=(p,x,y)=>{let inside=false;for(let i=0,j=p.length-1;i<p.length;j=i++)if((p[i][1]>y)!==(p[j][1]>y)&&x<(p[j][0]-p[i][0])*(y-p[i][1])/(p[j][1]-p[i][1])+p[i][0])inside=!inside;return inside;};
 const distance=(x,y,pts)=>Math.min(...pts.slice(1).map((p,i)=>segmentDistance(x,y,pts[i],p)));
-const floor=t=>['g','=','s','b'].includes(t);
+const floor=t=>['g','=','s','b','k'].includes(t);
 export function makeFixedRooms(){
+ const chartNames=Object.fromEntries(FIXED_ROOMS.map(r=>[r.id,r.chartName]));
  return FIXED_ROOMS.map(def=>{
   const tiles=Array.from({length:15},(_,y)=>Array.from({length:15},(_,x)=>contains(def.polygon,x+.5,y+.5)?'g':' '));
   const connections=gates[def.id];
@@ -121,6 +125,7 @@ export function makeFixedRooms(){
   };
   const approach=site=>{if(room.walkable(site.entrance.x,site.entrance.y))return site;const points=[];for(let y=1;y<14;y++)for(let x=1;x<14;x++)if(room.walkable(x,y))points.push({x,y});points.sort((a,b)=>Math.hypot(a.x-site.entrance.x,a.y-site.entrance.y)-Math.hypot(b.x-site.entrance.x,b.y-site.entrance.y));return {...site,entrance:points[0]};};
   if(room.site)room.site=approach(room.site);room.props=(def.props||[]).map(approach);
+  room.features=placeFixedFeatures(room,tiles,floor,chartNames);
   return room;
  });
 }

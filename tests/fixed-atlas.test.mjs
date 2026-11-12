@@ -2,10 +2,17 @@ import test from 'node:test';import assert from 'node:assert/strict';
 import {makeFixedRooms,FIXED_DIRECTIONS,fixedChartSize,createFixedJourney,gatePoint,FIXED_START} from '../fixed-screens.js';
 import {FIXED_SKIES} from '../fixed-sky.js';
 import {PILGRIM_ZONES} from '../pilgrimage-world.js';
+import {FIXED_AREAS} from '../fixed-areas.js';
+import {MUSIC_LIBRARY} from '../music.js';
 test('the atlas fills exactly 10 by 10 boards while retaining the original 33 and every main landscape cue',()=>{
  const rooms=makeFixedRooms();assert.equal(rooms.length,100);assert.equal(rooms.filter(r=>r.atlas).length,67);assert.deepEqual(fixedChartSize(),{w:150,h:150});
  for(let y=0;y<10;y++)for(let x=0;x<10;x++)assert.equal(rooms.filter(r=>r.col===x&&r.row===y).length,1);
- const cues=new Set(rooms.map(r=>r.cue));for(const z of PILGRIM_ZONES)assert.ok(cues.has(z.music[0]),'main primary cue '+z.name);assert.equal(cues.size,38);
+ // 2026-11-12: music is chosen per area. Every board plays its area's primary
+ // cue first, and the area playlists together carry the whole library.
+ const heard=new Set(FIXED_AREAS.flatMap(a=>a.playlist));for(const z of PILGRIM_ZONES)assert.ok(heard.has(z.music[0]),'main primary cue '+z.name);
+ for(let id=0;id<MUSIC_LIBRARY.length;id++)for(const phase of [1,2])assert.ok(heard.has(id+':'+phase),'library piece in the field '+id+':'+phase);
+ for(const r of rooms){const area=FIXED_AREAS.find(a=>a.id===r.area);assert.ok(area,r.id);assert.equal(r.cue,area.playlist[0]);assert.deepEqual(r.playlist,area.playlist);}
+ assert.equal(new Set(rooms.map(r=>r.cue)).size,FIXED_AREAS.length);
  assert.deepEqual(new Set(rooms.filter(r=>r.sky).map(r=>r.sky)),new Set(Object.keys(FIXED_SKIES)));for(const r of rooms.filter(r=>r.atlas)){assert.equal(r.role.length>8,true);assert.deepEqual(r.skyAnchor,{x:r.col,y:r.row});}
 });
 test('every author-placed object has reachable approaches and cannot cut an exit landing or occupy an NPC',()=>{

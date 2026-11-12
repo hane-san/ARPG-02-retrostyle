@@ -25,7 +25,7 @@ export async function checkJourneyMotion(browser,origin){
     return arc.call(this,x,y,r,...rest);
    };
   });
-  await page.goto(origin+'/');await page.waitForSelector('.journey-menu');
+  await page.goto(origin+'/?walk=1');await page.waitForSelector('.journey-menu');
   const toast=page.locator('#toast');
   assert.equal(await toast.evaluate(e=>getComputedStyle(e).transitionDuration),'0s','reduce suppresses notice transitions');
   await page.locator('#mapBtn').tap();

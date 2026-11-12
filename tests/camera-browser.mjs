@@ -9,7 +9,7 @@ export async function checkCameraInput(page,origin){
    const scale=CanvasRenderingContext2D.prototype.scale;
    CanvasRenderingContext2D.prototype.scale=function(x,y){if(this.canvas.id==='worldCanvas')window.drawnZoom=x;return scale.call(this,x,y);};
   });
-  await page.goto(origin+'/'+query);await page.waitForSelector('#worldCanvas');
+  await page.goto(origin+'/'+(query||'?walk=1'));await page.waitForSelector('#worldCanvas');
   await page.waitForFunction(()=>Number.isFinite(window.drawnZoom));
   const zoom=await page.evaluate(()=>window.drawnZoom);
   await page.mouse.wheel(0,-300);await page.waitForTimeout(80);

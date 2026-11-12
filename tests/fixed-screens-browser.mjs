@@ -17,7 +17,7 @@ export async function checkFixedScreens(browser,origin){
    P.arc=function(x,y,r,...args){if(this.canvas.id==='miniMap'&&this.fillStyle==='#fae5a1'&&document.body.classList.contains('fixed-sample'))window.fixedChartHero={x:x/this.canvas.width*chart.w-.5,y:y/this.canvas.height*chart.h-.5};return arc.call(this,x,y,r,...args);};
    const Native=window.AudioContext||window.webkitAudioContext;if(Native){const create=Native.prototype.createBufferSource;Native.prototype.createBufferSource=function(){const s=create.call(this),start=s.start.bind(s);s.start=(...a)=>{if(s.loop){window.fixedMusicStarts=(window.fixedMusicStarts||0)+1;window.fixedMusicSeconds=s.buffer?.duration;}return start(...a);};return s;};}
   },fixedChartSize());
-  await p.goto(origin+'/');await p.waitForFunction(()=>window.fixedBaseEye&&window.fixedBaseHero);await p.clock.install();await p.clock.pauseAt(await p.evaluate(()=>Date.now()+100));
+  await p.goto(origin+'/?walk=1');await p.waitForFunction(()=>window.fixedBaseEye&&window.fixedBaseHero);await p.clock.install();await p.clock.pauseAt(await p.evaluate(()=>Date.now()+100));
   const sample=p.locator('#fixedCanvas');let current=rooms[0];
   const baseSnapshot=()=>p.evaluate(()=>({hero:window.fixedBaseHero,eye:window.fixedBaseEye,zoom:window.fixedBaseZoom,track:document.querySelector('#trackSelect').value}));
   const frame=()=>p.evaluate(()=>window.fixedFrame);

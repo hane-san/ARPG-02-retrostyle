@@ -34,7 +34,7 @@ import {installJourneyUI} from './journey-ui.js';
 import {createJourneyFoley} from './journey-foley.js';
 import {journeySoundSources} from './journey-curios.js';
 import {createAmbienceDirector} from './journey-ambience.js';
-import {resolveGameMode,useComposedCamera} from './game-mode.js';
+import {resolveGameMode,useComposedCamera,useFixedDefault} from './game-mode.js';
 import {createJourneyCamera,journeyCameraScene,easeJourneyCamera,easeJourneyFollowCamera,createPilgrimageFollower} from './journey-camera.js';
 import {createDeadzonePilgrimageFollower} from './journey-deadzone-camera.js';
 import {createTyper} from './dialogue-typer.js';
@@ -51,6 +51,9 @@ const PREVIOUS_ATLAS=modeParams.get('atlas')==='previous'||modeParams.get('maze'
 const PILGRIMAGE_MODE=JOURNEY_MODE&&!PREVIOUS_ATLAS;
 // #108 adopts the composed follower; ?camera=directional keeps the former one.
 const DEADZONE_CAMERA_TRIAL=PILGRIMAGE_MODE&&useComposedCamera(window.location.search);
+// 2026-11-12: the screen-switching atlas is the default entrance (?walk=1 keeps
+// the connected pilgrimage). The connected world stays loaded underneath it.
+const FIXED_DEFAULT=PILGRIMAGE_MODE&&useFixedDefault(window.location.search);
 const mazeTrial=JOURNEY_MODE?createMazeTrial(PILGRIMAGE_MODE?'':window.location.search):null;
 const PROTOTYPE_MODE=gameMode==='prototype';
 const worlds={tidal:JOURNEY_MODE?null:PROTOTYPE_MODE?makePrototypeWorld():makeWorld(),silk:null,journey:JOURNEY_MODE?(PILGRIMAGE_MODE?makePilgrimageWorld():makeJourneyWorld()):null};
@@ -85,8 +88,9 @@ let fixedOrigin=null;
 const fixedTrial=PILGRIMAGE_MODE?createFixedScreenView({stage,paused:()=>!!dialogue||isPanelOpen()||document.hidden,
  audible:()=>sfx.enabled&&sfx.volume>0,onAmbient:(levels,events)=>sfx.ambience(levels,events),
  onCue:(cue,quiet)=>{trackSelect.value=cue;imperialQuiet=quiet;applyTrack({quick:true});},
+ onRotate:cue=>{trackSelect.value=cue;applyTrack();},listening:()=>music.enabled&&music.volume>0,
  onPrepare:(cue,quiet)=>{if(quiet||!music.enabled)return;const [id,phase]=cue.split(':').map(Number);music.prepare(id,phase);},
- onPlace:r=>{$('zoneName').textContent=r.name;$('zoneSub').textContent=r.role;},
+ onPlace:r=>{$('zoneName').textContent=r.name;$('zoneSub').textContent=r.areaName;},
  onTalk:(name,lines)=>openDialogue(name,'空の枝道の暮らし',lines),onReturn:returnFromFixed,
  onRead:()=>{if(dialogue)dialogueInput();},onStep:(d,t)=>sfx.step(d,t)}):null;
 const discovered=new Set(),visitedZones=new Set(),cache=new Map(),CHUNK=16,MAX_CHUNKS=42;
@@ -121,24 +125,26 @@ if(JOURNEY_MODE){
  helpParagraphs[1].textContent='地面や地図で行き先を選ぶと、主人公が道を探して歩きます。途中でも行き先を変えられます。建物や人を選ぶと、そのそばまで歩いて向かいます。';
  helpParagraphs[2].textContent='歩行中はカメラが道の先へ追従し、地面や地図のタップで行き先を変えられます。止まっている間は指で軽快になめらかに見回せます。屋外は少し引いた同じ画角で歩けます。特別な展望地点だけ遠くへ広がり、将来の屋内では近い画角になります。';
  helpParagraphs[3].textContent='訪れた場所の記録は、この画面を開いているあいだだけ残ります。';
+ // While the screen-switching journey is shown, connected-world notes step aside.
+ if(PILGRIMAGE_MODE)helpParagraphs.forEach(p=>p.classList.add('walk-help'));
  if(PILGRIMAGE_MODE){
-  const compare=document.createElement('p');compare.className='secondary camera-trial-links';
+  const compare=document.createElement('p');compare.className='secondary camera-trial-links walk-help';
   compare.append('カメラ比較試作：',document.createElement('br'));
-  for(const [href,label,composed] of [['./','落ち着いた追従（標準）',true],['./?camera=directional','以前の追従（比較）',false]]){
+  for(const [href,label,composed] of [['./?walk=1','落ち着いた追従（標準）',true],['./?camera=directional','以前の追従（比較）',false]]){
    const link=document.createElement('a');link.href=href;link.textContent=label;
    if(DEADZONE_CAMERA_TRIAL===composed)link.setAttribute('aria-current','page');
    compare.append(link,document.createTextNode('　'));
   }
   compare.append(document.createElement('br'),'比較切替では再読込され、現在の旅の位置は引き継がれません。');
   $('helpPanel').querySelector('.sheet').append(compare);
-  const trialHelp=document.createElement('p');trialHelp.className='secondary';trialHelp.textContent='船着場の待合のそばに、試遊用の道標があります。19の土地からランダムに選び、着いた先で普通に歩けます。';
+  const trialHelp=document.createElement('p');trialHelp.className='secondary walk-help';trialHelp.textContent='船着場の待合のそばに、試遊用の道標があります。19の土地からランダムに選び、着いた先で普通に歩けます。';
   const back=document.createElement('button');back.id='trialHelpReturn';back.className='line-btn';back.textContent='試遊の道標へ戻る';back.hidden=true;back.addEventListener('click',()=>performTrialWarp({id:'pilgrim-0',name:'白い船着場',...TRIAL_WAYSTONE.entrance}));
   $('helpPanel').querySelector('.sheet').append(trialHelp,back);
   const actions=document.createElement('div');actions.id='trialActions';actions.className='trial-actions';actions.hidden=true;actions.setAttribute('role','group');actions.setAttribute('aria-label','試遊の移動');
   for(const [action,id,text] of [['random','trialJump','ランダムに飛ぶ'],['return','trialReturn','船着場に戻る'],['fixed','fixedEnter','空の枝道へ（画面切替）']]){const button=document.createElement('button');button.id=id;button.dataset.trialAction=action;button.textContent=text;actions.append(button);}
   $('dialogue').append(actions);
-  const fixedHelp=document.createElement('p');fixedHelp.className='secondary fixed-help';fixedHelp.hidden=true;fixedHelp.textContent='ここは、景色ごとに画面が切り替わる比較用の枝道です。見えている道をタップし、端へ続く道から隣へ渡れます。中央の分水庭から、西は水路、北は乾いた器、東は石壁、南は畑へ。裂け目では、見える対岸へ上側から回れます。最北の道には広い空が続きます。地図にはつながる道が描かれています。分水庭か旧集落の帰りの道標、または下のボタンから元の場所へ戻れます。元の世界では、いつもの歩き方に戻ります。';
-  const fixedReturn=document.createElement('button');fixedReturn.id='fixedReturn';fixedReturn.className='line-btn';fixedReturn.textContent='元の場所へ戻る';fixedReturn.hidden=true;fixedReturn.addEventListener('click',returnFromFixed);$('helpPanel').querySelector('.sheet').append(fixedHelp,fixedReturn);
+  const fixedHelp=document.createElement('p');fixedHelp.className='secondary fixed-help';fixedHelp.hidden=true;fixedHelp.textContent=FIXED_DEFAULT?'景色ごとに画面が切り替わる旅です。見えている道をタップし、端へ続く道から隣へ渡れます。音楽は、となり合う数枚の土地をまとめたエリアごとに流れ、同じエリアにいるあいだは途切れません。茂みや岩の陰、飛び石の先、道しるべのそばには小さな発見もあります。中央の分水庭から、西は水路、北は乾いた器、東は石壁、南は畑へ。地図にはつながる道が描かれています。下のボタンか分水庭・旧集落の道標から、つながった一枚の大地を歩く以前の旅へ移れます。':'ここは、景色ごとに画面が切り替わる比較用の枝道です。見えている道をタップし、端へ続く道から隣へ渡れます。中央の分水庭から、西は水路、北は乾いた器、東は石壁、南は畑へ。裂け目では、見える対岸へ上側から回れます。最北の道には広い空が続きます。地図にはつながる道が描かれています。分水庭か旧集落の帰りの道標、または下のボタンから元の場所へ戻れます。元の世界では、いつもの歩き方に戻ります。';
+  const fixedReturn=document.createElement('button');fixedReturn.id='fixedReturn';fixedReturn.className='line-btn';fixedReturn.textContent=FIXED_DEFAULT?'つながった大地を歩く（以前の旅）':'元の場所へ戻る';fixedReturn.hidden=true;fixedReturn.addEventListener('click',returnFromFixed);$('helpPanel').querySelector('.sheet').append(fixedHelp,fixedReturn);
   const fixedHelpEnter=document.createElement('button');fixedHelpEnter.id='fixedHelpEnter';fixedHelpEnter.className='line-btn';fixedHelpEnter.textContent='空の枝道へ（画面切替）';fixedHelpEnter.addEventListener('click',enterFixed);$('helpPanel').querySelector('.sheet').append(fixedHelpEnter);
  }
  const mazeHelp=document.createElement('p');mazeHelp.className='secondary';
@@ -1129,4 +1135,4 @@ if(JOURNEY_MODE)$('sfxVolumeRange').addEventListener('input',e=>{
  sfx.setVolume(Number(e.target.value)/100);sfx.unlock();$('sfxVolumeLabel').textContent=e.target.value+'%';
 });
 syncMusic();
-updateDiscoveries();updateZone();updateJourneyMusic(performance.now());requestAnimationFrame(animate);
+updateDiscoveries();updateZone();updateJourneyMusic(performance.now());if(FIXED_DEFAULT)enterFixed();requestAnimationFrame(animate);

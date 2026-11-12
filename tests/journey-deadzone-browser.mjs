@@ -20,7 +20,7 @@ export async function checkDeadzoneCamera(browser,origin){
    return translate.call(this,x,y);
   };
  });
- await page.goto(origin+'/',{waitUntil:'load'});
+ await page.goto(origin+'/?walk=1',{waitUntil:'load'});
  await page.waitForFunction(()=>window.deadzoneTestCamera&&document.querySelector('#zoneName')?.textContent==='白い船着場');
  assert.equal(await page.locator('.journey-tool').count(),4,'no additional permanent tool');
  await page.locator('#helpBtn').click();

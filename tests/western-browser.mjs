@@ -21,7 +21,7 @@ export async function checkWestern(browser,origin,{quick=false,viewports=[[320,5
    CanvasRenderingContext2D.prototype.scale=function(x,y){if(this.canvas.id==='worldCanvas'){next=true;window.westZoom=x;}return scale.call(this,x,y);};
    CanvasRenderingContext2D.prototype.translate=function(x,y){if(next&&this.canvas.id==='worldCanvas'){next=false;window.westCamera={x:-x,y:-y};}return translate.call(this,x,y);};
   },{w:PILGRIM_W,h:PILGRIM_H});
-  await page.goto(origin+'/');await page.waitForSelector('.journey-menu');await page.clock.install();
+  await page.goto(origin+'/?walk=1');await page.waitForSelector('.journey-menu');await page.clock.install();
   async function settle(onEnter){let captured=false;for(let i=0;i<450;i++){await page.clock.runFor(1000);assert.deepEqual(errors,[]);if(onEnter&&!captured&&await page.locator('#zoneName').textContent()===onEnter.name){await snapshot(onEnter.key+'-entry');captured=true;}if(await page.locator('#worldCanvas').getAttribute('aria-busy')==='false')return;}throw Error('western route did not arrive');}
   async function position(){await page.locator('#mapBtn').click();const p=await page.evaluate(()=>window.westPosition);await page.locator('#mapPanel [data-close]').click();return {x:Math.round(p.x),y:Math.round(p.y)};}
   async function region(z){await page.locator('#mapBtn').click();const b=page.locator(`[data-zone="${z.id}"]`);await b.scrollIntoViewIfNeeded();await b.click();await settle(z);assert.deepEqual(await position(),{x:z.cx,y:z.cy});await page.clock.runFor(2200);assert.equal(await page.locator('#zoneName').textContent(),z.name);await page.locator('#soundBtn').click();assert.equal(await page.locator('#trackSelect').inputValue(),z.music[0]);await page.locator('#musicPanel [data-close]').click();

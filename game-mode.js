@@ -14,3 +14,11 @@ export function useComposedCamera(search=''){
  const p=new URLSearchParams(search);
  return resolveGameMode(search)==='journey'&&p.get('atlas')!=='previous'&&p.get('maze')!=='turns'&&p.get('camera')!=='directional';
 }
+
+// 2026-11-12: the producer made the screen-switching atlas the default entrance.
+// The connected pilgrimage stays one tap away and at ?walk=1; every explicit
+// comparison URL of the connected world still opens that world directly.
+export function useFixedDefault(search=''){
+ const p=new URLSearchParams(search);
+ return resolveGameMode(search)==='journey'&&!['walk','journey','atlas','maze','camera'].some(k=>p.has(k));
+}

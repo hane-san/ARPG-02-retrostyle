@@ -9,6 +9,8 @@ import {drawRegionalGroundDetail} from './regional-detail.js';
 import {drawSrpgUnit} from './sprite-srpg.js';
 import {drawVillager} from './sprite-villager.js';
 import {fixedLayout,fixedExitMarker,fixedGuideLayout} from './fixed-screens.js';
+import {drawFeatureGround,featureObjects,drawPondRim} from './fixed-feature-art.js';
+import {drawSurroundings,drawPanorama} from './fixed-backdrop.js';
 
 export const FIXED_SOURCE=WEST_STUDIES.find(z=>z.key==='village');
 const P=(c,p,col)=>{c.fillStyle=col;c.beginPath();p.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();};
@@ -36,30 +38,25 @@ function background(c,room,w,h,layout,time){
  if(!authored){R(c,0,0,w,h,'#a6cad2');
  const zoom=s*.9,camera={x:(source.cx+.5)*32+(room.col-1)*85,y:g.horizon-(horizon-h/2)/zoom,zoom};
  c.save();c.translate(w/2,h/2);c.scale(zoom,zoom);c.translate(-camera.x,-camera.y);drawLandscapeSky(c,source,camera,{w,h},0,time);c.restore();}
- // Shared terrain coordinates and roof: the same destination changes scale,
- // bearing and occlusion as the traveller goes round the two connected loops.
- for(let layer=0;layer<3;layer++){
-  const points=[[0,h]];for(let i=0;i<=40;i++){const x=i*w/40,world=i*.19+room.col*.4;points.push([x,horizon+layer*21*s-Math.sin(world+room.row*.22)*29*s-Math.sin(world*2.1+layer)*10*s]);}points.push([w,h]);P(c,points,['#a8c1bd','#96b3ac','#8ba69b'][layer]);
- }
- for(let i=0;i<5;i++){
-  const xx=(i+.4)*w/5+(room.col-1)*9*s,yy=horizon+10*s+Math.sin(i*2)*17*s;
-  c.save();c.globalAlpha*=.32;c.translate(xx,yy);c.scale(s*.19,s*.19);drawFixedHouse(c,{x:0,y:-3,w:4,h:3});c.restore();
- }
+ drawPanorama(c,room,w,h,layout,time);
+ // The blue roof seen from the hamlet keeps its bearing on the far land.
+ const far=Math.max(24*s,(y-128*s)*.58),base=far+((y-128*s)-far)*.42;
  if(Math.hypot(room.col-2,room.row)>.01){
-  const dx=2*15+11-(room.col*15+7),dy=4-(room.row*15+7),d=Math.hypot(dx,dy),size=s/(1+d/18),x=w/2+dx*4.2*s,base=horizon+12*s;
+  const dx=2*15+11-(room.col*15+7),dy=4-(room.row*15+7),d=Math.hypot(dx,dy),size=s/(1+d/18),x=w/2+dx*4.2*s;
   c.save();c.globalAlpha*=Math.min(.88,.38+22/(d+30))*Math.min(1,Math.hypot(room.col-2,room.row));c.translate(x,base);c.scale(size,size);drawFixedHouse(c,{x:-2.5,y:-3,w:5,h:3,landmark:true});c.restore();
  }
- const air=c.createLinearGradient(0,0,0,horizon);air.addColorStop(0,fixedClimate(room.col*15+7,room.row*15+7).sky+'44');air.addColorStop(1,'#f4e6c222');R(c,0,0,w,horizon,air);
- // The distant valley remains separate from the connected walking ground.
- const mist=c.createLinearGradient(0,horizon,0,h);mist.addColorStop(0,'#d9e1ce22');mist.addColorStop(1,'#c4d1b455');R(c,0,horizon,w,h-horizon,mist);
 }
 function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,guides=false}={}){
  const {w,h}=screen,l=fixedLayout(w,h),{sx,sy,proxy,trees}=materialWorld(room),s=l.scale;
  const spanL=Math.min(-64,-l.x/s-32),spanR=Math.max(544,(w-l.x)/s+32),left=Math.max(0,Math.floor((spanL-offsetX/s)/32)),right=Math.min(14,Math.ceil((spanR-offsetX/s)/32)),top=Math.max(0,Math.floor((-128-offsetY/s)/32)),bottom=Math.min(14,Math.ceil((544-offsetY/s)/32));
  c.save();c.translate(offsetX,offsetY);
  c.save();c.translate(l.x,l.y);c.scale(s,s);c.imageSmoothingEnabled=false;
- // Vertical cliff feet are separate from the grid top; the sky remains outside.
- for(let y=bottom;y>=top;y--)for(let x=left;x<=right;x++)if(![' ','w','r'].includes(room.tileAt(x,y))&&[' ','r'].includes(room.tileAt(x,y+1))&&!(y===14&&room.connections.S&&room.gateAt(x,y))){R(c,x*32,y*32+28,32,42,'#7f9691');R(c,x*32,y*32+28,32,4,'#d4dac1');R(c,x*32+7,y*32+38,2,19,'#b3c3b080');}
+ // The land's own surroundings lie behind the walkable board (2026-11-12).
+ drawSurroundings(c,room);
+ // Cliff faces remain only where a drop is natural: the fault, the ridges and
+ // the northern rim's open sky. Elsewhere the land simply continues.
+ const drop=(x,y)=>room.tileAt(x,y+1)==='r'||room.tileAt(x,y+1)===' '&&(room.land==='ridge'||room.skyline&&y+1<3);
+ for(let y=bottom;y>=top;y--)for(let x=left;x<=right;x++)if(![' ','w','r'].includes(room.tileAt(x,y))&&drop(x,y)&&!(y===14&&room.connections.S&&room.gateAt(x,y))){R(c,x*32,y*32+28,32,42,'#7f9691');R(c,x*32,y*32+28,32,4,'#d4dac1');R(c,x*32+7,y*32+38,2,19,'#b3c3b080');}
  for(let yy=top;yy<=bottom;yy++)for(let xx=left;xx<=right;xx++)if(room.tileAt(xx,yy)==='r'){
   const depth=c.createLinearGradient(0,yy*32,0,yy*32+32);depth.addColorStop(0,'#405969');depth.addColorStop(1,'#7f9fa8');R(c,xx*32,yy*32,32,32,depth);R(c,xx*32+8,yy*32+14,15,1,'#bed0c355');
  }
@@ -79,7 +76,8 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
    if(t==='b')for(let j=0;j<4;j++)R(c,x*32+j*8,y*32,1,32,'#7b8e8188');
   }
  }
- for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++)if(room.tileAt(x,y)==='w'){R(c,x*32+5,y*32+15+Math.sin(time/1600+x)*2,17,1,'#dbe6db88');}
+ for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++)if(room.tileAt(x,y)==='w'||room.tileAt(x,y)==='k'){R(c,x*32+5,y*32+15+Math.sin(time/1600+x)*2,17,1,'#dbe6db88');}
+ for(const f of room.features||[]){drawFeatureGround(c,room,f,time);drawPondRim(c,room,f);}
  for(const [d,seam] of Object.entries(room.seams))if(seam.ground)for(const [lo,hi]of seam.bands)for(let j=lo;j<=hi;j++)for(let k=0;k<3;k++){
   const xx=d==='N'||d==='S'?j:d==='W'?k:14-k,yy=d==='E'||d==='W'?j:d==='N'?k:14-k;
   if(room.walkable(xx,yy)){c.save();c.globalAlpha*=k===0?.64:k===1?.3:.1;R(c,xx*32,yy*32,32,32,seam.ground);c.restore();}
@@ -92,6 +90,7 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
  if(market)for(const d of trees.landscapeObjects)drawForestTree(c,d,'trunk');else drawLandscapeFeet(c,trees,{left:0,right:14,top:0,bottom:14});
  const objects=room.npcs.map(n=>({y:n.y+.5,paint:()=>drawVillager(c,n.x*32,n.y*32,n.color)}));
  for(const site of [room.site,...room.props||[]].filter(Boolean))objects.push({y:site.y+site.h,paint:()=>journeySite(c,site,time)});
+ for(const f of room.features||[])objects.push(...featureObjects(c,room,f,time));
  if(room.house)objects.push({y:room.house.y+room.house.h,paint:()=>{drawFixedHouse(c,room.house);if(!room.house.landmark){c.strokeStyle='#8c9e92';c.lineWidth=1;c.beginPath();c.moveTo(2*32,8*32);c.lineTo(5.5*32,8*32);c.stroke();for(let i=0;i<4;i++)R(c,(2.2+i*.7)*32,8*32,14,19,['#b8c9c3','#dfc9ab','#a7bac0'][i%3]);}}});
  if(hero)objects.push({y:hero.py+.7,paint:()=>{c.save();c.beginPath();c.rect(0,0,480,480);c.clip();c.translate(0,hero.moving&&time!==0?-Math.abs(Math.sin(hero.stride*9))*1.5:0);drawSrpgUnit(c,{x:hero.px,y:hero.py,team:'ally',acted:false,type:'sword'});R(c,hero.px*32+8,hero.py*32+13,15,3,'#b8d9dc');R(c,hero.px*32+7,hero.py*32+16,5,7,'#7dbac5');c.restore();}});
  objects.sort((a,b)=>a.y-b.y);objects.forEach(o=>o.paint());if(market)for(const d of trees.landscapeObjects){c.save();if((hero&&Math.abs(hero.px-d.x)<3&&hero.py<d.y+.5&&hero.py>d.y-5)||guidePoints.some(m=>Math.abs(m.x-d.x)<3&&m.y<d.y+.5&&m.y>d.y-7.5))c.globalAlpha=.24;drawForestTree(c,d,'canopy');c.restore();}else drawLandscapeCanopies(c,guides?{...trees,npcs:[...trees.npcs,...guidePoints]}:trees,{left:0,right:14,top:0,bottom:14},hero||{px:-100,py:-100});
@@ -154,7 +153,7 @@ export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[r
   terrain(c,r,person,screen,time,{offsetX:ox,offsetY:oy,destination:r===room?destination:null,guides:r.id===room.id});
   // Neighbouring boards stay visible as continuing land, under a light haze,
   // so the walkable board reads first. The haze crossfades during a slide.
-  const haze=.34*(transition?r.id===room.id?p:r.id===transition.to.id?1-p:1:r.id===room.id?0:1);
+  const haze=.24*(transition?r.id===room.id?p:r.id===transition.to.id?1-p:1:r.id===room.id?0:1);
   if(haze>.004){c.globalAlpha=haze;c.fillStyle='#dce6e1';c.fillRect(l.x+ox,l.y+oy-128*l.scale,l.width,l.height+128*l.scale);c.globalAlpha=1;}
   c.restore();
  }
