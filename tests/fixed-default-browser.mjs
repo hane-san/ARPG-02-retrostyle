@@ -10,7 +10,7 @@ export async function checkFixedDefault(browser,origin){
  const rooms=makeFixedRooms(),get=id=>rooms.find(r=>r.id===id),reports=[];mkdirSync('test-results/fixed-default',{recursive:true});
  for(const [width,height] of [[390,844],[320,568],[430,932],[844,390]]){
   const ctx=await browser.newContext({viewport:{width,height},isMobile:true,hasTouch:true,deviceScaleFactor:1}),p=await ctx.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));
-  await p.addInitScript(()=>{const P=CanvasRenderingContext2D.prototype,clear=P.clearRect,text=P.fillText;P.clearRect=function(...a){if(this.canvas.id==='fixedTerrainCanvas')window.fixedTexts=[];return clear.apply(this,a);};P.fillText=function(t,...a){if(this.canvas.id==='fixedTerrainCanvas'&&this.globalAlpha>.05)(window.fixedTexts||=[]).push(t);return text.call(this,t,...a);};});
+  await p.addInitScript(()=>{const P=CanvasRenderingContext2D.prototype,clear=P.clearRect,text=P.fillText;P.clearRect=function(...a){if(this.canvas.id==='fixedTerrainCanvas')window.fixedTexts=[];return clear.apply(this,a);};P.fillText=function(t,...a){if(this.canvas.id==='fixedTerrainCanvas'&&this.globalAlpha>.05)(window.fixedTexts||=[]).push(t);return text.call(this,t,...a);};const fill=P.fill;P.fill=function(...a){if(this.canvas.id==='fixedTerrainCanvas'&&String(this.fillStyle).startsWith('rgba(79, 122, 118'))window.fixedChevrons=(window.fixedChevrons||0)+1;return fill.apply(this,a);};});
   await p.clock.install();await p.goto(origin+'/');const canvas=p.locator('#fixedCanvas');await canvas.waitFor({state:'visible'});
   const start=get(FIXED_START.room);
   assert.equal(await p.locator('#worldCanvas').isVisible(),false,'the connected world waits underneath');
@@ -19,11 +19,12 @@ export async function checkFixedDefault(browser,origin){
   assert.equal(await p.locator('#trackSelect').inputValue(),start.cue);
   const stage=await canvas.boundingBox(),l=fixedLayout(stage.width,stage.height),point=t=>({x:l.x+(t.x+.5)*32*l.scale,y:l.y+(t.y+.5)*32*l.scale});
   if(width<height){assert.ok(l.y>stage.height*.3,'portrait keeps the board low, with the place behind it above');assert.ok(l.y+l.height<=stage.height,'the whole board stays above the dock');}
-  // 2026-11-13: exit names rise on arrival, then only the nearby ones stay.
+  // 2026-11-13 (producer): exits carry no "…へ" name on the board, on arrival or beside them; the chevrons alone show the way.
   await p.clock.runFor(300);const names=d=>get(start.connections[d]).chartName+'へ';
-  const arrival=await p.evaluate(()=>window.fixedTexts||[]);for(const d of Object.keys(start.connections))assert.ok(arrival.includes(names(d)),'arrival shows '+d);
-  await p.clock.runFor(3600);const settled=await p.evaluate(()=>window.fixedTexts||[]);
-  assert.ok(!settled.includes(names('N'))&&!settled.includes(names('W')),'far exit names settle away: '+settled);assert.ok(settled.includes(names('S')),'the exit beside the traveller keeps its name');
+  const arrival=await p.evaluate(()=>window.fixedTexts||[]);for(const d of Object.keys(start.connections))assert.ok(!arrival.includes(names(d)),'no exit name on arrival '+d);
+  await p.evaluate(()=>{window.fixedChevrons=0;});await p.clock.runFor(3600);const settled=await p.evaluate(()=>window.fixedTexts||[]);
+  for(const d of Object.keys(start.connections))assert.ok(!settled.includes(names(d)),'no exit name beside the traveller '+d);
+  assert.ok(await p.evaluate(()=>window.fixedChevrons)>0,'the exit chevrons are painted');
   await p.screenshot({path:`test-results/fixed-default/${width}x${height}-entry.png`});
   let current=start;
   async function cross(d){const next=get(current.connections[d]);await canvas.tap({position:point(gatePoint(d,current))});for(let i=0;i<200;i++){await p.clock.runFor(100);if(await p.locator('#zoneName').textContent()===next.name)break;}assert.equal(await p.locator('#zoneName').textContent(),next.name,'walk '+current.id+' '+d);await p.clock.runFor(700);current=next;}

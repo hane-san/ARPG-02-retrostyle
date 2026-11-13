@@ -68,14 +68,20 @@ export const fixedExitLabel=(d,room,scale)=>fixedGuideLayout(room,scale).labels[
 // legal boundary tile; visible neighbor terrain never teleports the traveller.
 export function fixedExitTarget(room,x,y,l){
  const tile=32*l.scale,tx=(x-l.x)/tile,ty=(y-l.y)/tile;
+ // The painted chevrons are the only sign of an exit (2026-11-13), so each one,
+ // including a second band's near a corner, is first of all a target for its
+ // own exit, before the broader edge zones are considered.
+ for(const d of Object.keys(room.connections)){
+  const seam=room.seams[d],vertical=d==='N'||d==='S',m=fixedExitMarker(d,room),p=gatePoint(d,room);
+  for(const [lo,hi] of seam.bands){const j=(lo+hi)/2,cx=l.x+((vertical?j:m.x)+.5)*tile,cy=l.y+((vertical?m.y:j)+.5)*tile;
+   if(Math.hypot(x-cx,y-cy)<=Math.min(22,tile*.7)){const k=Math.max(lo,Math.min(hi,Math.floor(vertical?tx:ty)));return vertical?{x:k,y:p.y}:{x:p.x,y:k};}}
+ }
  for(const d of Object.keys(room.connections)){
   const seam=room.seams[d],vertical=d==='N'||d==='S',across=vertical?tx:ty,along=vertical?ty:tx;
   const near=d==='N'||d==='W'?along>=-4&&along<=1.5:along>=13.5&&along<=19;
   const m=fixedExitMarker(d,room),mx=l.x+(m.x+.5)*tile,my=l.y+(m.y+.5)*tile;
-  const plate=fixedExitLabel(d,room,l.scale),px=l.x+plate.x*l.scale,py=l.y+plate.y*l.scale,oldY=my+Math.max(14*l.scale,12)/2+10*l.scale;
-  const label=Math.abs(x-px)<=Math.max(44,plate.w*l.scale)/2&&Math.abs(y-py)<=Math.max(22,plate.h*l.scale/2+4)||!plate.shifted&&Math.abs(x-mx)<=22&&Math.abs(y-oldY)<=22;
   const band=seam.bands.find(([lo,hi])=>near&&Math.abs(across-(lo+hi+1)/2)*tile<=Math.max(22,lo===hi?tile*1.15:0,(hi-lo+1)/2*tile));
-  if(band||Math.hypot(x-mx,y-my)<=Math.min(22,tile*.45)||label){
+  if(band||Math.hypot(x-mx,y-my)<=Math.min(22,tile*.45)){
    const [lo,hi]=band||seam.bands.find(([lo,hi])=>seam.center>=lo&&seam.center<=hi),j=Math.max(lo,Math.min(hi,Math.floor(across))),p=gatePoint(d,room);
    return vertical?{x:j,y:p.y}:{x:p.x,y:j};
   }
