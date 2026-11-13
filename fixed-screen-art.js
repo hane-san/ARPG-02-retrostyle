@@ -120,8 +120,9 @@ function drawExitStones(c,room,scale,hero,labels){
   // one cell nearer to the edge instead of being painted over it.
   const near=room.returnStone&&Math.abs(room.returnStone.x-m.x)<1.5&&Math.abs(room.returnStone.y-m.y)<1.5,push=near?.6:0;
   for(const [lo,hi]of room.seams[d].bands){const j=(lo+hi)/2,mark={x:d==='N'||d==='S'?j:m.x,y:d==='E'||d==='W'?j:m.y};
-   c.save();c.translate((mark.x+.5)*32,(mark.y+.5)*32);c.rotate(a);c.translate(push*32,0);c.scale(1.2,1.2);c.globalAlpha*=.74+.26*lit;
-   for(const step of [0,15]){P(c,[[step-7,-7],[step+3,0],[step-7,7],[step-3,0]],'#f3ecd6a8');P(c,[[step-6,-5.5],[step+1.5,0],[step-6,5.5],[step-3,0]],'#4f7a76d0');}c.restore();
+   c.save();c.translate((mark.x+.5)*32,(mark.y+.5)*32);c.rotate(a);c.translate(push*32,0);c.globalAlpha*=.74+.26*lit;
+   // Drawn 1.2x larger by their points, not by a canvas scale: the board's own scale stays the only one on this layer.
+   const k=1.2,K=pts=>pts.map(([x,y])=>[x*k,y*k]);for(const step of [0,15]){P(c,K([[step-7,-7],[step+3,0],[step-7,7],[step-3,0]]),'#f3ecd6a8');P(c,K([[step-6,-5.5],[step+1.5,0],[step-6,5.5],[step-3,0]]),'#4f7a76d0');}c.restore();
   }
  }
  c.restore();
