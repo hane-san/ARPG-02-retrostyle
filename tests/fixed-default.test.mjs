@@ -83,5 +83,5 @@ test('thin neighbour strips are left out on phones; wide screens keep the side c
  for(const [w,h] of [[390,753],[320,477],[430,841]]){const v=fixedNeighbourVisibility(fixedLayout(w,h),{w,h});assert.deepEqual(v,{sides:false,below:false},w+'x'+h);}
  const wide=fixedNeighbourVisibility(fixedLayout(844,316),{w:844,h:316});assert.equal(wide.sides,true);
  const view=readFileSync(new URL('../fixed-screen-view.js',import.meta.url),'utf8');
- assert.match(view,/if\(p\.x<1\|\|p\.y<1\|\|p\.x>13\|\|p\.y>13\)return;/,'blocked outer edge cells stay inert');
+ assert.match(view,/if\(p\.x<1\|\|p\.y<1\|\|p\.x>13\|\|p\.y>13\|\|!\['o','h','t',' '\]\.includes\(room\.tileAt\(p\.x,p\.y\)\)\)return;/,'blocked outer edge cells and water stay inert');
 });

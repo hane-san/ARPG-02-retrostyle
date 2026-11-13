@@ -62,10 +62,11 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
   if(house&&p.x>=house.x&&p.x<house.x+house.w&&p.y>=house.y&&p.y<house.y+house.h){inspect({...house,name:house.landmark?'青い屋根の家':'窓の開いた家',lines:[house.landmark?'下から見ていた屋根の下に、洗った器が並んでいる。窓の向こうを、風が通り抜ける。':'軒下には、干したばかりの布が揺れている。']},'talk');return;}
   const exit=fixedExitTarget(room,x,y,l);if(exit){state.walkTo(exit);return;}
   if(state.walkTo(p))return;
-  // A tap on a bush, a rock, water or the surrounding land walks up to the
-  // nearest open ground beside it, like stepping up to an obstacle. The outer
-  // edge cells stay inert, so a blocked edge never becomes an exit.
-  if(p.x<1||p.y<1||p.x>13||p.y>13)return;
+  // A tap on a bush, a rock, a tree, a wall or the surrounding land walks up
+  // to the nearest open ground beside it, like stepping up to an obstacle.
+  // Water stays a plain collision surface, and the outer edge cells stay
+  // inert, so a blocked edge never becomes an exit.
+  if(p.x<1||p.y<1||p.x>13||p.y>13||!['o','h','t',' '].includes(room.tileAt(p.x,p.y)))return;
   const near=[];for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const q={x:p.x+dx,y:p.y+dy};if((dx||dy)&&room.walkable(q.x,q.y)&&!room.gateAt(q.x,q.y))near.push(q);}
   near.sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y)||Math.hypot(a.x-hero.x,a.y-hero.y)-Math.hypot(b.x-hero.x,b.y-hero.y));
   for(const q of near)if(state.walkTo(q))return;
