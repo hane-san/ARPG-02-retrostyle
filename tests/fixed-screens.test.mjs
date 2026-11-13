@@ -2,7 +2,7 @@ import {walkFixedState} from './fixed-route.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {makeFixedRooms,createFixedJourney,fixedLayout,gatePoint,FIXED_DIRECTIONS,FIXED_SLIDE_MS,FIXED_CUE,fixedExitTarget,fixedExitMarker,fixedExitLabel,fixedGuideLayout} from '../fixed-screens.js';
+import {makeFixedRooms,createFixedJourney,fixedLayout,gatePoint,FIXED_DIRECTIONS,FIXED_SLIDE_MS,FIXED_CUE,fixedExitTarget,fixedExitMarker,fixedGuideLayout} from '../fixed-screens.js';
 import {MUSIC_LIBRARY,buildTrack} from '../music.js';
 import {transitionTraveller} from '../fixed-screen-art.js';
 const hash=x=>createHash('sha256').update(JSON.stringify(x)).digest('hex');
@@ -96,8 +96,8 @@ test('visible continuations and 44px narrow openings select only a legal connect
    for(const q of [g,{x:g.x+v.dx,y:g.y+v.dy},fixedExitMarker(d,r)]){
     const a=screen(q),target=fixedExitTarget(r,a.x,a.y,l);assert.ok(target);assert.equal(r.gateAt(target.x,target.y).direction,d);
    }
-   const plate=fixedExitLabel(d,r,l.scale),labelTap=fixedExitTarget(r,l.x+plate.x*l.scale,l.y+plate.y*l.scale,l);assert.ok(labelTap);assert.equal(r.gateAt(labelTap.x,labelTap.y).direction,d);
-   const mark=screen(fixedExitMarker(d,r)),labelY=mark.y+Math.max(14*l.scale,12)/2+10*l.scale;if(!plate.shifted)assert.ok(fixedExitTarget(r,mark.x,labelY,l));
+   // 2026-11-13: the exits carry no name tag; each painted chevron (one per open band) is itself a target for its own exit.
+   const m=fixedExitMarker(d,r);for(const [lo,hi] of r.seams[d].bands){const j=(lo+hi)/2,a=screen({x:d==='N'||d==='S'?j:m.x,y:d==='E'||d==='W'?j:m.y}),t=fixedExitTarget(r,a.x,a.y,l);assert.ok(t,r.id+' chevron '+d);assert.equal(r.gateAt(t.x,t.y).direction,d);}
    if(r.seams[d].width===1)for(const delta of [-21,21,-tile,tile]){
     const a=screen(g);if(v.dy)a.x+=delta;else a.y+=delta;
     const target=fixedExitTarget(r,a.x,a.y,l);assert.ok(target);assert.equal(r.gateAt(target.x,target.y).direction,d);

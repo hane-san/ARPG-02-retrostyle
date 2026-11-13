@@ -95,16 +95,15 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
  if(hero)objects.push({y:hero.py+.7,paint:()=>{c.save();c.beginPath();c.rect(0,0,480,480);c.clip();c.translate(0,hero.moving&&time!==0?-Math.abs(Math.sin(hero.stride*9))*1.5:0);drawSrpgUnit(c,{x:hero.px,y:hero.py,team:'ally',acted:false,type:'sword'});R(c,hero.px*32+8,hero.py*32+13,15,3,'#b8d9dc');R(c,hero.px*32+7,hero.py*32+16,5,7,'#7dbac5');c.restore();}});
  objects.sort((a,b)=>a.y-b.y);objects.forEach(o=>o.paint());if(market)for(const d of trees.landscapeObjects){c.save();if((hero&&Math.abs(hero.px-d.x)<3&&hero.py<d.y+.5&&hero.py>d.y-5)||guidePoints.some(m=>Math.abs(m.x-d.x)<3&&m.y<d.y+.5&&m.y>d.y-7.5))c.globalAlpha*=.24;drawForestTree(c,d,'canopy');c.restore();}else drawLandscapeCanopies(c,guides?{...trees,npcs:[...trees.npcs,...guidePoints]}:trees,{left:0,right:14,top:0,bottom:14},hero||{px:-100,py:-100});
  if(destination){for(const [col,lw] of [['#4f7a76cc',4],['#fff6d8',2]]){c.strokeStyle=col;c.lineWidth=lw;c.beginPath();c.ellipse((destination.x+.5)*32,(destination.y+.5)*32,11,6.5,0,0,Math.PI*2);c.stroke();}}
- if(guides)drawExitPlaques(c,room,l.scale,hero,labels);
  // A small edge gap reads as the continuing road, without a development HUD.
  c.restore();c.restore();
 }
 
-// Low road stones and quiet name tags belong to the walkable ground.
-// 2026-11-13: names no longer sit on the scenery all the time. A tag rises
-// when the traveller arrives, comes near that exit or the waystone, or walks
-// towards it, and settles away again; the stones alone mark the way. The tag
-// geometry (and so the generous tap target in fixedExitTarget) is unchanged.
+// Low road chevrons belong to the walkable ground and are the only sign of an
+// exit (producer 2026-11-13): no "…へ" name sits on the scenery, so the land
+// itself says where the road goes. They brighten when the traveller arrives,
+// comes near, or walks towards them. Only the return waystone keeps a quiet
+// name tag, because its diamond alone would not say what it does.
 function nearAlpha(hero,x,y,labels,key){
  const d=hero?Math.hypot(hero.px-x,hero.py-y):Infinity,near=Math.max(0,Math.min(1,(3.6-d)/1.4));
  return Math.max(near,labels?.arrival??0,labels?.target===key?1:0);
@@ -121,25 +120,12 @@ function drawExitStones(c,room,scale,hero,labels){
   // one cell nearer to the edge instead of being painted over it.
   const near=room.returnStone&&Math.abs(room.returnStone.x-m.x)<1.5&&Math.abs(room.returnStone.y-m.y)<1.5,push=near?.6:0;
   for(const [lo,hi]of room.seams[d].bands){const j=(lo+hi)/2,mark={x:d==='N'||d==='S'?j:m.x,y:d==='E'||d==='W'?j:m.y};
-   c.save();c.translate((mark.x+.5)*32,(mark.y+.5)*32);c.rotate(a);c.translate(push*32,0);c.globalAlpha*=.62+.38*lit;
+   c.save();c.translate((mark.x+.5)*32,(mark.y+.5)*32);c.rotate(a);c.translate(push*32,0);c.scale(1.2,1.2);c.globalAlpha*=.74+.26*lit;
    for(const step of [0,15]){P(c,[[step-7,-7],[step+3,0],[step-7,7],[step-3,0]],'#f3ecd6a8');P(c,[[step-6,-5.5],[step+1.5,0],[step-6,5.5],[step-3,0]],'#4f7a76d0');}c.restore();
   }
  }
  c.restore();
 }
-// Name tags are painted above houses, sites and canopies so a large
-// building can never hide where an exit leads. Over the traveller they thin.
-function drawExitPlaques(c,room,scale,hero,labels){
- const layout=fixedGuideLayout(room,scale);c.save();c.textAlign='center';c.textBaseline='middle';
- for(const label of Object.values(layout.labels)){
-  const a=exitAlpha(room,label.d,hero,labels);if(a<=.01)continue;
-  const under=hero&&Math.abs((hero.px+.5)*32-label.x)<label.w/2+10&&Math.abs((hero.py+.35)*32-label.y)<label.h/2+18;
-  c.save();c.globalAlpha*=a*(under?.5:1);c.font=`600 ${label.font}px system-ui,sans-serif`;
-  nameTag(c,label.x,label.y,label.w,label.h);c.fillStyle='#2f5a5e';c.fillText(label.name,label.x,label.y+1);c.restore();
- }
- c.restore();
-}
-
 // The camera moves by one walking board, not one browser viewport. The same
 // world-space terrain is visible on both sides, through a stable terrain window.
 const layers=new WeakMap();
