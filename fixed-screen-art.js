@@ -166,7 +166,7 @@ export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[r
  const front=transition?[[transition.to,p],[room,1-p]].filter(([,a])=>a>0):[[room,1]];
  const behindOnly=r=>!transition?r.id!==room.id:r.id===room.id?p>0:r.id===transition.to.id?p<1:true;
  const visible=rooms.filter(r=>Math.abs(r.col-cx)<=1.01&&Math.abs(r.row-cy)<=1.01&&behindOnly(r));
- const sky=FIXED_SKIES[room.sky]?.colors?.[3]||'#dce6e1',veil=mixHex('#dce6e1',sky,.45);
+ const veilOf=r=>mixHex('#dce6e1',FIXED_SKIES[r.sky]?.colors?.[3]||'#dce6e1',.45),veil=transition?mixHex(veilOf(room),veilOf(transition.to),p):veilOf(room);
  const clipL=Math.min(l.x-64*l.scale,0),clipR=Math.max(l.x+l.width+64*l.scale,screen.w);
  behind.save();behind.beginPath();behind.rect(clipL,l.y-150*l.scale,clipR-clipL,l.height+214*l.scale);behind.clip();
  for(const r of visible){const ox=(r.col-cx)*stride,oy=(r.row-cy)*stride;
