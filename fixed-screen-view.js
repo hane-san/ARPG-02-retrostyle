@@ -10,7 +10,7 @@ import {featureAt} from './fixed-features.js';
 // Own canvas and room-local state: the original world stays intact and paused.
 export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,onTalk,onReturn,onStep,onRead,onCue,onPrepare=()=>{},onRotate=()=>{},listening=()=>false}){
  const canvas=document.createElement('canvas');canvas.id='fixedCanvas';canvas.width=canvas.height=1;canvas.hidden=true;canvas.tabIndex=0;canvas.setAttribute('aria-label','空の枝道');canvas.setAttribute('aria-busy','false');stage.append(canvas);
- const c=canvas.getContext('2d',{alpha:false});let screen={w:1,h:1,dpr:1},last=null,paintAt=-Infinity,contact=null,multiple=false,lastCue=null,lastQuiet=false;
+ const c=canvas.getContext('2d',{alpha:false});let screen={w:1,h:1,dpr:1},last=null,paintAt=-Infinity,enteredAt=-Infinity,contact=null,multiple=false,lastCue=null,lastQuiet=false;
  const contacts=new Set(),held=new Set(),latched=new Set(),cancelled=new Set();
  const dirs={ArrowUp:[0,-1],ArrowRight:[1,0],ArrowDown:[0,1],ArrowLeft:[-1,0],w:[0,-1],d:[1,0],s:[0,1],a:[-1,0]};
  // The most recently pressed, still-held direction queues its next tile just
@@ -40,7 +40,7 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
   areaClock+=dt;if(areaClock<areaPieceSeconds(pieceSeconds(lastCue)))return;
   areaClock=0;const next=playlists.advance(lastArea);if(next&&next!==lastCue){lastCue=next;onRotate(next);}
  }
- const state=createFixedJourney({onRoom:r=>{canvas.setAttribute('aria-label','空の枝道：'+r.name);onPlace(r);cue(r);paintAt=-Infinity;},onTalk,onReturn,
+ const state=createFixedJourney({onRoom:r=>{enteredAt=performance.now();canvas.setAttribute('aria-label','空の枝道：'+r.name);onPlace(r);cue(r);paintAt=-Infinity;},onTalk,onReturn,
   onStep:(d,t)=>onStep(d,t==='b'?'+':t==='s'||state.room.land==='stone'||state.room.land==='ridge'?'study-stone':state.room.land==='salt'||state.room.land==='shore'||state.room.dry?'study-silt':t==='g'?'g':'='),onTransition:()=>{held.forEach(k=>latched.add(k));cancel();if(state.transition)cue(state.transition.to);}});
  const water=createAmbienceDirector(state.rooms.flatMap(r=>{const kind=r.dry?'stone':r.quiet?'echo':r.land==='forest'?'wood':r.land==='ridge'?'wind':r.water?'drip':null;return kind?[{id:'fixed-ambient-'+r.id,kind,x:r.col*15+9,y:r.row*15+7}]:[];}));
  const layout=()=>fixedLayout(screen.w,screen.h),project=p=>{const l=layout();return {x:l.x+(p.x+.5)*32*l.scale,y:l.y+(p.y+.5)*32*l.scale};};
@@ -95,7 +95,10 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
    canvas.setAttribute('aria-busy',String(!!state.transition||state.hero.path.length>0));
    const frame=state.transition?1000/60:state.hero.moving?1000/45:1000/24;if(now-paintAt<frame)return;paintAt=now;
    c.setTransform(screen.dpr,0,0,screen.dpr,0,0);c.fillStyle='#b6d5d7';c.fillRect(0,0,screen.w,screen.h);
-   drawFixedRoom(c,state.room,state.hero,screen,reduced?0:now,{rooms:state.rooms,transition:state.transition,destination:state.hero.path.at(-1)});
+   // Exit names rise on arrival and near their exit, then settle away.
+   const since=now-enteredAt,end=state.hero.path.at(-1),gate=end&&state.room.gateAt(end.x,end.y),stone=state.hero.arrival?.kind==='return';
+   const labels={arrival:reduced?(since<2600?1:0):Math.max(0,Math.min(1,1-(since-1800)/900)),target:gate?gate.direction:stone?'stone':null};
+   drawFixedRoom(c,state.room,state.hero,screen,reduced?0:now,{rooms:state.rooms,transition:state.transition,destination:state.hero.path.at(-1),labels});
   },
   drawMap(mini,zoneList){
    const chart=fixedChartSize();mini.width=810;mini.height=mini.width*chart.h/chart.w;mini.style.aspectRatio=String(chart.w/chart.h);mini.style.setProperty('--atlas-aspect',chart.w/chart.h);const g=mini.getContext('2d'),s=mini.width/chart.w;g.clearRect(0,0,mini.width,mini.height);g.fillStyle='#c9dce0';g.fillRect(0,0,mini.width,mini.height);

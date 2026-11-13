@@ -43,13 +43,14 @@ export function journeyBackground(c,room,w,h,l,time){
  const zoom=l.scale*.9,g=skyGeometry(profile),camera={x:(profile.cx+.5)*32+(room.col-5)*35,y:g.horizon-(horizon-h/2)/zoom,zoom};
  c.save();if(!z||!skyGeometry(z))c.globalAlpha*=.45;c.translate(w/2,h/2);c.scale(zoom,zoom);c.translate(-camera.x,-camera.y);drawLandscapeSky(c,profile,camera,{w,h},0,time);c.restore();}
  // The region beyond the boards: far, middle and near land in front of the sky.
- drawPanorama(c,room,w,h,l,time);
- const panoramaHorizon=Math.max(24*l.scale,(l.y-128*l.scale)*.58),panoramaMid=panoramaHorizon+((l.y-128*l.scale)-panoramaHorizon)*.42;
  // The imperial wall is seen over the plain and through the mountain saddle,
- // then becomes the actual solid gate in capital-gate. Repeat its human doors.
- if(['azure-plain','monolith-court','mountain-pass','snow-cliff','capital-gate','sealed-court'].includes(room.id)){
-  const size=l.scale*(room.id==='capital-gate'?.8:room.id==='azure-plain'?.25:.43),base=panoramaMid+4*l.scale;
-  c.save();c.globalAlpha*=.34;c.translate(w*.56,base);c.scale(size,size);
-  for(let i=-4;i<=5;i++){R(c,i*68,-80,48,80,'#aab9b7');R(c,i*68+8,-98,32,18,'#d6d8cb');R(c,i*68+16,-25,12,25,'#839ba2');}c.restore();
- }
+ // then becomes the actual solid gate in capital-gate. Repeat its human doors;
+ // it stands behind the middle land, so its foot is never in the air.
+ const wall=['azure-plain','monolith-court','mountain-pass','snow-cliff','capital-gate','sealed-court'].includes(room.id);
+ drawPanorama(c,room,w,h,l,time,wall?(g,feet,far)=>{
+  const size=l.scale*(room.id==='capital-gate'?.62:room.id==='azure-plain'?.25:.4);
+  g.save();g.translate(w*.56,feet+4*l.scale);g.scale(size,size);
+  for(let i=-5;i<=6;i++){R(g,i*68,-80,48,80,far('#aab9b7'));R(g,i*68+8,-98,32,18,far('#d6d8cb'));R(g,i*68+16,-25,12,25,far('#839ba2'));}R(g,-5*68,-60,12*68,14,far('#b8c3bd'));g.restore();
+ }:null);
+
 }

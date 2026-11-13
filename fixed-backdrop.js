@@ -90,7 +90,7 @@ export function drawSurroundings(c,room){const layer=surroundingsLayer(room);if(
 // Whether the old floating-island cliff faces still belong under the land.
 export function keepsCliffFaces(room){return room.land==='ridge'||!!room.skyline;}
 // The region beyond the boards, from far to near, in front of the sky.
-export function drawPanorama(c,room,w,h,l,time){
+export function drawPanorama(c,room,w,h,l,time,distant=null){
  const s=l.scale,top=l.y-128*s,horizon=Math.max(24*s,top*.58),kind=surroundingKind(room),col=colours(room,kind),sky=FIXED_SKIES[room.sky],haze=sky?sky.colors[3]:'#e6e3d0',far=mix(col[1],haze,.62),mid=mix(col[0],haze,.38),near=mix(col[0],haze,.12);
  const bearing=(room.col||0)*.37+(room.row||0)*.11,ridge=(i,amp,freq,phase)=>{const t=i*freq+bearing+phase;return horizon-amp*s*(.5+.3*Math.sin(t)+.16*Math.sin(t*2.3+phase*1.7)+.09*Math.sin(t*5.1+phase*2.9)+.06*Math.cos(t*.43+phase));};
  // Each band is lit from above and settles into its own colour lower down,
@@ -100,15 +100,35 @@ export function drawPanorama(c,room,w,h,l,time){
  if(kind==='sea'||kind==='marsh'){{const g=c.createLinearGradient(0,horizon,0,top);g.addColorStop(0,mix(far,haze,.35));g.addColorStop(1,far);R(c,0,horizon,w,h-horizon,g);}for(let i=0;i<9;i++)R(c,((i*97+time/1300)%(w+80))-40,horizon+(6+i*9)*s,w*.18,1,mix(far,'#ffffff',.45));band(horizon+4*s,10,.21,1.3,mix(far,haze,.25));}
  else if(kind==='scree'||kind==='snowscree'){band(horizon,64,.33,.4,far);const pts=[];for(let i=0;i<=48;i++)pts.push([i*w/48,ridge(i,64,.33,.4)]);c.save();c.strokeStyle=kind==='snowscree'?'#f3f4ebcc':mix(far,'#ffffff',.4);c.lineWidth=1.6*s;c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();c.restore();}
  else band(horizon,kind==='canopy'?26:18,.24,.8,far);
- // Mid: the land's own texture at a distance.
- const midBase=horizon+(top-horizon)*.42;
+ // Mid: the land's own texture at a distance. Distant houses, colonnades
+ // and mesas stand behind its crest, so their feet are hidden by the land
+ // in front instead of floating in the air (2026-11-13).
+ const midBase=horizon+(top-horizon)*.42,feet=midBase+12*s,far2=t=>mix(t,haze,.5);
+ if(kind==='garden'||room.sourceIndex===undefined)for(let i=0;i<6;i++){const x=(i+.4)*w/6+Math.sin(i*2+bearing)*10*s,u=(7+Math.sin(i*1.7)*1.5)*s,y=feet-2*s;R(c,x-u,y-u*1.3,u*2,u*1.3,far2('#e9e0cc'));P(c,[[x-u*1.25,y-u*1.3],[x,y-u*2.25],[x+u*1.25,y-u*1.3]],far2('#7c97a3'));}
+ if(kind==='paving')for(let i=-3;i<=4;i++){const x=w*.5+i*28*s,y=feet;R(c,x,y-30*s,11*s,30*s,far2('#c1c5bb'));R(c,x-2*s,y-34*s,15*s,4*s,far2('#dadbd0'));R(c,x+8*s,y-30*s,3*s,30*s,far2('#9fa8a3'));}
+ if(kind==='saltflat'||kind==='dryrock')for(let i=0;i<4;i++){const x=(i+.5)*w/4+Math.sin(i*2.1+bearing)*20*s,u=(12+i%2*8)*s;P(c,[[x-u*1.6,feet],[x-u,feet-u-8*s],[x+u,feet-u*.9-8*s],[x+u*1.5,feet]],far2(kind==='dryrock'?'#b48e6e':'#d8cdb7'));}
+ if(distant)distant(c,feet,far2);
  band(midBase,kind==='scree'||kind==='snowscree'?34:14,.29,2.1,mid);
  if(kind==='canopy')for(let i=0;i<26;i++){const x=(i+.5)*w/26+Math.sin(i*1.7+bearing)*6*s,y=midBase+(4+Math.sin(i*2.3)*5)*s,r=(9+Math.sin(i*3.1)*3)*s;E(c,x,y,r,r*.85,mix('#3f6b52',haze,.35));E(c,x-2*s,y-2*s,r*.55,r*.45,mix('#6d9a72',haze,.35));}
- if(kind==='fields'||kind==='grass'||kind==='garden')for(let i=0;i<5;i++){const y=midBase+(6+i*7)*s;R(c,0,y,w,2*s,mix(i%2?col[1]:col[0],haze,.3));}
- if(kind==='garden'||room.sourceIndex===undefined)for(let i=0;i<6;i++){const x=(i+.4)*w/6+Math.sin(i*2+bearing)*10*s,y=midBase+(8+Math.sin(i*1.3)*4)*s,u=9*s;R(c,x-u,y-u*.6,u*2,u*1.2,mix('#e9e0cc',haze,.35));P(c,[[x-u*1.2,y-u*.6],[x,y-u*1.5],[x+u*1.2,y-u*.6]],mix('#7c97a3',haze,.35));}
- if(kind==='paving')for(let i=-3;i<=4;i++){const x=w*.5+i*30*s,y=midBase+6*s;R(c,x,y-26*s,14*s,26*s,mix('#c1c5bb',haze,.4));R(c,x-2*s,y-30*s,18*s,5*s,mix('#dadbd0',haze,.4));}
- if(kind==='saltflat'||kind==='dryrock')for(let i=0;i<4;i++){const x=(i+.5)*w/4+Math.sin(i*2.1+bearing)*20*s,y=midBase+4*s,u=(12+i%2*8)*s;P(c,[[x-u*1.6,y],[x-u,y-u],[x+u,y-u*.9],[x+u*1.5,y]],mix(kind==='dryrock'?'#b48e6e':'#d8cdb7',haze,.35));}
+ if(kind==='fields'||kind==='grass'||kind==='garden')for(let i=0;i<34;i++){const x=(i+.5)*w/34+Math.sin(i*2.9+bearing)*5*s,y=midBase+(12+Math.sin(i*1.9)*4)*s,r=(3.2+Math.sin(i*4.1)*1.2)*s;E(c,x,y,r*1.4,r,mix('#557c56',haze,.42));}
  // Near: the surroundings colour itself, meeting the neighbouring boards.
  band(top+2*s,9,.31,3.3,near);
  R(c,0,top+16*s,w,h,near);
+ // The nearest land is not a flat colour: the board's own surroundings
+ // continue under every neighbour and out to the screen's edges, rising out
+ // of the near band in a soft fade.
+ const tex=nearTexture(room,kind,col);
+ if(tex&&c.createPattern){const pattern=c.createPattern(tex,'repeat');if(pattern){if(pattern.setTransform&&typeof DOMMatrix!=='undefined')pattern.setTransform(new DOMMatrix().translate(l.x,l.y).scale(s));c.save();const from=Math.min(top+6*s,midBase+22*s);c.fillStyle=pattern;c.globalAlpha=.92;c.beginPath();c.rect(0,from,w,h);c.fill();c.restore();
+ // Soften the fade with a haze that matches the band above it.
+ const veil=c.createLinearGradient(0,from,0,from+64*s);veil.addColorStop(0,near);veil.addColorStop(.35,near+'aa');veil.addColorStop(1,near+'00');R(c,0,from,w,64*s,veil);}}
+}
+// A repeating 8 x 8 cell tile of a board's surroundings for the near land.
+const textures=new Map();
+function nearTexture(room,kind,col){
+ if(typeof document==='undefined')return null;
+ const key=kind+':'+col.join();if(textures.has(key))return textures.get(key);
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=256;const c=canvas.getContext('2d'),proxy={col:7+(room.sourceIndex??3),row:11};
+ const cells=[];for(let y=0;y<8;y++)for(let x=0;x<8;x++){cell(c,proxy,kind,col,x,y);cells.push([x,y]);}
+ if(kind==='canopy'){c.save();c.beginPath();c.rect(0,0,256,256);c.clip();crowns(c,proxy,col,cells);for(const [dx,dy] of [[-256,0],[256,0],[0,-256],[0,256]]){c.save();c.translate(dx,dy);crowns(c,proxy,col,cells.map(a=>[...a]));c.restore();}c.restore();}
+ textures.set(key,canvas);while(textures.size>16)textures.delete(textures.keys().next().value);return canvas;
 }
