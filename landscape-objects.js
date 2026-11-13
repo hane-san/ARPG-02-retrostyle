@@ -58,7 +58,7 @@ export function drawLandscapeCanopies(c,world,bounds,hero){
  for(const d of world.landscapeObjects||[]){
   if(!visible(d,bounds)||!['willow','pine','cypress'].includes(d.kind))continue;
   const x=d.x*32+16,y=d.y*32,[g,l,,s]=d.palette;
-  c.save();if(people.some(p=>Math.abs(p.x-d.x)<2.8&&p.y<d.y+.5&&p.y>d.y-6.7))c.globalAlpha=.24;
+  c.save();if(people.some(p=>Math.abs(p.x-d.x)<2.8&&p.y<d.y+.5&&p.y>d.y-6.7))c.globalAlpha*=.24;
   if(d.kind==='pine')for(let j=0;j<4;j++)P(c,[[x-47+j*8,y-42-j*29],[x,y-116-j*21],[x+47-j*8,y-42-j*29]],j%2?g:s);
   else if(d.kind==='cypress'){E(c,x,y-110,25,89,s);E(c,x-6,y-122,17,69,g);L(c,x-10,y-168,x-15,y-102,l+'55',3);}
   else{

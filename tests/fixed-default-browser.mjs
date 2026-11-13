@@ -10,7 +10,8 @@ export async function checkFixedDefault(browser,origin){
  const rooms=makeFixedRooms(),get=id=>rooms.find(r=>r.id===id),reports=[];mkdirSync('test-results/fixed-default',{recursive:true});
  for(const [width,height] of [[390,844],[320,568],[430,932],[844,390]]){
   const ctx=await browser.newContext({viewport:{width,height},isMobile:true,hasTouch:true,deviceScaleFactor:1}),p=await ctx.newPage(),errors=[];p.on('pageerror',e=>errors.push(e.message));
-  await p.goto(origin+'/');const canvas=p.locator('#fixedCanvas');await canvas.waitFor({state:'visible'});await p.clock.install();
+  await p.addInitScript(()=>{const P=CanvasRenderingContext2D.prototype,clear=P.clearRect,text=P.fillText;P.clearRect=function(...a){if(this.canvas.id==='fixedTerrainCanvas')window.fixedTexts=[];return clear.apply(this,a);};P.fillText=function(t,...a){if(this.canvas.id==='fixedTerrainCanvas'&&this.globalAlpha>.05)(window.fixedTexts||=[]).push(t);return text.call(this,t,...a);};});
+  await p.clock.install();await p.goto(origin+'/');const canvas=p.locator('#fixedCanvas');await canvas.waitFor({state:'visible'});
   const start=get(FIXED_START.room);
   assert.equal(await p.locator('#worldCanvas').isVisible(),false,'the connected world waits underneath');
   assert.equal(await p.locator('#zoneName').textContent(),start.name);
@@ -18,6 +19,11 @@ export async function checkFixedDefault(browser,origin){
   assert.equal(await p.locator('#trackSelect').inputValue(),start.cue);
   const stage=await canvas.boundingBox(),l=fixedLayout(stage.width,stage.height),point=t=>({x:l.x+(t.x+.5)*32*l.scale,y:l.y+(t.y+.5)*32*l.scale});
   if(width<height){assert.ok(l.y>stage.height*.3,'portrait keeps the board low, with the place behind it above');assert.ok(l.y+l.height<=stage.height,'the whole board stays above the dock');}
+  // 2026-11-13: exit names rise on arrival, then only the nearby ones stay.
+  await p.clock.runFor(300);const names=d=>get(start.connections[d]).chartName+'へ';
+  const arrival=await p.evaluate(()=>window.fixedTexts||[]);for(const d of Object.keys(start.connections))assert.ok(arrival.includes(names(d)),'arrival shows '+d);
+  await p.clock.runFor(3600);const settled=await p.evaluate(()=>window.fixedTexts||[]);
+  assert.ok(!settled.includes(names('N'))&&!settled.includes(names('W')),'far exit names settle away: '+settled);assert.ok(settled.includes(names('S')),'the exit beside the traveller keeps its name');
   await p.screenshot({path:`test-results/fixed-default/${width}x${height}-entry.png`});
   let current=start;
   async function cross(d){const next=get(current.connections[d]);await canvas.tap({position:point(gatePoint(d,current))});for(let i=0;i<200;i++){await p.clock.runFor(100);if(await p.locator('#zoneName').textContent()===next.name)break;}assert.equal(await p.locator('#zoneName').textContent(),next.name,'walk '+current.id+' '+d);await p.clock.runFor(700);current=next;}
@@ -43,6 +49,11 @@ export async function checkFixedDefault(browser,origin){
   assert.equal(await canvas.isVisible(),true);assert.equal(await p.locator('#zoneName').textContent(),start.name,'re-entering starts again at the central hub');
   assert.deepEqual(errors,[]);reports.push({viewport:`${width}x${height}`,scale:l.scale,board:{x:l.x,y:l.y,size:l.width},area:start.areaName});await ctx.close();
  }
+ // Tall source buildings keep their whole silhouette above the board: the
+ // neighbours' distance fog never reaches the walkable board's own objects.
+ const tall=await browser.newPage({viewport:{width:390,height:753}});await tall.goto(origin+'/?walk=1');await tall.waitForTimeout(300);
+ const tower=await tall.evaluate(async()=>{const {drawFixedRoom}=await import('./fixed-screen-art.js'),{makeFixedRooms,fixedLayout}=await import('./fixed-screens.js');const rooms=makeFixedRooms(),room=rooms.find(r=>r.id==='monolith-court'),l=fixedLayout(390,753),c=document.createElement('canvas');c.width=390;c.height=753;const g=c.getContext('2d');drawFixedRoom(g,room,{px:7,py:11,x:7,y:11,path:[],stride:0},{w:390,h:753,dpr:1},1500,{rooms});return [...g.getImageData(175,Math.round(l.y-110*l.scale),1,1).data];});
+ assert.ok(tower[0]<130&&tower[1]<150&&tower[2]<150,'the monolith keeps its dark stone above the board: '+tower);await tall.close();
  // ?walk=1 keeps the connected pilgrimage as the opening world.
  const walk=await browser.newPage({viewport:{width:390,height:844}});await walk.goto(origin+'/?walk=1');await walk.waitForSelector('.journey-menu');await walk.waitForTimeout(400);
  assert.equal(await walk.locator('#fixedCanvas').isVisible(),false);assert.equal(await walk.locator('#worldCanvas').isVisible(),true);await walk.close();

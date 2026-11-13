@@ -1,4 +1,4 @@
-import {drawFixedSky} from './fixed-sky.js';
+import {drawFixedSky,FIXED_SKIES} from './fixed-sky.js';
 import {journeyMaterial,journeyTile,journeySite,journeyBackground} from './fixed-journey-art.js';
 import {drawForestTree} from './forest-market-art.js';
 import {WEST_STUDIES} from './western-world.js';
@@ -38,15 +38,15 @@ function background(c,room,w,h,layout,time){
  if(!authored){R(c,0,0,w,h,'#a6cad2');
  const zoom=s*.9,camera={x:(source.cx+.5)*32+(room.col-1)*85,y:g.horizon-(horizon-h/2)/zoom,zoom};
  c.save();c.translate(w/2,h/2);c.scale(zoom,zoom);c.translate(-camera.x,-camera.y);drawLandscapeSky(c,source,camera,{w,h},0,time);c.restore();}
- drawPanorama(c,room,w,h,layout,time);
- // The blue roof seen from the hamlet keeps its bearing on the far land.
- const far=Math.max(24*s,(y-128*s)*.58),base=far+((y-128*s)-far)*.42;
- if(Math.hypot(room.col-2,room.row)>.01){
+ // The blue roof seen from the hamlet keeps its bearing on the far land,
+ // standing behind the middle land like the other distant houses.
+ const away=Math.hypot(room.col-2,room.row);
+ drawPanorama(c,room,w,h,layout,time,away>.01?(g,feet)=>{
   const dx=2*15+11-(room.col*15+7),dy=4-(room.row*15+7),d=Math.hypot(dx,dy),size=s/(1+d/18),x=w/2+dx*4.2*s;
-  c.save();c.globalAlpha*=Math.min(.88,.38+22/(d+30))*Math.min(1,Math.hypot(room.col-2,room.row));c.translate(x,base);c.scale(size,size);drawFixedHouse(c,{x:-2.5,y:-3,w:5,h:3,landmark:true});c.restore();
- }
+  g.save();g.globalAlpha*=Math.min(.9,.45+22/(d+30))*Math.min(1,away);g.translate(x,feet);g.scale(size,size);drawFixedHouse(g,{x:-2.5,y:-3,w:5,h:3,landmark:true});g.restore();
+ }:null);
 }
-function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,guides=false}={}){
+function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,guides=false,labels=null}={}){
  const {w,h}=screen,l=fixedLayout(w,h),{sx,sy,proxy,trees}=materialWorld(room),s=l.scale;
  const spanL=Math.min(-64,-l.x/s-32),spanR=Math.max(544,(w-l.x)/s+32),left=Math.max(0,Math.floor((spanL-offsetX/s)/32)),right=Math.min(14,Math.ceil((spanR-offsetX/s)/32)),top=Math.max(0,Math.floor((-128-offsetY/s)/32)),bottom=Math.min(14,Math.ceil((544-offsetY/s)/32));
  c.save();c.translate(offsetX,offsetY);
@@ -83,9 +83,9 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
   if(room.walkable(xx,yy)){c.save();c.globalAlpha*=k===0?.64:k===1?.3:.1;R(c,xx*32,yy*32,32,32,seam.ground);c.restore();}
  }
  if(room.house?.landmark){R(c,6*32,5*32,5*32,4,'#e1dcc2');for(let i=0;i<4;i++)R(c,(6+i)*32,5*32+4,2,24,'#b7c5af');}
- if(room.returnStone){const {x,y}=room.returnStone;c.strokeStyle='#f1e6c5';c.lineWidth=3;c.beginPath();c.ellipse((x+.5)*32,(y+.5)*32,20,10,0,0,Math.PI*2);c.stroke();P(c,[[x*32+16,y*32+7],[x*32+22,y*32+16],[x*32+16,y*32+23],[x*32+10,y*32+16]],'#77a7ae');const g=fixedGuideLayout(room,s).stone;c.font=`600 ${g.font}px system-ui,sans-serif`;c.textAlign='center';c.textBaseline='middle';plaque(c,g.x,g.y,g.w,g.h,g.h*.32,'#e6f0eceb','#77a7ae');c.fillStyle='#2f5a62';c.fillText('帰りの道標',g.x,g.y+1);c.textBaseline='alphabetic';}
+ if(room.returnStone){const {x,y}=room.returnStone;c.strokeStyle='#f1e6c5';c.lineWidth=3;c.beginPath();c.ellipse((x+.5)*32,(y+.5)*32,20,10,0,0,Math.PI*2);c.stroke();P(c,[[x*32+16,y*32+7],[x*32+22,y*32+16],[x*32+16,y*32+23],[x*32+10,y*32+16]],'#77a7ae');const g=fixedGuideLayout(room,s).stone,a=guides?nearAlpha(hero,x,y,labels,'stone'):0;if(a>.01){c.save();c.globalAlpha*=a;c.font=`600 ${g.font}px system-ui,sans-serif`;c.textAlign='center';c.textBaseline='middle';nameTag(c,g.x,g.y,g.w,g.h);c.fillStyle='#2f5a62';c.fillText('帰りの道標',g.x,g.y+1);c.restore();}}
  const guidePoints=Object.entries(room.seams).flatMap(([d,seam])=>seam.bands.map(([lo,hi])=>{const m=fixedExitMarker(d,room),j=(lo+hi)/2;return {x:d==='N'||d==='S'?j:m.x,y:(d==='E'||d==='W'?j:m.y)+.8};}));
- if(guides)drawExitStones(c,room,l.scale);
+ if(guides)drawExitStones(c,room,l.scale,hero,labels);
  const market=room.sourceIndex===1;
  if(market)for(const d of trees.landscapeObjects)drawForestTree(c,d,'trunk');else drawLandscapeFeet(c,trees,{left:0,right:14,top:0,bottom:14});
  const objects=room.npcs.map(n=>({y:n.y+.5,paint:()=>drawVillager(c,n.x*32,n.y*32,n.color)}));
@@ -93,39 +93,49 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
  for(const f of room.features||[])objects.push(...featureObjects(c,room,f,time));
  if(room.house)objects.push({y:room.house.y+room.house.h,paint:()=>{drawFixedHouse(c,room.house);if(!room.house.landmark){c.strokeStyle='#8c9e92';c.lineWidth=1;c.beginPath();c.moveTo(2*32,8*32);c.lineTo(5.5*32,8*32);c.stroke();for(let i=0;i<4;i++)R(c,(2.2+i*.7)*32,8*32,14,19,['#b8c9c3','#dfc9ab','#a7bac0'][i%3]);}}});
  if(hero)objects.push({y:hero.py+.7,paint:()=>{c.save();c.beginPath();c.rect(0,0,480,480);c.clip();c.translate(0,hero.moving&&time!==0?-Math.abs(Math.sin(hero.stride*9))*1.5:0);drawSrpgUnit(c,{x:hero.px,y:hero.py,team:'ally',acted:false,type:'sword'});R(c,hero.px*32+8,hero.py*32+13,15,3,'#b8d9dc');R(c,hero.px*32+7,hero.py*32+16,5,7,'#7dbac5');c.restore();}});
- objects.sort((a,b)=>a.y-b.y);objects.forEach(o=>o.paint());if(market)for(const d of trees.landscapeObjects){c.save();if((hero&&Math.abs(hero.px-d.x)<3&&hero.py<d.y+.5&&hero.py>d.y-5)||guidePoints.some(m=>Math.abs(m.x-d.x)<3&&m.y<d.y+.5&&m.y>d.y-7.5))c.globalAlpha=.24;drawForestTree(c,d,'canopy');c.restore();}else drawLandscapeCanopies(c,guides?{...trees,npcs:[...trees.npcs,...guidePoints]}:trees,{left:0,right:14,top:0,bottom:14},hero||{px:-100,py:-100});
+ objects.sort((a,b)=>a.y-b.y);objects.forEach(o=>o.paint());if(market)for(const d of trees.landscapeObjects){c.save();if((hero&&Math.abs(hero.px-d.x)<3&&hero.py<d.y+.5&&hero.py>d.y-5)||guidePoints.some(m=>Math.abs(m.x-d.x)<3&&m.y<d.y+.5&&m.y>d.y-7.5))c.globalAlpha*=.24;drawForestTree(c,d,'canopy');c.restore();}else drawLandscapeCanopies(c,guides?{...trees,npcs:[...trees.npcs,...guidePoints]}:trees,{left:0,right:14,top:0,bottom:14},hero||{px:-100,py:-100});
  if(destination){for(const [col,lw] of [['#4f7a76cc',4],['#fff6d8',2]]){c.strokeStyle=col;c.lineWidth=lw;c.beginPath();c.ellipse((destination.x+.5)*32,(destination.y+.5)*32,11,6.5,0,0,Math.PI*2);c.stroke();}}
- if(guides)drawExitPlaques(c,room,l.scale,hero);
+ if(guides)drawExitPlaques(c,room,l.scale,hero,labels);
  // A small edge gap reads as the continuing road, without a development HUD.
  c.restore();c.restore();
 }
 
-// Low road stones and direction plaques belong to the walkable ground.
-// Plaques use rounded, outlined panels with a minimum on-screen type size;
-// the same geometry is used for tapping in fixedExitTarget.
-function plaque(c,x,y,w,h,r,fill,edge){c.beginPath();if(c.roundRect)c.roundRect(x-w/2,y-h/2,w,h,r);else c.rect(x-w/2,y-h/2,w,h);c.fillStyle=fill;c.fill();c.lineWidth=1.5;c.strokeStyle=edge;c.stroke();}
-function drawExitStones(c,room,scale){
- const layout=fixedGuideLayout(room,scale);c.save();
+// Low road stones and quiet name tags belong to the walkable ground.
+// 2026-11-13: names no longer sit on the scenery all the time. A tag rises
+// when the traveller arrives, comes near that exit or the waystone, or walks
+// towards it, and settles away again; the stones alone mark the way. The tag
+// geometry (and so the generous tap target in fixedExitTarget) is unchanged.
+function nearAlpha(hero,x,y,labels,key){
+ const d=hero?Math.hypot(hero.px-x,hero.py-y):Infinity,near=Math.max(0,Math.min(1,(3.6-d)/1.4));
+ return Math.max(near,labels?.arrival??0,labels?.target===key?1:0);
+}
+function nameTag(c,x,y,w,h){
+ const r=h*.5;c.save();c.shadowColor='#1d2f3240';c.shadowBlur=6;c.shadowOffsetY=1.5;c.beginPath();if(c.roundRect)c.roundRect(x-w/2,y-h/2,w,h,r);else c.rect(x-w/2,y-h/2,w,h);c.fillStyle='#f7f2e2e6';c.fill();c.restore();
+}
+function exitAlpha(room,d,hero,labels){const m=fixedExitMarker(d,room);return nearAlpha(hero,m.x,m.y,labels,d);}
+function drawExitStones(c,room,scale,hero,labels){
+ c.save();
  for(const [d] of Object.entries(room.connections)){
-  const m=fixedExitMarker(d,room),a=d==='N'?-Math.PI/2:d==='S'?Math.PI/2:d==='W'?Math.PI:0,label=layout.labels[d];
+  const m=fixedExitMarker(d,room),a=d==='N'?-Math.PI/2:d==='S'?Math.PI/2:d==='W'?Math.PI:0,lit=exitAlpha(room,d,hero,labels);
   // A return waystone on the same cell keeps its diamond; the chevrons step
   // one cell nearer to the edge instead of being painted over it.
   const near=room.returnStone&&Math.abs(room.returnStone.x-m.x)<1.5&&Math.abs(room.returnStone.y-m.y)<1.5,push=near?.6:0;
   for(const [lo,hi]of room.seams[d].bands){const j=(lo+hi)/2,mark={x:d==='N'||d==='S'?j:m.x,y:d==='E'||d==='W'?j:m.y};
-   c.save();c.translate((mark.x+.5)*32,(mark.y+.5)*32);c.rotate(a);c.translate(push*32,0);
-   for(const step of [0,19]){P(c,[[step-8,-8],[step+3,0],[step-8,8],[step-3,0]],'#f3ecd6c0');P(c,[[step-7,-6.5],[step+1.5,0],[step-7,6.5],[step-3.5,0]],'#4f7a76');}c.restore();
+   c.save();c.translate((mark.x+.5)*32,(mark.y+.5)*32);c.rotate(a);c.translate(push*32,0);c.globalAlpha*=.62+.38*lit;
+   for(const step of [0,15]){P(c,[[step-7,-7],[step+3,0],[step-7,7],[step-3,0]],'#f3ecd6a8');P(c,[[step-6,-5.5],[step+1.5,0],[step-6,5.5],[step-3,0]],'#4f7a76d0');}c.restore();
   }
  }
  c.restore();
 }
-// Name plaques are painted above houses, sites and canopies so a large
+// Name tags are painted above houses, sites and canopies so a large
 // building can never hide where an exit leads. Over the traveller they thin.
-function drawExitPlaques(c,room,scale,hero){
+function drawExitPlaques(c,room,scale,hero,labels){
  const layout=fixedGuideLayout(room,scale);c.save();c.textAlign='center';c.textBaseline='middle';
  for(const label of Object.values(layout.labels)){
+  const a=exitAlpha(room,label.d,hero,labels);if(a<=.01)continue;
   const under=hero&&Math.abs((hero.px+.5)*32-label.x)<label.w/2+10&&Math.abs((hero.py+.35)*32-label.y)<label.h/2+18;
-  c.globalAlpha=under?.5:1;c.font=`600 ${label.font}px system-ui,sans-serif`;
-  plaque(c,label.x,label.y,label.w,label.h,label.h*.32,'#f4eedbf0','#6f938c');c.fillStyle='#2f5a5e';c.fillText(label.name,label.x,label.y+1);
+  c.save();c.globalAlpha*=a*(under?.5:1);c.font=`600 ${label.font}px system-ui,sans-serif`;
+  nameTag(c,label.x,label.y,label.w,label.h);c.fillStyle='#2f5a5e';c.fillText(label.name,label.x,label.y+1);c.restore();
  }
  c.restore();
 }
@@ -134,38 +144,57 @@ function drawExitPlaques(c,room,scale,hero){
 // world-space terrain is visible on both sides, through a stable terrain window.
 const layers=new WeakMap();
 export function releaseFixedArt(c){const layer=layers.get(c);if(layer)layer.width=layer.height=1;}
-export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[room],transition=null}={}){
+export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[room],transition=null,labels=null}={}){
  const l=fixedLayout(screen.w,screen.h),stride=480*l.scale;
  const u=transition?Math.min(1,transition.elapsed/transition.duration):0,p=u*u*u*(u*(u*6-15)+10);
  const cx=room.col+(transition?transition.to.col-room.col:0)*p,cy=room.row+(transition?transition.to.row-room.row:0)*p;
  background(c,{...room,col:cx,row:cy},screen.w,screen.h,l,time);
- let layer=layers.get(c);if(!layer){layer=document.createElement('canvas');layer.id='fixedTerrainCanvas';layers.set(c,layer);}const dpr=screen.dpr||1;if(layer.width!==Math.round(screen.w*dpr)||layer.height!==Math.round(screen.h*dpr)){layer.width=Math.round(screen.w*dpr);layer.height=Math.round(screen.h*dpr);}const ground=layer.getContext('2d');ground.setTransform(dpr,0,0,dpr,0,0);
+ const dpr=screen.dpr||1,sized=layer=>{if(layer.width!==Math.round(screen.w*dpr)||layer.height!==Math.round(screen.h*dpr)){layer.width=Math.round(screen.w*dpr);layer.height=Math.round(screen.h*dpr);}const g=layer.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return g;};
+ let pair=layers.get(c);if(!pair){const front=document.createElement('canvas');front.id='fixedTerrainCanvas';const back=document.createElement('canvas');back.id='fixedNeighbourCanvas';pair={front,back};layers.set(c,pair);}
+ const ground=sized(pair.front),behind=sized(pair.back);
  // Sky renderers own their cloud alpha. Fade the completed sky, using the
  // terrain buffer before clearing it, so no cloud can bypass the transition.
- if(transition){background(ground,{...transition.to,col:cx,row:cy},screen.w,screen.h,l,time);c.save();c.globalAlpha=p;c.drawImage(layer,0,0,screen.w,screen.h);c.restore();}
- ground.clearRect(0,0,screen.w,screen.h);const skyContext=c;c=ground;
+ if(transition){background(ground,{...transition.to,col:cx,row:cy},screen.w,screen.h,l,time);c.save();c.globalAlpha=p;c.drawImage(pair.front,0,0,screen.w,screen.h);c.restore();}
+ ground.clearRect(0,0,screen.w,screen.h);behind.clearRect(0,0,screen.w,screen.h);
+ // 2026-11-13: the walkable board(s) are drawn in front of the neighbours and
+ // are never dissolved by the neighbours' fog, so a tall tower, windmill or
+ // gate keeps its whole silhouette against the sky. Neighbouring boards fade
+ // into the distant land behind it.
+ // During a slide the arriving board rises out of the distance as the
+ // leaving one sinks into it: each is drawn behind (faded, as a neighbour) and
+ // in front with the slide's own weight, so nothing pops at either end.
+ const front=transition?[[transition.to,p],[room,1-p]].filter(([,a])=>a>0):[[room,1]];
+ const behindOnly=r=>!transition?r.id!==room.id:r.id===room.id?p>0:r.id===transition.to.id?p<1:true;
+ const visible=rooms.filter(r=>Math.abs(r.col-cx)<=1.01&&Math.abs(r.row-cy)<=1.01&&behindOnly(r));
+ const sky=FIXED_SKIES[room.sky]?.colors?.[3]||'#dce6e1',veil=mixHex('#dce6e1',sky,.45);
  const clipL=Math.min(l.x-64*l.scale,0),clipR=Math.max(l.x+l.width+64*l.scale,screen.w);
- c.save();c.beginPath();c.rect(clipL,l.y-128*l.scale,clipR-clipL,l.height+192*l.scale);c.clip();
- const visible=new Set(rooms.filter(r=>Math.abs(r.col-cx)<=1.01&&Math.abs(r.row-cy)<=1.01).map(r=>r.id));
- for(const r of [...rooms.filter(r=>r.id!==room.id),room]){if(!visible.has(r.id))continue;const ox=(r.col-cx)*stride,oy=(r.row-cy)*stride;
-  c.save();c.beginPath();c.rect(l.x+ox,l.y+oy-128*l.scale,l.width,l.height+128*l.scale);c.clip();
-  const person=transition&&[room.id,transition.to.id].includes(r.id)?transitionTraveller(room,transition,r,p):r.id===room.id?hero:null;
-  terrain(c,r,person,screen,time,{offsetX:ox,offsetY:oy,destination:r===room?destination:null,guides:r.id===room.id});
-  // Neighbouring boards stay visible as continuing land, under a light haze,
-  // so the walkable board reads first. The haze crossfades during a slide.
-  const haze=.24*(transition?r.id===room.id?p:r.id===transition.to.id?1-p:1:r.id===room.id?0:1);
-  if(haze>.004){c.globalAlpha=haze;c.fillStyle='#dce6e1';c.fillRect(l.x+ox,l.y+oy-128*l.scale,l.width,l.height+128*l.scale);c.globalAlpha=1;}
-  c.restore();
+ behind.save();behind.beginPath();behind.rect(clipL,l.y-150*l.scale,clipR-clipL,l.height+214*l.scale);behind.clip();
+ for(const r of visible){const ox=(r.col-cx)*stride,oy=(r.row-cy)*stride;
+  behind.save();behind.beginPath();behind.rect(l.x+ox,l.y+oy-150*l.scale,l.width,l.height+150*l.scale);behind.clip();
+  const person=transition&&[room.id,transition.to.id].includes(r.id)?transitionTraveller(room,transition,r,p):null;
+  terrain(behind,r,person,screen,time,{offsetX:ox,offsetY:oy});
+  // Neighbouring boards stay visible as continuing land under the sky's own
+  // light haze, so the walkable board reads first.
+  behind.globalAlpha=.2;behind.fillStyle=veil;behind.fillRect(l.x+ox,l.y+oy-150*l.scale,l.width,l.height+150*l.scale);behind.globalAlpha=1;
+  behind.restore();
  }
- c.restore();
- c.save();c.globalCompositeOperation='destination-in';const fog=c.createLinearGradient(0,l.y-128*l.scale,0,l.y-48*l.scale);fog.addColorStop(0,'#0000');fog.addColorStop(1,'#000');c.fillStyle=fog;c.fillRect(0,0,screen.w,screen.h);
+ behind.restore();
+ behind.save();behind.globalCompositeOperation='destination-in';const fog=behind.createLinearGradient(0,l.y-150*l.scale,0,l.y-36*l.scale);fog.addColorStop(0,'#0000');fog.addColorStop(.55,'#0007');fog.addColorStop(1,'#000');behind.fillStyle=fog;behind.fillRect(0,0,screen.w,screen.h);
  // In wide viewports the neighbouring boards end inside the screen: let them
  // dissolve into the distant land instead of stopping on a hard vertical cut.
- const x0=l.x-stride,x1=l.x+l.width+stride,band=56*l.scale;
- if(x0>-band||x1<screen.w+band){const side=c.createLinearGradient(x0,0,x1,0),f=band/(x1-x0);side.addColorStop(0,'#0000');side.addColorStop(f,'#000');side.addColorStop(1-f,'#000');side.addColorStop(1,'#0000');c.fillStyle=side;c.fillRect(0,0,screen.w,screen.h);}
- c.restore();
- skyContext.drawImage(layer,0,0,screen.w,screen.h);
+ const x0=l.x-stride,x1=l.x+l.width+stride,band=72*l.scale;
+ if(x0>-band||x1<screen.w+band){const side=behind.createLinearGradient(x0,0,x1,0),f=band/(x1-x0);side.addColorStop(0,'#0000');side.addColorStop(f,'#000');side.addColorStop(1-f,'#000');side.addColorStop(1,'#0000');behind.fillStyle=side;behind.fillRect(0,0,screen.w,screen.h);}
+ behind.restore();
+ c.drawImage(pair.back,0,0,screen.w,screen.h);
+ for(const [r,weight] of front){const ox=(r.col-cx)*stride,oy=(r.row-cy)*stride;
+  ground.save();ground.globalAlpha=weight;ground.beginPath();ground.rect(l.x+ox,-screen.h,l.width,screen.h+l.y+oy+l.height);ground.clip();
+  const person=transition?transitionTraveller(room,transition,r,p):hero;
+  terrain(ground,r,person,screen,time,{offsetX:ox,offsetY:oy,destination:r===room?destination:null,guides:r.id===room.id,labels});
+  ground.restore();
+ }
+ c.drawImage(pair.front,0,0,screen.w,screen.h);
 }
+const mixHex=(a,b,t)=>'#'+[1,3,5].map(i=>Math.round(parseInt(a.slice(i,i+2),16)*(1-t)+parseInt(b.slice(i,i+2),16)*t).toString(16).padStart(2,'0')).join('');
 
 // Both board clips paint portions of the same traveller at one world position.
 export function transitionTraveller(from,transition,room,p){
