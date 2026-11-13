@@ -91,7 +91,7 @@ const fixedTrial=PILGRIMAGE_MODE?createFixedScreenView({stage,paused:()=>!!dialo
  onRotate:cue=>{trackSelect.value=cue;applyTrack();},listening:()=>music.enabled&&music.volume>0,
  onPrepare:(cue,quiet)=>{if(quiet||!music.enabled)return;const [id,phase]=cue.split(':').map(Number);music.prepare(id,phase);},
  onPlace:r=>{$('zoneName').textContent=r.name;$('zoneSub').textContent=r.areaName;},
- onTalk:(name,lines)=>openDialogue(name,'空の枝道の暮らし',lines),onReturn:returnFromFixed,
+ onTalk:(name,lines)=>openDialogue(name,fixedTrial?.room?.areaName||'旅の途中',lines),onReturn:returnFromFixed,
  onRead:()=>{if(dialogue)dialogueInput();},onStep:(d,t)=>sfx.step(d,t)}):null;
 const discovered=new Set(),visitedZones=new Set(),cache=new Map(),CHUNK=16,MAX_CHUNKS=42;
 const palette={'~':'#497d93','.':'#8d9f7c',',':'#cbbc96',f:'#567864','=':'#baa986','+':'#ae987a',s:'#98b0b0',n:'#576d88',p:'#b7a993','#':'#58605d',M:'#9eb88a',A:'#aa986e',R:'#7f9188',F:'#3e6559',G:'#73a49e',P:'#d1d4c5',C:'#77adb7',D:'#d2b78e',T:'#bc856d',Q:'#789e9f',B:'#496d78',K:'#424563',E:'#528eae'};
@@ -141,11 +141,11 @@ if(JOURNEY_MODE){
   const back=document.createElement('button');back.id='trialHelpReturn';back.className='line-btn';back.textContent='試遊の道標へ戻る';back.hidden=true;back.addEventListener('click',()=>performTrialWarp({id:'pilgrim-0',name:'白い船着場',...TRIAL_WAYSTONE.entrance}));
   $('helpPanel').querySelector('.sheet').append(trialHelp,back);
   const actions=document.createElement('div');actions.id='trialActions';actions.className='trial-actions';actions.hidden=true;actions.setAttribute('role','group');actions.setAttribute('aria-label','試遊の移動');
-  for(const [action,id,text] of [['random','trialJump','ランダムに飛ぶ'],['return','trialReturn','船着場に戻る'],['fixed','fixedEnter','空の枝道へ（画面切替）']]){const button=document.createElement('button');button.id=id;button.dataset.trialAction=action;button.textContent=text;actions.append(button);}
+  for(const [action,id,text] of [['random','trialJump','ランダムに飛ぶ'],['return','trialReturn','船着場に戻る'],['fixed','fixedEnter','画面切替の旅へ']]){const button=document.createElement('button');button.id=id;button.dataset.trialAction=action;button.textContent=text;actions.append(button);}
   $('dialogue').append(actions);
   const fixedHelp=document.createElement('p');fixedHelp.className='secondary fixed-help';fixedHelp.hidden=true;fixedHelp.textContent=FIXED_DEFAULT?'景色ごとに画面が切り替わる旅です。見えている道をタップし、端へ続く道から隣へ渡れます。音楽は、となり合う数枚の土地をまとめたエリアごとに流れ、同じエリアにいるあいだは途切れません。茂みや岩の陰、飛び石の先、道しるべのそばには小さな発見もあります。中央の分水庭から、西は水路、北は乾いた器、東は石壁、南は畑へ。地図にはつながる道が描かれています。下のボタンか分水庭・旧集落の道標から、つながった一枚の大地を歩く以前の旅へ移れます。':'ここは、景色ごとに画面が切り替わる比較用の枝道です。見えている道をタップし、端へ続く道から隣へ渡れます。中央の分水庭から、西は水路、北は乾いた器、東は石壁、南は畑へ。裂け目では、見える対岸へ上側から回れます。最北の道には広い空が続きます。地図にはつながる道が描かれています。分水庭か旧集落の帰りの道標、または下のボタンから元の場所へ戻れます。元の世界では、いつもの歩き方に戻ります。';
   const fixedReturn=document.createElement('button');fixedReturn.id='fixedReturn';fixedReturn.className='line-btn';fixedReturn.textContent=FIXED_DEFAULT?'つながった大地を歩く（以前の旅）':'元の場所へ戻る';fixedReturn.hidden=true;fixedReturn.addEventListener('click',returnFromFixed);$('helpPanel').querySelector('.sheet').append(fixedHelp,fixedReturn);
-  const fixedHelpEnter=document.createElement('button');fixedHelpEnter.id='fixedHelpEnter';fixedHelpEnter.className='line-btn';fixedHelpEnter.textContent='空の枝道へ（画面切替）';fixedHelpEnter.addEventListener('click',enterFixed);$('helpPanel').querySelector('.sheet').append(fixedHelpEnter);
+  const fixedHelpEnter=document.createElement('button');fixedHelpEnter.id='fixedHelpEnter';fixedHelpEnter.className='line-btn';fixedHelpEnter.textContent='画面切替の旅へ';fixedHelpEnter.addEventListener('click',enterFixed);$('helpPanel').querySelector('.sheet').append(fixedHelpEnter);
  }
  const mazeHelp=document.createElement('p');mazeHelp.className='secondary';
  mazeHelp.innerHTML='<strong>迷路の歩き方を比べる</strong><br>'+
@@ -659,7 +659,7 @@ function enterFixed(){
  fixedOrigin={world,position:{x:hero.x,y:hero.y},camera:{...camera},track:$('trackSelect').value,quiet:imperialQuiet,mapTitle:$('atlasTitle').textContent,mapText:$('mapPanel').querySelector('p.secondary').textContent};
  closeDialogue();closePanels(false);journeyView?.close();cancelCameraGesture();readingPress=null;
  Object.assign(hero,{px:hero.x,py:hero.y,path:[],arrival:null,moving:false});syncTravelState();
- $('atlasTitle').textContent='空の枝道';$('mapPanel').querySelector('p.secondary').textContent='つながる道をたどる。隣の地名を選ぶと、出口まで歩きます。';
+ $('atlasTitle').textContent='画面切替の旅の地図';$('mapPanel').querySelector('p.secondary').textContent='つながる道をたどる。隣の地名を選ぶと、出口まで歩きます。';
  $('trackSelect').value=FIXED_START_CUE;imperialQuiet=false;applyTrack();
  document.querySelector('.fixed-help').hidden=false;$('fixedReturn').hidden=false;fixedTrial.resize(screen);fixedTrial.enter();
 }
@@ -757,7 +757,17 @@ function openDialogue(name,role,lines){
  sfx.play('select');
 }
 function placeJourneyDialogue(){
- const card=$('dialogue');
+ const card=$('dialogue');card.style.top='';card.style.removeProperty('--tail-x');
+ // In the screen-switching journey the card sits just above the traveller,
+ // its tail pointing at the conversation, and drops below when there is no
+ // room above (2026-11-13).
+ if(fixedTrial?.active){
+  const p=fixedTrial.projectHero(),box=card.getBoundingClientRect(),gap=30,above=p.y-box.height-gap>=12;
+  card.classList.add('journey-dialogue-above');card.classList.toggle('fixed-dialogue-below',!above);
+  card.style.top=(above?p.y-box.height-gap:Math.min(screen.h-box.height-12,p.y+gap))+'px';
+  card.style.setProperty('--tail-x',Math.max(22,Math.min(box.width-22,p.x-box.left))+'px');return;
+ }
+ card.classList.remove('fixed-dialogue-below');
  // Keep the people visible without moving the camera when conversation starts.
  // A traveller near the lower edge needs the reading card on the opposite side.
  const heroY=fixedTrial?.active?fixedTrial.projectHero().y:screen.h/2+((hero.py+.5)*TILE-camera.y)*camera.zoom;

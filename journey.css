@@ -137,3 +137,9 @@
    notes about the connected world return when that world is shown. */
 .fixed-sample #helpPanel .walk-help,.fixed-sample #fixedHelpEnter,.fixed-sample #trialHelpReturn{display:none}
 .fixed-sample #helpPanel .fixed-help{font-size:14px;line-height:1.8;color:inherit}
+
+/* 2026-11-13: in the screen-switching journey the conversation card points at
+   the traveller, above or below, instead of hanging from the screen's top. */
+.fixed-sample .dialogue::after{left:var(--tail-x,50%)}
+.fixed-sample .dialogue.journey-dialogue-above.fixed-dialogue-below::after{top:-8px;bottom:auto;transform:rotate(45deg)}
+.fixed-sample .dialogue{transition:none}

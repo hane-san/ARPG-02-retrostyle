@@ -4,6 +4,8 @@ import {makeFixedRooms,createFixedJourney,gatePoint,FIXED_DIRECTIONS,FIXED_START
 import {FIXED_AREAS,fixedAreaAt,createAreaPlaylists,areaPieceSeconds,FIXED_AREA_HOLD_SECONDS} from '../fixed-areas.js';
 import {featureAt} from '../fixed-features.js';
 import {surroundingKind,keepsCliffFaces} from '../fixed-backdrop.js';
+import {fixedNeighbourVisibility} from '../fixed-screen-art.js';
+import {fixedLayout} from '../fixed-screens.js';
 import {resolveGameMode,useFixedDefault} from '../game-mode.js';
 import {MUSIC_LIBRARY,buildTrack} from '../music.js';
 
@@ -76,4 +78,10 @@ test('surroundings follow the land and cliff faces stay only where a drop is nat
  assert.equal(surroundingKind(by('mint-terraces')),'fields');assert.equal(surroundingKind(by('white-steppe')),'saltflat');assert.equal(surroundingKind(by('answer-wall')),'paving');
  assert.ok(['scree','snowscree'].includes(surroundingKind(by('glacier-rest'))));
  assert.equal(keepsCliffFaces(by('glacier-rest')),true);assert.equal(keepsCliffFaces(by('forest-picnic')),false);assert.equal(keepsCliffFaces(by('azure-plain')),true);
+});
+test('thin neighbour strips are left out on phones; wide screens keep the side country',()=>{
+ for(const [w,h] of [[390,753],[320,477],[430,841]]){const v=fixedNeighbourVisibility(fixedLayout(w,h),{w,h});assert.deepEqual(v,{sides:false,below:false},w+'x'+h);}
+ const wide=fixedNeighbourVisibility(fixedLayout(844,316),{w:844,h:316});assert.equal(wide.sides,true);
+ const view=readFileSync(new URL('../fixed-screen-view.js',import.meta.url),'utf8');
+ assert.match(view,/if\(p\.x<1\|\|p\.y<1\|\|p\.x>13\|\|p\.y>13\)return;/,'blocked outer edge cells stay inert');
 });

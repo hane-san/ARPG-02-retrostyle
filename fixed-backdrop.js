@@ -48,7 +48,7 @@ const floor=t=>['g','=','s','b','k','h','o','t','w','d'].includes(t);
 function cell(c,room,kind,col,x,y){
  const gx=Math.round(room.col)*15+x,gy=Math.round(room.row)*15+y,X=x*32,Y=y*32,n=noise(gx,gy);
  const [d,m,l,a]=col;
- R(c,X,Y,32,32,m);
+ R(c,X,Y,32,32,['grass','garden','paving','saltflat','dryrock'].includes(kind)?mix(m,d,.28):m);
  if(kind==='canopy'){R(c,X,Y,32,32,d);}
  else if(kind==='grass'||kind==='garden'){for(let i=0;i<6;i++){const tx=X+3+noise(gx,gy,i)*26,ty=Y+4+noise(gx,gy,i+9)*24;R(c,tx,ty,1,5,d);R(c,tx+2,ty+1,1,4,a);}if(kind==='garden'&&n<.3)for(let i=0;i<4;i++)R(c,X+5+noise(gx,gy,i+3)*22,Y+5+noise(gx,gy,i+5)*22,2,2,['#f1d3dd','#f4ecb0','#ffffff','#c9b8e8'][i]);}
  else if(kind==='fields'){const band=(gy%3);R(c,X,Y,32,32,band===0?m:band===1?d:mix(m,l,.5));for(let i=0;i<4;i++)R(c,X,Y+4+i*8,32,1,band===1?mix(d,'#3f5a33',.4):mix(m,'#8a8a4c',.35));if(band===2&&n<.5)R(c,X,Y+30,32,2,l);}
@@ -76,12 +76,11 @@ export function surroundingsLayer(room){
  const kind=surroundingKind(room),col=colours(room,kind),voids=[];
  for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(room.tileAt(x,y)===' '&&!(room.skyline&&y<3&&kind!=='canopy'))voids.push([x,y]);
  for(const [x,y] of voids)cell(c,room,kind,col,x,y);
- // A soft lip where the surroundings meet the walkable land.
- for(const [x,y] of voids)for(const [dx,dy,side] of [[0,-1,'top'],[0,1,'bottom'],[-1,0,'left'],[1,0,'right']]){
-  if(!floor(room.tileAt(x+dx,y+dy)))continue;const X=x*32,Y=y*32,edge=kind==='sea'?col[2]:kind==='canopy'?null:mix(col[0],'#000000',.15);if(!edge)continue;
-  c.save();c.globalAlpha=kind==='sea'?.7:.45;if(side==='top')R(c,X,Y,32,2,edge);if(side==='bottom')R(c,X,Y+30,32,2,edge);if(side==='left')R(c,X,Y,2,32,edge);if(side==='right')R(c,X+30,Y,2,32,edge);c.restore();
-  if(kind==='grass'||kind==='garden'||kind==='fields'||kind==='marsh')for(let i=0;i<4;i++){const t=noise(x,y,i+20)*28+2;const tx=side==='left'?X+1:side==='right'?X+29:X+t,ty=side==='top'?Y+1:side==='bottom'?Y+27:Y+t;R(c,tx,ty,2,4,col[3]);}
- }
+ // 2026-11-13: where the surroundings meet walkable ground they read as an
+ // obstacle — a hedge, a fence, tall grass, a parapet, a rock ridge, surf or
+ // reeds — so a blocked cell never looks like more floor.
+ const walk=t=>['g','=','s','b','k'].includes(t);
+ for(const [x,y] of voids)for(const [dx,dy,side] of [[0,-1,'top'],[0,1,'bottom'],[-1,0,'left'],[1,0,'right']])if(walk(room.tileAt(x+dx,y+dy)))edgePiece(c,kind,col,x,y,side);
  if(kind==='canopy')crowns(c,room,col,voids);
  caches.set(key,canvas);while(caches.size>CACHE_LIMIT)caches.delete(caches.keys().next().value);
  return canvas;
@@ -131,4 +130,30 @@ function nearTexture(room,kind,col){
  const cells=[];for(let y=0;y<8;y++)for(let x=0;x<8;x++){cell(c,proxy,kind,col,x,y);cells.push([x,y]);}
  if(kind==='canopy'){c.save();c.beginPath();c.rect(0,0,256,256);c.clip();crowns(c,proxy,col,cells);for(const [dx,dy] of [[-256,0],[256,0],[0,-256],[0,256]]){c.save();c.translate(dx,dy);crowns(c,proxy,col,cells.map(a=>[...a]));c.restore();}c.restore();}
  textures.set(key,canvas);while(textures.size>16)textures.delete(textures.keys().next().value);return canvas;
+}
+// One obstacle edge on the side of a surroundings cell facing walkable ground.
+function edgePiece(c,kind,col,x,y,side){
+ const X=x*32,Y=y*32,n=i=>noise(x,y,i+30),[d,m,l,a]=col;
+ const along=(fn)=>{for(let i=0;i<4;i++){const t=4+i*8+n(i)*3;const px=side==='left'?X+5:side==='right'?X+27:X+t,py=side==='top'?Y+5:side==='bottom'?Y+27:Y+t;fn(px,py,i);}};
+ const strip=(depth,fill)=>{if(side==='top')R(c,X,Y,32,depth,fill);if(side==='bottom')R(c,X,Y+32-depth,32,depth,fill);if(side==='left')R(c,X,Y,depth,32,fill);if(side==='right')R(c,X+32-depth,Y,depth,32,fill);};
+ if(kind==='sea'){c.save();c.globalAlpha=.75;strip(3,col[2]);c.restore();along((px,py)=>E(c,px,py,3,1.6,'#ffffffaa'));return;}
+ if(kind==='canopy')return;
+ if(kind==='marsh'){along((px,py,i)=>{c.strokeStyle=i%2?'#6f8f55':'#557a46';c.lineWidth=1.5;c.beginPath();c.moveTo(px,py+5);c.lineTo(px+(i%2?1:-1),py-7);c.stroke();});return;}
+ if(kind==='garden'||kind==='grass'){
+  const hedge=kind==='garden';
+  along((px,py)=>{E(c,px+1,py+3,7,4.5,'#24382c55');E(c,px,py,hedge?7:6,hedge?6:5,hedge?'#3f6b4c':'#4b7748');E(c,px-2,py-2,hedge?4:3.5,3,hedge?'#6f9a6a':'#79a565');});return;
+ }
+ if(kind==='fields'){
+  const horizontal=side==='top'||side==='bottom',o=side==='top'?6:side==='bottom'?26:side==='left'?6:26;
+  c.fillStyle='#8a6b4a';if(horizontal){R(c,X,Y+o-3,32,2,'#a0825c');R(c,X,Y+o+1,32,2,'#8a6b4a');for(const px of [X+4,X+20])R(c,px,Y+o-6,3,11,'#7a5a3c');}
+  else{R(c,X+o-3,Y,2,32,'#a0825c');R(c,X+o+1,Y,2,32,'#8a6b4a');for(const py of [Y+4,Y+20])R(c,X+o-5,py,11,3,'#7a5a3c');}return;
+ }
+ if(kind==='paving'){
+  // A low parapet with a lit top and a cast shadow on the far side.
+  const depth=9;strip(depth+3,'#3f4a4a40');strip(depth,mix(m,'#ffffff',.12));
+  c.fillStyle=mix(d,'#000000',.1);if(side==='top'||side==='bottom'){const yy=side==='top'?Y+depth-1:Y+32-depth;R(c,X,yy,32,1,mix(d,'#000000',.2));for(const px of [X+10,X+26])R(c,px,side==='top'?Y:Y+32-depth,1,depth,mix(d,'#000000',.15));}
+  else{const xx=side==='left'?X+depth-1:X+32-depth;R(c,xx,Y,1,32,mix(d,'#000000',.2));for(const py of [Y+10,Y+26])R(c,side==='left'?X:X+32-depth,py,depth,1,mix(d,'#000000',.15));}return;
+ }
+ // Salt, dry rock, scree and snow: a ridge of weathered stones.
+ along((px,py,i)=>{const r=3.6+n(i+5)*2;E(c,px+1,py+2,r+1,r*.7,'#2a333355');E(c,px,py,r,r*.75,mix(d,a,.3));E(c,px-1,py-1,r*.5,r*.35,mix(l,'#ffffff',.2));});
 }
