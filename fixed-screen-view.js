@@ -9,7 +9,7 @@ import {featureAt} from './fixed-features.js';
 
 // Own canvas and room-local state: the original world stays intact and paused.
 export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,onTalk,onReturn,onStep,onRead,onCue,onPrepare=()=>{},onRotate=()=>{},listening=()=>false}){
- const canvas=document.createElement('canvas');canvas.id='fixedCanvas';canvas.width=canvas.height=1;canvas.hidden=true;canvas.tabIndex=0;canvas.setAttribute('aria-label','空の枝道');canvas.setAttribute('aria-busy','false');stage.append(canvas);
+ const canvas=document.createElement('canvas');canvas.id='fixedCanvas';canvas.width=canvas.height=1;canvas.hidden=true;canvas.tabIndex=0;canvas.setAttribute('aria-label','画面切替の旅');canvas.setAttribute('aria-busy','false');stage.append(canvas);
  const c=canvas.getContext('2d',{alpha:false});let screen={w:1,h:1,dpr:1},last=null,paintAt=-Infinity,enteredAt=-Infinity,contact=null,multiple=false,lastCue=null,lastQuiet=false;
  const contacts=new Set(),held=new Set(),latched=new Set(),cancelled=new Set();
  const dirs={ArrowUp:[0,-1],ArrowRight:[1,0],ArrowDown:[0,1],ArrowLeft:[-1,0],w:[0,-1],d:[1,0],s:[0,1],a:[-1,0]};
@@ -40,7 +40,7 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
   areaClock+=dt;if(areaClock<areaPieceSeconds(pieceSeconds(lastCue)))return;
   areaClock=0;const next=playlists.advance(lastArea);if(next&&next!==lastCue){lastCue=next;onRotate(next);}
  }
- const state=createFixedJourney({onRoom:r=>{enteredAt=performance.now();canvas.setAttribute('aria-label','空の枝道：'+r.name);onPlace(r);cue(r);paintAt=-Infinity;},onTalk,onReturn,
+ const state=createFixedJourney({onRoom:r=>{enteredAt=performance.now();canvas.setAttribute('aria-label','画面切替の旅：'+r.name);onPlace(r);cue(r);paintAt=-Infinity;},onTalk,onReturn,
   onStep:(d,t)=>onStep(d,t==='b'?'+':t==='s'||state.room.land==='stone'||state.room.land==='ridge'?'study-stone':state.room.land==='salt'||state.room.land==='shore'||state.room.dry?'study-silt':t==='g'?'g':'='),onTransition:()=>{held.forEach(k=>latched.add(k));cancel();if(state.transition)cue(state.transition.to);}});
  const water=createAmbienceDirector(state.rooms.flatMap(r=>{const kind=r.dry?'stone':r.quiet?'echo':r.land==='forest'?'wood':r.land==='ridge'?'wind':r.water?'drip':null;return kind?[{id:'fixed-ambient-'+r.id,kind,x:r.col*15+9,y:r.row*15+7}]:[];}));
  const layout=()=>fixedLayout(screen.w,screen.h),project=p=>{const l=layout();return {x:l.x+(p.x+.5)*32*l.scale,y:l.y+(p.y+.5)*32*l.scale};};
@@ -60,7 +60,16 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
   if(room.tileAt(p.x,p.y)==='h'){const site=[room.site,...room.props||[]].filter(Boolean).filter(s=>p.x>=s.x&&p.x<s.x+s.w&&p.y>=s.y&&p.y<s.y+s.h).sort((a,b)=>a.w-b.w)[0];if(site){inspect(site,'talk');return;}}
   const house=room.house;
   if(house&&p.x>=house.x&&p.x<house.x+house.w&&p.y>=house.y&&p.y<house.y+house.h){inspect({...house,name:house.landmark?'青い屋根の家':'窓の開いた家',lines:[house.landmark?'下から見ていた屋根の下に、洗った器が並んでいる。窓の向こうを、風が通り抜ける。':'軒下には、干したばかりの布が揺れている。']},'talk');return;}
-  state.walkTo(fixedExitTarget(room,x,y,l)||p);
+  const exit=fixedExitTarget(room,x,y,l);if(exit){state.walkTo(exit);return;}
+  if(state.walkTo(p))return;
+  // A tap on a bush, a rock, a tree, a wall or the surrounding land walks up
+  // to the nearest open ground beside it, like stepping up to an obstacle.
+  // Water stays a plain collision surface, and the outer edge cells stay
+  // inert, so a blocked edge never becomes an exit.
+  if(p.x<1||p.y<1||p.x>13||p.y>13||!['o','h','t',' '].includes(room.tileAt(p.x,p.y)))return;
+  const near=[];for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const q={x:p.x+dx,y:p.y+dy};if((dx||dy)&&room.walkable(q.x,q.y)&&!room.gateAt(q.x,q.y))near.push(q);}
+  near.sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y)||Math.hypot(a.x-hero.x,a.y-hero.y)-Math.hypot(b.x-hero.x,b.y-hero.y));
+  for(const q of near)if(state.walkTo(q))return;
  }
  function cancel(){const ids=[...contacts];contact=null;contacts.clear();multiple=false;for(const id of ids){cancelled.add(id);if(canvas.hasPointerCapture(id))canvas.releasePointerCapture(id);}while(cancelled.size>32)cancelled.delete(cancelled.values().next().value);}
  document.addEventListener('pointerdown',e=>cancelled.delete(e.pointerId),true);
@@ -71,7 +80,7 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
  window.addEventListener('blur',()=>{cancel();held.clear();latched.clear();});document.addEventListener('visibilitychange',()=>{if(document.hidden){cancel();held.clear();latched.clear();}});
  window.addEventListener('keyup',e=>{held.delete(e.key);latched.delete(e.key);});
  const view={
-  get active(){return state.active;},get areaCue(){return lastCue;},get transitioning(){return !!state.transition;},canvas,
+  get active(){return state.active;},get areaCue(){return lastCue;},get room(){return state.room;},get transitioning(){return !!state.transition;},canvas,
   enter(){cancel();held.clear();latched.clear();lastCue=null;lastQuiet=false;lastArea=null;areaClock=0;state.enter();canvas.hidden=false;document.body.classList.add('fixed-sample');const r=stage.getBoundingClientRect();view.resize({...screen,w:r.width,h:r.height});last=null;paintAt=-Infinity;canvas.focus({preventScroll:true});},
   leave(){releaseFixedArt(c);state.leave();water.update({x:0,y:0},performance.now(),false);onAmbient([],[]);cancel();held.clear();latched.clear();canvas.hidden=true;canvas.setAttribute('aria-busy','false');canvas.width=canvas.height=1;document.body.classList.remove('fixed-sample');},
   resize(value){screen={...value};cancel();if(state.active){canvas.width=Math.max(1,Math.round(screen.w*screen.dpr));canvas.height=Math.max(1,Math.round(screen.h*screen.dpr));state.finishTransition();}paintAt=-Infinity;},

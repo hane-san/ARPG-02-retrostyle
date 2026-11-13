@@ -144,6 +144,8 @@ function drawExitPlaques(c,room,scale,hero,labels){
 // world-space terrain is visible on both sides, through a stable terrain window.
 const layers=new WeakMap();
 export function releaseFixedArt(c){const layer=layers.get(c);if(layer)layer.width=layer.height=1;}
+// Whether side and lower neighbours have room to read as land (two tiles).
+export function fixedNeighbourVisibility(l,screen){const sliver=64*l.scale;return {sides:l.x>=sliver,below:screen.h-(l.y+l.height)>=sliver};}
 export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[room],transition=null,labels=null}={}){
  const l=fixedLayout(screen.w,screen.h),stride=480*l.scale;
  const u=transition?Math.min(1,transition.elapsed/transition.duration):0,p=u*u*u*(u*(u*6-15)+10);
@@ -165,7 +167,12 @@ export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[r
  // in front with the slide's own weight, so nothing pops at either end.
  const front=transition?[[transition.to,p],[room,1-p]].filter(([,a])=>a>0):[[room,1]];
  const behindOnly=r=>!transition?r.id!==room.id:r.id===room.id?p>0:r.id===transition.to.id?p<1:true;
- const visible=rooms.filter(r=>Math.abs(r.col-cx)<=1.01&&Math.abs(r.row-cy)<=1.01&&behindOnly(r));
+ // A neighbour that would show only as a thin strip beside or below the board
+ // reads as a frame, not as land: it is left out, and the land's own
+ // surroundings continue there instead (2026-11-13). Wide screens still show
+ // the side boards as continuing country.
+ const {sides,below}=fixedNeighbourVisibility(l,screen);
+ const visible=rooms.filter(r=>{const dx=r.col-cx,dy=r.row-cy;if(Math.abs(dx)>1.01||Math.abs(dy)>1.01||!behindOnly(r))return false;if(Math.abs(dx)>.5&&!sides)return false;if(dy>.5&&!below)return false;return true;});
  const veilOf=r=>mixHex('#dce6e1',FIXED_SKIES[r.sky]?.colors?.[3]||'#dce6e1',.45),veil=transition?mixHex(veilOf(room),veilOf(transition.to),p):veilOf(room);
  const clipL=Math.min(l.x-64*l.scale,0),clipR=Math.max(l.x+l.width+64*l.scale,screen.w);
  behind.save();behind.beginPath();behind.rect(clipL,l.y-150*l.scale,clipR-clipL,l.height+214*l.scale);behind.clip();
@@ -186,6 +193,18 @@ export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[r
  if(x0>-band||x1<screen.w+band){const side=behind.createLinearGradient(x0,0,x1,0),f=band/(x1-x0);side.addColorStop(0,'#0000');side.addColorStop(f,'#000');side.addColorStop(1-f,'#000');side.addColorStop(1,'#0000');behind.fillStyle=side;behind.fillRect(0,0,screen.w,screen.h);}
  behind.restore();
  c.drawImage(pair.back,0,0,screen.w,screen.h);
+ // Where a hidden neighbour's road leaves the board, the road runs on a little
+ // into the surrounding land and fades, so an exit still reads as a way on.
+ for(const [r,weight] of front){const ox=(r.col-cx)*stride,oy=(r.row-cy)*stride,t=32*l.scale;
+  for(const [d,seam] of Object.entries(r.seams||{})){if((d==='E'||d==='W')&&sides||d==='S'&&below||d==='N')continue;
+   const reach=d==='S'?screen.h-(l.y+oy+l.height):d==='W'?l.x+ox:screen.w-(l.x+ox+l.width);if(reach<=1)continue;
+   const road=seam.ground||'#d9cfb2';
+   for(const [lo,hi] of seam.bands){c.save();c.globalAlpha=weight*.85;
+    if(d==='S'){const x=l.x+ox+lo*t,y=l.y+oy+l.height,g=c.createLinearGradient(0,y,0,y+reach);g.addColorStop(0,road);g.addColorStop(1,road+'00');c.fillStyle=g;c.fillRect(x,y,(hi-lo+1)*t,reach);}
+    else{const x=d==='W'?l.x+ox-reach:l.x+ox+l.width,y=l.y+oy+lo*t,g=c.createLinearGradient(d==='W'?x+reach:x,0,d==='W'?x:x+reach,0);g.addColorStop(0,road);g.addColorStop(1,road+'00');c.fillStyle=g;c.fillRect(x,y,reach,(hi-lo+1)*t);}
+    c.restore();}
+  }
+ }
  for(const [r,weight] of front){const ox=(r.col-cx)*stride,oy=(r.row-cy)*stride;
   ground.save();ground.globalAlpha=weight;ground.beginPath();ground.rect(l.x+ox,-screen.h,l.width,screen.h+l.y+oy+l.height);ground.clip();
   const person=transition?transitionTraveller(room,transition,r,p):hero;
@@ -201,5 +220,7 @@ export function transitionTraveller(from,transition,room,p){
  const a=transition.hero,b=transition.landing,to=transition.to;
  const x=from.col*15+a.px+(to.col*15+b.x-from.col*15-a.px)*p-room.col*15;
  const y=from.row*15+a.py+(to.row*15+b.y-from.row*15-a.py)*p-room.row*15;
- return {...a,x,y,px:x,py:y,moving:false};
+ // The traveller keeps walking through the slide instead of gliding still.
+ const walked=Math.hypot(to.col*15+b.x-from.col*15-a.px,to.row*15+b.y-from.row*15-a.py)*p;
+ return {...a,x,y,px:x,py:y,moving:p>0&&p<1,stride:(a.stride||0)+walked*Math.PI/18};
 }

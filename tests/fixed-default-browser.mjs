@@ -35,9 +35,16 @@ export async function checkFixedDefault(browser,origin){
   // A glint is a quiet line of text; a signpost names real exits.
   const glint=current.features.find(f=>f.kind==='glint');assert.ok(glint,'the windmill fields keep a small discovery');
   await canvas.tap({position:point({x:glint.x,y:glint.y})});for(let i=0;i<120;i++){await p.clock.runFor(100);if(await p.locator('#dialogue').isVisible())break;}
-  assert.equal(await p.locator('#dialogueName').textContent(),'小さな発見');await p.clock.runFor(2500);assert.ok((await p.locator('#dialogueText').textContent()).length>8);
+  assert.equal(await p.locator('#dialogueName').textContent(),'小さな発見');
+  // The card points at the traveller from just above or below, on screen.
+  const card=await p.locator('#dialogue').boundingBox(),gy=point({x:glint.x,y:glint.y}).y;
+  assert.ok(card.y>=0&&card.y+card.height<=height,'card on screen');assert.ok(card.y+card.height<=gy||card.y>=gy,'card clear of the traveller: '+JSON.stringify(card)+' '+gy);
+  assert.equal(await p.locator('#dialogueRole').textContent(),current.areaName,'the speaker belongs to the area');await p.clock.runFor(2500);assert.ok((await p.locator('#dialogueText').textContent()).length>8);
   if(width===390)await p.screenshot({path:`test-results/fixed-default/${width}x${height}-glint.png`});
   await p.locator('#dialogueClose').click();
+  // Tapping a solid landform walks up beside it instead of doing nothing.
+  const solid=current.features.find(f=>['bush','boulder','cairn','stump'].includes(f.kind));
+  if(solid){const [sx,sy]=solid.cells[0];await canvas.tap({position:point({x:sx,y:sy})});await p.clock.runFor(150);assert.equal(await canvas.getAttribute('aria-busy'),'true','a blocked tap walks to open ground beside it');for(let i=0;i<80;i++){await p.clock.runFor(100);if(await canvas.getAttribute('aria-busy')==='false')break;}}
   const sign=current.features.find(f=>f.kind==='sign');
   if(sign){await canvas.tap({position:point({x:sign.cells[0][0],y:sign.cells[0][1]})});for(let i=0;i<120;i++){await p.clock.runFor(100);if(await p.locator('#dialogue').isVisible())break;}assert.equal(await p.locator('#dialogueName').textContent(),'道しるべ');await p.clock.runFor(2500);const text=await p.locator('#dialogueText').textContent();assert.ok(Object.values(current.connections).some(id=>text.includes(get(id).chartName)),'the sign names a neighbour');await p.locator('#dialogueClose').click();}
   // Help leads with the screen-switching journey and offers the connected one.
