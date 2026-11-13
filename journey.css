@@ -143,3 +143,14 @@
 .fixed-sample .dialogue::after{left:var(--tail-x,50%)}
 .fixed-sample .dialogue.journey-dialogue-above.fixed-dialogue-below::after{top:-8px;bottom:auto;transform:rotate(45deg)}
 .fixed-sample .dialogue{transition:none}
+
+/* 2026-11-13: a region title for each new music area, over the sky in
+   portrait (in short landscape it passes briefly over the board's top edge).
+   No box and no input; it rises, holds for about 2.6 s and fades. */
+.area-card{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 12%);z-index:4;display:flex;align-items:center;gap:12px;max-width:min(88vw,520px);transform:translate(-50%,6px);opacity:0;pointer-events:none;transition:opacity .9s ease,transform .9s ease;color:#fbf7ea;text-shadow:0 1px 2px #2c3d4299,0 0 14px #2c3d4255;white-space:nowrap}
+.area-card strong{font-weight:500;font-size:clamp(17px,4.6vw,24px);letter-spacing:.32em;padding-left:.32em}
+.area-card-rule{flex:0 0 auto;width:clamp(18px,7vw,44px);height:1px;background:linear-gradient(90deg,#fbf7ea00,#fbf7eacc,#fbf7ea00)}
+.area-card.shown{opacity:1;transform:translate(-50%,0)}
+.reading .area-card,.panel-open .area-card{opacity:0}
+@media(orientation:landscape) and (max-height:500px){.area-card{top:calc(env(safe-area-inset-top,0px) + 8%)}}
+@media(prefers-reduced-motion:reduce){.area-card{transition:opacity .35s linear;transform:translate(-50%,0)}}

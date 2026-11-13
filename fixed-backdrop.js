@@ -82,6 +82,8 @@ export function surroundingsLayer(room){
  const walk=t=>['g','=','s','b','k'].includes(t);
  for(const [x,y] of voids)for(const [dx,dy,side] of [[0,-1,'top'],[0,1,'bottom'],[-1,0,'left'],[1,0,'right']])if(walk(room.tileAt(x+dx,y+dy)))edgePiece(c,kind,col,x,y,side);
  if(kind==='canopy')crowns(c,room,col,voids);
+ // Deeper in a meadow or garden's thicket stand a few round trees.
+ if(kind==='grass'||kind==='garden'){const inner=voids.filter(([x,y])=>![[0,-1],[0,1],[-1,0],[1,0]].some(([dx,dy])=>walk(room.tileAt(x+dx,y+dy)))&&noise(Math.round(room.col)*15+x,Math.round(room.row)*15+y,90)<.22);crowns(c,room,[mix(col[0],'#2f5444',.35),mix(col[1],'#43705a',.3),mix(col[2],'#8fb27a',.3)],inner);}
  caches.set(key,canvas);while(caches.size>CACHE_LIMIT)caches.delete(caches.keys().next().value);
  return canvas;
 }
@@ -139,10 +141,7 @@ function edgePiece(c,kind,col,x,y,side){
  if(kind==='sea'){c.save();c.globalAlpha=.75;strip(3,col[2]);c.restore();along((px,py)=>E(c,px,py,3,1.6,'#ffffffaa'));return;}
  if(kind==='canopy')return;
  if(kind==='marsh'){along((px,py,i)=>{c.strokeStyle=i%2?'#6f8f55':'#557a46';c.lineWidth=1.5;c.beginPath();c.moveTo(px,py+5);c.lineTo(px+(i%2?1:-1),py-7);c.stroke();});return;}
- if(kind==='garden'||kind==='grass'){
-  const hedge=kind==='garden';
-  along((px,py)=>{E(c,px+1,py+3,7,4.5,'#24382c55');E(c,px,py,hedge?7:6,hedge?6:5,hedge?'#3f6b4c':'#4b7748');E(c,px-2,py-2,hedge?4:3.5,3,hedge?'#6f9a6a':'#79a565');});return;
- }
+ if(kind==='garden'||kind==='grass')return; // a wall of bushes is drawn over the ground instead (bushWall)
  if(kind==='fields'){
   const horizontal=side==='top'||side==='bottom',o=side==='top'?6:side==='bottom'?26:side==='left'?6:26;
   c.fillStyle='#8a6b4a';if(horizontal){R(c,X,Y+o-3,32,2,'#a0825c');R(c,X,Y+o+1,32,2,'#8a6b4a');for(const px of [X+4,X+20])R(c,px,Y+o-6,3,11,'#7a5a3c');}
@@ -157,3 +156,94 @@ function edgePiece(c,kind,col,x,y,side){
  // Salt, dry rock, scree and snow: a ridge of weathered stones.
  along((px,py,i)=>{const r=3.6+n(i+5)*2;E(c,px+1,py+2,r+1,r*.7,'#2a333355');E(c,px,py,r,r*.75,mix(d,a,.3));E(c,px-1,py-1,r*.5,r*.35,mix(l,'#ffffff',.2));});
 }
+
+// 2026-11-13 (producer: "as natural as Zelda"): the walkable ground belongs to
+// the same land as its surroundings. Instead of pale squares, open ground is a
+// lawn, forest floor, sand, gravel, snow, salt or flagstones of the land's own
+// colours, with soft patches that ignore the cell grid; roads are one
+// continuous path with rounded corners and a darker worn edge. Stairs, bridges,
+// water, building feet and channels keep their own art. Static and cached.
+const GROUND={
+ grass:(p,c)=>({base:mix(c[2],c[1],.3),patch:mix(c[1],c[0],.25),fleck:c[0],path:mix(p[1],'#d6bf8e',.55)}),
+ garden:(p,c)=>({base:mix(c[2],c[1],.25),patch:mix(c[1],c[0],.2),fleck:c[3],path:mix(p[1],'#e3d3aa',.5),flowers:true}),
+ fields:(p,c)=>({base:mix(c[1],'#a9c58a',.45),patch:mix(c[0],c[1],.5),fleck:c[3],path:mix(p[1],'#d2b98a',.55)}),
+ canopy:(p,c)=>({base:mix(c[2],'#8aa06a',.5),patch:mix(c[1],'#5f7f4f',.35),fleck:'#b49a6a',path:mix(p[1],'#c9b386',.6),leaves:true}),
+ marsh:(p,c)=>({base:mix(c[1],'#9cb889',.45),patch:mix(c[0],c[1],.5),fleck:c[2],path:mix(p[1],'#cdbd94',.55)}),
+ sea:(p)=>({base:mix(p[1],'#ebdfbf',.55),patch:mix(p[1],'#d9c9a2',.5),fleck:'#bba98a',path:mix(p[1],'#dccb9f',.6),sand:true}),
+ saltflat:(p,c)=>({base:mix(c[2],'#f2eee2',.35),patch:mix(c[1],'#e2dccb',.4),fleck:c[3],path:mix(c[1],'#e3d8bd',.35),cracks:true}),
+ dryrock:(p,c)=>({base:mix(c[2],c[1],.45),patch:mix(c[1],c[0],.3),fleck:c[3],path:mix(c[2],'#efdfba',.5),pebbles:true}),
+ scree:(p,c)=>({base:mix(c[2],c[1],.5),patch:mix(c[1],c[0],.3),fleck:c[3],path:mix(c[2],'#dcd8c8',.5),pebbles:true}),
+ snowscree:(p,c)=>({base:'#e7ecee',patch:'#d3dce6',fleck:c[3],path:mix(c[1],'#cfd6de',.5),snow:true}),
+ paving:(p,c)=>({base:mix(c[2],c[1],.35),patch:mix(c[1],c[0],.2),fleck:c[3],path:mix(c[2],'#e6dfcb',.4),slabs:true})
+};
+const NATURAL=new Set(['g','t','o']),PATHS=new Set(['=']),JOINS=new Set(['=','s','b']);
+const groundCaches=new Map();
+export function groundStyle(room){const kind=surroundingKind(room);return GROUND[kind](paletteOf(room),colours(room,kind));}
+export function groundLayer(room,light=null){
+ const key=room.id;if(groundCaches.has(key)){const v=groundCaches.get(key);groundCaches.delete(key);groundCaches.set(key,v);return v;}
+ if(typeof document==='undefined')return null;
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=480*RES;const c=canvas.getContext('2d');c.scale(RES,RES);
+ const kind=surroundingKind(room),g=groundStyle(room),at=(x,y)=>room.tileAt(x,y);
+ const open=(x,y)=>NATURAL.has(at(x,y))||PATHS.has(at(x,y));
+ const region=new Path2D();let any=false;
+ for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(open(x,y)){region.rect(x*32,y*32,32,32);any=true;}
+ if(!any){groundCaches.set(key,canvas);return canvas;}
+ c.save();c.clip(region);
+ R(c,0,0,480,480,g.base);
+ const gx0=Math.round(room.col)*15,gy0=Math.round(room.row)*15;
+ // Soft patches that run across cell edges, so no grid shows.
+ for(let y=-1;y<16;y++)for(let x=-1;x<16;x++){const gx=gx0+x,gy=gy0+y,n=noise(gx,gy,40);if(n>.42)continue;c.save();c.globalAlpha=.28+n*.4;E(c,x*32+noise(gx,gy,41)*32,y*32+noise(gx,gy,42)*32,14+noise(gx,gy,43)*16,9+noise(gx,gy,44)*10,g.patch);c.restore();}
+ for(let y=0;y<15;y++)for(let x=0;x<15;x++){
+  if(!NATURAL.has(at(x,y)))continue;const gx=gx0+x,gy=gy0+y,X=x*32,Y=y*32,f=i=>noise(gx,gy,i+50);
+  if(g.slabs){c.strokeStyle=mix(g.base,g.fleck,.35);c.lineWidth=1;c.beginPath();const sy=Y+10+f(1)*12,sx=X+8+f(2)*16;c.moveTo(X,sy);c.lineTo(X+32,sy+f(3)*3-1.5);c.moveTo(sx,Y);c.lineTo(sx+f(4)*2-1,sy);c.moveTo(X+4+f(5)*24,sy);c.lineTo(X+4+f(5)*24,Y+32);c.stroke();continue;}
+  if(g.sand){for(let i=0;i<3;i++)R(c,X+3+f(i)*26,Y+3+f(i+3)*26,1.5,1.5,g.fleck+'99');if(f(9)<.25){c.strokeStyle=g.patch;c.lineWidth=1;c.beginPath();c.moveTo(X+4,Y+18+f(8)*6);c.quadraticCurveTo(X+16,Y+14+f(7)*6,X+28,Y+19+f(6)*5);c.stroke();}continue;}
+  if(g.cracks){if(f(1)<.55){c.strokeStyle=g.fleck+'55';c.lineWidth=1;c.beginPath();c.moveTo(X+f(2)*10,Y+6+f(3)*20);c.lineTo(X+12+f(4)*8,Y+10+f(5)*12);c.lineTo(X+30,Y+4+f(6)*24);c.stroke();}continue;}
+  if(g.pebbles){for(let i=0;i<3;i++){const px=X+4+f(i)*24,py=Y+4+f(i+4)*24,r=1.2+f(i+8)*1.8;E(c,px,py+.8,r+.5,r*.7,g.fleck+'55');E(c,px,py,r,r*.75,mix(g.base,'#ffffff',.3));}continue;}
+  if(g.snow){if(f(1)<.45){c.save();c.globalAlpha=.5;E(c,X+16,Y+20,13,4,g.patch);c.restore();}continue;}
+  // Lawns and forest floors: small tufts, now and then a flower or a fallen leaf.
+  for(let i=0;i<4;i++){const tx=X+3+f(i)*26,ty=Y+5+f(i+4)*22;c.strokeStyle=g.fleck+'80';c.lineWidth=1;c.beginPath();c.moveTo(tx-2,ty-3);c.lineTo(tx,ty+1);c.lineTo(tx+2,ty-3);c.stroke();}
+  if(g.flowers&&f(10)<.22)for(let i=0;i<3;i++)R(c,X+6+f(i+11)*20,Y+6+f(i+14)*20,2,2,['#f4dbe2','#f6eeb6','#ffffff'][i]);
+  if(g.leaves&&f(10)<.45)for(let i=0;i<3;i++)E(c,X+5+f(i+11)*22,Y+5+f(i+14)*22,2,1.2,['#c7a46a','#a9894f','#d7b97c'][i]);
+ }
+ // Roads: one continuous path. A corner rounds where neither neighbour on
+ // that corner continues the road (stairs and bridges continue it; so does the
+ // board edge, where the road runs on into the next screen).
+ const joins=(x,y,ox,oy)=>{const nx=x+ox,ny=y+oy;if(nx<0||ny<0||nx>14||ny>14)return true;return JOINS.has(at(nx,ny));};
+ const shapes=[];for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(PATHS.has(at(x,y))){const r=11,L=joins(x,y,-1,0),Rr=joins(x,y,1,0),U=joins(x,y,0,-1),D=joins(x,y,0,1);shapes.push({x,y,radii:[!L&&!U?r:0,!Rr&&!U?r:0,!Rr&&!D?r:0,!L&&!D?r:0]});}
+ const shape=(s,grow)=>{c.beginPath();if(c.roundRect)c.roundRect(s.x*32-grow,s.y*32-grow,32+grow*2,32+grow*2,s.radii.map(v=>v?v+grow:0));else c.rect(s.x*32-grow,s.y*32-grow,32+grow*2,32+grow*2);c.fill();};
+ c.fillStyle=mix(g.path,'#5d5038',.28);for(const s of shapes)shape(s,1.6);
+ c.fillStyle=g.path;for(const s of shapes)shape(s,0);
+ for(const s of shapes){const gx=gx0+s.x,gy=gy0+s.y,f=i=>noise(gx,gy,i+70);for(let i=0;i<3;i++){const px=s.x*32+5+f(i)*22,py=s.y*32+5+f(i+3)*22;E(c,px,py,1.6+f(i+6),1,mix(g.path,'#6b5a3c',.3));E(c,px-.5,py-.5,1,.6,mix(g.path,'#ffffff',.35));}}
+ if(light?.light){c.globalAlpha=light.strength*.8;R(c,0,0,480,480,light.light);}
+ c.restore();
+ bushWall(c,room,kind);
+ groundCaches.set(key,canvas);while(groundCaches.size>CACHE_LIMIT)groundCaches.delete(groundCaches.keys().next().value);
+ return canvas;
+}
+// The thicket's edge: round bushes (meadow, garden) or tree crowns (forest)
+// in the blocked cells beside open ground, painted after the ground so they
+// may lean a little over it. The staircase of cells reads as a living edge.
+function bushWall(c,room,kind){
+ if(!['grass','garden','canopy'].includes(kind))return;
+ const col=colours(room,kind),walkable=t=>['g','=','s','b','k'].includes(t),edge=[];
+ for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(room.tileAt(x,y)===' '&&!(room.skyline&&y<3&&kind!=='canopy')&&[[0,-1],[0,1],[-1,0],[1,0]].some(([dx,dy])=>walkable(room.tileAt(x+dx,y+dy))))edge.push([x,y]);
+ if(kind==='canopy'){crowns(c,room,col,edge);return;}
+ const [d,m,l]=kind==='garden'?['#365f45','#4f7f57','#86b07a']:[mix(col[0],'#335a3c',.4),mix(col[1],'#4c7d4a',.35),mix(col[2],'#93ba79',.3)];
+ edge.sort((a,b)=>a[1]-b[1]);
+ for(const [x,y] of edge){const gx=Math.round(room.col)*15+x,gy=Math.round(room.row)*15+y;
+  for(let k=0;k<3;k++){const bx=x*32+5+k*11+noise(gx,gy,k+60)*3,by=y*32+11+noise(gx,gy,k+63)*10,r=9.5+noise(gx,gy,k+66)*3;
+   E(c,bx+1.5,by+3,r+1,r*.8,'#1f332888');E(c,bx,by,r,r*.86,d);E(c,bx-1,by-1.5,r*.8,r*.66,m);E(c,bx-2.5,by-3.5,r*.36,r*.28,l);
+   if(kind==='garden'&&noise(gx,gy,k+69)<.18)for(let i=0;i<3;i++)E(c,bx-3+i*3,by-2+(i%2)*3,1.3,1.3,['#f4dbe2','#ffffff','#f6eeb6'][i]);}
+ }
+}
+// Cliff faces where the land really drops: weathered rock with a lit lip, a
+// darker foot and a ragged lower edge, instead of flat grey blocks.
+export function drawCliffFace(c,room,x,y){
+ const col=colours(room,room.sky==='glacier'||room.sky==='violet'?'snowscree':'scree'),gx=Math.round(room.col)*15+x,gy=Math.round(room.row)*15+y,X=x*32,Y=y*32+28,f=i=>noise(gx,gy,i+80);
+ const face=c.createLinearGradient(0,Y,0,Y+42);face.addColorStop(0,mix(col[1],col[0],.25));face.addColorStop(1,mix(col[0],'#2f3a3c',.35));
+ c.fillStyle=face;c.beginPath();c.moveTo(X,Y);c.lineTo(X+32,Y);c.lineTo(X+32,Y+36+f(1)*5);c.lineTo(X+22,Y+40+f(2)*4);c.lineTo(X+11,Y+35+f(3)*6);c.lineTo(X,Y+38+f(4)*4);c.closePath();c.fill();
+ c.strokeStyle=mix(col[0],'#2a3335',.4);c.lineWidth=1;c.beginPath();for(const t of [7+f(5)*5,18+f(6)*6,27+f(7)*3]){c.moveTo(X+t,Y+5+f(8)*4);c.lineTo(X+t+f(9)*3-1.5,Y+30+f(10)*6);}c.stroke();
+ R(c,X,Y,32,3,mix(col[2],'#ffffff',.25));R(c,X,Y+3,32,2,mix(col[1],col[0],.5));
+ for(let i=0;i<2;i++)E(c,X+6+f(11+i)*20,Y+12+f(13+i)*14,2.4,1.4,mix(col[2],'#ffffff',.15));
+}
+export function drawGround(c,room,light){const layer=groundLayer(room,light);if(layer)c.drawImage(layer,0,0,480,480);}

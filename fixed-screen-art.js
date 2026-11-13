@@ -10,7 +10,7 @@ import {drawSrpgUnit} from './sprite-srpg.js';
 import {drawVillager} from './sprite-villager.js';
 import {fixedLayout,fixedExitMarker,fixedGuideLayout} from './fixed-screens.js';
 import {drawFeatureGround,featureObjects,drawPondRim} from './fixed-feature-art.js';
-import {drawSurroundings,drawPanorama} from './fixed-backdrop.js';
+import {drawSurroundings,drawPanorama,drawGround,drawCliffFace,groundStyle} from './fixed-backdrop.js';
 
 export const FIXED_SOURCE=WEST_STUDIES.find(z=>z.key==='village');
 const P=(c,p,col)=>{c.fillStyle=col;c.beginPath();p.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();};
@@ -46,7 +46,7 @@ function background(c,room,w,h,layout,time){
   g.save();g.globalAlpha*=Math.min(.9,.45+22/(d+30))*Math.min(1,away);g.translate(x,feet);g.scale(size,size);drawFixedHouse(g,{x:-2.5,y:-3,w:5,h:3,landmark:true});g.restore();
  }:null);
 }
-function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,guides=false,labels=null}={}){
+function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,guides=false,labels=null,rooms=[room]}={}){
  const {w,h}=screen,l=fixedLayout(w,h),{sx,sy,proxy,trees}=materialWorld(room),s=l.scale;
  const spanL=Math.min(-64,-l.x/s-32),spanR=Math.max(544,(w-l.x)/s+32),left=Math.max(0,Math.floor((spanL-offsetX/s)/32)),right=Math.min(14,Math.ceil((spanR-offsetX/s)/32)),top=Math.max(0,Math.floor((-128-offsetY/s)/32)),bottom=Math.min(14,Math.ceil((544-offsetY/s)/32));
  c.save();c.translate(offsetX,offsetY);
@@ -56,7 +56,7 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
  // Cliff faces remain only where a drop is natural: the fault, the ridges and
  // the northern rim's open sky. Elsewhere the land simply continues.
  const drop=(x,y)=>room.tileAt(x,y+1)==='r'||room.tileAt(x,y+1)===' '&&(room.land==='ridge'||room.skyline&&y+1<3);
- for(let y=bottom;y>=top;y--)for(let x=left;x<=right;x++)if(![' ','w','r'].includes(room.tileAt(x,y))&&drop(x,y)&&!(y===14&&room.connections.S&&room.gateAt(x,y))){R(c,x*32,y*32+28,32,42,'#7f9691');R(c,x*32,y*32+28,32,4,'#d4dac1');R(c,x*32+7,y*32+38,2,19,'#b3c3b080');}
+ for(let y=bottom;y>=top;y--)for(let x=left;x<=right;x++)if(![' ','w','r'].includes(room.tileAt(x,y))&&drop(x,y)&&!(y===14&&room.connections.S&&room.gateAt(x,y)))drawCliffFace(c,room,x,y);
  for(let yy=top;yy<=bottom;yy++)for(let xx=left;xx<=right;xx++)if(room.tileAt(xx,yy)==='r'){
   const depth=c.createLinearGradient(0,yy*32,0,yy*32+32);depth.addColorStop(0,'#405969');depth.addColorStop(1,'#7f9fa8');R(c,xx*32,yy*32,32,32,depth);R(c,xx*32+8,yy*32+14,15,1,'#bed0c355');
  }
@@ -76,11 +76,21 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
    if(t==='b')for(let j=0;j<4;j++)R(c,x*32+j*8,y*32,1,32,'#7b8e8188');
   }
  }
+ // Open ground and roads as the land itself (2026-11-13), over the older cell art.
+ drawGround(c,room,FIXED_SKIES[room.sky]);
  for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++)if(room.tileAt(x,y)==='w'||room.tileAt(x,y)==='k'){R(c,x*32+5,y*32+15+Math.sin(time/1600+x)*2,17,1,'#dbe6db88');}
  for(const f of room.features||[]){drawFeatureGround(c,room,f,time);drawPondRim(c,room,f);}
- for(const [d,seam] of Object.entries(room.seams))if(seam.ground)for(const [lo,hi]of seam.bands)for(let j=lo;j<=hi;j++)for(let k=0;k<3;k++){
-  const xx=d==='N'||d==='S'?j:d==='W'?k:14-k,yy=d==='E'||d==='W'?j:d==='N'?k:14-k;
-  if(room.walkable(xx,yy)){c.save();c.globalAlpha*=k===0?.64:k===1?.3:.1;R(c,xx*32,yy*32,32,32,seam.ground);c.restore();}
+ // Across a seam both boards fade towards the same shared ground (and the
+ // same shared road colour), smoothly over three cells, so the land runs on.
+ const mine=groundStyle(room);
+ for(const [d,seam] of Object.entries(room.seams)){
+  const nb=rooms.find(r=>r.id===room.connections[d]);if(!nb)continue;const theirs=groundStyle(nb);
+  const ramp=col=>{const x0=d==='W'?0:d==='E'?480:0,y0=d==='N'?0:d==='S'?480:0,x1=d==='W'?96:d==='E'?384:0,y1=d==='N'?96:d==='S'?384:0,g=c.createLinearGradient(x0,y0,d==='N'||d==='S'?0:x1,d==='E'||d==='W'?0:y1);g.addColorStop(0,col+'b3');g.addColorStop(1,col+'00');return g;};
+  const soft={natural:ramp(mixHex(mine.base,theirs.base,.5)),road:ramp(mixHex(mine.path,theirs.path,.5))};
+  for(const [lo,hi]of seam.bands)for(let j=lo;j<=hi;j++)for(let k=0;k<3;k++){
+   const xx=d==='N'||d==='S'?j:d==='W'?k:14-k,yy=d==='E'||d==='W'?j:d==='N'?k:14-k,t=room.tileAt(xx,yy);
+   if(t==='g'||t==='t')R(c,xx*32,yy*32,32,32,soft.natural);else if(t==='=')R(c,xx*32,yy*32,32,32,soft.road);
+  }
  }
  if(room.house?.landmark){R(c,6*32,5*32,5*32,4,'#e1dcc2');for(let i=0;i<4;i++)R(c,(6+i)*32,5*32+4,2,24,'#b7c5af');}
  if(room.returnStone){const {x,y}=room.returnStone;c.strokeStyle='#f1e6c5';c.lineWidth=3;c.beginPath();c.ellipse((x+.5)*32,(y+.5)*32,20,10,0,0,Math.PI*2);c.stroke();P(c,[[x*32+16,y*32+7],[x*32+22,y*32+16],[x*32+16,y*32+23],[x*32+10,y*32+16]],'#77a7ae');const g=fixedGuideLayout(room,s).stone,a=guides?nearAlpha(hero,x,y,labels,'stone'):0;if(a>.01){c.save();c.globalAlpha*=a;c.font=`600 ${g.font}px system-ui,sans-serif`;c.textAlign='center';c.textBaseline='middle';nameTag(c,g.x,g.y,g.w,g.h);c.fillStyle='#2f5a62';c.fillText('帰りの道標',g.x,g.y+1);c.restore();}}
@@ -93,7 +103,12 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
  for(const f of room.features||[])objects.push(...featureObjects(c,room,f,time));
  if(room.house)objects.push({y:room.house.y+room.house.h,paint:()=>{drawFixedHouse(c,room.house);if(!room.house.landmark){c.strokeStyle='#8c9e92';c.lineWidth=1;c.beginPath();c.moveTo(2*32,8*32);c.lineTo(5.5*32,8*32);c.stroke();for(let i=0;i<4;i++)R(c,(2.2+i*.7)*32,8*32,14,19,['#b8c9c3','#dfc9ab','#a7bac0'][i%3]);}}});
  if(hero)objects.push({y:hero.py+.7,paint:()=>{c.save();c.beginPath();c.rect(0,0,480,480);c.clip();c.translate(0,hero.moving&&time!==0?-Math.abs(Math.sin(hero.stride*9))*1.5:0);drawSrpgUnit(c,{x:hero.px,y:hero.py,team:'ally',acted:false,type:'sword'});R(c,hero.px*32+8,hero.py*32+13,15,3,'#b8d9dc');R(c,hero.px*32+7,hero.py*32+16,5,7,'#7dbac5');c.restore();}});
- objects.sort((a,b)=>a.y-b.y);objects.forEach(o=>o.paint());if(market)for(const d of trees.landscapeObjects){c.save();if((hero&&Math.abs(hero.px-d.x)<3&&hero.py<d.y+.5&&hero.py>d.y-5)||guidePoints.some(m=>Math.abs(m.x-d.x)<3&&m.y<d.y+.5&&m.y>d.y-7.5))c.globalAlpha*=.24;drawForestTree(c,d,'canopy');c.restore();}else drawLandscapeCanopies(c,guides?{...trees,npcs:[...trees.npcs,...guidePoints]}:trees,{left:0,right:14,top:0,bottom:14},hero||{px:-100,py:-100});
+ objects.sort((a,b)=>a.y-b.y);objects.forEach(o=>o.paint());if(market)for(const d of trees.landscapeObjects){c.save();if((hero&&Math.abs(hero.px-d.x)<3&&hero.py<d.y+.5&&hero.py>d.y-5)||guidePoints.some(m=>Math.abs(m.x-d.x)<3&&m.y<d.y+.5&&m.y>d.y-7.5))c.globalAlpha*=.24;drawForestTree(c,d,'canopy');c.restore();}else{
+  // An exit chevron thins only a crown that really covers it (2026-11-13);
+  // trees merely near an exit stay solid instead of turning to ghosts.
+  const covered=guidePoints.filter(m=>(trees.landscapeObjects||[]).some(d=>['willow','pine','cypress'].includes(d.kind)&&Math.abs(m.x-d.x)<(d.kind==='willow'?2.2:1)&&m.y<d.y+.5&&m.y>d.y-4.5));
+  drawLandscapeCanopies(c,guides&&covered.length?{...trees,npcs:[...trees.npcs,...covered]}:trees,{left:0,right:14,top:0,bottom:14},hero||{px:-100,py:-100});
+ }
  if(destination){for(const [col,lw] of [['#4f7a76cc',4],['#fff6d8',2]]){c.strokeStyle=col;c.lineWidth=lw;c.beginPath();c.ellipse((destination.x+.5)*32,(destination.y+.5)*32,11,6.5,0,0,Math.PI*2);c.stroke();}}
  // A small edge gap reads as the continuing road, without a development HUD.
  c.restore();c.restore();
@@ -166,7 +181,7 @@ export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[r
  for(const r of visible){const ox=(r.col-cx)*stride,oy=(r.row-cy)*stride;
   behind.save();behind.beginPath();behind.rect(l.x+ox,l.y+oy-150*l.scale,l.width,l.height+150*l.scale);behind.clip();
   const person=transition&&[room.id,transition.to.id].includes(r.id)?transitionTraveller(room,transition,r,p):null;
-  terrain(behind,r,person,screen,time,{offsetX:ox,offsetY:oy});
+  terrain(behind,r,person,screen,time,{offsetX:ox,offsetY:oy,rooms});
   // Neighbouring boards stay visible as continuing land under the sky's own
   // light haze, so the walkable board reads first.
   behind.globalAlpha=.2;behind.fillStyle=veil;behind.fillRect(l.x+ox,l.y+oy-150*l.scale,l.width,l.height+150*l.scale);behind.globalAlpha=1;
@@ -195,7 +210,7 @@ export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[r
  for(const [r,weight] of front){const ox=(r.col-cx)*stride,oy=(r.row-cy)*stride;
   ground.save();ground.globalAlpha=weight;ground.beginPath();ground.rect(l.x+ox,-screen.h,l.width,screen.h+l.y+oy+l.height);ground.clip();
   const person=transition?transitionTraveller(room,transition,r,p):hero;
-  terrain(ground,r,person,screen,time,{offsetX:ox,offsetY:oy,destination:r===room?destination:null,guides:r.id===room.id,labels});
+  terrain(ground,r,person,screen,time,{offsetX:ox,offsetY:oy,destination:r===room?destination:null,guides:r.id===room.id,labels,rooms});
   ground.restore();
  }
  c.drawImage(pair.front,0,0,screen.w,screen.h);

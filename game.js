@@ -90,7 +90,7 @@ const fixedTrial=PILGRIMAGE_MODE?createFixedScreenView({stage,paused:()=>!!dialo
  onCue:(cue,quiet)=>{trackSelect.value=cue;imperialQuiet=quiet;applyTrack({quick:true});},
  onRotate:cue=>{trackSelect.value=cue;applyTrack();},listening:()=>music.enabled&&music.volume>0,
  onPrepare:(cue,quiet)=>{if(quiet||!music.enabled)return;const [id,phase]=cue.split(':').map(Number);music.prepare(id,phase);},
- onPlace:r=>{$('zoneName').textContent=r.name;$('zoneSub').textContent=r.areaName;},
+ onPlace:r=>{$('zoneName').textContent=r.name;$('zoneSub').textContent=r.areaName;showAreaCard(r);},
  onTalk:(name,lines)=>openDialogue(name,fixedTrial?.room?.areaName||'旅の途中',lines),onReturn:returnFromFixed,
  onRead:()=>{if(dialogue)dialogueInput();},onStep:(d,t)=>sfx.step(d,t)}):null;
 const discovered=new Set(),visitedZones=new Set(),cache=new Map(),CHUNK=16,MAX_CHUNKS=42;
@@ -654,8 +654,18 @@ function performTrialWarp(target){
  $('trackSelect').value=pickJourneyArrivalTrack(target.id);applyTrack();zoneId='';updateZone();syncTravelState();lastPaint=-Infinity;
  trialUsed=true;$('trialHelpReturn').hidden=false;openTrialTravel(target);canvas.focus({preventScroll:true});
 }
+// 2026-11-13: entering a new music area (not every board) raises its name over
+// the sky for a moment, as a region title does, then lets the land speak.
+let areaCardShown=null,areaCardTimer=0;
+function showAreaCard(r){
+ if(!r?.area||r.area===areaCardShown)return;areaCardShown=r.area;
+ let card=$('areaCard');if(!card){card=document.createElement('div');card.id='areaCard';card.className='area-card';card.setAttribute('aria-hidden','true');card.innerHTML='<span class="area-card-rule"></span><strong></strong><span class="area-card-rule"></span>';stage.appendChild(card);}
+ card.querySelector('strong').textContent=r.areaName;card.classList.remove('shown');void card.offsetWidth;card.classList.add('shown');
+ clearTimeout(areaCardTimer);areaCardTimer=setTimeout(()=>card.classList.remove('shown'),2600);
+}
 function enterFixed(){
  if(!fixedTrial||fixedTrial.active||!world.walkable(hero.x,hero.y))return;
+ areaCardShown=null;
  fixedOrigin={world,position:{x:hero.x,y:hero.y},camera:{...camera},track:$('trackSelect').value,quiet:imperialQuiet,mapTitle:$('atlasTitle').textContent,mapText:$('mapPanel').querySelector('p.secondary').textContent};
  closeDialogue();closePanels(false);journeyView?.close();cancelCameraGesture();readingPress=null;
  Object.assign(hero,{px:hero.x,py:hero.y,path:[],arrival:null,moving:false});syncTravelState();
@@ -665,6 +675,7 @@ function enterFixed(){
 }
 function returnFromFixed(){
  if(!fixedTrial?.active||!fixedOrigin)return;
+ clearTimeout(areaCardTimer);$('areaCard')?.classList.remove('shown');
  const origin=fixedOrigin;if(world!==origin.world||!world.walkable(origin.position.x,origin.position.y))throw Error('Unsafe fixed-screen return');
  fixedTrial.leave();closeDialogue();closePanels(false);cancelCameraGesture();readingPress=null;
  Object.assign(hero,{...origin.position,px:origin.position.x,py:origin.position.y,path:[],arrival:null,moving:false,stride:0});
