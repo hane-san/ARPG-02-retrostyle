@@ -97,16 +97,15 @@ export function drawNightLights(c,room,w,h,l,time,alpha=1){
  c.restore();
 }
 // The land is graded quietly so that the sky can be the colourful part: a
-// soft grey-green wash from the distant land down, a little of the sky's own
-// haze on the far edge of the board, and the sky's light (warm at dusk) on the
+// soft grey-green wash that deepens from the distant land to the board (tall
+// silhouettes above the board keep their own tone), and the sky's light (warm at dusk) on the
 // land. The open sky above the far land is left untouched.
 export function gradeLand(g,room,w,h,l,weight=1){
  if(weight<=0)return;
- const p=FIXED_SKIES[room.sky]||CLEAR_SKY,s=l.scale,horizon=skyFloor(l),feather=18*s,near=l.y+l.height*.2;
+ const p=FIXED_SKIES[room.sky]||CLEAR_SKY,s=l.scale,horizon=skyFloor(l),feather=18*s;
  g.save();
- const wash=g.createLinearGradient(0,horizon-feather,0,horizon+feather),tone=p.stars?'#8e93a8':'#a8ad9f';wash.addColorStop(0,tone+'00');wash.addColorStop(1,tone);
- g.globalAlpha=.2*weight;R(g,0,horizon-feather,w,h-horizon+feather,wash);
- const air=g.createLinearGradient(0,l.y-150*s,0,near);air.addColorStop(0,p.colors[3]+'00');air.addColorStop(.35,p.colors[3]+'30');air.addColorStop(1,p.colors[3]+'00');g.globalAlpha=weight;R(g,0,l.y-150*s,w,near-l.y+150*s,air);
+ const top=Math.max(horizon,l.y-72*s),wash=g.createLinearGradient(0,top,0,Math.max(top+feather,l.y)),tone=p.stars?'#8e93a8':'#a8ad9f';wash.addColorStop(0,tone+'00');wash.addColorStop(1,tone);
+ g.globalAlpha=.2*weight;R(g,0,top,w,h-top,wash);
  if(dusk(p)){const warm=g.createLinearGradient(0,horizon-feather,0,h);warm.addColorStop(0,(p.light||p.colors[3])+'00');warm.addColorStop(.08,(p.light||p.colors[3])+'2a');warm.addColorStop(1,(p.light||p.colors[3])+'0a');g.globalAlpha=weight;R(g,0,horizon-feather,w,h-horizon+feather,warm);}
  // A soft frame in the sky's deepest colour, like the edge of an old screen.
  const v=g.createRadialGradient(w/2,h*.48,Math.min(w,h)*.42,w/2,h*.48,Math.hypot(w,h)*.62);v.addColorStop(0,p.colors[0]+'00');v.addColorStop(1,p.colors[0]+(p.stars?'5c':'40'));g.globalAlpha=weight;R(g,0,0,w,h,v);
