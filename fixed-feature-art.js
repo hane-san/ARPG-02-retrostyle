@@ -1,3 +1,4 @@
+import {cultureOf,drawRegionalBuilding} from './fixed-culture.js';
 import {fixedSource} from './fixed-journey-data.js';
 // Hand-drawn, 32px-board pieces for the playful landforms in fixed-features.js.
 // Ground pieces lie under everything; solid pieces join the depth-sorted
@@ -30,6 +31,7 @@ export function featureObjects(c,room,f,time){
    reeds:()=>{for(let i=0;i<6;i++){const rx=x+7+i*3.6,h=12+((i*7+s*31)%9);c.strokeStyle=i%2?'#6f8f55':'#557a46';c.lineWidth=1.5;c.beginPath();c.moveTo(rx,y+28);c.quadraticCurveTo(rx+1,y+28-h/2,rx+(i%2?2:-1),y+28-h);c.stroke();}R(c,x+12,y+9,2,5,'#8a6a45');R(c,x+21,y+11,2,5,'#8a6a45');},
    glint:()=>{const tw=time?.5+.5*Math.sin(time/420+s*9):1;R(c,x+11,y+22,1,4,'#6c9a63');R(c,x+14,y+21,1,5,'#5a8a55');R(c,x+18,y+22,1,4,'#6c9a63');c.save();c.globalAlpha*=.35+.65*tw;c.fillStyle='#fff8d8';c.beginPath();c.moveTo(x+16,y+11);c.lineTo(x+17.5,y+15.5);c.lineTo(x+22,y+17);c.lineTo(x+17.5,y+18.5);c.lineTo(x+16,y+23);c.lineTo(x+14.5,y+18.5);c.lineTo(x+10,y+17);c.lineTo(x+14.5,y+15.5);c.closePath();c.fill();c.restore();}
   }[f.kind];
+  if(f.kind==='hut'){if(cx===f.cells[0][0]&&cy===f.cells[0][1])out.push({y:cy+1.95,paint:()=>drawRegionalBuilding(c,{x,y,w:64,h:64},cultureOf(room),'hut',time)});continue;}
   if(paint)out.push({y:cy+(f.kind==='glint'?.2:.95),paint});
  }
  return out;

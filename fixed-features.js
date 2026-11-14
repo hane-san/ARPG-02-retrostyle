@@ -98,7 +98,41 @@ export function placeFixedFeatures(room,tiles,floor,names){
  // Flower beds or a ring of stones on open ground are ground detail only.
  const deco=fam==='dry'||fam==='stone'?'ring':fam==='water'?'lilies':'flowers';
  for(let i=0;i<2;i++){const c=pickCell((x,y)=>deco==='lilies'?at(x,y)==='w':at(x,y)==='g'&&!keep.has(key(x,y)));if(c)features.push({kind:deco,cells:[c],seed:rnd(),ground:true});}
+ // 7. 2026-11-14: a small regional dwelling (a tent, a cabin, a stilt hut...)
+ // where the board has no house of its own. Placed last with its own seed, so
+ // every earlier landform keeps its place; physical and checked like the rest.
+ const culture=HUT_LINES[room.land]?room.land:null,home=room.house||[room.site,...(room.props||[])].some(s=>s&&['tea','west-home','west-village','se-kitchen','se-home'].includes(s.form));
+ // A dwelling is larger than the other landforms, so it must leave the whole
+ // floor as ONE piece (every lane reaching every other), and it never covers a
+ // glint, stepping stones or flowers already laid.
+ const taken=new Set(features.flatMap(f=>f.cells.map(([x,y])=>key(x,y))));
+ const whole=()=>{let s0=null;for(let y=0;y<15&&!s0;y++)for(let x=0;x<15;x++)if(floor(tiles[y][x])){s0=[x,y];break;}if(!s0)return false;const seen=new Set([key(...s0)]),q=[s0];
+  for(let i=0;i<q.length;i++){const [x,y]=q[i];for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>14||ny>14||seen.has(key(nx,ny))||!floor(tiles[ny][nx]))continue;seen.add(key(nx,ny));q.push([nx,ny]);}}
+  for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(floor(tiles[y][x])&&!seen.has(key(x,y)))return false;return true;};
+ const wasWhole=whole();
+ if(culture&&!home&&wasWhole){const r2=random(seedOf(room.id+':hut'));if(r2()<.8)for(let attempt=0;attempt<40;attempt++){
+  const spots=[];for(let y=3;y<=10;y++)for(let x=2;x<=11;x++)if([[x,y],[x+1,y],[x,y+1],[x+1,y+1]].every(([a,b])=>open(a,b)&&!taken.has(key(a,b)))&&(floor(at(x,y+2))||floor(at(x+1,y+2))))spots.push([x,y]);
+  if(!spots.length)break;const [x,y]=spots[Math.floor(r2()*spots.length)],[name,line]=HUT_LINES[culture];
+  const cells=[[x,y],[x+1,y],[x,y+1],[x+1,y+1]],old=cells.map(([a,b])=>tiles[b][a]);cells.forEach(([a,b])=>tiles[b][a]='o');
+  const ok=whole()&&connected();cells.forEach(([a,b],i)=>tiles[b][a]=old[i]);
+  if(ok&&trySolid(cells,{kind:'hut',seed:r2(),name,lines:[line]}))break;
+  spots.length=0;
+ }}
  return features;
 }
+const HUT_LINES={
+ forest:['木組みの小屋','軒先に、干した茸と木の実の束が揺れている。'],
+ meadow:['草原の天幕','フェルトの壁に、色糸で風の模様が縫ってある。'],
+ terrace:['段畑の天幕','入口の帯に、収穫の数だけ結び目がある。'],
+ canal:['水路の家','舟着きの杭に、色の違う綱が三本。家ごとの目印らしい。'],
+ river:['川べりの家','窓辺の鉢から、川の匂いのする草が伸びている。'],
+ pond:['池のほとりの家','戸口の石に、小さな魚の絵が刻んである。'],
+ marsh:['高床の葦小屋','床下を、小さな水鳥がくぐっていった。'],
+ shore:['網の浜の小屋','干した網の間で、浮きがからりと鳴った。'],
+ salt:['日干し煉瓦の家','風の塔の下は、昼でもひんやりしている。'],
+ dry:['乾いた谷の家','戸口の壺に、朝くんだ水が残っている。'],
+ stone:['青い丸屋根の家','戸口のタイルは、一枚ずつ違う星の形。'],
+ ridge:['石積みの小屋','屋根の小旗が、峰からの風を数えている。']
+};
 // Looking at a solid sign or a walkable glint uses an ordinary approach cell.
 export function featureAt(room,x,y){return (room.features||[]).find(f=>f.lines&&f.cells.some(([a,b])=>a===x&&b===y))||null;}
