@@ -7,6 +7,9 @@ import {createAreaPlaylists,areaPieceSeconds} from './fixed-areas.js';
 import {buildTrack} from './music.js';
 import {featureAt} from './fixed-features.js';
 
+// Pale mood shared with the earlier pastel journey: a faint mint screen.
+export const PASTEL_HAZE={tint:'#d3e4da',alpha:.14};
+
 // Own canvas and room-local state: the original world stays intact and paused.
 export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,onTalk,onReturn,onStep,onRead,onCue,onPrepare=()=>{},onRotate=()=>{},listening=()=>false}){
  const canvas=document.createElement('canvas');canvas.id='fixedCanvas';canvas.width=canvas.height=1;canvas.hidden=true;canvas.tabIndex=0;canvas.setAttribute('aria-label','画面切替の旅');canvas.setAttribute('aria-busy','false');stage.append(canvas);
@@ -108,6 +111,9 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
    const since=now-enteredAt,end=state.hero.path.at(-1),gate=end&&state.room.gateAt(end.x,end.y),stone=state.hero.arrival?.kind==='return';
    const labels={arrival:reduced?(since<2600?1:0):Math.max(0,Math.min(1,1-(since-1800)/900)),target:gate?gate.direction:stone?'stone':null};
    drawFixedRoom(c,state.room,state.hero,screen,reduced?0:now,{rooms:state.rooms,transition:state.transition,destination:state.hero.path.at(-1),labels});
+   // A light mint haze keeps the earlier pale, watercolour mood over the
+   // clearer boards (2026-11-14). Paired with the soft CSS grade in journey.css.
+   c.setTransform(1,0,0,1,0,0);c.globalCompositeOperation='screen';c.globalAlpha=PASTEL_HAZE.alpha;c.fillStyle=PASTEL_HAZE.tint;c.fillRect(0,0,canvas.width,canvas.height);c.globalAlpha=1;c.globalCompositeOperation='source-over';
   },
   drawMap(mini,zoneList){
    const chart=fixedChartSize();mini.width=810;mini.height=mini.width*chart.h/chart.w;mini.style.aspectRatio=String(chart.w/chart.h);mini.style.setProperty('--atlas-aspect',chart.w/chart.h);const g=mini.getContext('2d'),s=mini.width/chart.w;g.clearRect(0,0,mini.width,mini.height);g.fillStyle='#c9dce0';g.fillRect(0,0,mini.width,mini.height);

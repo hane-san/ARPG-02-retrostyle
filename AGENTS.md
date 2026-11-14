@@ -75,6 +75,7 @@ This replaces the nonstop prototype phase of 2026-10-21 and the daily 15:00 afte
 - Real tap/path walking with source-correct collision (original solids and renderers at the same scale). Shared offset and split bands form the seams of the new terrain; every lane, physical fault, water and solid foot is preserved, and the diagonal fault is walked around its upper tip, never bridged by connectivity repair. Water, ditches, faults and solids are never used as rescue floor.
 - The original world is kept in memory: returning from the atlas restores its safe occupied cell, held camera and previous track, discarding stale routes and input.
 - Portrait-first layering: objects in front, walkable ground, natural surroundings filling non-walkable cells, neighbouring boards, then a layered regional panorama in front of the sky.
+- A soft pastel grade (CSS saturation/contrast on `#fixedCanvas` plus a faint mint screen, `PASTEL_HAZE`) keeps the earlier pale mood over the atlas only (producer chat 2026-11-14).
 - The closed court keeps its quiet state.
 - 88 boards carry seeded, physically honest playful landforms that are rejected whenever any lane, doorstep or person would be cut off. No items, quests, scores or saved progress.
 
