@@ -1,4 +1,4 @@
-import {drawFixedSky,FIXED_SKIES} from './fixed-sky.js';
+import {drawFixedSky,FIXED_SKIES,drawSkyAir,drawNightLights,gradeLand,CLEAR_SKY,skyFloor} from './fixed-sky.js';
 import {journeyMaterial,journeyTile,journeySite,journeyBackground} from './fixed-journey-art.js';
 import {drawForestTree} from './forest-market-art.js';
 import {WEST_STUDIES} from './western-world.js';
@@ -41,7 +41,7 @@ function background(c,room,w,h,layout,time){
  const authored=drawFixedSky(c,room,w,h,layout,time);
  if(!authored){R(c,0,0,w,h,'#a6cad2');
  const zoom=s*.9,camera={x:(source.cx+.5)*32+(room.col-1)*85,y:g.horizon-(horizon-h/2)/zoom,zoom};
- c.save();c.translate(w/2,h/2);c.scale(zoom,zoom);c.translate(-camera.x,-camera.y);drawLandscapeSky(c,source,camera,{w,h},0,time);c.restore();}
+ c.save();c.translate(w/2,h/2);c.scale(zoom,zoom);c.translate(-camera.x,-camera.y);drawLandscapeSky(c,source,camera,{w,h},0,time);c.restore();drawSkyAir(c,CLEAR_SKY,w,skyFloor(layout),s,time,room.col,room.row);}
  // The blue roof seen from the hamlet keeps its bearing on the far land,
  // standing behind the middle land like the other distant houses.
  const away=Math.hypot(room.col-2,room.row);
@@ -176,12 +176,13 @@ export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[r
  const u=transition?Math.min(1,transition.elapsed/transition.duration):0,p=u*u*u*(u*(u*6-15)+10);
  const cx=room.col+(transition?transition.to.col-room.col:0)*p,cy=room.row+(transition?transition.to.row-room.row:0)*p;
  background(c,{...room,col:cx,row:cy},screen.w,screen.h,l,time);
+ drawNightLights(c,{...room,col:cx,row:cy},screen.w,screen.h,l,time);
  const dpr=screen.dpr||1,sized=layer=>{if(layer.width!==Math.round(screen.w*dpr)||layer.height!==Math.round(screen.h*dpr)){layer.width=Math.round(screen.w*dpr);layer.height=Math.round(screen.h*dpr);}const g=layer.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return g;};
  let pair=layers.get(c);if(!pair){const front=document.createElement('canvas');front.id='fixedTerrainCanvas';const back=document.createElement('canvas');back.id='fixedNeighbourCanvas';pair={front,back};layers.set(c,pair);}
  const ground=sized(pair.front),behind=sized(pair.back);
  // Sky renderers own their cloud alpha. Fade the completed sky, using the
  // terrain buffer before clearing it, so no cloud can bypass the transition.
- if(transition){background(ground,{...transition.to,col:cx,row:cy},screen.w,screen.h,l,time);c.save();c.globalAlpha=p;c.drawImage(pair.front,0,0,screen.w,screen.h);c.restore();}
+ if(transition){background(ground,{...transition.to,col:cx,row:cy},screen.w,screen.h,l,time);drawNightLights(ground,{...transition.to,col:cx,row:cy},screen.w,screen.h,l,time);c.save();c.globalAlpha=p;c.drawImage(pair.front,0,0,screen.w,screen.h);c.restore();}
  ground.clearRect(0,0,screen.w,screen.h);behind.clearRect(0,0,screen.w,screen.h);
  // 2026-11-13: the walkable board(s) are drawn in front of the neighbours and
  // are never dissolved by the neighbours' fog, so a tall tower, windmill or
@@ -237,6 +238,7 @@ export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[r
   ground.restore();
  }
  c.drawImage(pair.front,0,0,screen.w,screen.h);
+ if(transition){gradeLand(c,room,screen.w,screen.h,l,1-p);gradeLand(c,transition.to,screen.w,screen.h,l,p);}else gradeLand(c,room,screen.w,screen.h,l);
 }
 const mixHex=(a,b,t)=>'#'+[1,3,5].map(i=>Math.round(parseInt(a.slice(i,i+2),16)*(1-t)+parseInt(b.slice(i,i+2),16)*t).toString(16).padStart(2,'0')).join('');
 

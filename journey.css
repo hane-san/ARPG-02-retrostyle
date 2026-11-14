@@ -107,7 +107,7 @@
 .journey-mode .dialogue:has(.trial-actions:not([hidden])){max-height:min(62dvh,300px)}
 .trial-actions:not([hidden]){flex-wrap:wrap}
 .trial-actions #fixedEnter{flex-basis:100%}
-#fixedCanvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;z-index:1;filter:saturate(.74) contrast(.9) brightness(1.02)}
+#fixedCanvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;z-index:1}
 #fixedCanvas[hidden],#fixedReturn[hidden],.fixed-help[hidden]{display:none}
 .fixed-sample #worldCanvas{visibility:hidden}
 .fixed-sample #vistaBtn{display:none}

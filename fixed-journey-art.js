@@ -1,4 +1,4 @@
-import {drawFixedSky,FIXED_SKIES} from './fixed-sky.js';
+import {drawFixedSky,FIXED_SKIES,drawSkyAir,CLEAR_SKY,skyFloor} from './fixed-sky.js';
 import {WEST_STUDIES} from './western-world.js';
 import {fixedSource} from './fixed-journey-data.js';
 import {drawPilgrimTile,drawPilgrimSite} from './pilgrimage-art.js';
@@ -44,7 +44,7 @@ export function journeyBackground(c,room,w,h,l,time){
  const authored=!!room.sky;
  if(authored)drawFixedSky(c,room,w,h,l,time);else{colors.forEach((col,i)=>grad.addColorStop(i/(colors.length-1),col));R(c,0,0,w,h,grad);
  const zoom=l.scale*.9,g=skyGeometry(profile),camera={x:(profile.cx+.5)*32+(room.col-5)*35,y:g.horizon-(horizon-h/2)/zoom,zoom};
- c.save();if(!z||!skyGeometry(z))c.globalAlpha*=.45;c.translate(w/2,h/2);c.scale(zoom,zoom);c.translate(-camera.x,-camera.y);drawLandscapeSky(c,profile,camera,{w,h},0,time);c.restore();}
+ c.save();if(!z||!skyGeometry(z))c.globalAlpha*=.45;c.translate(w/2,h/2);c.scale(zoom,zoom);c.translate(-camera.x,-camera.y);drawLandscapeSky(c,profile,camera,{w,h},0,time);c.restore();drawSkyAir(c,{...CLEAR_SKY,colors:[colors[0],colors[0],colors[1],colors.at(-1),colors.at(-1)]},w,skyFloor(l),l.scale,time,room.col,room.row);}
  // The region beyond the boards: far, middle and near land in front of the sky.
  // The imperial wall is seen over the plain and through the mountain saddle,
  // then becomes the actual solid gate in capital-gate. Repeat its human doors;
