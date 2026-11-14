@@ -3,7 +3,7 @@ import {WEST_STUDIES} from './western-world.js';
 import {fixedSource} from './fixed-journey-data.js';
 import {drawPilgrimTile,drawPilgrimSite} from './pilgrimage-art.js';
 import {drawLandscapeSky,skyGeometry,skyPalette} from './landscape-sky.js';
-import {drawPanorama} from './fixed-backdrop.js';
+import {drawPanorama,mix} from './fixed-backdrop.js';
 const R=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h);};
 const P=(c,p,col)=>{c.fillStyle=col;c.beginPath();p.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();};
 const cache=new WeakMap();
@@ -13,7 +13,10 @@ export function journeyMaterial(room){
  const tag=t=>z.southeast?({s:'se-stair',b:room.land==='shore'?'se-stonebridge':'se-boardwalk',w:'L',k:'L','#':'se-wall','=':'='}[t]||'se-ground'):z.western?({s:'west-stair',b:'west-bridge',w:'L',k:'L','#':'west-wall','=':'='}[t]||'west-ground'):({s:'=',b:'+',w:'L',k:'L','#':'X','=':'='}[t]||'.');
  const proxy={tileAt:(x,y)=>tag(room.tileAt(x-sx,y-sy)),walkable:(x,y)=>room.walkable(x-sx,y-sy),zoneAt:()=>z};
  const kind=room.sourceIndex===17?'pine':room.sourceIndex===27?'cypress':room.land==='forest'?'willow':room.land==='marsh'?'willow':room.land==='shore'?'rock':'cypress';
- const landscapeObjects=room.trees.map(([x,y],i)=>({x,y,kind,seed:.2+i*.1,solid:true,palette:z.palette}));
+ // 2026-11-14: trees on the boards are leafy greens (still tinted by the land),
+ // not the pale blue-grey of the distant pilgrimage palette.
+ const leafy=[mix(z.palette[0],kind==='pine'?'#557e5c':'#6f9a63',.7),mix(z.palette[1],'#c2d9a0',.6),z.palette[2],mix(z.palette[3],kind==='pine'?'#2f5040':'#3f6a4a',.72)];
+ const landscapeObjects=room.trees.map(([x,y],i)=>({x,y,kind,seed:.2+i*.1,solid:true,palette:kind==='rock'?z.palette:leafy}));
  if(['meadow','terrace','marsh','shore'].includes(room.land))for(let y=3;y<13;y+=3)for(let x=2;x<13;x+=4)if(room.tileAt(x,y)==='g')landscapeObjects.push({x,y,kind:room.land==='marsh'?'reed':'flower',seed:(x+y)%7/7,solid:false,palette:z.palette});
  const trees={landscapeObjects,npcs:room.npcs};
  const data={sx,sy,proxy,trees,tag,z};cache.set(room,data);return data;

@@ -174,9 +174,11 @@ const GROUND={
  dryrock:(p,c)=>({base:mix(c[2],c[1],.45),patch:mix(c[1],c[0],.3),fleck:c[3],path:mix(c[2],'#efdfba',.5),pebbles:true}),
  scree:(p,c)=>({base:mix(c[2],c[1],.5),patch:mix(c[1],c[0],.3),fleck:c[3],path:mix(c[2],'#dcd8c8',.5),pebbles:true}),
  snowscree:(p,c)=>({base:'#e7ecee',patch:'#d3dce6',fleck:c[3],path:mix(c[1],'#cfd6de',.5),snow:true}),
- paving:(p,c)=>({base:mix(c[2],c[1],.35),patch:mix(c[1],c[0],.2),fleck:c[3],path:mix(c[2],'#e6dfcb',.4),slabs:true})
+ paving:(p,c)=>({base:mix(c[2],c[1],.55),patch:mix(c[1],c[0],.32),fleck:c[3],path:mix(c[2],'#e9dfc4',.45),slabs:true})
 };
-const NATURAL=new Set(['g','t','o']),PATHS=new Set(['=']),JOINS=new Set(['=','s','b']);
+// A building's foot ('h') stands on the same ground, so no pale slab shows
+// around a drawing that covers less than its footprint.
+const NATURAL=new Set(['g','t','o','h']),PATHS=new Set(['=']),JOINS=new Set(['=','s','b']);
 const groundCaches=new Map();
 export function groundStyle(room){const kind=surroundingKind(room);return GROUND[kind](paletteOf(room),colours(room,kind));}
 export function groundLayer(room,light=null){
@@ -185,8 +187,24 @@ export function groundLayer(room,light=null){
  const canvas=document.createElement('canvas');canvas.width=canvas.height=480*RES;const c=canvas.getContext('2d');c.scale(RES,RES);
  const kind=surroundingKind(room),g=groundStyle(room),at=(x,y)=>room.tileAt(x,y);
  const open=(x,y)=>NATURAL.has(at(x,y))||PATHS.has(at(x,y));
- const region=new Path2D();let any=false;
- for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(open(x,y)){region.rect(x*32,y*32,32,32);any=true;}
+ // The land's outline: a corner of open ground rounds off where both of its
+ // neighbours on that corner are water or blocked land, so coasts and edges
+ // curve instead of stepping (2026-11-14).
+ const soft=(x,y)=>{if(x<0||y<0||x>14||y>14)return false;const t=at(x,y);return t===' '||t==='w'||t==='r';};
+ const region=new Path2D(),water=new Path2D(),wet=new Path2D();let any=false,anyWater=false;
+ for(let y=0;y<15;y++)for(let x=0;x<15;x++){
+  if(open(x,y)){const r=12,L=soft(x-1,y),Rr=soft(x+1,y),U=soft(x,y-1),D=soft(x,y+1),radii=[L&&U&&soft(x-1,y-1)?r:0,Rr&&U&&soft(x+1,y-1)?r:0,Rr&&D&&soft(x+1,y+1)?r:0,L&&D&&soft(x-1,y+1)?r:0];
+   if(region.roundRect&&radii.some(Boolean))region.roundRect(x*32,y*32,32,32,radii);else region.rect(x*32,y*32,32,32);any=true;}
+  const t=at(x,y);if(t==='w'||t==='k'||(t===' '&&(kind==='sea'||kind==='marsh'))){water.rect(x*32,y*32,32,32);wet.rect(x*32-5,y*32-5,42,42);anyWater=true;}
+ }
+ // Water inside the board shares the sea's (or the river's) colour, with a
+ // lighter shallow band and ripples, instead of pale tiles of its own.
+ const pal=paletteOf(room),deep=kind==='sea'?colours(room,'sea')[0]:mix(pal[2],'#5f9db4',.5),shallow=mix(deep,'#d9eee6',.38);
+ if(anyWater){c.save();c.clip(water);
+  for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(['w','k'].includes(at(x,y)))R(c,x*32,y*32,32,32,deep);
+  if(any){c.strokeStyle=shallow;c.globalAlpha=.55;c.lineWidth=18;c.stroke(region);c.globalAlpha=1;}
+  for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(at(x,y)==='w'){const gx=Math.round(room.col)*15+x,gy=Math.round(room.row)*15+y;for(let i=0;i<2;i++){const wy=y*32+9+i*13+noise(gx,gy,i+90)*5;R(c,x*32+4+noise(gx,gy,i+92)*12,wy,9+noise(gx,gy,i+94)*9,1,mix(shallow,'#ffffff',.4)+'aa');}}
+  c.restore();}
  if(!any){groundCaches.set(key,canvas);return canvas;}
  c.save();c.clip(region);
  R(c,0,0,480,480,g.base);
@@ -195,7 +213,7 @@ export function groundLayer(room,light=null){
  for(let y=-1;y<16;y++)for(let x=-1;x<16;x++){const gx=gx0+x,gy=gy0+y,n=noise(gx,gy,40);if(n>.42)continue;c.save();c.globalAlpha=.28+n*.4;E(c,x*32+noise(gx,gy,41)*32,y*32+noise(gx,gy,42)*32,14+noise(gx,gy,43)*16,9+noise(gx,gy,44)*10,g.patch);c.restore();}
  for(let y=0;y<15;y++)for(let x=0;x<15;x++){
   if(!NATURAL.has(at(x,y)))continue;const gx=gx0+x,gy=gy0+y,X=x*32,Y=y*32,f=i=>noise(gx,gy,i+50);
-  if(g.slabs){c.strokeStyle=mix(g.base,g.fleck,.35);c.lineWidth=1;c.beginPath();const sy=Y+10+f(1)*12,sx=X+8+f(2)*16;c.moveTo(X,sy);c.lineTo(X+32,sy+f(3)*3-1.5);c.moveTo(sx,Y);c.lineTo(sx+f(4)*2-1,sy);c.moveTo(X+4+f(5)*24,sy);c.lineTo(X+4+f(5)*24,Y+32);c.stroke();continue;}
+  if(g.slabs){c.strokeStyle=mix(g.base,g.fleck,.5);c.lineWidth=1;c.beginPath();const sy=Y+10+f(1)*12,sx=X+8+f(2)*16;c.moveTo(X,sy);c.lineTo(X+32,sy+f(3)*3-1.5);c.moveTo(sx,Y);c.lineTo(sx+f(4)*2-1,sy);c.moveTo(X+4+f(5)*24,sy);c.lineTo(X+4+f(5)*24,Y+32);c.stroke();continue;}
   if(g.sand){for(let i=0;i<3;i++)R(c,X+3+f(i)*26,Y+3+f(i+3)*26,1.5,1.5,g.fleck+'99');if(f(9)<.25){c.strokeStyle=g.patch;c.lineWidth=1;c.beginPath();c.moveTo(X+4,Y+18+f(8)*6);c.quadraticCurveTo(X+16,Y+14+f(7)*6,X+28,Y+19+f(6)*5);c.stroke();}continue;}
   if(g.cracks){if(f(1)<.55){c.strokeStyle=g.fleck+'55';c.lineWidth=1;c.beginPath();c.moveTo(X+f(2)*10,Y+6+f(3)*20);c.lineTo(X+12+f(4)*8,Y+10+f(5)*12);c.lineTo(X+30,Y+4+f(6)*24);c.stroke();}continue;}
   if(g.pebbles){for(let i=0;i<3;i++){const px=X+4+f(i)*24,py=Y+4+f(i+4)*24,r=1.2+f(i+8)*1.8;E(c,px,py+.8,r+.5,r*.7,g.fleck+'55');E(c,px,py,r,r*.75,mix(g.base,'#ffffff',.3));}continue;}
@@ -215,7 +233,11 @@ export function groundLayer(room,light=null){
  c.fillStyle=g.path;for(const s of shapes)shape(s,0);
  for(const s of shapes){const gx=gx0+s.x,gy=gy0+s.y,f=i=>noise(gx,gy,i+70);for(let i=0;i<3;i++){const px=s.x*32+5+f(i)*22,py=s.y*32+5+f(i+3)*22;E(c,px,py,1.6+f(i+6),1,mix(g.path,'#6b5a3c',.3));E(c,px-.5,py-.5,1,.6,mix(g.path,'#ffffff',.35));}}
  if(light?.light){c.globalAlpha=light.strength*.8;R(c,0,0,480,480,light.light);}
+ // Wet ground along the water's edge.
+ if(anyWater){c.save();c.clip(wet);c.globalAlpha=1;c.strokeStyle=kind==='sea'||g.sand?'rgba(120,98,64,.22)':'rgba(40,70,60,.18)';c.lineWidth=9;c.stroke(region);c.restore();}
  c.restore();
+ // Foam: a bright line just off the shore, broken now and then.
+ if(anyWater&&any){c.save();c.clip(water);c.setLineDash([22,5,9,6]);c.lineCap='round';c.strokeStyle='rgba(255,255,255,.62)';c.lineWidth=3.2;c.stroke(region);c.setLineDash([]);c.strokeStyle='rgba(255,255,255,.16)';c.lineWidth=9;c.stroke(region);c.restore();}
  bushWall(c,room,kind);
  groundCaches.set(key,canvas);while(groundCaches.size>CACHE_LIMIT)groundCaches.delete(groundCaches.keys().next().value);
  return canvas;
@@ -241,9 +263,12 @@ function bushWall(c,room,kind){
 export function drawCliffFace(c,room,x,y){
  const col=colours(room,room.sky==='glacier'||room.sky==='violet'?'snowscree':'scree'),gx=Math.round(room.col)*15+x,gy=Math.round(room.row)*15+y,X=x*32,Y=y*32+28,f=i=>noise(gx,gy,i+80);
  const face=c.createLinearGradient(0,Y,0,Y+42);face.addColorStop(0,mix(col[1],col[0],.25));face.addColorStop(1,mix(col[0],'#2f3a3c',.35));
- c.fillStyle=face;c.beginPath();c.moveTo(X,Y);c.lineTo(X+32,Y);c.lineTo(X+32,Y+36+f(1)*5);c.lineTo(X+22,Y+40+f(2)*4);c.lineTo(X+11,Y+35+f(3)*6);c.lineTo(X,Y+38+f(4)*4);c.closePath();c.fill();
+ // Where the ground above rounds its corner, the face turns the same corner.
+ const soft=(a,b)=>{if(a<0||b<0||a>14||b>14)return false;const t=room.tileAt(a,b);return t===' '||t==='w'||t==='r';};
+ const rl=soft(x-1,y)&&soft(x-1,y+1)?9:0,rr=soft(x+1,y)&&soft(x+1,y+1)?9:0;
+ c.fillStyle=face;c.beginPath();c.moveTo(X+rl,Y-(rl?4:0));c.lineTo(X+32-rr,Y-(rr?4:0));if(rr)c.quadraticCurveTo(X+32,Y,X+31,Y+12);c.lineTo(X+32-rr*.4,Y+36+f(1)*5);c.lineTo(X+22,Y+40+f(2)*4);c.lineTo(X+11,Y+35+f(3)*6);c.lineTo(X+rl*.4,Y+38+f(4)*4);if(rl){c.lineTo(X+1,Y+12);c.quadraticCurveTo(X,Y,X+rl,Y-4);}c.closePath();c.fill();
  c.strokeStyle=mix(col[0],'#2a3335',.4);c.lineWidth=1;c.beginPath();for(const t of [7+f(5)*5,18+f(6)*6,27+f(7)*3]){c.moveTo(X+t,Y+5+f(8)*4);c.lineTo(X+t+f(9)*3-1.5,Y+30+f(10)*6);}c.stroke();
- R(c,X,Y,32,3,mix(col[2],'#ffffff',.25));R(c,X,Y+3,32,2,mix(col[1],col[0],.5));
+ R(c,X+rl,Y,32-rl-rr,3,mix(col[2],'#ffffff',.25));R(c,X+rl*.5,Y+3,32-(rl+rr)*.5,2,mix(col[1],col[0],.5));
  for(let i=0;i<2;i++)E(c,X+6+f(11+i)*20,Y+12+f(13+i)*14,2.4,1.4,mix(col[2],'#ffffff',.15));
 }
 export function drawGround(c,room,light){const layer=groundLayer(room,light);if(layer)c.drawImage(layer,0,0,480,480);}

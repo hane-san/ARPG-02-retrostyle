@@ -10,13 +10,14 @@ import {drawSrpgUnit} from './sprite-srpg.js';
 import {drawVillager} from './sprite-villager.js';
 import {fixedLayout,fixedExitMarker,fixedGuideLayout} from './fixed-screens.js';
 import {drawFeatureGround,featureObjects,drawPondRim} from './fixed-feature-art.js';
+import {drawFinished} from './fixed-sprite-finish.js';
 import {drawSurroundings,drawPanorama,drawGround,drawCliffFace,groundStyle} from './fixed-backdrop.js';
 
 export const FIXED_SOURCE=WEST_STUDIES.find(z=>z.key==='village');
 const P=(c,p,col)=>{c.fillStyle=col;c.beginPath();p.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();};
 const R=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h);};
 const tag=t=>({g:'west-ground','=':'=',s:'west-stair',b:'west-bridge',w:'L',t:'west-ground',h:'west-ground','#':'west-wall'}[t]||'west-sky');
-const renderData=new WeakMap();
+const renderData=new WeakMap(),featureKeys=new WeakMap();
 const mix=(a,b,t)=>{const c=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16));return '#'+c(a).map((v,i)=>Math.round(v+(c(b)[i]-v)*Math.max(0,Math.min(1,t))).toString(16).padStart(2,'0')).join('');};
 export function fixedClimate(x,y){const east=Math.max(0,Math.min(1,x/45)),south=Math.max(0,Math.min(1,y/45));return {ground:mix(mix('#b8bdad','#a5c4b7',east),mix('#c4c8a7','#b0c8b0',east),south),road:mix('#d4d1ba','#ede0b9',south),sky:mix('#9fc4d4','#c0d7cf',south),stone:mix('#a3b4b4','#d1cbb4',south)};}
 function materialWorld(room){
@@ -24,7 +25,8 @@ function materialWorld(room){
  if(renderData.has(room))return renderData.get(room);
  const sx=130+room.col*30,sy=382+room.row*14;
  const proxy={tileAt:(x,y)=>tag(room.tileAt(x-sx,y-sy)),walkable:(x,y)=>room.walkable(x-sx,y-sy),zoneAt:()=>FIXED_SOURCE};
- const trees={landscapeObjects:room.trees.map(([x,y],i)=>({x,y,kind:'cypress',seed:.2+i*.1,solid:true,palette:FIXED_SOURCE.palette})),npcs:room.npcs};
+ const p=FIXED_SOURCE.palette,leafy=[mixHex(p[0],'#6f9a63',.7),mixHex(p[1],'#c2d9a0',.6),p[2],mixHex(p[3],'#3f6a4a',.72)];
+ const trees={landscapeObjects:room.trees.map(([x,y],i)=>({x,y,kind:'cypress',seed:.2+i*.1,solid:true,palette:leafy})),npcs:room.npcs};
  const data={sx,sy,proxy,trees};renderData.set(room,data);return data;
 }
 export function drawFixedHouse(c,house){
@@ -98,10 +100,16 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
  if(guides)drawExitStones(c,room,l.scale,hero,labels);
  const market=room.sourceIndex===1;
  if(market)for(const d of trees.landscapeObjects)drawForestTree(c,d,'trunk');else drawLandscapeFeet(c,trees,{left:0,right:14,top:0,bottom:14});
- const objects=room.npcs.map(n=>({y:n.y+.5,paint:()=>drawVillager(c,n.x*32,n.y*32,n.color)}));
- for(const site of [room.site,...room.props||[]].filter(Boolean))objects.push({y:site.y+site.h,paint:()=>journeySite(c,site,time)});
- for(const f of room.features||[])objects.push(...featureObjects(c,room,f,time));
- if(room.house)objects.push({y:room.house.y+room.house.h,paint:()=>{drawFixedHouse(c,room.house);if(!room.house.landmark){c.strokeStyle='#8c9e92';c.lineWidth=1;c.beginPath();c.moveTo(2*32,8*32);c.lineTo(5.5*32,8*32);c.stroke();for(let i=0;i<4;i++)R(c,(2.2+i*.7)*32,8*32,14,19,['#b8c9c3','#dfc9ab','#a7bac0'][i%3]);}}});
+ // Villagers share the contour, so people read clearly against any ground.
+ const objects=room.npcs.map(n=>({y:n.y+.5,paint:()=>drawFinished(c,n,{x:n.x*32,y:n.y*32,w:32,h:32},g=>drawVillager(g,n.x*32,n.y*32,n.color),time,{shadow:false})}));
+ // Buildings and equipment get a shadow, a contour and light (2026-11-14).
+ for(const site of [room.site,...room.props||[]].filter(Boolean))objects.push({y:site.y+site.h,paint:()=>drawFinished(c,site,{x:site.x*32,y:site.y*32,w:site.w*32,h:site.h*32},(g,t)=>journeySite(g,site,t),time,{texture:['west-home','se-home','west-village'].includes(site.form)?'boards':null})});
+ // Solid landforms share the contour too; a glint and reeds stay soft.
+ for(const f of room.features||[]){
+  const parts=featureObjects(c,room,f,time),solid=['bush','boulder','cairn','stump','sign'].includes(f.kind),keys=featureKeys.get(f)||featureKeys.set(f,f.cells.map(()=>({}))).get(f);
+  parts.forEach((o,i)=>{const [cx,cy]=f.cells[i];objects.push(solid?{y:o.y,paint:()=>drawFinished(c,keys[i],{x:cx*32,y:cy*32,w:32,h:32},g=>featureObjects(g,room,f,time)[i].paint(),time,{shadow:false})}:o);});
+ }
+ if(room.house)objects.push({y:room.house.y+room.house.h,paint:()=>{drawFinished(c,room.house,{x:room.house.x*32,y:room.house.y*32,w:room.house.w*32,h:room.house.h*32},g=>drawFixedHouse(g,room.house),time,{texture:room.house.landmark?null:'boards'});if(!room.house.landmark){c.strokeStyle='#8c9e92';c.lineWidth=1;c.beginPath();c.moveTo(2*32,8*32);c.lineTo(5.5*32,8*32);c.stroke();for(let i=0;i<4;i++)R(c,(2.2+i*.7)*32,8*32,14,19,['#b8c9c3','#dfc9ab','#a7bac0'][i%3]);}}});
  if(hero)objects.push({y:hero.py+.7,paint:()=>{c.save();c.beginPath();c.rect(0,0,480,480);c.clip();c.translate(0,hero.moving&&time!==0?-Math.abs(Math.sin(hero.stride*9))*1.5:0);drawSrpgUnit(c,{x:hero.px,y:hero.py,team:'ally',acted:false,type:'sword'});R(c,hero.px*32+8,hero.py*32+13,15,3,'#b8d9dc');R(c,hero.px*32+7,hero.py*32+16,5,7,'#7dbac5');c.restore();}});
  objects.sort((a,b)=>a.y-b.y);objects.forEach(o=>o.paint());if(market)for(const d of trees.landscapeObjects){c.save();if((hero&&Math.abs(hero.px-d.x)<3&&hero.py<d.y+.5&&hero.py>d.y-5)||guidePoints.some(m=>Math.abs(m.x-d.x)<3&&m.y<d.y+.5&&m.y>d.y-7.5))c.globalAlpha*=.24;drawForestTree(c,d,'canopy');c.restore();}else{
   // An exit chevron thins only a crown that really covers it (2026-11-13);
