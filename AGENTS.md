@@ -9,27 +9,23 @@ Entry documents: [DEVELOPMENT](docs/DEVELOPMENT.md), [DESIGN](docs/DESIGN.md), [
 
 ## 2. Current phase and development contract
 
-### Nonstop prototype phase (human instruction 2026-10-21)
+### Autopilot phase (human instruction 2026-11-14)
 
-The human producer wants ideas thrown in at lunch to be playable on GitHub Pages by the evening. Until the human declares a stabilization phase, this section overrides the merge-approval wording elsewhere in this file, in `CLAUDE.md` and in `docs/DEVELOPMENT.md`.
+This replaces the nonstop prototype phase of 2026-10-21 and the daily 15:00 afternoon run. Until the human declares a stabilization phase, this section overrides the merge wording elsewhere in this file, in `CLAUDE.md`, in `docs/DEVELOPMENT.md` and in the steward skill. How the parts work: [docs/AUTOPILOT.md](docs/AUTOPILOT.md).
 
-- **Daily afternoon run**: every day at about 15:00 JST a Claude Code run audits, fixes, implements and **merges** work in `hane-san/ARPG-02-retrostyle` and `hane-san/SRPG-01-FEstyle`. Procedure: `.claude/skills/steward/SKILL.md` (section 「毎日15時の昼ラン」).
-- **Adopted work** = open Issues and PRs created by the owner account (including GPT/Codex acting for the owner), unless the title starts with 「提案」, the body says 未採用/保留/マージ保留, or it carries a `hold`/`proposal` label. Proposals are never implemented on their own initiative.
-- **Merge gate** (all required, checked on the exact head SHA): `rules` and `browser` Actions succeed (`browser` is the aggregate of all five browser groups); no conflict with latest `main`; the run's own audit has no BLOCK; no `hold` label. Merge with a normal merge commit through the PR, then confirm the `main` Actions, the Pages build and public boot. If `main` or Pages breaks, open and merge a revert PR in the same run.
-- Human approval, independent audit and iPhone playtests are **batched to the evening play session**. Record them as unverified in the PR; never call them done.
-- Still prohibited: direct push to `main`, force-push or history rewrite, GitHub's auto-merge feature, PR approvals, repository Settings changes, deleting or weakening tests, renaming the repository/display title/storage keys, and touching other repositories. Game invariants below stay binding; a change that breaks them needs an explicit Issue from the human.
-- Only the afternoon run merges. The dawn patrol and other sessions keep reviewing and fixing PR branches without merging. (Earlier per-Issue merge delegations to Codex for #106, #108, #110, #112, #120, #122 and #124 applied only to those Issues; their text is in DECISIONS.)
-- **Daily loop and roles**:
-  1. Morning and lunch — the human throws improvement ideas at the GPT chat, which files Issues (or small PRs).
-  2. About 15:00 — the Claude Code afternoon run turns everything adopted into playable builds and merges them.
-  3. Evening — the human plays on Pages and talks impressions over.
-  4. Night — broader direction (abstract improvements, scenario/world direction) is discussed in the GPT chat and filed as Issues; Codex turns them into proper PRs. Codex never merges, never pushes to `main` and leaves its PRs ready for review (Draft is fine) with `Closes #n`, the tests it ran and what is unverified.
-  5. Next 15:00 — the afternoon run reconciles the night's Codex PRs with the morning/lunch Issues and PRs **as a whole**: it resolves overlaps and contradictions, keeps one coherent direction, and merges.
-- **Scenario and direction documents**: story/world direction lives in `docs/DIRECTION.md` (created by the first PR that needs it). Direction PRs may be docs-only; the afternoon run merges them and implements only the parts the human adopted. Unadopted brainstorms stay marked 「提案」.
+- **Flow**: Issues from the owner account (filed from GPT/Claude chats or other AIs) are triaged automatically (labels only). `lane/auto` (low/medium risk) is implemented one at a time per repository by the Claude Code scheduled task 「自動操縦の見回り」 (daily around 4:00 JST; a 13:00 run may be added later), which opens a ready PR containing `Closes #n` and arms auto-merge. `lane/claude` (high risk) is implemented when the human asks Claude Code directly. Every adopted PR merges through GitHub auto-merge.
+- **Adopted work** = Issues and PRs created by the owner account (including GPT/Codex/Claude acting for the owner), unless the title starts with 「提案」, the body states that the change is 未採用/保留/マージ保留, or it carries a `hold`/`proposal` label. Proposals are never implemented on their own initiative.
+- **Merge condition**: the required checks `rules`, `browser` and `gate` succeed on the head commit and the PR does not conflict with `main`. **GitHub's auto-merge feature is allowed** and is the normal way PRs merge (merge commit). No human approval, pre-merge audit or time window is required. A session may also merge a passing adopted PR itself with a normal merge commit.
+- **Safety**: if `main` CI fails, the main guard opens a "main is red" Issue labelled `autopilot-stop`; while any `autopilot-stop` Issue is open the scheduled task implements nothing new and opens a revert PR instead. Closing the Issue resumes. Anything that must not merge gets `hold`.
+- Human playtests, independent audit, physical iPhone and ear listening are batched to the evening play session. Record them as unverified; never call them done.
+- Still prohibited: direct push to `main`, force-push or history rewrite, PR approvals, AI changes to repository Settings/Secrets/Variables/Rulesets, deleting or weakening tests, renaming the repository/display title/storage keys, touching other repositories, and changing `.github/workflows` except in a session the human starts to fix the autopilot wiring. Game invariants stay binding; a change that breaks them needs an explicit Issue from the human.
+- **Large changes asked of Claude Code directly**: write a short technical design in the PR body first, then implement; leave merging to auto-merge and note the result in the 「自動操縦の日報」 Issue.
+- **Supervision after merge** (when the human asks, and in the dawn patrol): audit merged PRs against the invariants, open a fix Issue or revert PR when needed, rescue `stuck` items and reconcile contradictory directions (the newest human statement wins). Procedure: `.claude/skills/steward/SKILL.md`.
+- **Scenario and direction documents**: story/world direction lives in `docs/DIRECTION.md` (created by the first PR that needs it). Direction PRs may be docs-only; only the parts the human adopted are implemented. Unadopted brainstorms stay marked 「提案」.
 
 ### Rapid-prototype rules still in force (2026-10-19)
 
-- `main` protection (Rulesets) is deferred; do not make it or old pending review/device records a prerequisite for new development. Keep existing CI as feedback.
+- Old pending review/device records are not a prerequisite for new development. The `main` Ruleset is now set by the human for the autopilot phase (required checks `rules`, `browser`, `gate`).
 - Related small improvements may share an Issue and PR. Copy the adopted Chat request into a short scope/acceptance summary and continue without repeatedly asking for the same approval. PRs can be concise: purpose, changes, checks and remaining items.
 - Low-risk and reversible medium-risk changes may batch independent review and iPhone playtests at a playable milestone. Record what was deferred. High-risk pathfinding, cross-world or storage-contract changes keep a targeted design and review.
 
