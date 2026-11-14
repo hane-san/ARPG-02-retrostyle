@@ -11,7 +11,8 @@ import {drawVillager} from './sprite-villager.js';
 import {fixedLayout,fixedExitMarker,fixedGuideLayout} from './fixed-screens.js';
 import {drawFeatureGround,featureObjects,drawPondRim} from './fixed-feature-art.js';
 import {drawFinished} from './fixed-sprite-finish.js';
-import {cultureOf,drawRegionalBuilding,drawRegionalVillager,dwellingRole} from './fixed-culture.js';
+import {cultureOf,drawRegionalBuilding,drawRegionalVillager,dwellingRole,smokePoints} from './fixed-culture.js';
+import {drawFlavourGround,drawFlavourAir} from './fixed-flavour.js';
 import {drawSurroundings,drawPanorama,drawGround,drawCliffFace,groundStyle} from './fixed-backdrop.js';
 
 export const FIXED_SOURCE=WEST_STUDIES.find(z=>z.key==='village');
@@ -83,6 +84,8 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
  drawGround(c,room,FIXED_SKIES[room.sky]);
  for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++)if(room.tileAt(x,y)==='w'||room.tileAt(x,y)==='k'){R(c,x*32+5,y*32+15+Math.sin(time/1600+x)*2,17,1,'#dbe6db88');}
  for(const f of room.features||[]){drawFeatureGround(c,room,f,time);drawPondRim(c,room,f);}
+ // Small ambient life on the board in view (2026-11-14): grass, water light, cloud shadows.
+ if(guides)drawFlavourGround(c,room,time);
  // Across a seam both boards fade towards the same shared ground (and the
  // same shared road colour), smoothly over three cells, so the land runs on.
  const mine=groundStyle(room);
@@ -120,6 +123,14 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
   // trees merely near an exit stay solid instead of turning to ghosts.
   const covered=guidePoints.filter(m=>(trees.landscapeObjects||[]).some(d=>['willow','pine','cypress'].includes(d.kind)&&Math.abs(m.x-d.x)<(d.kind==='willow'?2.2:1)&&m.y<d.y+.5&&m.y>d.y-4.5));
   drawLandscapeCanopies(c,guides&&covered.length?{...trees,npcs:[...trees.npcs,...covered]}:trees,{left:0,right:14,top:0,bottom:14},hero||{px:-100,py:-100});
+ }
+ if(guides){
+  // Creatures, leaves, snow, birds, and smoke from chimneys, tents and kitchens.
+  const smoke=[],cul=cultureOf(room);
+  for(const site of [room.site,...room.props||[]].filter(Boolean)){const role=dwellingRole(site);if(role)smoke.push(...smokePoints({x:site.x*32,y:site.y*32,w:site.w*32,h:site.h*32},cul,role));}
+  if(room.house&&!room.house.landmark)smoke.push(...smokePoints({x:room.house.x*32,y:room.house.y*32,w:room.house.w*32,h:room.house.h*32},cul,'home'));
+  for(const f of room.features||[])if(f.kind==='hut')smoke.push(...smokePoints({x:f.cells[0][0]*32,y:f.cells[0][1]*32,w:64,h:64},cul,'hut'));
+  drawFlavourAir(c,room,time,smoke);
  }
  if(destination){for(const [col,lw] of [['#4f7a76cc',4],['#fff6d8',2]]){c.strokeStyle=col;c.lineWidth=lw;c.beginPath();c.ellipse((destination.x+.5)*32,(destination.y+.5)*32,11,6.5,0,0,Math.PI*2);c.stroke();}}
  // A small edge gap reads as the continuing road, without a development HUD.

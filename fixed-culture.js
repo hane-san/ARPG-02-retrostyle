@@ -101,8 +101,7 @@ export function drawRegionalBuilding(c,box,culture,role='home',time=0){
  const lamps=()=>{for(const lx of [X+W*.18,X+W*.82]){L(c,lx,wallTop+2,lx,wallTop+10,'#2b3437',1.2);E(c,lx,wallTop+15,5,6,'#2b3437');E(c,lx,wallTop+15,4,5,'#7ec3e6');E(c,lx-1,wallTop+13,1.6,2,'#e6f6ff');}
   R(c,mid+W*.12,wallTop+6,22,14,'#2b3437');R(c,mid+W*.12+1.5,wallTop+7.5,19,11,k.accent);R(c,mid+W*.12+5,wallTop+11,11,2,'#2b3437');};
  const awning=()=>{const ay=base-wallH*.55,stripes=Math.round((W-24)/12);for(let i=0;i<stripes;i++)P(c,[[X+12+i*12,ay],[X+24+i*12,ay],[X+26+i*12,ay+11],[X+10+i*12,ay+11]],i%2?'#f1ede2':k.accent);R(c,X+10,ay+10,W-20,2,'#2b3437');
-  for(const tx of [X+W*.2,X+W*.8]){R(c,tx-10,base+2,20,3,'#7a5a3c');R(c,tx-8,base+5,2,5,'#5c4330');R(c,tx+6,base+5,2,5,'#5c4330');E(c,tx-3,base+1,3,1.5,'#f1ede2');E(c,tx+4,base+1,3,1.5,'#f1ede2');}
-  const t=time/900;for(let i=0;i<3;i++){c.save();c.globalAlpha=.35;E(c,mid+W*.3+Math.sin(t+i)*3,Y-6-i*9-(t*6%9),4+i,3+i*.6,'#ffffff');c.restore();}};
+  for(const tx of [X+W*.2,X+W*.8]){R(c,tx-10,base+2,20,3,'#7a5a3c');R(c,tx-8,base+5,2,5,'#5c4330');R(c,tx+6,base+5,2,5,'#5c4330');E(c,tx-3,base+1,3,1.5,'#f1ede2');E(c,tx+4,base+1,3,1.5,'#f1ede2');}};
  const cloth=()=>{L(c,X+12,wallTop+wallH*.25,X+W-12,wallTop+wallH*.25,'#4b3b2c',1.4);for(let i=0;i<6;i++){const cx=X+16+i*(W-32)/5;P(c,[[cx-5,wallTop+wallH*.25],[cx+5,wallTop+wallH*.25],[cx+4,wallTop+wallH*.25+18+(i%2)*5],[cx-4,wallTop+wallH*.25+20]],['#c4573c','#3a9aa0','#e2b94c','#7a5aa8','#4f8f5a','#d9708a'][i]);}};
  const laundry=()=>{L(c,X+4,wallTop+4,X-20,wallTop+14,'#4b3b2c',1);for(let i=0;i<3;i++)R(c,X-16+i*6,wallTop+9+i*1.4,4,7,['#f1ede2','#e2b94c','#8fb4d9'][i]);};
  const detail=()=>{if(role==='inn')lamps();else if(role==='kitchen')awning();else if(role==='cloth')cloth();else if(role==='home'&&W>100)laundry();};
@@ -180,4 +179,16 @@ export function drawRegionalBuilding(c,box,culture,role='home',time=0){
 export function dwellingRole(site){
  if(!site)return null;
  return {tea:'inn','se-kitchen':'kitchen','west-home':'home','se-home':/布/.test(site.name||'')?'cloth':'home','west-village':'glass'}[site.form]||null;
+}
+// Where smoke or steam rises from a building (board pixels), for the moving
+// flavour layer: the buildings themselves stay still drawings.
+export function smokePoints(box,culture,role){
+ const {x:X,y:Y,w:W,h:H}=box,mid=X+W/2,wallTop=Y+H*(culture==='canal'?.18:.4),pts=[];
+ if(role==='kitchen')pts.push([mid+W*.3,Y-4,'steam']);
+ if(culture==='hamlet')pts.push([X+W*.7+5,Y-H*.38,'smoke']);
+ if(culture==='highland')pts.push([X+W*.72+6,wallTop-H*.36-4,'smoke']);
+ if(culture==='steppe'){const big=role==='hut'?Math.min(W*.4,H*.5):Math.min(H*.62,W*.24);pts.push([mid,Y+H-big*1.05-big*.5,'smoke']);}
+ if(culture==='forest'&&role==='hut')pts.push([mid+W*.18,Y-H*.2,'smoke']);
+ if(culture==='marsh')pts.push([mid,Y+H-H*.32-Math.min(W*.3,H*.55)*1.9,'smoke']);
+ return pts;
 }
