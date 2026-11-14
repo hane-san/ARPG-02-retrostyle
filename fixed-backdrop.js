@@ -174,9 +174,11 @@ const GROUND={
  dryrock:(p,c)=>({base:mix(c[2],c[1],.45),patch:mix(c[1],c[0],.3),fleck:c[3],path:mix(c[2],'#efdfba',.5),pebbles:true}),
  scree:(p,c)=>({base:mix(c[2],c[1],.5),patch:mix(c[1],c[0],.3),fleck:c[3],path:mix(c[2],'#dcd8c8',.5),pebbles:true}),
  snowscree:(p,c)=>({base:'#e7ecee',patch:'#d3dce6',fleck:c[3],path:mix(c[1],'#cfd6de',.5),snow:true}),
- paving:(p,c)=>({base:mix(c[2],c[1],.35),patch:mix(c[1],c[0],.2),fleck:c[3],path:mix(c[2],'#e6dfcb',.4),slabs:true})
+ paving:(p,c)=>({base:mix(c[2],c[1],.55),patch:mix(c[1],c[0],.32),fleck:c[3],path:mix(c[2],'#e9dfc4',.45),slabs:true})
 };
-const NATURAL=new Set(['g','t','o']),PATHS=new Set(['=']),JOINS=new Set(['=','s','b']);
+// A building's foot ('h') stands on the same ground, so no pale slab shows
+// around a drawing that covers less than its footprint.
+const NATURAL=new Set(['g','t','o','h']),PATHS=new Set(['=']),JOINS=new Set(['=','s','b']);
 const groundCaches=new Map();
 export function groundStyle(room){const kind=surroundingKind(room);return GROUND[kind](paletteOf(room),colours(room,kind));}
 export function groundLayer(room,light=null){
@@ -211,7 +213,7 @@ export function groundLayer(room,light=null){
  for(let y=-1;y<16;y++)for(let x=-1;x<16;x++){const gx=gx0+x,gy=gy0+y,n=noise(gx,gy,40);if(n>.42)continue;c.save();c.globalAlpha=.28+n*.4;E(c,x*32+noise(gx,gy,41)*32,y*32+noise(gx,gy,42)*32,14+noise(gx,gy,43)*16,9+noise(gx,gy,44)*10,g.patch);c.restore();}
  for(let y=0;y<15;y++)for(let x=0;x<15;x++){
   if(!NATURAL.has(at(x,y)))continue;const gx=gx0+x,gy=gy0+y,X=x*32,Y=y*32,f=i=>noise(gx,gy,i+50);
-  if(g.slabs){c.strokeStyle=mix(g.base,g.fleck,.35);c.lineWidth=1;c.beginPath();const sy=Y+10+f(1)*12,sx=X+8+f(2)*16;c.moveTo(X,sy);c.lineTo(X+32,sy+f(3)*3-1.5);c.moveTo(sx,Y);c.lineTo(sx+f(4)*2-1,sy);c.moveTo(X+4+f(5)*24,sy);c.lineTo(X+4+f(5)*24,Y+32);c.stroke();continue;}
+  if(g.slabs){c.strokeStyle=mix(g.base,g.fleck,.5);c.lineWidth=1;c.beginPath();const sy=Y+10+f(1)*12,sx=X+8+f(2)*16;c.moveTo(X,sy);c.lineTo(X+32,sy+f(3)*3-1.5);c.moveTo(sx,Y);c.lineTo(sx+f(4)*2-1,sy);c.moveTo(X+4+f(5)*24,sy);c.lineTo(X+4+f(5)*24,Y+32);c.stroke();continue;}
   if(g.sand){for(let i=0;i<3;i++)R(c,X+3+f(i)*26,Y+3+f(i+3)*26,1.5,1.5,g.fleck+'99');if(f(9)<.25){c.strokeStyle=g.patch;c.lineWidth=1;c.beginPath();c.moveTo(X+4,Y+18+f(8)*6);c.quadraticCurveTo(X+16,Y+14+f(7)*6,X+28,Y+19+f(6)*5);c.stroke();}continue;}
   if(g.cracks){if(f(1)<.55){c.strokeStyle=g.fleck+'55';c.lineWidth=1;c.beginPath();c.moveTo(X+f(2)*10,Y+6+f(3)*20);c.lineTo(X+12+f(4)*8,Y+10+f(5)*12);c.lineTo(X+30,Y+4+f(6)*24);c.stroke();}continue;}
   if(g.pebbles){for(let i=0;i<3;i++){const px=X+4+f(i)*24,py=Y+4+f(i+4)*24,r=1.2+f(i+8)*1.8;E(c,px,py+.8,r+.5,r*.7,g.fleck+'55');E(c,px,py,r,r*.75,mix(g.base,'#ffffff',.3));}continue;}
