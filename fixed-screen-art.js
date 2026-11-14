@@ -11,6 +11,8 @@ import {drawVillager} from './sprite-villager.js';
 import {fixedLayout,fixedExitMarker,fixedGuideLayout} from './fixed-screens.js';
 import {drawFeatureGround,featureObjects,drawPondRim} from './fixed-feature-art.js';
 import {drawFinished} from './fixed-sprite-finish.js';
+import {cultureOf,drawRegionalBuilding,drawRegionalVillager,dwellingRole,smokePoints} from './fixed-culture.js';
+import {drawFlavourGround,drawFlavourAir} from './fixed-flavour.js';
 import {drawSurroundings,drawPanorama,drawGround,drawCliffFace,groundStyle} from './fixed-backdrop.js';
 
 export const FIXED_SOURCE=WEST_STUDIES.find(z=>z.key==='village');
@@ -82,6 +84,8 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
  drawGround(c,room,FIXED_SKIES[room.sky]);
  for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++)if(room.tileAt(x,y)==='w'||room.tileAt(x,y)==='k'){R(c,x*32+5,y*32+15+Math.sin(time/1600+x)*2,17,1,'#dbe6db88');}
  for(const f of room.features||[]){drawFeatureGround(c,room,f,time);drawPondRim(c,room,f);}
+ // Small ambient life on the board in view (2026-11-14): grass, water light, cloud shadows.
+ if(guides)drawFlavourGround(c,room,time);
  // Across a seam both boards fade towards the same shared ground (and the
  // same shared road colour), smoothly over three cells, so the land runs on.
  const mine=groundStyle(room);
@@ -101,21 +105,32 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
  const market=room.sourceIndex===1;
  if(market)for(const d of trees.landscapeObjects)drawForestTree(c,d,'trunk');else drawLandscapeFeet(c,trees,{left:0,right:14,top:0,bottom:14});
  // Villagers share the contour, so people read clearly against any ground.
- const objects=room.npcs.map(n=>({y:n.y+.5,paint:()=>drawFinished(c,n,{x:n.x*32,y:n.y*32,w:32,h:32},g=>drawVillager(g,n.x*32,n.y*32,n.color),time,{shadow:false})}));
+ const objects=room.npcs.map(n=>({y:n.y+.5,paint:()=>drawFinished(c,n,{x:n.x*32,y:n.y*32,w:32,h:32},g=>drawRegionalVillager(g,n.x*32,n.y*32,n,cultureOf(room)),time,{shadow:false})}));
  // Buildings and equipment get a shadow, a contour and light (2026-11-14).
- for(const site of [room.site,...room.props||[]].filter(Boolean))objects.push({y:site.y+site.h,paint:()=>drawFinished(c,site,{x:site.x*32,y:site.y*32,w:site.w*32,h:site.h*32},(g,t)=>journeySite(g,site,t),time,{texture:['west-home','se-home','west-village'].includes(site.form)?'boards':null})});
+ // Dwellings are re-drawn in the board's regional culture (2026-11-14 experiment),
+ // keeping each place's role; landmarks keep their own drawings.
+ const culture=cultureOf(room);
+ for(const site of [room.site,...room.props||[]].filter(Boolean)){const role=dwellingRole(site);objects.push({y:site.y+site.h,paint:()=>drawFinished(c,site,{x:site.x*32,y:site.y*32,w:site.w*32,h:site.h*32},role?(g,t)=>drawRegionalBuilding(g,{x:site.x*32,y:site.y*32,w:site.w*32,h:site.h*32},culture,role,t):(g,t)=>journeySite(g,site,t),time)});}
  // Solid landforms share the contour too; a glint and reeds stay soft.
  for(const f of room.features||[]){
-  const parts=featureObjects(c,room,f,time),solid=['bush','boulder','cairn','stump','sign'].includes(f.kind),keys=featureKeys.get(f)||featureKeys.set(f,f.cells.map(()=>({}))).get(f);
-  parts.forEach((o,i)=>{const [cx,cy]=f.cells[i];objects.push(solid?{y:o.y,paint:()=>drawFinished(c,keys[i],{x:cx*32,y:cy*32,w:32,h:32},g=>featureObjects(g,room,f,time)[i].paint(),time,{shadow:false})}:o);});
+  const parts=featureObjects(c,room,f,time),solid=['bush','boulder','cairn','stump','sign','hut'].includes(f.kind),keys=featureKeys.get(f)||featureKeys.set(f,f.cells.map(()=>({}))).get(f),size=f.kind==='hut'?64:32;
+  parts.forEach((o,i)=>{const [cx,cy]=f.cells[i];objects.push(solid?{y:o.y,paint:()=>drawFinished(c,keys[i],{x:cx*32,y:cy*32,w:size,h:size},g=>featureObjects(g,room,f,time)[i].paint(),time,{shadow:f.kind==='hut'})}:o);});
  }
- if(room.house)objects.push({y:room.house.y+room.house.h,paint:()=>{drawFinished(c,room.house,{x:room.house.x*32,y:room.house.y*32,w:room.house.w*32,h:room.house.h*32},g=>drawFixedHouse(g,room.house),time,{texture:room.house.landmark?null:'boards'});if(!room.house.landmark){c.strokeStyle='#8c9e92';c.lineWidth=1;c.beginPath();c.moveTo(2*32,8*32);c.lineTo(5.5*32,8*32);c.stroke();for(let i=0;i<4;i++)R(c,(2.2+i*.7)*32,8*32,14,19,['#b8c9c3','#dfc9ab','#a7bac0'][i%3]);}}});
+ if(room.house)objects.push({y:room.house.y+room.house.h,paint:()=>{drawFinished(c,room.house,{x:room.house.x*32,y:room.house.y*32,w:room.house.w*32,h:room.house.h*32},room.house.landmark?g=>drawFixedHouse(g,room.house):(g,t)=>drawRegionalBuilding(g,{x:room.house.x*32,y:room.house.y*32,w:room.house.w*32,h:room.house.h*32},cultureOf(room),'home',t),time);if(!room.house.landmark){c.strokeStyle='#8c9e92';c.lineWidth=1;c.beginPath();c.moveTo(2*32,8*32);c.lineTo(5.5*32,8*32);c.stroke();for(let i=0;i<4;i++)R(c,(2.2+i*.7)*32,8*32,14,19,['#b8c9c3','#dfc9ab','#a7bac0'][i%3]);}}});
  if(hero)objects.push({y:hero.py+.7,paint:()=>{c.save();c.beginPath();c.rect(0,0,480,480);c.clip();c.translate(0,hero.moving&&time!==0?-Math.abs(Math.sin(hero.stride*9))*1.5:0);drawSrpgUnit(c,{x:hero.px,y:hero.py,team:'ally',acted:false,type:'sword'});R(c,hero.px*32+8,hero.py*32+13,15,3,'#b8d9dc');R(c,hero.px*32+7,hero.py*32+16,5,7,'#7dbac5');c.restore();}});
  objects.sort((a,b)=>a.y-b.y);objects.forEach(o=>o.paint());if(market)for(const d of trees.landscapeObjects){c.save();if((hero&&Math.abs(hero.px-d.x)<3&&hero.py<d.y+.5&&hero.py>d.y-5)||guidePoints.some(m=>Math.abs(m.x-d.x)<3&&m.y<d.y+.5&&m.y>d.y-7.5))c.globalAlpha*=.24;drawForestTree(c,d,'canopy');c.restore();}else{
   // An exit chevron thins only a crown that really covers it (2026-11-13);
   // trees merely near an exit stay solid instead of turning to ghosts.
   const covered=guidePoints.filter(m=>(trees.landscapeObjects||[]).some(d=>['willow','pine','cypress'].includes(d.kind)&&Math.abs(m.x-d.x)<(d.kind==='willow'?2.2:1)&&m.y<d.y+.5&&m.y>d.y-4.5));
   drawLandscapeCanopies(c,guides&&covered.length?{...trees,npcs:[...trees.npcs,...covered]}:trees,{left:0,right:14,top:0,bottom:14},hero||{px:-100,py:-100});
+ }
+ if(guides){
+  // Creatures, leaves, snow, birds, and smoke from chimneys, tents and kitchens.
+  const smoke=[],cul=cultureOf(room);
+  for(const site of [room.site,...room.props||[]].filter(Boolean)){const role=dwellingRole(site);if(role)smoke.push(...smokePoints({x:site.x*32,y:site.y*32,w:site.w*32,h:site.h*32},cul,role));}
+  if(room.house&&!room.house.landmark)smoke.push(...smokePoints({x:room.house.x*32,y:room.house.y*32,w:room.house.w*32,h:room.house.h*32},cul,'home'));
+  for(const f of room.features||[])if(f.kind==='hut')smoke.push(...smokePoints({x:f.cells[0][0]*32,y:f.cells[0][1]*32,w:64,h:64},cul,'hut'));
+  drawFlavourAir(c,room,time,smoke);
  }
  if(destination){for(const [col,lw] of [['#4f7a76cc',4],['#fff6d8',2]]){c.strokeStyle=col;c.lineWidth=lw;c.beginPath();c.ellipse((destination.x+.5)*32,(destination.y+.5)*32,11,6.5,0,0,Math.PI*2);c.stroke();}}
  // A small edge gap reads as the continuing road, without a development HUD.
