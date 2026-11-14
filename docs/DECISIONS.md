@@ -248,3 +248,95 @@
 ## 2026-11-14 / 盤面の小さな動き（制作者のチャット指示）
 
 - 立っている盤面に、揺れる草、水のきらめきと魚の輪、雲の影、蝶、落ち葉、蛍、雪、ときどき横切る鳥の群れ、煙突・天幕・小屋の煙と食堂の湯気を加えた。物理・操作・保存はなく、Reduced Motion では止まる。詳細は [FIXED-DEFAULT-AREAS](FIXED-DEFAULT-AREAS.md) の13節。
+
+
+## 2026-11-14 / AGENTS.md の整理で移した原文（docs/slim-contract）
+
+規則の中身は変えずに、AGENTS.md を「いま有効な規程」だけに細くした。日付つきの節と、上書きを重ねていたカメラの条文の原文をここへそのまま移す。現在値は AGENTS.md の「3. Game invariants」が正本。
+
+### Opt-in camera framing comparison (2026-11-03, Issue #104)
+
+The producer approved trying a Zelda-like stable screen feel **without replacing seamless travel**. Keep the standard #96/#101 pilgrimage follow at `/`. The temporary `/?camera=deadzone` variant uses a screen-relative dead zone on short walks and soft, forward-biased tracking on sustained walks. Do not change map coordinates, zoom, pathfinding, normal menu/dialogue, or the older worlds. The variant is linked from Help only (reload resets the current journey position). This does **not** approve Zelda-style room transitions or indoor room maps. Do not merge this A/B experiment into default behaviour unless the producer separately chooses it after iPhone playtesting.
+
+### Adopted default journey replacement (2026-10-28, Issue #80)
+
+The producer explicitly authorizes overwriting the current journey terrain and layout, reducing/repositioning NPCs, and experimenting boldly with many objects, regional pastel colours, stable framing, music and monumental unease. The default journey is now the authored pilgrimage loop and changed final approach in `pilgrimage-world.js`; its implementation plan is `docs/PILGRIMAGE-LOOP.md`. Previous atlas coordinate/count preservation applies to that historical version, not this new default. `?atlas=previous` retains the previous data for comparison/regression; `?maze=turns` remains its existing opt-in maze trial. The old classic/prototype worlds, original 68 plus added tracks, non-traversable water, storage namespace and no combat/quest/save/payment remain invariant. Field/map speeds remain 5.7/7.35 and outdoor framing 0.8 with only authored wide vantages at 0.6. The approximately ten-minute duration includes observation and is not a verified human playtime.
+
+### Adopted catch-up framing and world studies (2026-10-29, Issue #86)
+
+The producer's follow-up supersedes the field/map framing distinction above **only for the current pilgrimage**: both hold a manually panned view until the traveller catches its forward side, then follow the occupied route edge without recoiling. The authored regional scales are ordinary 0.8, ridge 0.46, capital/citadel 0.38 (Reduced Motion 0.6); use regional entry/exit dwell and hold instead of zooming around individual objects. See `docs/WORLD-STUDIES.md`. Seven optional studies and three vistas add story inspiration without deciding the open mythology or introducing quest/completion/save state. Historical modes keep their existing camera.
+
+### Western landscape integration (2026-11-04, Issue #106)
+
+The producer explicitly delegates **this Issue's normal PR merge to Codex**, overriding the role/time restriction above only for #106 and the incorporated #105 camera commit. All exact-head rules/browser, latest-main conflict, no BLOCK/hold, normal merge, main CI and Pages checks remain required. No direct main push, force push, auto-merge, Approve or Settings changes. Independent audit, actual iPhone and ear listening remain unverified until separately performed.
+
+The current pilgrimage is **480×832**, with 29 regions, 76 sites and 26 NPCs. Twelve west studies reuse the #99 twilight/shore IDs and add ten IDs; the old six detour paths and the original lake/43-leg loop remain. Original ninety pieces keep their IDs, followed by twelve original 60–120s pieces (45:1 through 50:2). See [western ledger and technical plan](docs/WESTERN-SKY-STUDIES.md). Cliff time advances only inside its actual world rectangle, with session-local accumulation. Sky openings require alpha in the western terrain chunks; never paint opaque black over them. Keep both #105 camera followers and the default selection unchanged. Outdoor scales remain .8, authored plain .6, cliff/ridge .46, capital .38, Reduced Motion .6.
+
+### Adopted composed camera and living landscapes (2026-11-04, Issue #108)
+
+The producer explicitly selected the improved #105 composed follower as the default and delegated this Issue's normal PR merge to Codex. This supersedes #104's pending default-selection rule and #106's unchanged-default clause for the current pilgrimage only. `/` and `?camera=deadzone` use the composed follower; `?camera=directional` retains the #96/#101 comparison. Old atlas/maze/classic/prototype framing, regional scales and speeds are unchanged. The role/time merge restriction is overridden only for #108; exact-head rules/browser success, latest-main conflict check, no hold/BLOCK, normal merge, main CI, Pages and live boot remain required. No direct main push, force push, auto-merge, Approve or Settings changes.
+
+The 480×832 pilgrimage now has 33 regions, 86 sites, 32 NPCs and 106 pieces. Four southeast river/plateau/marsh/coast countries follow the original 29 regions; four original pieces follow the previous 102 without changing any old score/event output. The western twelve landscapes retain their anchors/cues and gain natural rims, curved roads, shared broad surface fields and clustered flora. Real water, solid feet and stair/bridge floors remain the collision source. See [living-landscape plan, ledger and QA](docs/LIVING-LANDSCAPES.md). Full-floor connectivity and object-clearance tests are required. Independent audit, actual ear listening, iPhone and human aesthetic acceptance remain unverified until performed.
+
+### Adopted sky, natural landforms and trial travel (2026-11-04, Issue #110)
+
+The producer explicitly delegates this Issue's normal PR merge to Codex, overriding the role/time restriction only for #110. Exact-head rules/browser success, latest-main conflict check, no hold/unresolved BLOCK, normal merge, main CI, Pages and live boot are still required. No direct main push, force push, auto-merge, Approve or Settings changes. Real ear listening, physical iPhone, independent audit and human aesthetic acceptance stay unverified.
+
+The current pilgrimage remains 480×832 and 33 regions, with 87 sites (one is a trial utility), 32 NPCs and 110 pieces. The previous 106 score data and event output keep their IDs and exact hashes. Four energetic original compositions at 53:1–54:2 replace the primary cues of mountain/canyon/mesa/grass only; all previous pieces remain in the sound room. Preserve OFF/ON defaults, independent volumes and continuous release/crossfade.
+
+The explicitly approved trial waystone at (25,104), entrance (26,107), is the only exception to normal seamless walking. It offers a session-local random bag of 19 curated lands, a repeat jump and return via Help. Do not treat it as goddess lore, a quest or saved progress; do not expose it in older modes or inflate discovery counts. The arrival APIs of camera/music are only for explicit trial jumps; ordinary walking dwell/follow/zoom stays unchanged. Keep all original walking regressions; they must not use this tool to bypass routes.
+
+Eight world sky openings (seven west plus the existing cloud ridge) use immutable world geometry, layered light/clouds and blocked transparent sky cells. Original lake and route floors remain intact in the core; the western cliff fringe protects roads, architecture and NPCs. All-floor connectivity remains mandatory. Regional terrain and detail must be read from physical floor/wall/bridge/water data, with bounded chunks and visible-range objects. See [sky/trial ledger and QA](docs/SKY-AND-TRIAL-TRAVEL.md).
+
+### Independent fixed-screen comparison (2026-11-05, Issue #112)
+
+The producer explicitly authorizes implementation through main integration and permits a smoother delivery route. This Issue uses a work branch and normal PR merge after exact-head rules/browser success, latest-main conflict check and no hold/unresolved BLOCK, then main CI, Pages and public startup. This overrides the role/time restriction only for #112. Do not use direct main push, force push, auto-merge, Approve or Settings changes in this chosen workflow.
+
+Only the separate eight-room `fixed-screens` experiment uses fixed framing and cardinal screen transitions; adoption throughout the game remains undecided. Each room has a 15×15 grid and common isotropic viewport-fit scale. Ordinary pilgrimage and older modes keep their existing camera, map, routes, collision and music library. The existing trial dialogue and Help expose the named entrance. Retain the original world in memory; return to its safe occupied cell, held camera and previous track, discarding stale routes/input. Music remains continuous across rooms. Keep all existing walking regressions, add real browser tests of field gates, repeated returns and transition input, and distinguish emulation from physical iPhone, ears and independent audit. See [plan and room ledger](docs/FIXED-SCREEN-BRANCHES.md).
+
+### Adopted fixed-screen grand journey (2026-11-06, Issue #120)
+
+The producer explicitly delegates this Issue's normal PR merge to Codex, overriding the role/time restriction for #120. Exact-head rules/browser success, latest-main conflict check, no hold/unresolved BLOCK, normal merge, main CI, Pages and public boot remain mandatory. No direct main push, force, auto-merge, Approve or Settings changes.
+
+The independent fixed comparison now has 33 screens (original eight plus 25), each 15×15, and a 135×60 overview. Port 21 current-main regions and their 21 cue assignments through existing original renderers, source solid footprints and music; the closed court retains its quiet state. Use common isotropic viewport fit, 560ms transitions, real tap/path walking, source-correct collision, old safe return and uninterrupted same-region music. Whole-world fixed-screen adoption remains undecided; the current main map, camera, 110-piece library and all old modes remain available. See [ledger, plan, cue map and QA](docs/FIXED-GRAND-JOURNEY.md). Real iPhone/Safari, ear listening, independent audit and human aesthetic acceptance remain unverified.
+
+### Adopted hundred-screen atlas (2026-11-06, Issue #122)
+
+The producer clarified that the count is **10×10 maps = 100 screens**, not a 40×40 walking grid. Preserve each 15×15 board, common isotropic fit and 560ms transitions. Keep the original 33 boards and main world, add 67 authored boards, all 33 main-region primary cues plus selected existing mood variants (38 assignments including the quiet court), and 11 sky compositions. No new mythology answers or whole-world fixed-screen adoption. See [hundred-screen ledger and QA](docs/FIXED-HUNDRED-ATLAS.md).
+
+The producer's continuing instruction to complete related improvements through merge covers #122. Use a branch and normal PR merge only after exact-head rules and **all five browser groups** succeed, latest-main no conflicts, no hold/unresolved BLOCK; then verify main CI, Pages and public play. No direct main push, force, auto-merge, Approve or Settings changes. Browser checks are sharded into core/landscapes/journey/fixed/atlas without dropping the existing checks; the `browser` aggregate requires every group. Physical iPhone/Safari, ears, independent audit and human aesthetic acceptance stay unverified.
+
+### Adopted connected fixed geography (2026-11-09, Issue #124)
+
+The producer's continuing normal-PR merge delegation covers #124 after exact-head rules/all five browser groups/browser, latest-main no conflict, no hold/unresolved BLOCK, then main CI/Pages/public play. Keep all prohibitions and deferred physical iPhone/ears/independent audit. The 100-screen comparison still uses 15×15/common isotropic fit/560ms, but starts at central (4,5) watershed-wheel. Shared offset and split bands replace centered-only seams in the new terrain; preserve every lane, physical faults/water/solid feet, and safe return. New diagonal fault must be walked around its upper tip, not bridged by connectivity repair. Old 8/33-room regressions walk from central entry before their retained routes. All ten northern boards have authored sky bearings. See [technical plan, geography, routes and QA](docs/FIXED-CONNECTED-GEOGRAPHY.md). Whole-world adoption remains undecided.
+
+### Adopted screen-switching default, area music and playful terrain (2026-11-12, producer chat)
+
+The producer chose the screen-switching atlas as the **default entrance** (superseding "whole-world fixed-screen adoption remains undecided"). `./` enters the 100-board atlas at the central hub after preparing the connected pilgrimage underneath; `./?walk=1`, `?journey=1`, `?atlas=previous`, `?maze=turns` and `?camera=*` open the connected world directly, and Help switches between both. Old classic/prototype modes are unchanged.
+
+Music in the atlas follows **20 contiguous areas** (`fixed-areas.js`), not single boards: one piece continues across an area and changes only at area edges; each area's 4–7 piece playlist moves on after two loops and at least 150 s of actual listening. All 110 pieces are placed in the field, the sound room lists all 110, and the 110 score hashes are unchanged. Portrait-first layering: objects in front, walkable ground, the land's natural surroundings filling non-walkable board cells, neighbouring boards, then a layered regional panorama in front of the sky (cliffs and sky remain at the fault, ridges and the northern rim). 88 boards gain seeded, physically honest playful landforms (nooks of bushes/boulders, glints with a line of text, stepping stones, ponds, signposts) that are rejected whenever any lane, doorstep or person would be cut off. No items, quests, scores or saved progress. See [plan, area ledger and QA](docs/FIXED-DEFAULT-AREAS.md). Physical iPhone/Safari, ear listening, independent audit and human aesthetic acceptance remain unverified.
+
+### Former camera invariant bullets (verbatim)
+
+- Camera is static-first: manual drag eases to a bounded target, route/edge follow is gentle, the explorer remains visible, map bounds hold, and manual zoom is disabled in all modes (Issue #30). **Issue #70 supersedes the place-based outdoor zoom targets of #28/#39/#62 only for the default journey**: all regular outdoor terrain, towns, outdoor ruins, architecture and normal scenic beats use a steady **0.8** from the first frame; only specifically authored `journey-scenic-wide` vantages may use **0.6** and return to 0.8 with hysteresis. Actual interiors may use **1.35** when implemented; there are currently no indoor maps, and outdoor structures or monoliths must not trigger a close zoom. Historical six-stage values remain in older decision/test history, not the active default camera. Preserve route-aware forward framing, stopped manual pan, region names and NPC interactions, and do not change classic or prototype framing.
+- Human instruction 2026-10-29 supersedes the 0.6 minimum only at the current pilgrimage's authored grand vantages: cloud ridge 0.46, capital/citadel 0.38, with spatial/temporal hysteresis. Reduced Motion uses 0.6. Ordinary outdoor travel stays 0.8; field taps retain the composition and only follow at edges, while atlas walks retain route lookahead. Older modes keep their existing framing.
+- Human instruction 2026-11-02 (Issue #96) refines the **current pilgrimage** camera's forward follow: preserve the Issue #86 manually panned composition until catch-up, then grow a direction-sensitive, viewport-relative lookahead on sustained walking (stronger horizontal lead in portrait, gentler vertical lead and landscape bias). Do not reintroduce 3-tile fixed lead or recenter on short taps; keep 0.8 / 0.46 / 0.38 zoom, bounds and visibility. Legacy atlas/classic/prototype remain untouched.
+- Human playtest correction 2026-11-02 evening (Issue #101): **the #96 directional framing should stay, but the camera must reach it more naturally**. For the current pilgrimage, grow the lead through a five-tile smoothstep instead of a four-tile linear surge (refined after real Chromium composition feedback); soften response and bound per-frame catch-up speed relative to player movement; scale both responsiveness and speed cap with the traveller's pace so field/atlas settle to the same frame after comparable distances. Preserve the forward panned view until catch-up, short taps, the eventual lead and zoom invariants. The user's iPhone Safari feel is not verified by CI alone.
+
+### Former earlier-phase section (verbatim)
+
+### Earlier phase: rapid prototype iteration (2026-10-19, still applies where not overridden above)
+
+Human instruction on 2026-10-19: defer main protection and prioritize adding and trying improvements during early development. This phase applies only to ARPG-02 and takes precedence over the per-change review/device steps below.
+
+- Do not make Ruleset setup or old pending review/device records a prerequisite for new development. Leave the current unprotected main setting as it is; retain existing CI as feedback.
+- Related small improvements may share an Issue and PR. Copy the adopted Chat request into a short scope/acceptance summary and continue without repeatedly asking for the same approval. PRs can be concise: purpose, changes, checks and remaining items.
+- For low-risk and reversible medium-risk changes, independent review and iPhone playtests may be batched at a playable milestone instead of blocking every PR. Record what was deferred; do not call it tested or independently approved. Keep targeted design/review for high-risk pathfinding, cross-world or storage-contract changes.
+- Use a work branch and PR, run relevant checks and report failures honestly. Merging follows the nonstop phase above; direct main push, force-push and GitHub auto-merge are still prohibited. Resume stricter release checks when the human chooses stabilization or wider distribution.
+
+
+### Former release / handoff section (verbatim)
+
+### Release / handoff
+
+Record Issue, PR, verified commit SHA, exact executed tests, risk/audit outcome, untested behavior, live Pages result, and required iPhone steps. Main merge and repository Settings remain human controlled. The repository was renamed to **ARPG-02-retrostyle** on 2026-10-19 (Issue #3); use the current repository name and the Pages URL `https://hane-san.github.io/ARPG-02-retrostyle/`. Do not rename the display title or the `tidal-atlas:` storage namespace. Validate Pages, links, Actions and AI integrations after renaming; branch protection is still a separate GitHub Settings task.
