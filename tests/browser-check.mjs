@@ -1,3 +1,4 @@
+import {checkFixedLandmarks} from './fixed-landmarks-browser.mjs';
 import {checkFixedGeography} from './fixed-geography-browser.mjs';
 import {checkFixedDefault} from './fixed-default-browser.mjs';
 import {checkFixedAtlas} from './fixed-atlas-browser.mjs';
@@ -54,7 +55,7 @@ async function main(){
  page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status()+' '+r.url());});
  page.on('requestfailed',r=>{if(r.failure()?.errorText!=='net::ERR_ABORTED')errors.push('Request '+r.url()+': '+r.failure()?.errorText);});
  if(group==='fixed'){await checkFixedDefault(browser,origin);await checkFixedScreens(browser,origin);await checkFixedGrandJourney(browser,origin);return;}
- if(group==='atlas'){await checkFixedGeography(browser,origin);await checkFixedAtlas(browser,origin);return;}
+ if(group==='atlas'){await checkFixedLandmarks(browser,origin);await checkFixedGeography(browser,origin);await checkFixedAtlas(browser,origin);return;}
  if(group==='landscapes'){await checkSkyTrial(browser,origin);await checkWestern(browser,origin);await checkPilgrimage(browser,origin);await checkDeadzoneCamera(browser,origin);await checkImperialStudies(page,origin);return;}
  if(group==='journey'){await checkJourney(page,origin);await checkJourneyTaps(browser,origin);await checkJourneyFlow(browser,origin);await checkJourneyTargets(browser,origin);await checkJourneyMotion(browser,origin);await checkMazeTrial(browser,origin);await checkJourneyFoley(browser,origin);return;}
  const response=await page.goto(origin+'/?mode=classic',{waitUntil:'load'});
@@ -120,6 +121,7 @@ async function main(){
  await checkFixedDefault(browser,origin);
  await checkFixedScreens(browser,origin);
  await checkFixedGrandJourney(browser,origin);
+ await checkFixedLandmarks(browser,origin);
  await checkFixedGeography(browser,origin);
  await checkFixedAtlas(browser,origin);
  await checkSkyTrial(browser,origin);

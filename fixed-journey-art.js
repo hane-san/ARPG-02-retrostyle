@@ -3,6 +3,7 @@ import {WEST_STUDIES} from './western-world.js';
 import {fixedSource} from './fixed-journey-data.js';
 import {drawPilgrimTile,drawPilgrimSite} from './pilgrimage-art.js';
 import {drawLandscapeSky,skyGeometry,skyPalette} from './landscape-sky.js';
+import {drawJourneyLandmarks,drawArrivalRoof} from './fixed-landmarks.js';
 import {drawPanorama,mix} from './fixed-backdrop.js';
 const R=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h);};
 const P=(c,p,col)=>{c.fillStyle=col;c.beginPath();p.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();};
@@ -34,6 +35,7 @@ export function journeyTile(c,room,x,y){
 export function journeySite(c,site,time){
  c.save();c.translate(site.x*32,site.y*32);c.scale(site.scale,site.scale);
  drawPilgrimSite(c,{...site,x:0,y:0,w:site.sourceW,h:site.sourceH},time,0);c.restore();
+ if(site.landmarkGlass)drawArrivalRoof(c,{id:'glass-court',site});
 }
 // Sky is outside the movement grid. Its source profiles, geology and repeated
 // architecture give the small boards a shared, much larger surrounding world.
@@ -50,10 +52,12 @@ export function journeyBackground(c,room,w,h,l,time){
  // then becomes the actual solid gate in capital-gate. Repeat its human doors;
  // it stands behind the middle land, so its foot is never in the air.
  const wall=['azure-plain','monolith-court','mountain-pass','snow-cliff','capital-gate','sealed-court'].includes(room.id);
- drawPanorama(c,room,w,h,l,time,wall?(g,feet,far)=>{
+ drawPanorama(c,room,w,h,l,time,(g,feet,far)=>{
+  drawJourneyLandmarks(g,room,w,l,feet,time);
+  if(!wall)return;
   const size=l.scale*(room.id==='capital-gate'?.62:room.id==='azure-plain'?.25:.4);
   g.save();g.translate(w*.56,feet+4*l.scale);g.scale(size,size);
   for(let i=-5;i<=6;i++){R(g,i*68,-80,48,80,far('#aab9b7'));R(g,i*68+8,-98,32,18,far('#d6d8cb'));R(g,i*68+16,-25,12,25,far('#839ba2'));}R(g,-5*68,-60,12*68,14,far('#b8c3bd'));g.restore();
- }:null);
+ });
 
 }

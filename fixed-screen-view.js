@@ -2,6 +2,7 @@ import {createFixedJourney,fixedLayout,gatePoint,fixedExitTarget,fixedChartSize}
 import {drawFixedRoom,releaseFixedArt} from './fixed-screen-art.js';
 import {fixedSource} from './fixed-journey-data.js';
 import {pickJourneyTap} from './journey-tap.js';
+import {fixedAmbientSources,fixedListeningPosition} from './fixed-landmarks.js';
 import {createAmbienceDirector} from './journey-ambience.js';
 import {createAreaPlaylists,areaPieceSeconds} from './fixed-areas.js';
 import {buildTrack} from './music.js';
@@ -42,7 +43,7 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
  }
  const state=createFixedJourney({onRoom:r=>{enteredAt=performance.now();canvas.setAttribute('aria-label','画面切替の旅：'+r.name);onPlace(r);cue(r);paintAt=-Infinity;},onTalk,onReturn,
   onStep:(d,t)=>onStep(d,t==='b'?'+':t==='s'||state.room.land==='stone'||state.room.land==='ridge'?'study-stone':state.room.land==='salt'||state.room.land==='shore'||state.room.dry?'study-silt':t==='g'?'g':'='),onTransition:()=>{held.forEach(k=>latched.add(k));cancel();if(state.transition)cue(state.transition.to);}});
- const water=createAmbienceDirector(state.rooms.flatMap(r=>{const kind=r.dry?'stone':r.quiet?'echo':r.land==='forest'?'wood':r.land==='ridge'?'wind':r.water?'drip':null;return kind?[{id:'fixed-ambient-'+r.id,kind,x:r.col*15+9,y:r.row*15+7}]:[];}));
+ const water=createAmbienceDirector(fixedAmbientSources(state.rooms));
  const layout=()=>fixedLayout(screen.w,screen.h),project=p=>{const l=layout();return {x:l.x+(p.x+.5)*32*l.scale,y:l.y+(p.y+.5)*32*l.scale};};
  function inspect(item,kind){const p=item.entrance||item;state.walkTo(p,{kind,name:item.name,lines:item.lines});}
  function npc(n){const steps=[[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dy])=>({x:n.x+dx,y:n.y+dy})).filter(p=>state.room.walkable(p.x,p.y)).sort((a,b)=>Math.hypot(a.x-state.hero.x,a.y-state.hero.y)-Math.hypot(b.x-state.hero.x,b.y-state.hero.y));for(const p of steps)if(state.walkTo(p,{kind:'talk',name:n.name,lines:n.lines}))break;}
@@ -100,7 +101,7 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
   frame(now,reduced){
    const dt=last===null?0:(now-last)/1000;last=now;if(state.active){steer();prepareExit();rotate(Math.min(dt,.25));}state.update(dt,{paused:paused(),reduced});
    if(!state.active)return;
-   const sound=water.update({x:state.room.col*15+state.hero.px,y:state.room.row*15+state.hero.py},now,!paused()&&!state.transition&&audible());onAmbient(sound.levels,sound.events);
+   const sound=water.update(fixedListeningPosition(state),now,!paused()&&audible());onAmbient(sound.levels,sound.events);
    canvas.setAttribute('aria-busy',String(!!state.transition||state.hero.path.length>0));
    const frame=state.transition?1000/60:state.hero.moving?1000/45:1000/24;if(now-paintAt<frame)return;paintAt=now;
    c.setTransform(screen.dpr,0,0,screen.dpr,0,0);c.fillStyle='#b6d5d7';c.fillRect(0,0,screen.w,screen.h);
