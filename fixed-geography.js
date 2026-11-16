@@ -1,3 +1,4 @@
+import {fixedObject} from './fixed-journey-data.js';
 import {fixedSource} from './fixed-journey-data.js';
 
 // Physical shared edges. Lane numbers are identical on the two boards; a
@@ -22,6 +23,18 @@ export function composeFixedGeography(defs){
   const n=(r.col*3+r.row)%4;
   r.polygon=[[1,2+n/2],[5,1],[10,1+n/2],[13,3],[14,8],[12,13],[8,14],[2,12],[0,7]];
   r.roads=r.land==='ridge'?[[[2,10],[4,11],[7,10],[10,8],[12,5]],[[4,11],[5,7],[3,5]]]:r.land==='shore'?[[[2,5],[4,8],[7,11],[10,11],[12,9]]]:[[[2,8],[4,10],[8,11],[12,9]],[[4,10],[5,6],[8,5]]];
+ }
+ // The reflection pond is an approach, not a second full greenhouse.
+ const pond=defs.find(r=>r.id==='glass-reflection');
+ pond.site=fixedObject('pilgrim-detail-1',{x:3,y:4,width:2,entrance:{x:5,y:8}});
+ pond.water=[[[10,0],[11,5],[11,10],[10,14]]];
+ const glass=defs.find(r=>r.id==='glass-court');glass.site={...glass.site,landmarkGlass:true};
+ glass.water=[[[11,0],[10,5],[10,14]]];
+ glass.npc={x:4,y:10,name:'鉢を運ぶ人',lines:['北の段畑から見えるのは、この屋根。換気の窓だけ少し高くしてあるの。','水をやった鉢は、重いから。階段の手前で、一度置いていくんだ。']};
+ // One centre line crosses both north/south seams from the receiving court
+ // down to the two bridges; dry channels repeat its width on the next column.
+ for(const id of ['wet-temple','wet-stairs','canal-bend','empty-basin','dry-stairs','dry-temple']){
+  const r=defs.find(r=>r.id===id);r.water=[[[10,0],[10,5],[9,10],[10,14]]];
  }
  const flowers=defs.find(r=>r.id==='white-flower-road');flowers.name='白花の裂け野';flowers.chartName='裂け野';flowers.role='花の原が斜めに切れ、見える対岸へ上側の先端を回る。上下の岸は隣の風見石にも続く。';
  const centre=defs.find(r=>r.id===FIXED_START.room);

@@ -12,6 +12,7 @@ import {fixedLayout,fixedExitMarker,fixedGuideLayout} from './fixed-screens.js';
 import {drawFeatureGround,featureObjects,drawPondRim} from './fixed-feature-art.js';
 import {drawFinished} from './fixed-sprite-finish.js';
 import {cultureOf,drawRegionalBuilding,drawRegionalVillager,dwellingRole,smokePoints} from './fixed-culture.js';
+import {drawJourneyGround} from './fixed-landmarks.js';
 import {drawFlavourGround,drawFlavourAir} from './fixed-flavour.js';
 import {drawSurroundings,drawPanorama,drawGround,drawCliffFace,groundStyle} from './fixed-backdrop.js';
 
@@ -86,6 +87,7 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
  for(const f of room.features||[]){drawFeatureGround(c,room,f,time);drawPondRim(c,room,f);}
  // Small ambient life on the board in view (2026-11-14): grass, water light, cloud shadows.
  if(guides)drawFlavourGround(c,room,time);
+ drawJourneyGround(c,room,time,guides);
  // Across a seam both boards fade towards the same shared ground (and the
  // same shared road colour), smoothly over three cells, so the land runs on.
  const mine=groundStyle(room);
@@ -175,14 +177,14 @@ export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[r
  const l=fixedLayout(screen.w,screen.h),stride=480*l.scale;
  const u=transition?Math.min(1,transition.elapsed/transition.duration):0,p=u*u*u*(u*(u*6-15)+10);
  const cx=room.col+(transition?transition.to.col-room.col:0)*p,cy=room.row+(transition?transition.to.row-room.row:0)*p;
- background(c,{...room,col:cx,row:cy},screen.w,screen.h,l,time);
+ background(c,{...room,col:cx,row:cy,viewpoint:hero},screen.w,screen.h,l,time);
  drawNightLights(c,{...room,col:cx,row:cy},screen.w,screen.h,l,time);
  const dpr=screen.dpr||1,sized=layer=>{if(layer.width!==Math.round(screen.w*dpr)||layer.height!==Math.round(screen.h*dpr)){layer.width=Math.round(screen.w*dpr);layer.height=Math.round(screen.h*dpr);}const g=layer.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);return g;};
  let pair=layers.get(c);if(!pair){const front=document.createElement('canvas');front.id='fixedTerrainCanvas';const back=document.createElement('canvas');back.id='fixedNeighbourCanvas';pair={front,back};layers.set(c,pair);}
  const ground=sized(pair.front),behind=sized(pair.back);
  // Sky renderers own their cloud alpha. Fade the completed sky, using the
  // terrain buffer before clearing it, so no cloud can bypass the transition.
- if(transition){background(ground,{...transition.to,col:cx,row:cy},screen.w,screen.h,l,time);drawNightLights(ground,{...transition.to,col:cx,row:cy},screen.w,screen.h,l,time);c.save();c.globalAlpha=p;c.drawImage(pair.front,0,0,screen.w,screen.h);c.restore();}
+ if(transition){background(ground,{...transition.to,col:cx,row:cy,viewpoint:transition.landing},screen.w,screen.h,l,time);drawNightLights(ground,{...transition.to,col:cx,row:cy},screen.w,screen.h,l,time);c.save();c.globalAlpha=p;c.drawImage(pair.front,0,0,screen.w,screen.h);c.restore();}
  ground.clearRect(0,0,screen.w,screen.h);behind.clearRect(0,0,screen.w,screen.h);
  // 2026-11-13: the walkable board(s) are drawn in front of the neighbours and
  // are never dissolved by the neighbours' fog, so a tall tower, windmill or

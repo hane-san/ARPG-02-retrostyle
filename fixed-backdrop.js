@@ -91,7 +91,7 @@ export function drawSurroundings(c,room){const layer=surroundingsLayer(room);if(
 // Whether the old floating-island cliff faces still belong under the land.
 export function keepsCliffFaces(room){return room.land==='ridge'||!!room.skyline;}
 // The region beyond the boards, from far to near, in front of the sky.
-export function drawPanorama(c,room,w,h,l,time,distant=null){
+export function drawPanorama(c,room,w,h,l,time,distant=null,afterMiddle=null){
  const s=l.scale,top=l.y-128*s,horizon=Math.max(24*s,top*.58),kind=surroundingKind(room),col=colours(room,kind),sky=FIXED_SKIES[room.sky],haze=sky?sky.colors[3]:'#e6e3d0',far=mix(col[1],haze,.62),mid=mix(col[0],haze,.38),near=mix(col[0],haze,.12);
  const bearing=(room.col||0)*.37+(room.row||0)*.11,ridge=(i,amp,freq,phase)=>{const t=i*freq+bearing+phase;return horizon-amp*s*(.5+.3*Math.sin(t)+.16*Math.sin(t*2.3+phase*1.7)+.09*Math.sin(t*5.1+phase*2.9)+.06*Math.cos(t*.43+phase));};
  // Each band is lit from above and settles into its own colour lower down,
@@ -112,6 +112,9 @@ export function drawPanorama(c,room,w,h,l,time,distant=null){
  band(midBase,kind==='scree'||kind==='snowscree'?34:14,.29,2.1,mid);
  if(kind==='canopy')for(let i=0;i<26;i++){const x=(i+.5)*w/26+Math.sin(i*1.7+bearing)*6*s,y=midBase+(4+Math.sin(i*2.3)*5)*s,r=(9+Math.sin(i*3.1)*3)*s;E(c,x,y,r,r*.85,mix('#3f6b52',haze,.35));E(c,x-2*s,y-2*s,r*.55,r*.45,mix('#6d9a72',haze,.35));}
  if(kind==='fields'||kind==='grass'||kind==='garden')for(let i=0;i<34;i++){const x=(i+.5)*w/34+Math.sin(i*2.9+bearing)*5*s,y=midBase+(12+Math.sin(i*1.9)*4)*s,r=(3.2+Math.sin(i*4.1)*1.2)*s;E(c,x,y,r*1.4,r,mix('#557c56',haze,.42));}
+ // A homeward landmark on a nearer hill keeps its feet visible above this
+ // crest while still settling behind the nearest land.
+ if(afterMiddle)afterMiddle(c,midBase,far2);
  // Near: the surroundings colour itself, meeting the neighbouring boards.
  band(top+2*s,9,.31,3.3,near);
  R(c,0,top+16*s,w,h,near);
