@@ -1,0 +1,674 @@
+[
+  {
+    "width": 320,
+    "id": "empty-basin",
+    "hero": {
+      "x": 5,
+      "y": 13
+    }
+  },
+  {
+    "width": 320,
+    "id": "glass-reflection",
+    "hero": {
+      "x": 13,
+      "y": 10
+    }
+  },
+  {
+    "width": 320,
+    "id": "wet-stairs",
+    "hero": {
+      "x": 6,
+      "y": 13
+    }
+  },
+  {
+    "width": 320,
+    "id": "wet-temple",
+    "hero": {
+      "x": 7,
+      "y": 13
+    }
+  },
+  {
+    "width": 320,
+    "id": "glass-court",
+    "hero": {
+      "x": 7,
+      "y": 13
+    }
+  },
+  {
+    "width": 320,
+    "id": "terraced-fields",
+    "hero": {
+      "x": 7,
+      "y": 13
+    }
+  },
+  {
+    "width": 320,
+    "id": "glass-court",
+    "hero": {
+      "x": 7,
+      "y": 1
+    }
+  },
+  {
+    "width": 320,
+    "id": "wet-temple",
+    "hero": {
+      "x": 7,
+      "y": 1
+    }
+  },
+  {
+    "width": 320,
+    "id": "wet-stairs",
+    "hero": {
+      "x": 7,
+      "y": 1
+    }
+  },
+  {
+    "width": 320,
+    "id": "glass-reflection",
+    "hero": {
+      "x": 6,
+      "y": 1
+    }
+  },
+  {
+    "width": 320,
+    "id": "empty-basin",
+    "hero": {
+      "x": 1,
+      "y": 10
+    }
+  },
+  {
+    "width": 320,
+    "id": "watershed-wheel",
+    "hero": {
+      "x": 5,
+      "y": 1
+    }
+  },
+  {
+    "width": 320,
+    "id": "flour-bags",
+    "hero": {
+      "x": 7,
+      "y": 1
+    }
+  },
+  {
+    "width": 320,
+    "id": "white-flower-road",
+    "hero": {
+      "x": 1,
+      "y": 6
+    }
+  },
+  {
+    "width": 320,
+    "id": "cairn-turn",
+    "hero": {
+      "x": 1,
+      "y": 4
+    }
+  },
+  {
+    "width": 320,
+    "id": "mountain-sill",
+    "hero": {
+      "x": 1,
+      "y": 3
+    }
+  },
+  {
+    "width": 320,
+    "id": "glacier-rest",
+    "hero": {
+      "x": 1,
+      "y": 6
+    }
+  },
+  {
+    "width": 320,
+    "id": "mountain-sill",
+    "hero": {
+      "x": 13,
+      "y": 6
+    }
+  },
+  {
+    "width": 320,
+    "id": "cairn-turn",
+    "hero": {
+      "x": 13,
+      "y": 3
+    }
+  },
+  {
+    "width": 320,
+    "id": "white-flower-road",
+    "hero": {
+      "x": 13,
+      "y": 4
+    }
+  },
+  {
+    "width": 320,
+    "id": "flour-bags",
+    "hero": {
+      "x": 13,
+      "y": 6
+    }
+  },
+  {
+    "width": 320,
+    "id": "watershed-wheel",
+    "hero": {
+      "x": 7,
+      "y": 13
+    }
+  },
+  {
+    "width": 320,
+    "id": "canal-bend",
+    "hero": {
+      "x": 13,
+      "y": 4
+    }
+  },
+  {
+    "width": 320,
+    "id": "glass-reflection",
+    "hero": {
+      "x": 6,
+      "y": 13
+    }
+  },
+  {
+    "width": 320,
+    "id": "empty-basin",
+    "hero": {
+      "x": 1,
+      "y": 10
+    }
+  },
+  {
+    "width": 320,
+    "id": "glass-reflection",
+    "hero": {
+      "x": 13,
+      "y": 10
+    }
+  },
+  {
+    "width": 320,
+    "id": "wet-stairs",
+    "hero": {
+      "x": 6,
+      "y": 13
+    }
+  },
+  {
+    "width": 320,
+    "id": "dry-stairs",
+    "hero": {
+      "x": 1,
+      "y": 7
+    }
+  },
+  {
+    "width": 320,
+    "id": "wet-stairs",
+    "hero": {
+      "x": 13,
+      "y": 7
+    }
+  },
+  {
+    "width": 320,
+    "id": "wet-temple",
+    "hero": {
+      "x": 7,
+      "y": 13
+    }
+  },
+  {
+    "width": 320,
+    "id": "dry-temple",
+    "hero": {
+      "x": 1,
+      "y": 7
+    }
+  },
+  {
+    "width": 320,
+    "id": "salt-boats",
+    "hero": {
+      "x": 1,
+      "y": 7
+    }
+  },
+  {
+    "width": 320,
+    "id": "dry-temple",
+    "hero": {
+      "x": 13,
+      "y": 7
+    }
+  },
+  {
+    "width": 320,
+    "id": "wet-temple",
+    "hero": {
+      "x": 13,
+      "y": 7
+    }
+  },
+  {
+    "width": 320,
+    "id": "wet-stairs",
+    "hero": {
+      "x": 7,
+      "y": 1
+    }
+  },
+  {
+    "width": 320,
+    "id": "dry-stairs",
+    "hero": {
+      "x": 1,
+      "y": 7
+    }
+  },
+  {
+    "width": 320,
+    "id": "wet-stairs",
+    "hero": {
+      "x": 13,
+      "y": 7
+    }
+  },
+  {
+    "width": 320,
+    "id": "glass-reflection",
+    "hero": {
+      "x": 6,
+      "y": 1
+    }
+  },
+  {
+    "width": 320,
+    "id": "empty-basin",
+    "hero": {
+      "x": 1,
+      "y": 10
+    }
+  },
+  {
+    "width": 320,
+    "id": "glass-reflection",
+    "hero": {
+      "x": 13,
+      "y": 10
+    }
+  },
+  {
+    "width": 320,
+    "id": "canal-bend",
+    "hero": {
+      "x": 6,
+      "y": 1
+    }
+  },
+  {
+    "width": 320,
+    "id": "watershed-wheel",
+    "hero": {
+      "x": 1,
+      "y": 4
+    }
+  },
+  {
+    "width": 390,
+    "id": "empty-basin",
+    "hero": {
+      "x": 5,
+      "y": 13
+    }
+  },
+  {
+    "width": 390,
+    "id": "glass-reflection",
+    "hero": {
+      "x": 13,
+      "y": 10
+    }
+  },
+  {
+    "width": 390,
+    "id": "wet-stairs",
+    "hero": {
+      "x": 6,
+      "y": 13
+    }
+  },
+  {
+    "width": 390,
+    "id": "wet-temple",
+    "hero": {
+      "x": 7,
+      "y": 13
+    }
+  },
+  {
+    "width": 390,
+    "id": "glass-court",
+    "hero": {
+      "x": 7,
+      "y": 13
+    }
+  },
+  {
+    "width": 390,
+    "id": "terraced-fields",
+    "hero": {
+      "x": 7,
+      "y": 13
+    }
+  },
+  {
+    "width": 390,
+    "id": "glass-court",
+    "hero": {
+      "x": 7,
+      "y": 1
+    }
+  },
+  {
+    "width": 390,
+    "id": "wet-temple",
+    "hero": {
+      "x": 7,
+      "y": 1
+    }
+  },
+  {
+    "width": 390,
+    "id": "wet-stairs",
+    "hero": {
+      "x": 7,
+      "y": 1
+    }
+  },
+  {
+    "width": 390,
+    "id": "glass-reflection",
+    "hero": {
+      "x": 6,
+      "y": 1
+    }
+  },
+  {
+    "width": 390,
+    "id": "empty-basin",
+    "hero": {
+      "x": 1,
+      "y": 10
+    }
+  },
+  {
+    "width": 390,
+    "id": "watershed-wheel",
+    "hero": {
+      "x": 5,
+      "y": 1
+    }
+  },
+  {
+    "width": 390,
+    "id": "flour-bags",
+    "hero": {
+      "x": 7,
+      "y": 1
+    }
+  },
+  {
+    "width": 390,
+    "id": "white-flower-road",
+    "hero": {
+      "x": 1,
+      "y": 6
+    }
+  },
+  {
+    "width": 390,
+    "id": "cairn-turn",
+    "hero": {
+      "x": 1,
+      "y": 4
+    }
+  },
+  {
+    "width": 390,
+    "id": "mountain-sill",
+    "hero": {
+      "x": 1,
+      "y": 3
+    }
+  },
+  {
+    "width": 390,
+    "id": "glacier-rest",
+    "hero": {
+      "x": 1,
+      "y": 6
+    }
+  },
+  {
+    "width": 390,
+    "id": "mountain-sill",
+    "hero": {
+      "x": 13,
+      "y": 6
+    }
+  },
+  {
+    "width": 390,
+    "id": "cairn-turn",
+    "hero": {
+      "x": 13,
+      "y": 3
+    }
+  },
+  {
+    "width": 390,
+    "id": "white-flower-road",
+    "hero": {
+      "x": 13,
+      "y": 4
+    }
+  },
+  {
+    "width": 390,
+    "id": "flour-bags",
+    "hero": {
+      "x": 13,
+      "y": 6
+    }
+  },
+  {
+    "width": 390,
+    "id": "watershed-wheel",
+    "hero": {
+      "x": 7,
+      "y": 13
+    }
+  },
+  {
+    "width": 390,
+    "id": "canal-bend",
+    "hero": {
+      "x": 13,
+      "y": 4
+    }
+  },
+  {
+    "width": 390,
+    "id": "glass-reflection",
+    "hero": {
+      "x": 6,
+      "y": 13
+    }
+  },
+  {
+    "width": 390,
+    "id": "empty-basin",
+    "hero": {
+      "x": 1,
+      "y": 10
+    }
+  },
+  {
+    "width": 390,
+    "id": "glass-reflection",
+    "hero": {
+      "x": 13,
+      "y": 10
+    }
+  },
+  {
+    "width": 390,
+    "id": "wet-stairs",
+    "hero": {
+      "x": 6,
+      "y": 13
+    }
+  },
+  {
+    "width": 390,
+    "id": "dry-stairs",
+    "hero": {
+      "x": 1,
+      "y": 7
+    }
+  },
+  {
+    "width": 390,
+    "id": "wet-stairs",
+    "hero": {
+      "x": 13,
+      "y": 7
+    }
+  },
+  {
+    "width": 390,
+    "id": "wet-temple",
+    "hero": {
+      "x": 7,
+      "y": 13
+    }
+  },
+  {
+    "width": 390,
+    "id": "dry-temple",
+    "hero": {
+      "x": 1,
+      "y": 7
+    }
+  },
+  {
+    "width": 390,
+    "id": "salt-boats",
+    "hero": {
+      "x": 1,
+      "y": 7
+    }
+  },
+  {
+    "width": 390,
+    "id": "dry-temple",
+    "hero": {
+      "x": 13,
+      "y": 7
+    }
+  },
+  {
+    "width": 390,
+    "id": "wet-temple",
+    "hero": {
+      "x": 13,
+      "y": 7
+    }
+  },
+  {
+    "width": 390,
+    "id": "wet-stairs",
+    "hero": {
+      "x": 7,
+      "y": 1
+    }
+  },
+  {
+    "width": 390,
+    "id": "dry-stairs",
+    "hero": {
+      "x": 1,
+      "y": 7
+    }
+  },
+  {
+    "width": 390,
+    "id": "wet-stairs",
+    "hero": {
+      "x": 13,
+      "y": 7
+    }
+  },
+  {
+    "width": 390,
+    "id": "glass-reflection",
+    "hero": {
+      "x": 6,
+      "y": 1
+    }
+  },
+  {
+    "width": 390,
+    "id": "empty-basin",
+    "hero": {
+      "x": 1,
+      "y": 10
+    }
+  },
+  {
+    "width": 390,
+    "id": "glass-reflection",
+    "hero": {
+      "x": 13,
+      "y": 10
+    }
+  },
+  {
+    "width": 390,
+    "id": "canal-bend",
+    "hero": {
+      "x": 6,
+      "y": 1
+    }
+  },
+  {
+    "width": 390,
+    "id": "watershed-wheel",
+    "hero": {
+      "x": 1,
+      "y": 4
+    }
+  }
+]
