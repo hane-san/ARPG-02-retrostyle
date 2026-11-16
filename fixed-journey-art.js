@@ -3,7 +3,7 @@ import {WEST_STUDIES} from './western-world.js';
 import {fixedSource} from './fixed-journey-data.js';
 import {drawPilgrimTile,drawPilgrimSite} from './pilgrimage-art.js';
 import {drawLandscapeSky,skyGeometry,skyPalette} from './landscape-sky.js';
-import {drawJourneyLandmarks,drawArrivalRoof} from './fixed-landmarks.js';
+import {drawJourneyLandmarks,drawArrivalRoof,drawHomewardMill} from './fixed-landmarks.js';
 import {drawPanorama,mix} from './fixed-backdrop.js';
 const R=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h);};
 const P=(c,p,col)=>{c.fillStyle=col;c.beginPath();p.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.closePath();c.fill();};
@@ -58,6 +58,6 @@ export function journeyBackground(c,room,w,h,l,time){
   const size=l.scale*(room.id==='capital-gate'?.62:room.id==='azure-plain'?.25:.4);
   g.save();g.translate(w*.56,feet+4*l.scale);g.scale(size,size);
   for(let i=-5;i<=6;i++){R(g,i*68,-80,48,80,far('#aab9b7'));R(g,i*68+8,-98,32,18,far('#d6d8cb'));R(g,i*68+16,-25,12,25,far('#839ba2'));}R(g,-5*68,-60,12*68,14,far('#b8c3bd'));g.restore();
- });
+ },(g,midBase)=>drawHomewardMill(g,room,w,l,midBase,time));
 
 }

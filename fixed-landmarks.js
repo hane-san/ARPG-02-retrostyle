@@ -59,11 +59,16 @@ export function drawJourneyLandmarks(c,room,w,l,feet,time){
   // the peaks entirely. Above it the same eastern saddle comes back.
   P(c,[[w*.42,feet+18*s],[w*.51,feet-3*s],[w*.62,feet-15*s],[w*.71,feet-32*s],[w*.79,feet-29*s],[w*.88,feet-17*s],[w,feet+18*s]],'#8c9f98');
  }
- if(v.mill){
-  const x=w*.15,y=feet-15*s;c.save();c.translate(x,y);c.scale(s*.25,s*.25);
-  P(c,[[-42,10],[-20,-9],[180,-3],[230,30]],'#b1b995');
-  drawWesternSite(c,{x:0,y:-4,w:5,h:4,chapter:13,form:'west-windmill'},time);c.restore();
- }
+
+}
+// A westward hill is in front of the middle ridge. Painting both hill and
+// mill together here keeps the tiny sails attached to their real footing.
+export function drawHomewardMill(c,room,w,l,midBase,time){
+ if(room.id!=='glacier-rest')return;
+ const s=l.scale,x=w*.15,y=midBase+4*s;
+ c.save();c.translate(x,y);c.scale(s*.25,s*.25);
+ P(c,[[-120,100],[-64,30],[0,-4],[70,7],[140,42],[240,100]],'#98aa88');
+ drawWesternSite(c,{x:0,y:-4,w:5,h:4,chapter:13,form:'west-windmill'},time);c.restore();
 }
 export function drawArrivalRoof(c,room){
  if(room.id!=='glass-court'||!room.site)return;
