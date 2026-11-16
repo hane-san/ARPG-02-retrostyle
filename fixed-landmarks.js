@@ -60,7 +60,7 @@ export function drawJourneyLandmarks(c,room,w,l,feet,time){
   P(c,[[w*.42,feet+18*s],[w*.51,feet-3*s],[w*.62,feet-15*s],[w*.71,feet-32*s],[w*.79,feet-29*s],[w*.88,feet-17*s],[w,feet+18*s]],'#8c9f98');
  }
  if(v.mill){
-  const x=w*.15,y=feet-7*s;c.save();c.translate(x,y);c.scale(s*.13,s*.13);
+  const x=w*.15,y=feet-15*s;c.save();c.translate(x,y);c.scale(s*.25,s*.25);
   P(c,[[-42,10],[-20,-9],[180,-3],[230,30]],'#b1b995');
   drawWesternSite(c,{x:0,y:-4,w:5,h:4,chapter:13,form:'west-windmill'},time);c.restore();
  }
@@ -71,6 +71,7 @@ export function drawArrivalRoof(c,room){
  // Pots and recent watering marks use only the open interior/approach, and
  // have no new blocking feet. Their shadows are deliberately small.
  const base=(a.y+a.h)*32;
+ for(const x of [a.x*32+55,a.x*32+139]){c.fillStyle='#567f794d';c.beginPath();c.ellipse(x,base+3,17,5,0,0,Math.PI*2);c.fill();R(c,x+17,base+9,3,2,'#8db3a5');}
  for(let i=0;i<4;i++){const x=a.x*32+40+i*43;R(c,x,base-17,13,11,'#9a785b');R(c,x-2,base-19,17,4,'#c6a582');R(c,x+5,base-31,3,12,'#50765a');L(c,x+6,base-26,x,base-30,'#739265',3);}
 }
 // Valley under the south-east lip of the northern terrace; keep it outside
