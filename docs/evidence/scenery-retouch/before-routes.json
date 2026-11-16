@@ -1,0 +1,38 @@
+[
+  {
+    "label": "before",
+    "width": 390,
+    "id": "watershed-wheel",
+    "name": "旅支度の分水庭"
+  },
+  {
+    "label": "before",
+    "width": 390,
+    "id": "wet-temple",
+    "name": "水を受ける七段"
+  },
+  {
+    "label": "before",
+    "width": 390,
+    "id": "dry-temple",
+    "name": "水の失せた七段"
+  },
+  {
+    "label": "before",
+    "width": 390,
+    "id": "lantern-inn",
+    "name": "青い灯の休み処"
+  },
+  {
+    "label": "before",
+    "width": 390,
+    "id": "river-port",
+    "name": "木陰の河港"
+  },
+  {
+    "label": "before",
+    "width": 390,
+    "id": "orchard-window",
+    "name": "果樹の窓辺"
+  }
+]

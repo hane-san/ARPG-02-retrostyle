@@ -1,3 +1,4 @@
+import {drawRetouchedSite} from './fixed-retouch.js';
 import {drawFixedSky,FIXED_SKIES,drawSkyAir,CLEAR_SKY,skyFloor} from './fixed-sky.js';
 import {WEST_STUDIES} from './western-world.js';
 import {fixedSource} from './fixed-journey-data.js';
@@ -32,9 +33,10 @@ export function journeyTile(c,room,x,y){
  const light=FIXED_SKIES[room.sky];if(light?.light){c.save();c.globalAlpha*=light.strength;R(c,(x+sx)*32,(y+sy)*32,32,32,light.light);c.restore();}
  if(t==='s'&&!z.western)for(let j=0;j<4;j++){R(c,(x+sx)*32,(y+sy)*32+j*8,32,2,z.palette[1]);R(c,(x+sx)*32,(y+sy)*32+j*8+2,32,1,z.palette[3]);}
 }
-export function journeySite(c,site,time){
+export function journeySite(c,site,time,retouch=null){
  c.save();c.translate(site.x*32,site.y*32);c.scale(site.scale,site.scale);
- drawPilgrimSite(c,{...site,x:0,y:0,w:site.sourceW,h:site.sourceH},time,0);c.restore();
+ const source={...site,x:0,y:0,w:site.sourceW,h:site.sourceH};
+ if(!drawRetouchedSite(c,source,retouch))drawPilgrimSite(c,source,time,0);c.restore();
  if(site.landmarkGlass)drawArrivalRoof(c,{id:'glass-court',site});
 }
 // Sky is outside the movement grid. Its source profiles, geology and repeated

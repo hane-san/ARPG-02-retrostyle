@@ -1,3 +1,4 @@
+import {sceneryRetouch} from './fixed-retouch.js';
 import {drawFixedSky,FIXED_SKIES,drawSkyAir,drawNightLights,gradeLand,CLEAR_SKY,skyFloor} from './fixed-sky.js';
 import {journeyMaterial,journeyTile,journeySite,journeyBackground} from './fixed-journey-art.js';
 import {drawForestTree} from './forest-market-art.js';
@@ -112,7 +113,7 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
  // Dwellings are re-drawn in the board's regional culture (2026-11-14 experiment),
  // keeping each place's role; landmarks keep their own drawings.
  const culture=cultureOf(room);
- for(const site of [room.site,...room.props||[]].filter(Boolean)){const role=dwellingRole(site);objects.push({y:site.y+site.h,paint:()=>drawFinished(c,site,{x:site.x*32,y:site.y*32,w:site.w*32,h:site.h*32},role?(g,t)=>drawRegionalBuilding(g,{x:site.x*32,y:site.y*32,w:site.w*32,h:site.h*32},culture,role,t):(g,t)=>journeySite(g,site,t),time)});}
+ for(const site of [room.site,...room.props||[]].filter(Boolean)){const role=dwellingRole(site),retouch=site===room.site?sceneryRetouch(room):null;objects.push({y:site.y+site.h,paint:()=>drawFinished(c,site,{x:site.x*32,y:site.y*32,w:site.w*32,h:site.h*32},role?(g,t)=>drawRegionalBuilding(g,{x:site.x*32,y:site.y*32,w:site.w*32,h:site.h*32},culture,role,t,retouch?.building):(g,t)=>journeySite(g,site,t,retouch),time,{finish:retouch?.finish||'default'})});}
  // Solid landforms share the contour too; a glint and reeds stay soft.
  for(const f of room.features||[]){
   const parts=featureObjects(c,room,f,time),solid=['bush','boulder','cairn','stump','sign','hut'].includes(f.kind),keys=featureKeys.get(f)||featureKeys.set(f,f.cells.map(()=>({}))).get(f),size=f.kind==='hut'?64:32;

@@ -16,6 +16,13 @@
 // drawing that moves (a windmill's sails, a turning wheel) is measured again
 // each frame.
 const RES=2,PAD_X=96,PAD_UP=420,PAD_DOWN=40,LIMIT=48;
+// Only the six selected scenes opt into the material-coloured, narrower
+// contours; all other art keeps its existing finish, including people.
+const FINISHES=Object.freeze({
+ default:{width:.9,ink:'rgba(32,44,46,.6)',light:1,shadow:.2},
+ stone:{width:.55,ink:'rgba(73,87,79,.42)',light:.7,shadow:.15},
+ timber:{width:.65,ink:'rgba(79,70,58,.46)',light:.72,shadow:.16}
+});
 const cache=new Map();
 let scratch=null;
 function canvasOf(w,h){const c=document.createElement('canvas');c.width=Math.max(1,w);c.height=Math.max(1,h);return c;}
@@ -36,12 +43,12 @@ function layers(e,draw,time){
  const t=e.trim||(e.trim=e.animated?{sx:0,sy:0,sw:W,sh:H}:bounds(g,W,H));if(!t){e.under=e.over=null;return;}
  const {sx,sy,sw,sh}=t;
  // Under: the silhouette in deep ink, spread by about one board pixel.
- const ink=canvasOf(sw,sh),k=ink.getContext('2d');k.drawImage(scratch,sx,sy,sw,sh,0,0,sw,sh);k.globalCompositeOperation='source-in';k.fillStyle='rgba(32,44,46,.6)';k.fillRect(0,0,sw,sh);
+ const ink=canvasOf(sw,sh),k=ink.getContext('2d');k.drawImage(scratch,sx,sy,sw,sh,0,0,sw,sh);k.globalCompositeOperation='source-in';k.fillStyle=e.finish.ink;k.fillRect(0,0,sw,sh);
  const under=e.under&&e.under.width===sw&&e.under.height===sh?e.under:canvasOf(sw,sh),u=under.getContext('2d');u.clearRect(0,0,sw,sh);
- for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]])u.drawImage(ink,dx*RES*.9,dy*RES*.9);
+ for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]])u.drawImage(ink,dx*RES*e.finish.width,dy*RES*e.finish.width);
  // Over: the light, kept inside the silhouette.
  const over=e.over&&e.over.width===sw&&e.over.height===sh?e.over:canvasOf(sw,sh),o=over.getContext('2d');o.clearRect(0,0,sw,sh);
- o.save();o.translate(-sx,-sy);
+ o.save();o.globalAlpha=e.finish.light;o.translate(-sx,-sy);
  const foot=(PAD_UP+box.h)*RES,top=Math.max(0,PAD_UP*RES-box.h*RES*1.6);
  const v=o.createLinearGradient(0,top,0,foot);v.addColorStop(0,'rgba(255,250,232,.16)');v.addColorStop(.55,'rgba(255,250,232,0)');v.addColorStop(.82,'rgba(30,42,44,.06)');v.addColorStop(1,'rgba(30,42,44,.2)');o.fillStyle=v;o.fillRect(sx,sy,sw,sh);
  const left=PAD_X*RES,right=(PAD_X+box.w)*RES,s=o.createLinearGradient(left,0,right,0);s.addColorStop(0,'rgba(255,250,232,.06)');s.addColorStop(.6,'rgba(30,42,44,0)');s.addColorStop(1,'rgba(30,42,44,.12)');o.fillStyle=s;o.fillRect(sx,sy,sw,sh);
@@ -58,15 +65,16 @@ function moves(box,draw){
  return false;
 }
 // box: the object's footprint on the board in board pixels {x,y,w,h}.
-export function drawFinished(c,key,box,draw,time,{texture=null,shadow=true}={}){
+export function drawFinished(c,key,box,draw,time,{texture=null,shadow=true,finish='default'}={}){
  if(typeof document==='undefined'){draw(c,time);return;}
+ const material=FINISHES[finish]||FINISHES.default;
  let e=cache.get(key);
- if(!e||e.box.w!==box.w||e.box.h!==box.h||e.box.x!==box.x||e.box.y!==box.y){e={box:{...box},texture,animated:moves(box,draw),trim:null,under:null,over:null,ready:false};}
+ if(!e||e.finish!==material||e.box.w!==box.w||e.box.h!==box.h||e.box.x!==box.x||e.box.y!==box.y){e={box:{...box},finish:material,texture,animated:moves(box,draw),trim:null,under:null,over:null,ready:false};}
  cache.delete(key);cache.set(key,e);
  while(cache.size>LIMIT)cache.delete(cache.keys().next().value);
  if(e.animated){layers(e,draw,time);}else if(!e.ready){layers(e,draw,time);e.ready=true;}
  const place=img=>{if(img)c.drawImage(img,box.x-PAD_X+e.trim.sx/RES,box.y-PAD_UP+e.trim.sy/RES,img.width/RES,img.height/RES);};
  // A soft contact shadow, a little to the lower right of the footprint.
- if(shadow){c.save();c.fillStyle='rgba(28,40,38,.2)';c.beginPath();c.ellipse(box.x+box.w/2+5,box.y+box.h-3,box.w/2+9,Math.min(16,6+box.h*.12),0,0,Math.PI*2);c.fill();c.restore();}
+ if(shadow){c.save();c.fillStyle=`rgba(28,40,38,${e.finish.shadow})`;c.beginPath();c.ellipse(box.x+box.w/2+5,box.y+box.h-3,box.w/2+9,Math.min(16,6+box.h*.12),0,0,Math.PI*2);c.fill();c.restore();}
  place(e.under);draw(c,time);place(e.over);
 }
