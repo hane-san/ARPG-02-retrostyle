@@ -1,0 +1,222 @@
+{
+  "shadow": [
+    38,
+    38
+  ],
+  "sourceShadow": [
+    37,
+    37
+  ],
+  "padding": [
+    {
+      "id": "windmill-hill",
+      "angle": 0,
+      "outside": 0
+    },
+    {
+      "id": "windmill-hill",
+      "angle": 0.7853981633974483,
+      "outside": 0
+    },
+    {
+      "id": "windmill-hill",
+      "angle": 1.5707963267948966,
+      "outside": 0
+    },
+    {
+      "id": "windmill-hill",
+      "angle": 3.141592653589793,
+      "outside": 0
+    },
+    {
+      "id": "windmill-hill",
+      "angle": 4.71238898038469,
+      "outside": 0
+    },
+    {
+      "id": "flour-bags",
+      "angle": 0,
+      "outside": 0
+    },
+    {
+      "id": "flour-bags",
+      "angle": 0.7853981633974483,
+      "outside": 0
+    },
+    {
+      "id": "flour-bags",
+      "angle": 1.5707963267948966,
+      "outside": 0
+    },
+    {
+      "id": "flour-bags",
+      "angle": 3.141592653589793,
+      "outside": 0
+    },
+    {
+      "id": "flour-bags",
+      "angle": 4.71238898038469,
+      "outside": 0
+    },
+    {
+      "id": "gold-windmill",
+      "angle": 0,
+      "outside": 0
+    },
+    {
+      "id": "gold-windmill",
+      "angle": 0.7853981633974483,
+      "outside": 0
+    },
+    {
+      "id": "gold-windmill",
+      "angle": 1.5707963267948966,
+      "outside": 0
+    },
+    {
+      "id": "gold-windmill",
+      "angle": 3.141592653589793,
+      "outside": 0
+    },
+    {
+      "id": "gold-windmill",
+      "angle": 4.71238898038469,
+      "outside": 0
+    },
+    {
+      "id": "night-distribution",
+      "angle": 0,
+      "outside": 0
+    },
+    {
+      "id": "night-distribution",
+      "angle": 0.7853981633974483,
+      "outside": 0
+    },
+    {
+      "id": "night-distribution",
+      "angle": 1.5707963267948966,
+      "outside": 0
+    },
+    {
+      "id": "night-distribution",
+      "angle": 3.141592653589793,
+      "outside": 0
+    },
+    {
+      "id": "night-distribution",
+      "angle": 4.71238898038469,
+      "outside": 0
+    }
+  ],
+  "highContour": 110,
+  "overhang": 549,
+  "joints": [
+    {
+      "id": "reed-walk",
+      "time": 0,
+      "connected": true
+    },
+    {
+      "id": "fog-coast",
+      "time": 0,
+      "connected": true
+    },
+    {
+      "id": "terraced-fields",
+      "time": 0,
+      "connected": true
+    },
+    {
+      "id": "lily-rest",
+      "time": 0,
+      "connected": true
+    },
+    {
+      "id": "river-mill",
+      "time": 0,
+      "connected": true
+    },
+    {
+      "id": "river-mill",
+      "time": 9000,
+      "connected": true
+    },
+    {
+      "id": "river-mill",
+      "time": 17000,
+      "connected": true
+    },
+    {
+      "id": "river-mill",
+      "time": 31000,
+      "connected": true
+    }
+  ],
+  "people": [
+    {
+      "w": 320,
+      "h": 477,
+      "id": "wet-temple",
+      "x": 7,
+      "y": 4,
+      "visible": 211
+    },
+    {
+      "w": 320,
+      "h": 477,
+      "id": "wet-temple",
+      "x": 7,
+      "y": 6,
+      "visible": 216
+    },
+    {
+      "w": 320,
+      "h": 477,
+      "id": "dry-temple",
+      "x": 7,
+      "y": 4,
+      "visible": 211
+    },
+    {
+      "w": 320,
+      "h": 477,
+      "id": "dry-temple",
+      "x": 7,
+      "y": 6,
+      "visible": 216
+    },
+    {
+      "w": 390,
+      "h": 753,
+      "id": "wet-temple",
+      "x": 7,
+      "y": 4,
+      "visible": 316
+    },
+    {
+      "w": 390,
+      "h": 753,
+      "id": "wet-temple",
+      "x": 7,
+      "y": 6,
+      "visible": 316
+    },
+    {
+      "w": 390,
+      "h": 753,
+      "id": "dry-temple",
+      "x": 7,
+      "y": 4,
+      "visible": 316
+    },
+    {
+      "w": 390,
+      "h": 753,
+      "id": "dry-temple",
+      "x": 7,
+      "y": 6,
+      "visible": 316
+    }
+  ]
+}

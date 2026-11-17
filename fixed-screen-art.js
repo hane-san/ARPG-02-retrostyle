@@ -1,4 +1,5 @@
-import {sceneryRetouch} from './fixed-retouch.js';
+import {sceneryRetouch,drawRetouchedCourtGround,retouchedCourtColumns,drawRetouchedCourtColumn} from './fixed-retouch.js';
+import {fixedObjectPadding,fixedObjectNeedsContactShadow} from './fixed-object-art.js';
 import {drawFixedSky,FIXED_SKIES,drawSkyAir,drawNightLights,gradeLand,CLEAR_SKY,skyFloor} from './fixed-sky.js';
 import {journeyMaterial,journeyTile,journeySite,journeyBackground} from './fixed-journey-art.js';
 import {atlasTreeKind,drawAtlasTreeFeet,drawAtlasTreeCanopy} from './fixed-nature-art.js';
@@ -86,6 +87,8 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
  }
  // Open ground and roads as the land itself (2026-11-13), over the older cell art.
  drawGround(c,room,FIXED_SKIES[room.sky]);
+ // A courtyard is a floor. Its standing columns join the depth-sorted objects.
+ if(sceneryRetouch(room)?.kind==='court'){c.save();c.beginPath();for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(room.walkable(x,y))c.rect(x*32,y*32,32,32);c.clip();drawRetouchedCourtGround(c,room.site);c.restore();}
  for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++)if(room.tileAt(x,y)==='w'||room.tileAt(x,y)==='k'){R(c,x*32+5,y*32+15+Math.sin(time/1600+x)*2,17,1,'#dbe6db88');}
  for(const f of room.features||[]){drawFeatureGround(c,room,f,time);drawPondRim(c,room,f);}
  // Small ambient life on the board in view (2026-11-14): grass, water light, cloud shadows.
@@ -116,7 +119,13 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
  // Dwellings are re-drawn in the board's regional culture (2026-11-14 experiment),
  // keeping each place's role; landmarks keep their own drawings.
  const culture=cultureOf(room);
- for(const site of [room.site,...room.props||[]].filter(Boolean)){const role=dwellingRole(site),retouch=site===room.site?sceneryRetouch(room):null;objects.push({y:site.y+site.h,paint:()=>drawFinished(c,site,{x:site.x*32,y:site.y*32,w:site.w*32,h:site.h*32},role?(g,t)=>drawRegionalBuilding(g,{x:site.x*32,y:site.y*32,w:site.w*32,h:site.h*32},culture,role,t,retouch?.building):(g,t)=>journeySite(g,site,t,retouch),time,{finish:retouch?.finish||siteMaterial(site)})});}
+ for(const site of [room.site,...room.props||[]].filter(Boolean)){
+  const role=dwellingRole(site),retouch=site===room.site?sceneryRetouch(room):null;
+  if(retouch?.kind==='court'){
+   for(const col of retouchedCourtColumns(site))objects.push({y:(col.y+col.h)/32,paint:()=>drawFinished(c,col,col,g=>drawRetouchedCourtColumn(g,col),time,{finish:'stone'})});
+  }else objects.push({y:site.y+site.h,paint:()=>drawFinished(c,site,{x:site.x*32,y:site.y*32,w:site.w*32,h:site.h*32},role?(g,t)=>drawRegionalBuilding(g,{x:site.x*32,y:site.y*32,w:site.w*32,h:site.h*32},culture,role,t,retouch?.building):(g,t)=>journeySite(g,site,t,retouch),time,{finish:retouch?.finish||siteMaterial(site),padding:fixedObjectPadding(site),shadow:fixedObjectNeedsContactShadow(site,{role,retouch})})});
+ }
+
  // Solid landforms share the contour too; a glint and reeds stay soft.
  for(const f of room.features||[]){
   const parts=featureObjects(c,room,f,time),solid=['bush','boulder','cairn','stump','sign','hut'].includes(f.kind),keys=featureKeys.get(f)||featureKeys.set(f,f.cells.map(()=>({}))).get(f),size=f.kind==='hut'?64:32;
@@ -254,7 +263,9 @@ export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[r
   }
  }
  for(const [r,weight] of front){const ox=(r.col-cx)*stride,oy=(r.row-cy)*stride;
-  ground.save();ground.globalAlpha=weight;ground.beginPath();ground.rect(l.x+ox,-screen.h,l.width,screen.h+l.y+oy+l.height);ground.clip();
+  // The feet and traveller still use board coordinates. Elevated art may
+  // extend past its board edge until the actual viewport edge.
+  ground.save();ground.globalAlpha=weight;ground.beginPath();ground.rect(0,-screen.h,screen.w,screen.h+l.y+oy+l.height);ground.clip();
   const person=transition?transitionTraveller(room,transition,r,p):hero;
   terrain(ground,r,person,screen,time,{offsetX:ox,offsetY:oy,destination:r===room?destination:null,guides:r.id===room.id,labels,rooms});
   ground.restore();
