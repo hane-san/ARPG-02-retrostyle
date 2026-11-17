@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {makeFixedRooms,createFixedJourney,gatePoint,FIXED_DIRECTIONS,FIXED_START} from '../fixed-screens.js';
-import {FIXED_AREAS,fixedAreaAt,createAreaPlaylists,areaPieceSeconds,FIXED_AREA_HOLD_SECONDS} from '../fixed-areas.js';
+import {FIXED_AREAS,FIXED_FIELD_CUES,fixedAreaAt,createAreaPlaylists,areaPieceSeconds,FIXED_AREA_HOLD_SECONDS} from '../fixed-areas.js';
 import {featureAt} from '../fixed-features.js';
 import {surroundingKind,keepsCliffFaces} from '../fixed-backdrop.js';
 import {fixedNeighbourVisibility} from '../fixed-screen-art.js';
@@ -32,15 +32,36 @@ test('twenty areas partition all hundred boards into connected neighbourhoods',(
  assert.equal(seen.size,100);
  for(const r of rooms){assert.equal(r.area,fixedAreaAt(r.col,r.row).id);assert.equal(r.areaName,fixedAreaAt(r.col,r.row).name);}
 });
-test('area playlists re-place the whole library, keep every piece real, and only rotate after long listening',()=>{
+test('the field uses exactly the ten favourites while the whole library remains intact',()=>{
  const all=FIXED_AREAS.flatMap(a=>a.playlist);
  for(const cue of all){const [id,phase]=cue.split(':').map(Number);assert.ok(MUSIC_LIBRARY[id]?.[phase===1?'ally':'hostile'],cue);}
- assert.equal(new Set(all).size,MUSIC_LIBRARY.length*2,'all 110 pieces are placed in the field');
- for(const a of FIXED_AREAS){assert.ok(a.playlist.length>=4,a.id);assert.equal(new Set(a.playlist).size,a.playlist.length,a.id);}
+ assert.equal(MUSIC_LIBRARY.length*2,110,'the sound-room library survives');
+ assert.equal(FIXED_FIELD_CUES.length,10);assert.deepEqual([...new Set(all)].sort(),[...FIXED_FIELD_CUES].sort());
+ for(const a of FIXED_AREAS)assert.equal(a.playlist.length,1,a.id+' one regional representative');
  const lists=createAreaPlaylists(),a=FIXED_AREAS[0];
- assert.equal(lists.cue(a.id),a.playlist[0]);for(let i=1;i<=a.playlist.length;i++)assert.equal(lists.advance(a.id),a.playlist[i%a.playlist.length]);
+ for(const area of FIXED_AREAS){assert.equal(lists.cue(area.id),area.playlist[0]);for(let i=0;i<12;i++)assert.equal(lists.advance(area.id),area.playlist[0],'long listening never swaps '+area.id);}
  lists.reset();assert.equal(lists.cue(a.id),a.playlist[0]);
  for(const cue of all){const [id,phase]=cue.split(':').map(Number),loop=buildTrack(id,phase).seconds;assert.ok(areaPieceSeconds(loop)>=Math.max(FIXED_AREA_HOLD_SECONDS,loop*2));}
+});
+test('the screenshot titles resolve to their exact score and phase',()=>{
+ const selected={'0:1':'川霧を越えて','0:2':'霧中の足音','5:2':'最後の防壁','6:2':'丘の向こうの先遣隊','8:2':'涙の残る戦野','16:2':'白い塔の夢の跡','19:2':'城壁に消える伝令','22:2':'宇宙港の影','28:1':'峠を越える風','40:2':'草の向こうへ'};
+ assert.deepEqual([...FIXED_FIELD_CUES].sort(),Object.keys(selected).sort());
+ for(const [cue,title] of Object.entries(selected)){const [id,phase]=cue.split(':').map(Number);assert.equal(MUSIC_LIBRARY[id][phase===1?'ally':'hostile'].title,title);}
+});
+test('all 37 walkable area borders contrast by cue and by lead instrument or metre',()=>{
+ const rooms=makeFixedRooms(),borders=new Set();
+ for(const r of rooms)for(const id of Object.values(r.connections)){const to=rooms.find(b=>b.id===id);if(to.area===r.area)continue;
+  borders.add([r.area,to.area].sort().join('|'));assert.notEqual(r.cue,to.cue,r.area+' / '+to.area);
+  const a=MUSIC_LIBRARY[+r.cue.split(':')[0]],b=MUSIC_LIBRARY[+to.cue.split(':')[0]];
+  assert.ok(a.lead!==b.lead||a.meter!==b.meter,'audible contrast '+r.area+' / '+to.area);
+ }
+ assert.equal(borders.size,37);
+});
+test('even map-touching regions without a direct walking gate have distinct cues',()=>{
+ const edges=new Set();for(let y=0;y<10;y++)for(let x=0;x<10;x++)for(const [dx,dy]of [[1,0],[0,1]]){
+  const a=fixedAreaAt(x,y),b=fixedAreaAt(x+dx,y+dy);if(!b||a.id===b.id)continue;edges.add([a.id,b.id].sort().join('|'));assert.notEqual(a.playlist[0],b.playlist[0],a.id+' / '+b.id);
+ }
+ assert.equal(edges.size,41);
 });
 test('walking between boards of one area never changes the piece; crossing an area edge does',()=>{
  const rooms=makeFixedRooms();let inside=0,across=0;

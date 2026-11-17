@@ -1,0 +1,93 @@
+[
+  {
+    "id": "watershed-wheel",
+    "cue": "6:2",
+    "seconds": 62.950819672131146,
+    "starts": 1,
+    "changed": true
+  },
+  {
+    "id": "answer-wall",
+    "cue": "6:2",
+    "seconds": 62.950819672131146,
+    "starts": 1,
+    "changed": false
+  },
+  {
+    "id": "watershed-wheel",
+    "cue": "6:2",
+    "seconds": 62.950819672131146,
+    "starts": 1,
+    "changed": false
+  },
+  {
+    "id": "empty-basin",
+    "cue": "16:2",
+    "seconds": 61.935483870967744,
+    "starts": 2,
+    "changed": true
+  },
+  {
+    "id": "glass-reflection",
+    "cue": "0:1",
+    "seconds": 58.775510204081634,
+    "starts": 3,
+    "changed": true
+  },
+  {
+    "id": "wet-stairs",
+    "cue": "0:1",
+    "seconds": 58.775510204081634,
+    "starts": 3,
+    "changed": false
+  },
+  {
+    "id": "wet-temple",
+    "cue": "0:1",
+    "seconds": 58.775510204081634,
+    "starts": 3,
+    "changed": false
+  },
+  {
+    "id": "dry-temple",
+    "cue": "16:2",
+    "seconds": 61.935483870967744,
+    "starts": 4,
+    "changed": true
+  },
+  {
+    "id": "wet-temple",
+    "cue": "0:1",
+    "seconds": 58.775510204081634,
+    "starts": 5,
+    "changed": true
+  },
+  {
+    "id": "glass-court",
+    "cue": "40:2",
+    "seconds": 64,
+    "starts": 6,
+    "changed": true
+  },
+  {
+    "id": "terraced-fields",
+    "cue": "40:2",
+    "seconds": 64,
+    "starts": 6,
+    "changed": false
+  },
+  {
+    "id": "glass-court",
+    "cue": "40:2",
+    "seconds": 64,
+    "starts": 6,
+    "changed": false
+  },
+  {
+    "id": "watershed-wheel",
+    "cue": "6:2",
+    "seconds": 62.950819672131146,
+    "starts": 9,
+    "changed": true
+  }
+]

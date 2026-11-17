@@ -1,0 +1,38 @@
+[
+  {
+    "label": "before",
+    "width": 390,
+    "id": "glass-reflection",
+    "name": "ガラスに映る池"
+  },
+  {
+    "label": "before",
+    "width": 390,
+    "id": "terraced-fields",
+    "name": "空の段畑の畦"
+  },
+  {
+    "label": "before",
+    "width": 390,
+    "id": "flour-bags",
+    "name": "粉袋を数える風車"
+  },
+  {
+    "label": "before",
+    "width": 390,
+    "id": "white-flower-road",
+    "name": "白花の裂け野"
+  },
+  {
+    "label": "before",
+    "width": 390,
+    "id": "glacier-rest",
+    "name": "氷色の雪嶺の休み場"
+  },
+  {
+    "label": "before",
+    "width": 390,
+    "id": "forest-picnic",
+    "name": "木洩れ日の昼休み"
+  }
+]

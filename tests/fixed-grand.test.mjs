@@ -18,7 +18,7 @@ test('the expanded journey reaches all 100 rooms from the retained entrance and 
 });
 test('ported building collision uses exactly the same uniform source transform as its art and keeps an accessible doorstep',()=>{
  for(const r of makeFixedRooms()){
-  const z=PILGRIM_ZONES[r.sourceIndex??23];assert.ok(FIXED_AREAS.some(a=>a.playlist.includes(z.music[0])),'source primary still heard in the field '+r.id);assert.equal(r.cue,FIXED_AREAS.find(a=>a.id===r.area).playlist[0]);const [id,phase]=r.cue.split(':').map(Number);assert.ok(MUSIC_LIBRARY[id][phase===1?'ally':'hostile']);
+  const z=PILGRIM_ZONES[r.sourceIndex??23];const [sourceId,sourcePhase]=z.music[0].split(':').map(Number);assert.ok(MUSIC_LIBRARY[sourceId][sourcePhase===1?'ally':'hostile'],'source primary retained in the library '+r.id);assert.equal(r.cue,FIXED_AREAS.find(a=>a.id===r.area).playlist[0]);const [id,phase]=r.cue.split(':').map(Number);assert.ok(MUSIC_LIBRARY[id][phase===1?'ally':'hostile']);
   for(const s of [r.site,...r.props||[]].filter(Boolean)){const original=PILGRIM_SITES.find(a=>a.id===s.sourceId);assert.equal(s.form,original.form);assert.deepEqual(s.solid,original.solid);assert.equal(s.sourceW,original.w);assert.equal(s.sourceH,original.h);assert.ok(Math.abs(s.w/s.sourceW-s.h/s.sourceH)<1e-12);assert.equal(s.w/s.sourceW,s.scale);assert.ok(r.walkable(s.entrance.x,s.entrance.y),r.id+' doorstep');
   for(const a of s.solid)for(let y=Math.floor(s.y+a.y*s.scale);y<Math.ceil(s.y+(a.y+a.h)*s.scale);y++)for(let x=Math.floor(s.x+a.x*s.scale);x<Math.ceil(s.x+(a.x+a.w)*s.scale);x++)assert.equal(r.walkable(x,y),false,r.id+' solid foot '+x+','+y);}
  }

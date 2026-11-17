@@ -16,10 +16,11 @@
 // drawing that moves (a windmill's sails, a turning wheel) is measured again
 // each frame.
 const RES=2,PAD_X=96,PAD_UP=420,PAD_DOWN=40,LIMIT=48;
-// Only the six selected scenes opt into the material-coloured, narrower
-// contours; all other art keeps its existing finish, including people.
+// Scene retouches and natural props opt into material-coloured, narrower
+// contours; other art keeps its existing finish, including people.
 const FINISHES=Object.freeze({
  default:{width:.9,ink:'rgba(32,44,46,.6)',light:1,shadow:.2},
+ foliage:{width:.55,ink:'rgba(49,78,57,.38)',light:.75,shadow:.16},
  stone:{width:.55,ink:'rgba(73,87,79,.42)',light:.7,shadow:.15},
  timber:{width:.65,ink:'rgba(79,70,58,.46)',light:.72,shadow:.16}
 });

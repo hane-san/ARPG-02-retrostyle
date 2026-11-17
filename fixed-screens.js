@@ -9,7 +9,7 @@ import {routeJourneyWalk} from './journey-world.js';
 import {segmentDistance} from './landscape-geometry.js';
 
 // An independent comparison area. These cells never replace the pilgrimage.
-export const FIXED_SIZE=15,FIXED_TILE=32,FIXED_CUE='47:2',FIXED_SLIDE_MS=560;
+export const FIXED_SIZE=15,FIXED_TILE=32,FIXED_CUE='6:2',FIXED_SLIDE_MS=560;
 export const FIXED_DIRECTIONS={N:{dx:0,dy:-1,back:'S'},E:{dx:1,dy:0,back:'W'},S:{dx:0,dy:1,back:'N'},W:{dx:-1,dy:0,back:'E'}};
 const definition=(id,col,row,name,chartName,role,polygon,roads,trees,extra={})=>({id,col,row,name,chartName,role,polygon,roads,trees,...extra});
 export const FIXED_ROOMS=[
