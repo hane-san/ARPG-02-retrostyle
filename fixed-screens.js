@@ -1,3 +1,4 @@
+import {applyFixedPeople} from './fixed-people.js';
 import {FIXED_START,FIXED_GEOGRAPHY_LINKS,composeFixedGeography,geographySeam,seamLanes,seamTile,faultCell,connectFixedLand} from './fixed-geography.js';
 export {FIXED_START} from './fixed-geography.js';
 import {FIXED_ATLAS,FIXED_ATLAS_LINKS} from './fixed-atlas-data.js';
@@ -132,6 +133,7 @@ export function makeFixedRooms(){
   const approach=site=>{if(room.walkable(site.entrance.x,site.entrance.y))return site;const points=[];for(let y=1;y<14;y++)for(let x=1;x<14;x++)if(room.walkable(x,y))points.push({x,y});points.sort((a,b)=>Math.hypot(a.x-site.entrance.x,a.y-site.entrance.y)-Math.hypot(b.x-site.entrance.x,b.y-site.entrance.y));return {...site,entrance:points[0]};};
   if(room.site)room.site=approach(room.site);room.props=(def.props||[]).map(approach);
   room.features=placeFixedFeatures(room,tiles,floor,chartNames);
+  applyFixedPeople(room);
   return room;
  });
 }
