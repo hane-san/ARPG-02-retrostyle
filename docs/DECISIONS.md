@@ -348,3 +348,8 @@ Human instruction on 2026-10-19: defer main protection and prioritize adding and
 ### Release / handoff
 
 Record Issue, PR, verified commit SHA, exact executed tests, risk/audit outcome, untested behavior, live Pages result, and required iPhone steps. Main merge and repository Settings remain human controlled. The repository was renamed to **ARPG-02-retrostyle** on 2026-10-19 (Issue #3); use the current repository name and the Pages URL `https://hane-san.github.io/ARPG-02-retrostyle/`. Do not rename the display title or the `tidal-atlas:` storage namespace. Validate Pages, links, Actions and AI integrations after renaming; branch protection is still a separate GitHub Settings task.
+
+
+## 2026-11-17：好みの10曲と淡い自然の縁（#144）
+
+持ち主のスクリーンショットで指定された10曲へ画面切替版のフィールド選曲を絞り、既存20地域の代表1曲を継続する方式を採用。旧来の全110曲フィールド配置・4〜7曲回転・53〜54代表の条件を置き換える。音楽室の全110曲と譜面・IDは保持。隣接する37の地域境界すべてで曲と主旋律の楽器または拍子が変わる配分とした。草道・茂み・石・水辺の縁の小さな描画調整も採用。地理・固体・入口・音設定・保存・旧モードは維持し、マージまで持ち主が明示許可。詳細は [FIXED-FAVOURITE-MUSIC](FIXED-FAVOURITE-MUSIC.md)。

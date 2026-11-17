@@ -82,8 +82,8 @@ This replaces the nonstop prototype phase of 2026-10-21 and the daily 15:00 afte
 ### Music and audio
 
 - All **110** original pieces survive with their IDs and exact score/event hashes (the first 68 are the classic library). The sound room lists all 110.
-- Atlas music follows **20 contiguous areas** (`fixed-areas.js`): one piece continues across an area and changes only at area edges; each area's 4–7 piece playlist moves on after two loops and at least 150 s of actual listening; all 110 pieces are placed in the field. Music continues uninterrupted within a region/area across board transitions.
-- The four energetic pieces 53:1–54:2 are the primary cues of mountain/canyon/mesa/grass only; earlier pieces remain available.
+- Atlas music follows **20 contiguous areas** (`fixed-areas.js`), with **one representative piece per area from the producer's ten favourites** (human instruction 2026-11-17; [FIXED-FAVOURITE-MUSIC](docs/FIXED-FAVOURITE-MUSIC.md)). The piece continues across boards and prolonged listening inside an area, and changes only at area edges. All 41 map-touching area pairs have distinct cues; all 37 actual walking borders also change lead instrument or metre. All 110 pieces remain in the sound room with their original IDs/scores.
+- The connected pilgrimage retains its energetic mountain/canyon/mesa/grass cues (53:1–54:2). The atlas's former full-library field placement and 4–7-piece rotation are superseded by the favourite selection above.
 - BGM defaults OFF, SFX ON; player BGM/SFX preferences and volumes persist independently. Audio never blocks movement. Avoid abrupt gain discontinuities, timer starvation and click/pop regressions; keep continuous release/crossfade.
 
 ### Product boundaries

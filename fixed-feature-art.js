@@ -7,7 +7,7 @@ const R=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h);};
 const E=(c,x,y,rx,ry,col)=>{c.fillStyle=col;c.beginPath();c.ellipse(x,y,rx,ry,0,0,Math.PI*2);c.fill();};
 const mix=(a,b,t)=>{const v=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));const A=v(a),B=v(b);return '#'+A.map((n,i)=>Math.round(n+(B[i]-n)*t).toString(16).padStart(2,'0')).join('');};
 const leaf=land=>land==='forest'?['#2f5a45','#447257','#6a9473']:land==='village'?['#3f6b4c','#588a5e','#86b07a']:['#4c7a49','#679855','#94bd72'];
-const rock=room=>{const p=fixedSource(room.sourceIndex).palette;return [mix(p[3],'#5d6466',.45),mix(p[1],'#8f9693',.45),mix(p[1],'#f1ecd8',.35)];};
+const rock=room=>{const p=fixedSource(room.sourceIndex).palette;return [mix(p[3],'#687a70',.42),mix(p[1],'#8f9693',.45),mix(p[1],'#e3e4cc',.3)];};
 export function drawFeatureGround(c,room,f,time){
  const p=fixedSource(room.sourceIndex).palette;
  for(const [cx,cy] of f.cells){const x=cx*32,y=cy*32;
@@ -23,8 +23,8 @@ export function featureObjects(c,room,f,time){
  for(const [cx,cy] of f.cells){const x=cx*32,y=cy*32,s=f.seed;
   const paint={
    bush:()=>{const [d,m,l]=leaf(room.land);E(c,x+16,y+27,15,5,'#24372c55');E(c,x+9,y+18,10,9,d);E(c,x+23,y+18,10,9,d);E(c,x+16,y+12,11,10,m);E(c,x+10,y+16,7,6,m);E(c,x+13,y+9,5,4,l);E(c,x+22,y+13,4,3,l);if(room.land!=='forest')for(let i=0;i<3;i++)R(c,x+7+((i*9+s*40)%18),y+12+((i*5)%9),2,2,room.land==='village'?'#f2d0dc':'#f6e9a8');},
-   boulder:()=>{const [d,m,l]=rock(room);E(c,x+16,y+27,14,5,'#2a333355');c.fillStyle=d;c.beginPath();c.moveTo(x+3,y+26);c.quadraticCurveTo(x+2,y+11,x+13,y+7);c.quadraticCurveTo(x+27,y+5,x+29,y+20);c.quadraticCurveTo(x+30,y+27,x+22,y+28);c.closePath();c.fill();c.fillStyle=m;c.beginPath();c.moveTo(x+6,y+22);c.quadraticCurveTo(x+6,y+12,x+14,y+9);c.quadraticCurveTo(x+24,y+8,x+26,y+18);c.quadraticCurveTo(x+20,y+16,x+6,y+22);c.fill();E(c,x+13,y+12,4,2,l);R(c,x+17,y+17,6,1,d);},
-   cairn:()=>{const [d,m,l]=rock(room);E(c,x+16,y+28,11,4,'#2a333355');for(const [w,h,yy] of [[22,7,21],[16,6,14],[10,5,8]]){E(c,x+16,y+yy+1,w/2,h/2,d);E(c,x+16,y+yy,w/2,h/2,m);E(c,x+14,y+yy-1,w/4,h/5,l);}},
+   boulder:()=>{const [d,m,l]=rock(room);E(c,x+16,y+27,14,5,'#2a333355');c.fillStyle=d;c.beginPath();c.moveTo(x+3,y+26);c.quadraticCurveTo(x+2,y+11,x+13,y+7);c.quadraticCurveTo(x+27,y+5,x+29,y+20);c.quadraticCurveTo(x+30,y+27,x+22,y+28);c.closePath();c.fill();c.fillStyle=m;c.beginPath();c.moveTo(x+6,y+22);c.quadraticCurveTo(x+6,y+12,x+14,y+9);c.quadraticCurveTo(x+24,y+8,x+26,y+18);c.quadraticCurveTo(x+20,y+16,x+6,y+22);c.fill();E(c,x+12+s*3,y+12,3.6,1.6,mix(l,m,.28));R(c,x+17,y+17,5,1,d);},
+   cairn:()=>{const [d,m,l]=rock(room);E(c,x+16,y+28,11,4,'#2a333355');for(const [w,h,yy,off] of [[22,7,21,0],[16,6,14,-1.4+s],[10,5,8,1.6-s*2]]){E(c,x+16+off,y+yy+1,w/2,h/2,d);E(c,x+16+off,y+yy,w/2,h/2,m);E(c,x+14+off,y+yy-1,w/4,h/5,mix(l,m,.22));}},
    stump:()=>{E(c,x+16,y+27,12,4,'#2e2a2255');R(c,x+7,y+14,18,12,'#7a5a3f');E(c,x+16,y+26,9,3,'#6a4c35');E(c,x+16,y+14,9,4,'#c9a774');c.strokeStyle='#8f6b48';c.lineWidth=1;c.beginPath();c.ellipse(x+16,y+14,5,2,0,0,Math.PI*2);c.stroke();R(c,x+24,y+20,5,2,'#5d8a52');},
    sign:()=>{E(c,x+16,y+28,8,3,'#2e2a2255');R(c,x+14,y+12,4,16,'#80603f');R(c,x+5,y+6,22,9,'#c79f6b');R(c,x+5,y+14,22,2,'#8d6a45');c.fillStyle='#5b4330';for(const [ax,dir] of [[9,1],[23,-1]]){c.beginPath();c.moveTo(x+ax+dir*4,y+10);c.lineTo(x+ax,y+8);c.lineTo(x+ax,y+12);c.fill();}},
    pond:()=>{},

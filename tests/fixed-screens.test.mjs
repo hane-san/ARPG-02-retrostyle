@@ -49,7 +49,7 @@ test('return is explicit, fires once, and leaving discards both a route and an u
 });
 test('one isotropic layout fits real portrait/landscape stages and every old piece stays unchanged',()=>{
  for(const [w,h] of [[320,477],[390,753],[430,841],[844,311]]){const l=fixedLayout(w,h);assert.ok(l.scale>0);assert.equal(l.width/l.height,1);assert.ok(l.x>=12&&l.y>=0&&l.y+l.height<=h-17);assert.ok(l.scale*32>=(w<h?19:15));}
- assert.equal(FIXED_CUE,'47:2');assert.equal(MUSIC_LIBRARY.length*2,110);
+ assert.equal(FIXED_CUE,'6:2');assert.equal(MUSIC_LIBRARY.length*2,110);
  assert.equal(hash(MUSIC_LIBRARY),'ecae882fc6257b7350efc2d3ba62356b2d7c343ffc0c46bd22b2046618d7c037');
  assert.equal(hash(MUSIC_LIBRARY.map((_,i)=>[buildTrack(i,1),buildTrack(i,2)])),'679e4bedd1375819274e78f6582644bcf120cdd312bfe896a5bbba29ab7645ee');
 });

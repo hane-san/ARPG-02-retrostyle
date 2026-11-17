@@ -222,7 +222,7 @@ export function groundLayer(room,light=null){
   if(g.pebbles){for(let i=0;i<3;i++){const px=X+4+f(i)*24,py=Y+4+f(i+4)*24,r=1.2+f(i+8)*1.8;E(c,px,py+.8,r+.5,r*.7,g.fleck+'55');E(c,px,py,r,r*.75,mix(g.base,'#ffffff',.3));}continue;}
   if(g.snow){if(f(1)<.45){c.save();c.globalAlpha=.5;E(c,X+16,Y+20,13,4,g.patch);c.restore();}continue;}
   // Lawns and forest floors: small tufts, now and then a flower or a fallen leaf.
-  for(let i=0;i<4;i++){const tx=X+3+f(i)*26,ty=Y+5+f(i+4)*22;c.strokeStyle=g.fleck+'80';c.lineWidth=1;c.beginPath();c.moveTo(tx-2,ty-3);c.lineTo(tx,ty+1);c.lineTo(tx+2,ty-3);c.stroke();}
+  for(let i=0;i<2+(f(9)>.72?1:0);i++){const tx=X+3+f(i)*26,ty=Y+5+f(i+4)*22;c.strokeStyle=g.fleck+'66';c.lineWidth=1;c.beginPath();c.moveTo(tx-2,ty-3);c.lineTo(tx,ty+1);c.lineTo(tx+2,ty-3);c.stroke();}
   if(g.flowers&&f(10)<.22)for(let i=0;i<3;i++)R(c,X+6+f(i+11)*20,Y+6+f(i+14)*20,2,2,['#f4dbe2','#f6eeb6','#ffffff'][i]);
   if(g.leaves&&f(10)<.45)for(let i=0;i<3;i++)E(c,X+5+f(i+11)*22,Y+5+f(i+14)*22,2,1.2,['#c7a46a','#a9894f','#d7b97c'][i]);
  }
@@ -232,15 +232,26 @@ export function groundLayer(room,light=null){
  const joins=(x,y,ox,oy)=>{const nx=x+ox,ny=y+oy;if(nx<0||ny<0||nx>14||ny>14)return true;return JOINS.has(at(nx,ny));};
  const shapes=[];for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(PATHS.has(at(x,y))){const r=11,L=joins(x,y,-1,0),Rr=joins(x,y,1,0),U=joins(x,y,0,-1),D=joins(x,y,0,1);shapes.push({x,y,radii:[!L&&!U?r:0,!Rr&&!U?r:0,!Rr&&!D?r:0,!L&&!D?r:0]});}
  const shape=(s,grow)=>{c.beginPath();if(c.roundRect)c.roundRect(s.x*32-grow,s.y*32-grow,32+grow*2,32+grow*2,s.radii.map(v=>v?v+grow:0));else c.rect(s.x*32-grow,s.y*32-grow,32+grow*2,32+grow*2);c.fill();};
- c.fillStyle=mix(g.path,'#5d5038',.28);for(const s of shapes)shape(s,1.6);
+ c.fillStyle=mix(g.path,'#5d5038',.21);for(const s of shapes)shape(s,1.2);
  c.fillStyle=g.path;for(const s of shapes)shape(s,0);
  for(const s of shapes){const gx=gx0+s.x,gy=gy0+s.y,f=i=>noise(gx,gy,i+70);for(let i=0;i<3;i++){const px=s.x*32+5+f(i)*22,py=s.y*32+5+f(i+3)*22;E(c,px,py,1.6+f(i+6),1,mix(g.path,'#6b5a3c',.3));E(c,px-.5,py-.5,1,.6,mix(g.path,'#ffffff',.35));}}
+ // A little grass/earth meets a worn road instead of a uniform dark rim.
+ // Only interior lawn edges are feathered; the three-cell shared seams,
+ // water, solid feet, stairs and the centre of the road keep their drawing.
+ if(!g.slabs&&!g.pebbles&&!g.cracks&&!g.snow&&!g.sand)for(const q of shapes){
+  if(q.x<3||q.y<3||q.x>11||q.y>11)continue;
+  for(const [dx,dy] of [[-1,0],[1,0],[0,-1],[0,1]])if(at(q.x+dx,q.y+dy)==='g'){
+   const n=noise(gx0+q.x,gy0+q.y,90+dx+dy*3),along=9+n*14;
+   const ex=q.x*32+(dx<0?.6:dx>0?31.4:along),ey=q.y*32+(dy<0?.6:dy>0?31.4:along);
+   E(c,ex,ey,dx?.7+n*.8:3+n*2,dy?.7+n*.8:3+n*2,mix(g.base,g.path,.22));
+  }
+ }
  if(light?.light){c.globalAlpha=light.strength*.8;R(c,0,0,480,480,light.light);}
  // Wet ground along the water's edge.
  if(anyWater){c.save();c.clip(wet);c.globalAlpha=1;c.strokeStyle=kind==='sea'||g.sand?'rgba(120,98,64,.22)':'rgba(40,70,60,.18)';c.lineWidth=9;c.stroke(region);c.restore();}
  c.restore();
  // Foam: a bright line just off the shore, broken now and then.
- if(anyWater&&any){c.save();c.clip(water);c.setLineDash([22,5,9,6]);c.lineCap='round';c.strokeStyle='rgba(255,255,255,.62)';c.lineWidth=3.2;c.stroke(region);c.setLineDash([]);c.strokeStyle='rgba(255,255,255,.16)';c.lineWidth=9;c.stroke(region);c.restore();}
+ if(anyWater&&any){c.save();c.clip(water);c.setLineDash([22,5,9,6]);c.lineCap='round';c.strokeStyle=kind==='sea'||g.sand?'rgba(255,255,255,.62)':'rgba(235,245,225,.36)';c.lineWidth=kind==='sea'||g.sand?3.2:2.2;c.stroke(region);c.setLineDash([]);c.strokeStyle=kind==='sea'||g.sand?'rgba(255,255,255,.16)':'rgba(235,245,225,.11)';c.lineWidth=kind==='sea'||g.sand?9:7;c.stroke(region);c.restore();}
  bushWall(c,room,kind);
  groundCaches.set(key,canvas);while(groundCaches.size>CACHE_LIMIT)groundCaches.delete(groundCaches.keys().next().value);
  return canvas;
@@ -256,8 +267,9 @@ function bushWall(c,room,kind){
  const [d,m,l]=kind==='garden'?['#365f45','#4f7f57','#86b07a']:[mix(col[0],'#335a3c',.4),mix(col[1],'#4c7d4a',.35),mix(col[2],'#93ba79',.3)];
  edge.sort((a,b)=>a[1]-b[1]);
  for(const [x,y] of edge){const gx=Math.round(room.col)*15+x,gy=Math.round(room.row)*15+y;
-  for(let k=0;k<3;k++){const bx=x*32+5+k*11+noise(gx,gy,k+60)*3,by=y*32+11+noise(gx,gy,k+63)*10,r=9.5+noise(gx,gy,k+66)*3;
-   E(c,bx+1.5,by+3,r+1,r*.8,'#1f332888');E(c,bx,by,r,r*.86,d);E(c,bx-1,by-1.5,r*.8,r*.66,m);E(c,bx-2.5,by-3.5,r*.36,r*.28,l);
+  const count=noise(gx,gy,59)>.65?3:2;
+  for(let k=0;k<count;k++){const bx=x*32+(k+.5)*32/count+noise(gx,gy,k+60)*4-2,by=y*32+10+noise(gx,gy,k+63)*12,r=9+noise(gx,gy,k+66)*4,ry=r*(.75+noise(gx,gy,k+70)*.16);
+   E(c,bx+1.5,by+3,r+1,ry*.94,'#1f33285c');E(c,bx,by,r,ry,d);E(c,bx-1,by-1.5,r*.8,ry*.78,m);E(c,bx-2.5,by-3.5,r*.34,ry*.32,mix(l,m,.24));
    if(kind==='garden'&&noise(gx,gy,k+69)<.18)for(let i=0;i<3;i++)E(c,bx-3+i*3,by-2+(i%2)*3,1.3,1.3,['#f4dbe2','#ffffff','#f6eeb6'][i]);}
  }
 }

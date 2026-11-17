@@ -29,8 +29,8 @@ export function createFixedScreenView({stage,paused,audible,onAmbient,onPlace,on
  // While walking out through an exit, the destination's loop is prepared.
  let prepared=null;
  // Music belongs to an area of neighbouring boards. Inside one area, board
- // changes never change the piece; after two loops of actual listening the
- // area's playlist moves on with an ordinary, unhurried crossfade.
+ // changes never change the piece. The one-cue playlist also keeps that
+ // representative playing after prolonged listening without restarting it.
  const playlists=createAreaPlaylists(),loopSeconds=new Map();let lastArea=null,areaClock=0;
  const areaCue=r=>playlists.cue(r.area)||r.cue;
  const pieceSeconds=cue=>{if(!loopSeconds.has(cue)){const [id,phase]=cue.split(':').map(Number);loopSeconds.set(cue,buildTrack(id,phase).seconds);}return loopSeconds.get(cue);};
