@@ -1,0 +1,3528 @@
+[
+  {
+    "index": 0,
+    "room": "wet-temple",
+    "id": "pilgrim-place-2",
+    "form": "garden",
+    "role": null,
+    "culture": "canal",
+    "box": {
+      "x": 96,
+      "y": 32,
+      "w": 288,
+      "h": 199.3846153846154
+    },
+    "bounds": {
+      "x": 96,
+      "y": 43,
+      "w": 288,
+      "h": 197
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 1,
+    "room": "dry-temple",
+    "id": "pilgrim-place-6",
+    "form": "garden",
+    "role": null,
+    "culture": "oasis",
+    "box": {
+      "x": 96,
+      "y": 32,
+      "w": 288,
+      "h": 199.3846153846154
+    },
+    "bounds": {
+      "x": 96,
+      "y": 43,
+      "w": 288,
+      "h": 197
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 2,
+    "room": "salt-boats",
+    "id": "pilgrim-detail-21",
+    "form": "boat",
+    "role": null,
+    "culture": "oasis",
+    "box": {
+      "x": 96,
+      "y": 32,
+      "w": 128,
+      "h": 96
+    },
+    "bounds": {
+      "x": 99,
+      "y": 37,
+      "w": 121,
+      "h": 99
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 3,
+    "room": "lantern-inn",
+    "id": "pilgrim-place-8",
+    "form": "tea",
+    "role": "inn",
+    "culture": "hamlet",
+    "box": {
+      "x": 96,
+      "y": 32,
+      "w": 288,
+      "h": 199.3846153846154
+    },
+    "bounds": {
+      "x": 93,
+      "y": -44,
+      "w": 294,
+      "h": 278
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 4,
+    "room": "mesa-window",
+    "id": "se-mesa-window",
+    "form": "se-windarch",
+    "role": null,
+    "culture": "highland",
+    "box": {
+      "x": 96,
+      "y": 32,
+      "w": 288,
+      "h": 198
+    },
+    "bounds": {
+      "x": 96,
+      "y": -103,
+      "w": 288,
+      "h": 333
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 5,
+    "room": "reed-walk",
+    "id": "se-marsh-shelter",
+    "form": "se-shelter",
+    "role": null,
+    "culture": "marsh",
+    "box": {
+      "x": 96,
+      "y": 32,
+      "w": 288,
+      "h": 216
+    },
+    "bounds": {
+      "x": 76,
+      "y": -46,
+      "w": 328,
+      "h": 294
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 6,
+    "room": "river-port",
+    "id": "se-port-kitchen",
+    "form": "se-kitchen",
+    "role": "kitchen",
+    "culture": "canal",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 288,
+      "h": 172.8
+    },
+    "bounds": {
+      "x": 100,
+      "y": 97,
+      "w": 280,
+      "h": 182
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 7,
+    "room": "sea-arch",
+    "id": "se-coast-arch",
+    "form": "se-seaarch",
+    "role": null,
+    "culture": "shore",
+    "box": {
+      "x": 96,
+      "y": 32,
+      "w": 288,
+      "h": 136.42105263157893
+    },
+    "bounds": {
+      "x": 96,
+      "y": -67,
+      "w": 288,
+      "h": 236
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 8,
+    "room": "glass-court",
+    "id": "west-glass",
+    "form": "west-glass",
+    "role": null,
+    "culture": "canal",
+    "box": {
+      "x": 96,
+      "y": 128,
+      "w": 288,
+      "h": 120
+    },
+    "bounds": {
+      "x": 94,
+      "y": 52,
+      "w": 292,
+      "h": 207
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 9,
+    "room": "forest-market",
+    "id": "forest-cloth",
+    "form": "forest-cloth",
+    "role": null,
+    "culture": "forest",
+    "box": {
+      "x": 96,
+      "y": 32,
+      "w": 224,
+      "h": 160
+    },
+    "bounds": {
+      "x": 81,
+      "y": -6,
+      "w": 254,
+      "h": 206
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 10,
+    "room": "forest-workshop",
+    "id": "forest-carver",
+    "form": "forest-carver",
+    "role": null,
+    "culture": "forest",
+    "box": {
+      "x": 96,
+      "y": 32,
+      "w": 224,
+      "h": 179.2
+    },
+    "bounds": {
+      "x": 75,
+      "y": -22,
+      "w": 266,
+      "h": 245
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 11,
+    "room": "mountain-pass",
+    "id": "west-mountain",
+    "form": "west-mountain",
+    "role": null,
+    "culture": "highland",
+    "box": {
+      "x": 96,
+      "y": 32,
+      "w": 288,
+      "h": 192
+    },
+    "bounds": {
+      "x": 86,
+      "y": -91,
+      "w": 308,
+      "h": 315
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 12,
+    "room": "snow-cliff",
+    "id": "west-cliff",
+    "form": "west-cliff",
+    "role": null,
+    "culture": "highland",
+    "box": {
+      "x": 96,
+      "y": 32,
+      "w": 288,
+      "h": 192
+    },
+    "bounds": {
+      "x": 96,
+      "y": 114,
+      "w": 288,
+      "h": 110
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 13,
+    "room": "terraced-fields",
+    "id": "west-terrace",
+    "form": "west-terrace",
+    "role": null,
+    "culture": "steppe",
+    "box": {
+      "x": 96,
+      "y": 32,
+      "w": 288,
+      "h": 192
+    },
+    "bounds": {
+      "x": 96,
+      "y": 100,
+      "w": 288,
+      "h": 124
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 14,
+    "room": "windmill-hill",
+    "id": "west-extra-windmill-23",
+    "form": "west-windmill",
+    "role": null,
+    "culture": "steppe",
+    "box": {
+      "x": 96,
+      "y": 32,
+      "w": 288,
+      "h": 230.4
+    },
+    "bounds": {
+      "x": -45,
+      "y": -262,
+      "w": 438,
+      "h": 527
+    },
+    "excess": {
+      "left": 45,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 15,
+    "room": "monolith-court",
+    "id": "pilgrim-place-5",
+    "form": "monolith",
+    "role": null,
+    "culture": "citadel",
+    "box": {
+      "x": 96,
+      "y": 32,
+      "w": 256,
+      "h": 142.22222222222223
+    },
+    "bounds": {
+      "x": 103,
+      "y": -288,
+      "w": 247,
+      "h": 470
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 16,
+    "room": "capital-gate",
+    "id": "pilgrim-place-11",
+    "form": "gate",
+    "role": null,
+    "culture": "citadel",
+    "box": {
+      "x": 64,
+      "y": 32,
+      "w": 352,
+      "h": 186.3529411764706
+    },
+    "bounds": {
+      "x": 51,
+      "y": -116,
+      "w": 377,
+      "h": 343
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 17,
+    "room": "sealed-court",
+    "id": "pilgrim-place-10",
+    "form": "sealed",
+    "role": null,
+    "culture": "citadel",
+    "box": {
+      "x": 96,
+      "y": 32,
+      "w": 288,
+      "h": 160
+    },
+    "bounds": {
+      "x": 104,
+      "y": -132,
+      "w": 272,
+      "h": 332
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 18,
+    "room": "sky-distribution",
+    "id": "pilgrim-place-12",
+    "form": "citadel",
+    "role": null,
+    "culture": "citadel",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 142.22222222222223
+    },
+    "bounds": {
+      "x": 79,
+      "y": -235,
+      "w": 289,
+      "h": 484
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 19,
+    "room": "violet-saddle",
+    "id": "pilgrim-place-4",
+    "form": "stairs",
+    "role": null,
+    "culture": "highland",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 177.23076923076923
+    },
+    "bounds": {
+      "x": 101,
+      "y": 59,
+      "w": 246,
+      "h": 219
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 20,
+    "room": "violet-saddle",
+    "id": "pilgrim-detail-3",
+    "form": "bowl",
+    "role": null,
+    "culture": "highland",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 100,
+      "y": 326,
+      "w": 56,
+      "h": 46
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 21,
+    "room": "copper-cut",
+    "id": "pilgrim-place-3",
+    "form": "arch",
+    "role": null,
+    "culture": "highland",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 177.23076923076923
+    },
+    "bounds": {
+      "x": 89,
+      "y": 53,
+      "w": 269,
+      "h": 225
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 22,
+    "room": "copper-cut",
+    "id": "pilgrim-detail-5",
+    "form": "boat",
+    "role": null,
+    "culture": "highland",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 97,
+      "y": 322,
+      "w": 61,
+      "h": 50
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 23,
+    "room": "rose-inlet",
+    "id": "west-impression",
+    "form": "west-impression",
+    "role": null,
+    "culture": "shore",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 170.66666666666666
+    },
+    "bounds": {
+      "x": 46,
+      "y": 4,
+      "w": 349,
+      "h": 263
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 24,
+    "room": "orchard-window",
+    "id": "west-extra-village-210",
+    "form": "west-home",
+    "role": "home",
+    "culture": "hamlet",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 204.8
+    },
+    "bounds": {
+      "x": 76,
+      "y": 18,
+      "w": 279,
+      "h": 285
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 25,
+    "room": "orchard-window",
+    "id": "pilgrim-detail-11",
+    "form": "bowl",
+    "role": null,
+    "culture": "hamlet",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 100,
+      "y": 326,
+      "w": 56,
+      "h": 46
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 26,
+    "room": "lane-bridge",
+    "id": "pilgrim-detail-1",
+    "form": "gauge",
+    "role": null,
+    "culture": "steppe",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 100,
+      "y": 308,
+      "w": 56,
+      "h": 64
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 27,
+    "room": "bucket-bank",
+    "id": "journey-wonder-wheel",
+    "form": "wonder-wheel",
+    "role": null,
+    "culture": "canal",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 160,
+      "h": 128
+    },
+    "bounds": {
+      "x": 96,
+      "y": -12,
+      "w": 160,
+      "h": 241
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 28,
+    "room": "beech-tea",
+    "id": "forest-tea",
+    "form": "forest-tea",
+    "role": null,
+    "culture": "forest",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 182.85714285714283
+    },
+    "bounds": {
+      "x": 78,
+      "y": 52,
+      "w": 292,
+      "h": 236
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 29,
+    "room": "beech-tea",
+    "id": "pilgrim-detail-5",
+    "form": "boat",
+    "role": null,
+    "culture": "forest",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 97,
+      "y": 322,
+      "w": 61,
+      "h": 50
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 30,
+    "room": "cloth-court",
+    "id": "forest-cloth",
+    "form": "forest-cloth",
+    "role": null,
+    "culture": "forest",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 182.85714285714283
+    },
+    "bounds": {
+      "x": 78,
+      "y": 52,
+      "w": 292,
+      "h": 236
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 31,
+    "room": "cloth-court",
+    "id": "pilgrim-detail-9",
+    "form": "gauge",
+    "role": null,
+    "culture": "forest",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 100,
+      "y": 308,
+      "w": 56,
+      "h": 64
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 32,
+    "room": "glass-reflection",
+    "id": "pilgrim-detail-1",
+    "form": "gauge",
+    "role": null,
+    "culture": "canal",
+    "box": {
+      "x": 96,
+      "y": 128,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 100,
+      "y": 116,
+      "w": 56,
+      "h": 64
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 33,
+    "room": "empty-basin",
+    "id": "pilgrim-detail-3",
+    "form": "bowl",
+    "role": null,
+    "culture": "oasis",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 100,
+      "y": 326,
+      "w": 56,
+      "h": 46
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 34,
+    "room": "salt-pier",
+    "id": "pilgrim-place-7",
+    "form": "pier",
+    "role": null,
+    "culture": "oasis",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 177.23076923076923
+    },
+    "bounds": {
+      "x": 95,
+      "y": 68,
+      "w": 257,
+      "h": 210
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 35,
+    "room": "canyon-turn",
+    "id": "pilgrim-detail-9",
+    "form": "gauge",
+    "role": null,
+    "culture": "highland",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 100,
+      "y": 308,
+      "w": 56,
+      "h": 64
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 36,
+    "room": "mesa-stair",
+    "id": "se-mesa-window",
+    "form": "se-windarch",
+    "role": null,
+    "culture": "highland",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 176
+    },
+    "bounds": {
+      "x": 96,
+      "y": -24,
+      "w": 256,
+      "h": 296
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 37,
+    "room": "chalk-post",
+    "id": "pilgrim-detour-plateau",
+    "form": "salt-pillar",
+    "role": null,
+    "culture": "highland",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 128,
+      "h": 170.66666666666666
+    },
+    "bounds": {
+      "x": 104,
+      "y": 133,
+      "w": 112,
+      "h": 139
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 38,
+    "room": "willow-sunset",
+    "id": "pilgrim-detail-3",
+    "form": "bowl",
+    "role": null,
+    "culture": "shore",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 100,
+      "y": 326,
+      "w": 56,
+      "h": 46
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 39,
+    "room": "carving-porch",
+    "id": "forest-carver",
+    "form": "forest-carver",
+    "role": null,
+    "culture": "forest",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 204.8
+    },
+    "bounds": {
+      "x": 71,
+      "y": 35,
+      "w": 305,
+      "h": 279
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 40,
+    "room": "river-mill",
+    "id": "se-port-wheel",
+    "form": "se-waterwheel",
+    "role": null,
+    "culture": "canal",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 192,
+      "h": 224
+    },
+    "bounds": {
+      "x": 90,
+      "y": 101,
+      "w": 266,
+      "h": 219
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 41,
+    "room": "river-mill",
+    "id": "pilgrim-detail-11",
+    "form": "bowl",
+    "role": null,
+    "culture": "canal",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 100,
+      "y": 326,
+      "w": 56,
+      "h": 46
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 42,
+    "room": "watershed-wheel",
+    "id": "pilgrim-place-9",
+    "form": "wheel",
+    "role": null,
+    "culture": "citadel",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 177.23076923076923
+    },
+    "bounds": {
+      "x": 118,
+      "y": 233,
+      "w": 212,
+      "h": 41
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 43,
+    "room": "answer-wall",
+    "id": "journey-wonder-return",
+    "form": "wonder-return",
+    "role": null,
+    "culture": "citadel",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 128
+    },
+    "bounds": {
+      "x": 91,
+      "y": -64,
+      "w": 266,
+      "h": 196
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 44,
+    "room": "answer-wall",
+    "id": "pilgrim-detail-5",
+    "form": "boat",
+    "role": null,
+    "culture": "citadel",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 97,
+      "y": 322,
+      "w": 61,
+      "h": 50
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 45,
+    "room": "buried-threshold",
+    "id": "pilgrim-detour-windruin",
+    "form": "buried-gate",
+    "role": null,
+    "culture": "steppe",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 128,
+      "h": 76.80000000000001
+    },
+    "bounds": {
+      "x": 96,
+      "y": 126,
+      "w": 135,
+      "h": 50
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 46,
+    "room": "white-steppe",
+    "id": "pilgrim-detour-plateau",
+    "form": "salt-pillar",
+    "role": null,
+    "culture": "oasis",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 128,
+      "h": 170.66666666666666
+    },
+    "bounds": {
+      "x": 104,
+      "y": 133,
+      "w": 112,
+      "h": 139
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 47,
+    "room": "sandbar-light",
+    "id": "west-shoal",
+    "form": "west-shoal",
+    "role": null,
+    "culture": "shore",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 170.66666666666666
+    },
+    "bounds": {
+      "x": 96,
+      "y": 239,
+      "w": 255,
+      "h": 26
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 48,
+    "room": "sandbar-light",
+    "id": "pilgrim-detail-1",
+    "form": "gauge",
+    "role": null,
+    "culture": "shore",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 100,
+      "y": 308,
+      "w": 56,
+      "h": 64
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 49,
+    "room": "dotted-holiday",
+    "id": "west-dots",
+    "form": "west-dots",
+    "role": null,
+    "culture": "canal",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 170.66666666666666
+    },
+    "bounds": {
+      "x": 46,
+      "y": 4,
+      "w": 349,
+      "h": 263
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 50,
+    "room": "cedar-shadow",
+    "id": "pilgrim-detour-conifer",
+    "form": "fallen-cedar",
+    "role": null,
+    "culture": "forest",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 128,
+      "h": 96
+    },
+    "bounds": {
+      "x": 102,
+      "y": 158,
+      "w": 116,
+      "h": 38
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 51,
+    "room": "laundry-lane",
+    "id": "west-extra-village-150",
+    "form": "west-home",
+    "role": "home",
+    "culture": "hamlet",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 170.66666666666666
+    },
+    "bounds": {
+      "x": 76,
+      "y": 31,
+      "w": 279,
+      "h": 238
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 52,
+    "room": "mint-terraces",
+    "id": "west-terrace",
+    "form": "west-terrace",
+    "role": null,
+    "culture": "steppe",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 170.66666666666666
+    },
+    "bounds": {
+      "x": 96,
+      "y": 156,
+      "w": 256,
+      "h": 111
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 53,
+    "room": "flour-bags",
+    "id": "west-extra-windmill-85",
+    "form": "west-windmill",
+    "role": null,
+    "culture": "steppe",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 204.8
+    },
+    "bounds": {
+      "x": -29,
+      "y": -165,
+      "w": 389,
+      "h": 468
+    },
+    "excess": {
+      "left": 29,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 54,
+    "room": "flour-bags",
+    "id": "pilgrim-detail-3",
+    "form": "bowl",
+    "role": null,
+    "culture": "steppe",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 100,
+      "y": 326,
+      "w": 56,
+      "h": 46
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 55,
+    "room": "white-flower-road",
+    "id": "pilgrim-detail-5",
+    "form": "boat",
+    "role": null,
+    "culture": "steppe",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 97,
+      "y": 322,
+      "w": 61,
+      "h": 50
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 56,
+    "room": "cairn-turn",
+    "id": "pilgrim-detour-climb",
+    "form": "summit-cairn",
+    "role": null,
+    "culture": "highland",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 128,
+      "h": 170.66666666666666
+    },
+    "bounds": {
+      "x": 104,
+      "y": 168,
+      "w": 112,
+      "h": 104
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 57,
+    "room": "mountain-sill",
+    "id": "west-mountain",
+    "form": "west-mountain",
+    "role": null,
+    "culture": "highland",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 170.66666666666666
+    },
+    "bounds": {
+      "x": 87,
+      "y": -14,
+      "w": 274,
+      "h": 281
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 58,
+    "room": "glacier-rest",
+    "id": "west-cliff",
+    "form": "west-cliff",
+    "role": null,
+    "culture": "highland",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 170.66666666666666
+    },
+    "bounds": {
+      "x": 96,
+      "y": 168,
+      "w": 256,
+      "h": 99
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 59,
+    "room": "fog-coast",
+    "id": "se-coast-bench",
+    "form": "se-shelter",
+    "role": null,
+    "culture": "shore",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 146.28571428571428
+    },
+    "bounds": {
+      "x": 76,
+      "y": 17,
+      "w": 296,
+      "h": 226
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 60,
+    "room": "letter-window",
+    "id": "journey-wonder-letters",
+    "form": "wonder-letters",
+    "role": null,
+    "culture": "hamlet",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 128
+    },
+    "bounds": {
+      "x": 91,
+      "y": 50,
+      "w": 266,
+      "h": 82
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 61,
+    "room": "letter-window",
+    "id": "pilgrim-detail-9",
+    "form": "gauge",
+    "role": null,
+    "culture": "hamlet",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 100,
+      "y": 308,
+      "w": 56,
+      "h": 64
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 62,
+    "room": "soup-evening",
+    "id": "pilgrim-place-8",
+    "form": "tea",
+    "role": "inn",
+    "culture": "hamlet",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 177.23076923076923
+    },
+    "bounds": {
+      "x": 93,
+      "y": 28,
+      "w": 262,
+      "h": 248
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 63,
+    "room": "rose-grass",
+    "id": "west-grass",
+    "form": "west-grass",
+    "role": null,
+    "culture": "steppe",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 170.66666666666666
+    },
+    "bounds": {
+      "x": 104,
+      "y": 87,
+      "w": 194,
+      "h": 180
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 64,
+    "room": "cloud-ring",
+    "id": "journey-wonder-ring",
+    "form": "wonder-ring",
+    "role": null,
+    "culture": "highland",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 128
+    },
+    "bounds": {
+      "x": 96,
+      "y": -236,
+      "w": 256,
+      "h": 465
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 65,
+    "room": "night-monolith",
+    "id": "pilgrim-place-5",
+    "form": "monolith",
+    "role": null,
+    "culture": "citadel",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 224,
+      "h": 124.44444444444444
+    },
+    "bounds": {
+      "x": 102,
+      "y": -184,
+      "w": 216,
+      "h": 411
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 66,
+    "room": "night-monolith",
+    "id": "pilgrim-detail-9",
+    "form": "gauge",
+    "role": null,
+    "culture": "citadel",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 100,
+      "y": 308,
+      "w": 56,
+      "h": 64
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 67,
+    "room": "ship-ribs",
+    "id": "journey-wonder-ribs",
+    "form": "wonder-ribs",
+    "role": null,
+    "culture": "oasis",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 128
+    },
+    "bounds": {
+      "x": 96,
+      "y": -39,
+      "w": 256,
+      "h": 268
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 68,
+    "room": "harbour-return",
+    "id": "pilgrim-place-0",
+    "form": "tea",
+    "role": "inn",
+    "culture": "canal",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 177.23076923076923
+    },
+    "bounds": {
+      "x": 100,
+      "y": 98,
+      "w": 248,
+      "h": 178
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 69,
+    "room": "river-lamps",
+    "id": "se-port-home-a",
+    "form": "se-home",
+    "role": "home",
+    "culture": "canal",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 170.66666666666666
+    },
+    "bounds": {
+      "x": 100,
+      "y": 96,
+      "w": 248,
+      "h": 173
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 70,
+    "room": "blue-roof-court",
+    "id": "west-village",
+    "form": "west-village",
+    "role": "glass",
+    "culture": "hamlet",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 128
+    },
+    "bounds": {
+      "x": 93,
+      "y": 47,
+      "w": 262,
+      "h": 179
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 71,
+    "room": "school-glass",
+    "id": "west-glass",
+    "form": "west-glass",
+    "role": null,
+    "culture": "canal",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 106.66666666666666
+    },
+    "bounds": {
+      "x": 94,
+      "y": 36,
+      "w": 260,
+      "h": 167
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 72,
+    "room": "gold-windmill",
+    "id": "west-windmill",
+    "form": "west-windmill",
+    "role": null,
+    "culture": "steppe",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 170.66666666666666
+    },
+    "bounds": {
+      "x": 26,
+      "y": -49,
+      "w": 331,
+      "h": 317
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 73,
+    "room": "rose-chalk",
+    "id": "pilgrim-detail-5",
+    "form": "boat",
+    "role": null,
+    "culture": "oasis",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 97,
+      "y": 322,
+      "w": 61,
+      "h": 50
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 74,
+    "room": "air-aqueduct",
+    "id": "journey-wonder-aqueduct",
+    "form": "wonder-aqueduct",
+    "role": null,
+    "culture": "citadel",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 128
+    },
+    "bounds": {
+      "x": 96,
+      "y": -169,
+      "w": 256,
+      "h": 398
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 75,
+    "room": "reeds-sunset",
+    "id": "se-marsh-shelter",
+    "form": "se-shelter",
+    "role": null,
+    "culture": "marsh",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 192
+    },
+    "bounds": {
+      "x": 79,
+      "y": 27,
+      "w": 290,
+      "h": 261
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 76,
+    "room": "river-supper",
+    "id": "se-port-kitchen",
+    "form": "se-kitchen",
+    "role": "kitchen",
+    "culture": "canal",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 153.60000000000002
+    },
+    "bounds": {
+      "x": 100,
+      "y": 93,
+      "w": 248,
+      "h": 167
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 77,
+    "room": "night-arch",
+    "id": "se-coast-arch",
+    "form": "se-seaarch",
+    "role": null,
+    "culture": "shore",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 121.26315789473684
+    },
+    "bounds": {
+      "x": 96,
+      "y": 8,
+      "w": 256,
+      "h": 210
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 78,
+    "room": "waterside-avenue",
+    "id": "west-lane",
+    "form": "west-lane",
+    "role": null,
+    "culture": "forest",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 170.66666666666666
+    },
+    "bounds": {
+      "x": 52,
+      "y": 8,
+      "w": 333,
+      "h": 259
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 79,
+    "room": "forest-wheel-court",
+    "id": "pilgrim-place-1",
+    "form": "forest-wheel",
+    "role": null,
+    "culture": "forest",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 182.85714285714283
+    },
+    "bounds": {
+      "x": 82,
+      "y": 112,
+      "w": 284,
+      "h": 176
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 80,
+    "room": "lily-rest",
+    "id": "pilgrim-detour-shore",
+    "form": "shore-bench",
+    "role": null,
+    "culture": "canal",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 128,
+      "h": 85.33333333333333
+    },
+    "bounds": {
+      "x": 104,
+      "y": 128,
+      "w": 112,
+      "h": 59
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 81,
+    "room": "sandbar-sunset",
+    "id": "pilgrim-detail-5",
+    "form": "boat",
+    "role": null,
+    "culture": "shore",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 97,
+      "y": 322,
+      "w": 61,
+      "h": 50
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 82,
+    "room": "night-distribution",
+    "id": "journey-wonder-distribution",
+    "form": "wonder-distribution",
+    "role": null,
+    "culture": "citadel",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 182.85714285714283
+    },
+    "bounds": {
+      "x": 96,
+      "y": -470,
+      "w": 256,
+      "h": 755
+    },
+    "excess": {
+      "left": 0,
+      "top": 146,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 83,
+    "room": "mist-reeds",
+    "id": "se-marsh-rest",
+    "form": "se-pier",
+    "role": null,
+    "culture": "marsh",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 146.28571428571428
+    },
+    "bounds": {
+      "x": 96,
+      "y": 169,
+      "w": 256,
+      "h": 74
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 84,
+    "room": "mist-reeds",
+    "id": "pilgrim-detail-11",
+    "form": "bowl",
+    "role": null,
+    "culture": "marsh",
+    "box": {
+      "x": 96,
+      "y": 320,
+      "w": 64,
+      "h": 48
+    },
+    "bounds": {
+      "x": 100,
+      "y": 326,
+      "w": 56,
+      "h": 46
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  },
+  {
+    "index": 85,
+    "room": "harbour-cloth",
+    "id": "se-port-home-b",
+    "form": "se-home",
+    "role": "cloth",
+    "culture": "canal",
+    "box": {
+      "x": 96,
+      "y": 96,
+      "w": 256,
+      "h": 182.85714285714283
+    },
+    "bounds": {
+      "x": 100,
+      "y": 99,
+      "w": 248,
+      "h": 182
+    },
+    "excess": {
+      "left": 0,
+      "top": 0,
+      "right": 0,
+      "bottom": 0
+    },
+    "state": {
+      "depth": 0,
+      "alpha": 1,
+      "composite": "source-over",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        256,
+        800
+      ]
+    },
+    "badRects": [],
+    "invalidColors": []
+  }
+]

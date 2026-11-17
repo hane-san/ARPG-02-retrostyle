@@ -31,7 +31,7 @@ function pier(c,x,y,h,w,wet){
  L(c,x-2,y-3,x+w+1,y-3,'#e1ddc5',1);R(c,x-4,y+h-5,w+8,7,'#8d9f89');
  L(c,x-3,y+h-5,x+w+2,y+h-5,'#c7ceb4',1);
 }
-export function drawRetouchedSite(c,s,style){
+export function drawRetouchedSite(c,s,style,{columns=true}={}){
  if(style?.kind!=='court'&&style?.kind!=='wheel')return false;
  const p=fixedSource(s.chapter).palette,w=s.w*32,h=s.h*32,cx=w/2,wet=s.chapter===2;
  c.save();
@@ -47,7 +47,7 @@ export function drawRetouchedSite(c,s,style){
   // The source's exact bowl/column positions and stepped approach survive.
   for(const side of [-1,1])for(let i=0;i<4;i++){
    const xx=side<0?13:w-32,yy=21+i*(h-56)/4;
-   basin(c,xx+(side<0?25:-42),yy+37,44,27,wet);pier(c,xx,yy,58,15,wet);
+   basin(c,xx+(side<0?25:-42),yy+37,44,27,wet);if(columns)pier(c,xx,yy,58,15,wet);
   }
   basin(c,cx-38,34,76,34,wet);
   L(c,cx,68,cx,h-11,wet?'#819e91':'#a29f85',8);
@@ -63,4 +63,19 @@ export function drawRetouchedSite(c,s,style){
   for(let i=0;i<3;i++)basin(c,cx-55+i*40,h-19,29,19,true);
  }
  drawPilgrimPlay(c,s,p);c.restore();return true;
+}
+
+const courtColumns=new WeakMap();
+export function retouchedCourtColumns(site){
+ if(courtColumns.has(site))return courtColumns.get(site);
+ const out=[],w=site.sourceW*32,h=site.sourceH*32,s=site.scale;
+ for(const side of [-1,1])for(let i=0;i<4;i++)out.push({x:site.x*32+(side<0?13:w-32)*s,y:site.y*32+(21+i*(h-56)/4)*s,w:15*s,h:58*s,scale:s,wet:site.chapter===2});
+ courtColumns.set(site,out);return out;
+}
+export function drawRetouchedCourtGround(c,site){
+ c.save();c.translate(site.x*32,site.y*32);c.scale(site.scale,site.scale);
+ drawRetouchedSite(c,{...site,x:0,y:0,w:site.sourceW,h:site.sourceH},STONE,{columns:false});c.restore();
+}
+export function drawRetouchedCourtColumn(c,col){
+ c.save();c.translate(col.x,col.y);c.scale(col.scale,col.scale);pier(c,0,0,58,15,col.wet);c.restore();
 }

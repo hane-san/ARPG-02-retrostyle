@@ -1,3 +1,4 @@
+import {drawConnectedAtlasObject} from './fixed-object-art.js';
 import {drawWoodlandSite} from './fixed-nature-art.js';
 import {drawRetouchedSite} from './fixed-retouch.js';
 import {drawFixedSky,FIXED_SKIES,drawSkyAir,CLEAR_SKY,skyFloor} from './fixed-sky.js';
@@ -37,7 +38,7 @@ export function journeyTile(c,room,x,y){
 export function journeySite(c,site,time,retouch=null){
  c.save();c.translate(site.x*32,site.y*32);c.scale(site.scale,site.scale);
  const source={...site,x:0,y:0,w:site.sourceW,h:site.sourceH};
- if(!drawRetouchedSite(c,source,retouch)&&!drawWoodlandSite(c,source))drawPilgrimSite(c,source,time,0);c.restore();
+ if(!drawRetouchedSite(c,source,retouch)&&!drawWoodlandSite(c,source)&&!drawConnectedAtlasObject(c,source,time,drawPilgrimSite))drawPilgrimSite(c,source,time,0);c.restore();
  if(site.landmarkGlass)drawArrivalRoof(c,{id:'glass-court',site});
 }
 // Sky is outside the movement grid. Its source profiles, geology and repeated
