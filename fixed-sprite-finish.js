@@ -2,10 +2,9 @@
 // journey reuses the pilgrimage's building drawings at a closer, steadier
 // scale, where they read as flat pastel boxes. This finishing pass gives every
 // building, house, piece of equipment and villager on a board what a
-// hand-made 16-bit tile set has: a soft shadow where it meets the ground, a
-// dark one-pixel contour around its silhouette, and light from the upper left
-// (a lit top, a shaded foot and right side). Plain painted walls also gain
-// faint weatherboards.
+// hand-made tile set has: a contact shadow, a material-coloured contour and
+// light from the upper left. People retain a stronger contour for legibility.
+// Plain painted walls also gain faint weatherboards.
 //
 // The drawing itself is still painted straight onto the board, exactly as
 // before (some drawings blend with the ground beneath them), so the contour is
@@ -16,8 +15,8 @@
 // drawing that moves (a windmill's sails, a turning wheel) is measured again
 // each frame.
 const RES=2,PAD_X=96,PAD_UP=420,PAD_DOWN=40,LIMIT=48;
-// Scene retouches and natural props opt into material-coloured, narrower
-// contours; other art keeps its existing finish, including people.
+// Atlas scenery uses material-coloured, narrower contours. People keep
+// the stronger default finish so they remain clear against leaves and stone.
 const FINISHES=Object.freeze({
  default:{width:.9,ink:'rgba(32,44,46,.6)',light:1,shadow:.2},
  foliage:{width:.55,ink:'rgba(49,78,57,.38)',light:.75,shadow:.16},

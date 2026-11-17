@@ -1,11 +1,11 @@
 import {sceneryRetouch} from './fixed-retouch.js';
 import {drawFixedSky,FIXED_SKIES,drawSkyAir,drawNightLights,gradeLand,CLEAR_SKY,skyFloor} from './fixed-sky.js';
 import {journeyMaterial,journeyTile,journeySite,journeyBackground} from './fixed-journey-art.js';
-import {drawForestTree} from './forest-market-art.js';
+import {atlasTreeKind,drawAtlasTreeFeet,drawAtlasTreeCanopy} from './fixed-nature-art.js';
 import {WEST_STUDIES} from './western-world.js';
 import {drawWesternTile,drawWesternSite} from './western-art.js';
 import {drawLandscapeSky,skyGeometry} from './landscape-sky.js';
-import {drawLandscapeFeet,drawLandscapeCanopies} from './landscape-objects.js';
+import {drawLandscapeFeet} from './landscape-objects.js';
 import {drawRegionalGroundDetail} from './regional-detail.js';
 import {drawSrpgUnit} from './sprite-srpg.js';
 import {drawVillager} from './sprite-villager.js';
@@ -22,6 +22,8 @@ const P=(c,p,col)=>{c.fillStyle=col;c.beginPath();p.forEach(([x,y],i)=>i?c.lineT
 const R=(c,x,y,w,h,col)=>{c.fillStyle=col;c.fillRect(x,y,w,h);};
 const tag=t=>({g:'west-ground','=':'=',s:'west-stair',b:'west-bridge',w:'L',t:'west-ground',h:'west-ground','#':'west-wall'}[t]||'west-sky');
 const renderData=new WeakMap(),featureKeys=new WeakMap();
+const TIMBER_SITES=new Set(['boat','shore-bench','fallen-cedar','se-pier','se-shelter','se-kitchen','forest-wheel','forest-cloth','forest-carver','forest-tea','tea','se-home','west-home','west-windmill','se-waterwheel','wheel','pier']);
+const siteMaterial=site=>dwellingRole(site)||TIMBER_SITES.has(site.form)?'timber':'stone';
 const mix=(a,b,t)=>{const c=x=>[1,3,5].map(i=>parseInt(x.slice(i,i+2),16));return '#'+c(a).map((v,i)=>Math.round(v+(c(b)[i]-v)*Math.max(0,Math.min(1,t))).toString(16).padStart(2,'0')).join('');};
 export function fixedClimate(x,y){const east=Math.max(0,Math.min(1,x/45)),south=Math.max(0,Math.min(1,y/45));return {ground:mix(mix('#b8bdad','#a5c4b7',east),mix('#c4c8a7','#b0c8b0',east),south),road:mix('#d4d1ba','#ede0b9',south),sky:mix('#9fc4d4','#c0d7cf',south),stone:mix('#a3b4b4','#d1cbb4',south)};}
 function materialWorld(room){
@@ -105,28 +107,26 @@ function terrain(c,room,hero,screen,time,{destination=null,offsetX=0,offsetY=0,g
  if(room.returnStone){const {x,y}=room.returnStone;c.strokeStyle='#f1e6c5';c.lineWidth=3;c.beginPath();c.ellipse((x+.5)*32,(y+.5)*32,20,10,0,0,Math.PI*2);c.stroke();P(c,[[x*32+16,y*32+7],[x*32+22,y*32+16],[x*32+16,y*32+23],[x*32+10,y*32+16]],'#77a7ae');const g=fixedGuideLayout(room,s).stone,a=guides?nearAlpha(hero,x,y,labels,'stone'):0;if(a>.01){c.save();c.globalAlpha*=a;c.font=`600 ${g.font}px system-ui,sans-serif`;c.textAlign='center';c.textBaseline='middle';nameTag(c,g.x,g.y,g.w,g.h);c.fillStyle='#2f5a62';c.fillText('帰りの道標',g.x,g.y+1);c.restore();}}
  const guidePoints=Object.entries(room.seams).flatMap(([d,seam])=>seam.bands.map(([lo,hi])=>{const m=fixedExitMarker(d,room),j=(lo+hi)/2;return {x:d==='N'||d==='S'?j:m.x,y:(d==='E'||d==='W'?j:m.y)+.8};}));
  if(guides)drawExitStones(c,room,l.scale,hero,labels);
- const market=room.sourceIndex===1;
- if(market)for(const d of trees.landscapeObjects)drawForestTree(c,d,'trunk');else drawLandscapeFeet(c,trees,{left:0,right:14,top:0,bottom:14});
+ const artTree=d=>room.sourceIndex===1?{...d,kind:'orchard'}:d;
+ for(const d of trees.landscapeObjects)if(atlasTreeKind(d.kind))drawAtlasTreeFeet(c,artTree(d));
+ drawLandscapeFeet(c,{...trees,landscapeObjects:trees.landscapeObjects.filter(d=>!atlasTreeKind(d.kind))},{left:0,right:14,top:0,bottom:14});
  // Villagers share the contour, so people read clearly against any ground.
  const objects=room.npcs.map(n=>({y:n.y+.5,paint:()=>drawFinished(c,n,{x:n.x*32,y:n.y*32,w:32,h:32},g=>drawRegionalVillager(g,n.x*32,n.y*32,n,cultureOf(room)),time,{shadow:false})}));
  // Buildings and equipment get a shadow, a contour and light (2026-11-14).
  // Dwellings are re-drawn in the board's regional culture (2026-11-14 experiment),
  // keeping each place's role; landmarks keep their own drawings.
  const culture=cultureOf(room);
- for(const site of [room.site,...room.props||[]].filter(Boolean)){const role=dwellingRole(site),retouch=site===room.site?sceneryRetouch(room):null;objects.push({y:site.y+site.h,paint:()=>drawFinished(c,site,{x:site.x*32,y:site.y*32,w:site.w*32,h:site.h*32},role?(g,t)=>drawRegionalBuilding(g,{x:site.x*32,y:site.y*32,w:site.w*32,h:site.h*32},culture,role,t,retouch?.building):(g,t)=>journeySite(g,site,t,retouch),time,{finish:retouch?.finish||'default'})});}
+ for(const site of [room.site,...room.props||[]].filter(Boolean)){const role=dwellingRole(site),retouch=site===room.site?sceneryRetouch(room):null;objects.push({y:site.y+site.h,paint:()=>drawFinished(c,site,{x:site.x*32,y:site.y*32,w:site.w*32,h:site.h*32},role?(g,t)=>drawRegionalBuilding(g,{x:site.x*32,y:site.y*32,w:site.w*32,h:site.h*32},culture,role,t,retouch?.building):(g,t)=>journeySite(g,site,t,retouch),time,{finish:retouch?.finish||siteMaterial(site)})});}
  // Solid landforms share the contour too; a glint and reeds stay soft.
  for(const f of room.features||[]){
   const parts=featureObjects(c,room,f,time),solid=['bush','boulder','cairn','stump','sign','hut'].includes(f.kind),keys=featureKeys.get(f)||featureKeys.set(f,f.cells.map(()=>({}))).get(f),size=f.kind==='hut'?64:32;
-  parts.forEach((o,i)=>{const [cx,cy]=f.cells[i];objects.push(solid?{y:o.y,paint:()=>drawFinished(c,keys[i],{x:cx*32,y:cy*32,w:size,h:size},g=>featureObjects(g,room,f,time)[i].paint(),time,{shadow:f.kind==='hut',finish:f.kind==='bush'?'foliage':['boulder','cairn'].includes(f.kind)?'stone':f.kind==='stump'?'timber':'default'})}:o);});
+  parts.forEach((o,i)=>{const [cx,cy]=f.cells[i];objects.push(solid?{y:o.y,paint:()=>drawFinished(c,keys[i],{x:cx*32,y:cy*32,w:size,h:size},g=>featureObjects(g,room,f,time)[i].paint(),time,{shadow:f.kind==='hut',finish:f.kind==='bush'?'foliage':['boulder','cairn'].includes(f.kind)?'stone':['stump','sign','hut'].includes(f.kind)?'timber':'default'})}:o);});
  }
- if(room.house)objects.push({y:room.house.y+room.house.h,paint:()=>{drawFinished(c,room.house,{x:room.house.x*32,y:room.house.y*32,w:room.house.w*32,h:room.house.h*32},room.house.landmark?g=>drawFixedHouse(g,room.house):(g,t)=>drawRegionalBuilding(g,{x:room.house.x*32,y:room.house.y*32,w:room.house.w*32,h:room.house.h*32},cultureOf(room),'home',t),time);if(!room.house.landmark){c.strokeStyle='#8c9e92';c.lineWidth=1;c.beginPath();c.moveTo(2*32,8*32);c.lineTo(5.5*32,8*32);c.stroke();for(let i=0;i<4;i++)R(c,(2.2+i*.7)*32,8*32,14,19,['#b8c9c3','#dfc9ab','#a7bac0'][i%3]);}}});
+ if(room.house)objects.push({y:room.house.y+room.house.h,paint:()=>{drawFinished(c,room.house,{x:room.house.x*32,y:room.house.y*32,w:room.house.w*32,h:room.house.h*32},room.house.landmark?g=>drawFixedHouse(g,room.house):(g,t)=>drawRegionalBuilding(g,{x:room.house.x*32,y:room.house.y*32,w:room.house.w*32,h:room.house.h*32},cultureOf(room),'home',t),time,{finish:'timber'});if(!room.house.landmark){c.strokeStyle='#8c9e92';c.lineWidth=1;c.beginPath();c.moveTo(2*32,8*32);c.lineTo(5.5*32,8*32);c.stroke();for(let i=0;i<4;i++)R(c,(2.2+i*.7)*32,8*32,14,19,['#b8c9c3','#dfc9ab','#a7bac0'][i%3]);}}});
  if(hero)objects.push({y:hero.py+.7,paint:()=>{c.save();c.beginPath();c.rect(0,0,480,480);c.clip();c.translate(0,hero.moving&&time!==0?-Math.abs(Math.sin(hero.stride*9))*1.5:0);drawSrpgUnit(c,{x:hero.px,y:hero.py,team:'ally',acted:false,type:'sword'});R(c,hero.px*32+8,hero.py*32+13,15,3,'#b8d9dc');R(c,hero.px*32+7,hero.py*32+16,5,7,'#7dbac5');c.restore();}});
- objects.sort((a,b)=>a.y-b.y);objects.forEach(o=>o.paint());if(market)for(const d of trees.landscapeObjects){c.save();if((hero&&Math.abs(hero.px-d.x)<3&&hero.py<d.y+.5&&hero.py>d.y-5)||guidePoints.some(m=>Math.abs(m.x-d.x)<3&&m.y<d.y+.5&&m.y>d.y-7.5))c.globalAlpha*=.24;drawForestTree(c,d,'canopy');c.restore();}else{
-  // An exit chevron thins only a crown that really covers it (2026-11-13);
-  // trees merely near an exit stay solid instead of turning to ghosts.
-  const covered=guidePoints.filter(m=>(trees.landscapeObjects||[]).some(d=>['willow','pine','cypress'].includes(d.kind)&&Math.abs(m.x-d.x)<(d.kind==='willow'?2.2:1)&&m.y<d.y+.5&&m.y>d.y-4.5));
-  drawLandscapeCanopies(c,guides&&covered.length?{...trees,npcs:[...trees.npcs,...covered]}:trees,{left:0,right:14,top:0,bottom:14},hero||{px:-100,py:-100});
- }
+ objects.sort((a,b)=>a.y-b.y);objects.forEach(o=>o.paint());
+ const openings=[...(hero?[{x:hero.px,y:hero.py}]:[]),...room.npcs,...(guides?guidePoints:[])];
+ for(const d of trees.landscapeObjects)if(atlasTreeKind(d.kind)&&d.kind!=='rock')drawAtlasTreeCanopy(c,artTree(d),openings);
  if(guides){
   // Creatures, leaves, snow, birds, and smoke from chimneys, tents and kitchens.
   const smoke=[],cul=cultureOf(room);
@@ -172,6 +172,25 @@ function drawExitStones(c,room,scale,hero,labels){
 // world-space terrain is visible on both sides, through a stable terrain window.
 const layers=new WeakMap();
 export function releaseFixedArt(c){const layer=layers.get(c);if(layer)layer.width=layer.height=1;}
+// A northern exit belongs to this board: a short path recedes into its own
+// landscape, without a full-size slice of the next board's steps or buildings.
+function drawNorthApproach(c,room,l,ox,oy,weight,rooms){
+ const seam=room.seams?.N;if(!seam)return;
+ const s=l.scale,base=l.y+oy,top=base-96*s,tile=32*s;
+ const strip=(lo,hi,col)=>{const x0=l.x+ox+lo*tile,x1=l.x+ox+(hi+1)*tile,mid=(x0+x1)/2,half=(x1-x0)*.29;
+  const g=c.createLinearGradient(0,base,0,top);g.addColorStop(0,col);g.addColorStop(.45,col+'a0');g.addColorStop(1,col+'00');
+  P(c,[[x0,base+1],[x1,base+1],[mid+half,top],[mid-half,top]],g);
+ };
+ c.save();c.globalAlpha=weight*.85;
+ // A broad grass landing is open country, not an eleven-tile road. Only
+ // the actual road, bridge or stair at the edge recedes into the landscape.
+ const road=[];for(let x=0;x<15;x++)if(['=','s','b'].includes(room.tileAt(x,0))&&seam.bands.some(([lo,hi])=>x>=lo&&x<=hi))road.push(x);
+ for(let i=0;i<road.length;i++){const lo=road[i];while(road[i+1]===road[i]+1)i++;strip(lo,road[i],groundStyle(room).path);}
+ const next=rooms.find(r=>r.id===room.connections.N),channels=[];
+ for(let x=0;x<15;x++)if(['w','d'].includes(room.tileAt(x,0))&&next?.tileAt(x,14)===room.tileAt(x,0))channels.push(x);
+ if(channels.length<=3)for(const x of channels)strip(x,x,room.tileAt(x,0)==='d'?'#b6a88c':'#7fa8ab');
+ c.restore();
+}
 // Whether side and lower neighbours have room to read as land (two tiles).
 export function fixedNeighbourVisibility(l,screen){const sliver=64*l.scale;return {sides:l.x>=sliver,below:screen.h-(l.y+l.height)>=sliver};}
 export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[room],transition=null,labels=null}={}){
@@ -201,7 +220,7 @@ export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[r
  // surroundings continue there instead (2026-11-13). Wide screens still show
  // the side boards as continuing country.
  const {sides,below}=fixedNeighbourVisibility(l,screen);
- const visible=rooms.filter(r=>{const dx=r.col-cx,dy=r.row-cy;if(Math.abs(dx)>1.01||Math.abs(dy)>1.01||!behindOnly(r))return false;if(Math.abs(dx)>.5&&!sides)return false;if(dy>.5&&!below)return false;return true;});
+ const visible=rooms.filter(r=>{if(screen.h>=screen.w)return false;const dx=r.col-cx,dy=r.row-cy;if(Math.abs(dx)>1.01||Math.abs(dy)>1.01||!behindOnly(r))return false;if(Math.abs(dx)>.5&&!sides)return false;if(dy>.5&&!below)return false;return true;});
  const veilOf=r=>mixHex('#dce6e1',FIXED_SKIES[r.sky]?.colors?.[3]||'#dce6e1',.45),veil=transition?mixHex(veilOf(room),veilOf(transition.to),p):veilOf(room);
  const clipL=Math.min(l.x-64*l.scale,0),clipR=Math.max(l.x+l.width+64*l.scale,screen.w);
  behind.save();behind.beginPath();behind.rect(clipL,l.y-150*l.scale,clipR-clipL,l.height+214*l.scale);behind.clip();
@@ -225,7 +244,7 @@ export function drawFixedRoom(c,room,hero,screen,time,{destination=null,rooms=[r
  // Where a hidden neighbour's road leaves the board, the road runs on a little
  // into the surrounding land and fades, so an exit still reads as a way on.
  for(const [r,weight] of front){const ox=(r.col-cx)*stride,oy=(r.row-cy)*stride,t=32*l.scale;
-  for(const [d,seam] of Object.entries(r.seams||{})){if((d==='E'||d==='W')&&sides||d==='S'&&below||d==='N')continue;
+  for(const [d,seam] of Object.entries(r.seams||{})){if(d==='N'&&screen.h>=screen.w){drawNorthApproach(c,r,l,ox,oy,weight,rooms);continue;}if((d==='E'||d==='W')&&sides||d==='S'&&below||d==='N')continue;
    const reach=d==='S'?screen.h-(l.y+oy+l.height):d==='W'?l.x+ox:screen.w-(l.x+ox+l.width);if(reach<=1)continue;
    const road=seam.ground||'#d9cfb2';
    for(const [lo,hi] of seam.bands){c.save();c.globalAlpha=weight*.85;
