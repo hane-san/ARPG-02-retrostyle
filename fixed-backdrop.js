@@ -1,3 +1,4 @@
+import {drawLeafCluster} from './fixed-nature-art.js';
 import {fixedSource} from './fixed-journey-data.js';
 import {FIXED_SKIES} from './fixed-sky.js';
 // Producer request 2026-11-12, portrait first: the walkable board and its
@@ -30,7 +31,7 @@ const paletteOf=room=>room.sourceIndex===undefined?['#b8c4a6','#ddd6bd','#7fa5ad
 function colours(room,kind){
  const p=paletteOf(room);
  return {
-  canopy:['#2f5444','#43705a','#6b9670',mix(p[0],'#2c4a3c',.55)],
+  canopy:['#3d5e4b','#537960','#83a17a',mix(p[0],'#2c4a3c',.55)],
   grass:[mix(p[0],'#5f8d58',.5),mix(p[0],'#77a265',.45),mix(p[0],'#a6c58a',.3),'#4d7a4c'],
   garden:[mix(p[0],'#5c8a5b',.45),mix(p[0],'#7aa66e',.4),'#a7c98d','#3e6a4b'],
   fields:[mix(p[0],'#7d9f5c',.5),mix(p[0],'#b9b56d',.45),mix(p[2],'#6fa3b0',.3),'#5f7f4a'],
@@ -64,7 +65,7 @@ function cell(c,room,kind,col,x,y){
 function crowns(c,room,col,cells){
  const [d,m,l]=col;cells.sort((a,b)=>a[1]-b[1]);
  for(const [x,y] of cells){const gx=Math.round(room.col)*15+x,gy=Math.round(room.row)*15+y;
-  for(let k=0;k<2;k++){const cx=x*32+8+noise(gx,gy,k)*16,cy=y*32+8+noise(gx,gy,k+4)*16,r=13+noise(gx,gy,k+8)*6;E(c,cx+2,cy+4,r,r*.86,'#1f3a2e88');E(c,cx,cy,r,r*.86,d);E(c,cx-2,cy-2,r*.78,r*.66,m);E(c,cx-4,cy-5,r*.38,r*.3,l);}
+  for(let k=0;k<2;k++){const cx=x*32+8+noise(gx,gy,k)*16,cy=y*32+8+noise(gx,gy,k+4)*16,r=13+noise(gx,gy,k+8)*6;drawLeafCluster(c,cx,cy,r,r*.84,[d,m,mix(l,m,.35)],noise(gx,gy,k+12));}
  }
 }
 const caches=new Map(),CACHE_LIMIT=14,RES=2;
@@ -121,10 +122,21 @@ export function drawPanorama(c,room,w,h,l,time,distant=null,afterMiddle=null){
  // The nearest land is not a flat colour: the board's own surroundings
  // continue under every neighbour and out to the screen's edges, rising out
  // of the near band in a soft fade.
- const tex=nearTexture(room,kind,col);
- if(tex&&c.createPattern){const pattern=c.createPattern(tex,'repeat');if(pattern){if(pattern.setTransform&&typeof DOMMatrix!=='undefined')pattern.setTransform(new DOMMatrix().translate(l.x,l.y).scale(s));c.save();const from=Math.min(top+6*s,midBase+22*s);c.fillStyle=pattern;c.globalAlpha=.92;c.beginPath();c.rect(0,from,w,h);c.fill();c.restore();
- // Soften the fade with a haze that matches the band above it.
- const veil=c.createLinearGradient(0,from,0,from+64*s);veil.addColorStop(0,near);veil.addColorStop(.35,near+'aa');veil.addColorStop(1,near+'00');R(c,0,from,w,64*s,veil);}}
+ const layer=nearLandLayer(room,kind,col,w,h,l,Math.max(top+8*s,midBase+22*s));
+ if(layer)c.drawImage(layer,0,0,w,h);
+}
+// Fade the texture's alpha itself, so the distant hillside stays curved and
+// the forest does not begin as a hard, full-size band across the upper screen.
+const nearLayers=new Map();
+function nearLandLayer(room,kind,col,w,h,l,from){
+ if(typeof document==='undefined')return null;
+ const key=[kind,...col,w,h,l.scale].join(':');if(nearLayers.has(key))return nearLayers.get(key);
+ const tex=nearTexture(room,kind,col),layer=document.createElement('canvas');layer.width=w;layer.height=h;
+ const g=layer.getContext('2d'),pattern=g.createPattern(tex,'repeat');
+ if(pattern.setTransform&&typeof DOMMatrix!=='undefined')pattern.setTransform(new DOMMatrix().translate(l.x,l.y).scale(l.scale));
+ g.fillStyle=pattern;g.fillRect(0,0,w,h);g.globalCompositeOperation='destination-in';
+ const mask=g.createLinearGradient(0,from,0,Math.max(from+24*l.scale,l.y-16*l.scale));mask.addColorStop(0,'#0000');mask.addColorStop(.45,'#0005');mask.addColorStop(1,'#000e');g.fillStyle=mask;g.fillRect(0,0,w,h);
+ nearLayers.set(key,layer);while(nearLayers.size>14)nearLayers.delete(nearLayers.keys().next().value);return layer;
 }
 // A repeating 8 x 8 cell tile of a board's surroundings for the near land.
 const textures=new Map();
@@ -263,15 +275,19 @@ function bushWall(c,room,kind){
  if(!['grass','garden','canopy'].includes(kind))return;
  const col=colours(room,kind),walkable=t=>['g','=','s','b','k'].includes(t),edge=[];
  for(let y=0;y<15;y++)for(let x=0;x<15;x++)if(room.tileAt(x,y)===' '&&!(room.skyline&&y<3&&kind!=='canopy')&&[[0,-1],[0,1],[-1,0],[1,0]].some(([dx,dy])=>walkable(room.tileAt(x+dx,y+dy))))edge.push([x,y]);
- if(kind==='canopy'){crowns(c,room,col,edge);return;}
+ // Keep the leafy boundary rooted in blocked cells. A two-pixel fringe
+ // softens the edge without covering a narrow path, water or a stair.
+ c.save();c.beginPath();for(const [x,y] of edge)c.rect(x*32-2,y*32-2,36,36);c.clip();
+ if(kind==='canopy'){crowns(c,room,col,edge);c.restore();return;}
  const [d,m,l]=kind==='garden'?['#365f45','#4f7f57','#86b07a']:[mix(col[0],'#335a3c',.4),mix(col[1],'#4c7d4a',.35),mix(col[2],'#93ba79',.3)];
  edge.sort((a,b)=>a[1]-b[1]);
  for(const [x,y] of edge){const gx=Math.round(room.col)*15+x,gy=Math.round(room.row)*15+y;
   const count=noise(gx,gy,59)>.65?3:2;
   for(let k=0;k<count;k++){const bx=x*32+(k+.5)*32/count+noise(gx,gy,k+60)*4-2,by=y*32+10+noise(gx,gy,k+63)*12,r=9+noise(gx,gy,k+66)*4,ry=r*(.75+noise(gx,gy,k+70)*.16);
-   E(c,bx+1.5,by+3,r+1,ry*.94,'#1f33285c');E(c,bx,by,r,ry,d);E(c,bx-1,by-1.5,r*.8,ry*.78,m);E(c,bx-2.5,by-3.5,r*.34,ry*.32,mix(l,m,.24));
-   if(kind==='garden'&&noise(gx,gy,k+69)<.18)for(let i=0;i<3;i++)E(c,bx-3+i*3,by-2+(i%2)*3,1.3,1.3,['#f4dbe2','#ffffff','#f6eeb6'][i]);}
+   drawLeafCluster(c,bx,by,r,ry,[mix(d,m,.25),m,mix(l,m,.35)],noise(gx,gy,k+73));
+   if(kind==='garden'&&noise(gx,gy,k+69)<.18)for(let i=0;i<3;i++)E(c,bx-3+i*3,by-2+(i%2)*3,1.3,1.3,['#ecd5d8','#eee8d6','#e6ddb0'][i]);}
  }
+ c.restore();
 }
 // Cliff faces where the land really drops: weathered rock with a lit lip, a
 // darker foot and a ragged lower edge, instead of flat grey blocks.

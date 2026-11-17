@@ -1,0 +1,434 @@
+[
+  {
+    "label": "after-final",
+    "width": 320,
+    "height": 568,
+    "leg": "out",
+    "id": "glass-reflection",
+    "actor": {
+      "x": 6,
+      "y": 13
+    },
+    "cue": "0:1"
+  },
+  {
+    "label": "after-final",
+    "width": 320,
+    "height": 568,
+    "leg": "out",
+    "id": "wet-temple",
+    "actor": {
+      "x": 7,
+      "y": 13
+    },
+    "cue": "0:1"
+  },
+  {
+    "label": "after-final",
+    "width": 320,
+    "height": 568,
+    "leg": "out",
+    "id": "cypresses",
+    "actor": {
+      "x": 13,
+      "y": 7
+    },
+    "cue": "6:2"
+  },
+  {
+    "label": "after-final",
+    "width": 320,
+    "height": 568,
+    "leg": "out",
+    "id": "mist-pines",
+    "actor": {
+      "x": 1,
+      "y": 7
+    },
+    "cue": "0:2"
+  },
+  {
+    "label": "after-final",
+    "width": 320,
+    "height": 568,
+    "leg": "out",
+    "id": "willow-sunset",
+    "actor": {
+      "x": 6,
+      "y": 1
+    },
+    "cue": "22:2"
+  },
+  {
+    "label": "after-final",
+    "width": 320,
+    "height": 568,
+    "leg": "out",
+    "id": "glacier-rest",
+    "actor": {
+      "x": 6,
+      "y": 1
+    },
+    "cue": "6:2"
+  },
+  {
+    "label": "after-final",
+    "width": 320,
+    "height": 568,
+    "leg": "out",
+    "id": "white-flower-road",
+    "actor": {
+      "x": 13,
+      "y": 4
+    },
+    "cue": "28:1"
+  },
+  {
+    "label": "after-final",
+    "width": 320,
+    "height": 568,
+    "leg": "out",
+    "id": "night-distribution",
+    "actor": {
+      "x": 6,
+      "y": 1
+    },
+    "cue": "22:2"
+  },
+  {
+    "label": "after-final",
+    "width": 320,
+    "height": 568,
+    "leg": "out",
+    "id": "forest-picnic",
+    "actor": {
+      "x": 7,
+      "y": 13
+    },
+    "cue": "40:2"
+  },
+  {
+    "label": "after-final",
+    "width": 320,
+    "height": 568,
+    "leg": "back",
+    "id": "night-distribution",
+    "actor": {
+      "x": 6,
+      "y": 1
+    },
+    "cue": "22:2"
+  },
+  {
+    "label": "after-final",
+    "width": 320,
+    "height": 568,
+    "leg": "back",
+    "id": "white-flower-road",
+    "actor": {
+      "x": 7,
+      "y": 13
+    },
+    "cue": "28:1"
+  },
+  {
+    "label": "after-final",
+    "width": 320,
+    "height": 568,
+    "leg": "back",
+    "id": "glacier-rest",
+    "actor": {
+      "x": 1,
+      "y": 6
+    },
+    "cue": "6:2"
+  },
+  {
+    "label": "after-final",
+    "width": 320,
+    "height": 568,
+    "leg": "back",
+    "id": "willow-sunset",
+    "actor": {
+      "x": 6,
+      "y": 13
+    },
+    "cue": "22:2"
+  },
+  {
+    "label": "after-final",
+    "width": 320,
+    "height": 568,
+    "leg": "back",
+    "id": "mist-pines",
+    "actor": {
+      "x": 13,
+      "y": 7
+    },
+    "cue": "0:2"
+  },
+  {
+    "label": "after-final",
+    "width": 320,
+    "height": 568,
+    "leg": "back",
+    "id": "cypresses",
+    "actor": {
+      "x": 13,
+      "y": 7
+    },
+    "cue": "6:2"
+  },
+  {
+    "label": "after-final",
+    "width": 320,
+    "height": 568,
+    "leg": "back",
+    "id": "wet-temple",
+    "actor": {
+      "x": 1,
+      "y": 7
+    },
+    "cue": "0:1"
+  },
+  {
+    "label": "after-final",
+    "width": 320,
+    "height": 568,
+    "leg": "back",
+    "id": "glass-reflection",
+    "actor": {
+      "x": 6,
+      "y": 1
+    },
+    "cue": "0:1"
+  },
+  {
+    "label": "after-final",
+    "width": 320,
+    "height": 568,
+    "leg": "back",
+    "id": "watershed-wheel",
+    "actor": {
+      "x": 5,
+      "y": 1
+    },
+    "cue": "6:2"
+  },
+  {
+    "label": "after-final",
+    "width": 390,
+    "height": 844,
+    "leg": "out",
+    "id": "glass-reflection",
+    "actor": {
+      "x": 6,
+      "y": 13
+    },
+    "cue": "0:1"
+  },
+  {
+    "label": "after-final",
+    "width": 390,
+    "height": 844,
+    "leg": "out",
+    "id": "wet-temple",
+    "actor": {
+      "x": 7,
+      "y": 13
+    },
+    "cue": "0:1"
+  },
+  {
+    "label": "after-final",
+    "width": 390,
+    "height": 844,
+    "leg": "out",
+    "id": "cypresses",
+    "actor": {
+      "x": 13,
+      "y": 7
+    },
+    "cue": "6:2"
+  },
+  {
+    "label": "after-final",
+    "width": 390,
+    "height": 844,
+    "leg": "out",
+    "id": "mist-pines",
+    "actor": {
+      "x": 1,
+      "y": 7
+    },
+    "cue": "0:2"
+  },
+  {
+    "label": "after-final",
+    "width": 390,
+    "height": 844,
+    "leg": "out",
+    "id": "willow-sunset",
+    "actor": {
+      "x": 6,
+      "y": 1
+    },
+    "cue": "22:2"
+  },
+  {
+    "label": "after-final",
+    "width": 390,
+    "height": 844,
+    "leg": "out",
+    "id": "glacier-rest",
+    "actor": {
+      "x": 6,
+      "y": 1
+    },
+    "cue": "6:2"
+  },
+  {
+    "label": "after-final",
+    "width": 390,
+    "height": 844,
+    "leg": "out",
+    "id": "white-flower-road",
+    "actor": {
+      "x": 13,
+      "y": 4
+    },
+    "cue": "28:1"
+  },
+  {
+    "label": "after-final",
+    "width": 390,
+    "height": 844,
+    "leg": "out",
+    "id": "night-distribution",
+    "actor": {
+      "x": 6,
+      "y": 1
+    },
+    "cue": "22:2"
+  },
+  {
+    "label": "after-final",
+    "width": 390,
+    "height": 844,
+    "leg": "out",
+    "id": "forest-picnic",
+    "actor": {
+      "x": 7,
+      "y": 13
+    },
+    "cue": "40:2"
+  },
+  {
+    "label": "after-final",
+    "width": 390,
+    "height": 844,
+    "leg": "back",
+    "id": "night-distribution",
+    "actor": {
+      "x": 6,
+      "y": 1
+    },
+    "cue": "22:2"
+  },
+  {
+    "label": "after-final",
+    "width": 390,
+    "height": 844,
+    "leg": "back",
+    "id": "white-flower-road",
+    "actor": {
+      "x": 7,
+      "y": 13
+    },
+    "cue": "28:1"
+  },
+  {
+    "label": "after-final",
+    "width": 390,
+    "height": 844,
+    "leg": "back",
+    "id": "glacier-rest",
+    "actor": {
+      "x": 1,
+      "y": 6
+    },
+    "cue": "6:2"
+  },
+  {
+    "label": "after-final",
+    "width": 390,
+    "height": 844,
+    "leg": "back",
+    "id": "willow-sunset",
+    "actor": {
+      "x": 6,
+      "y": 13
+    },
+    "cue": "22:2"
+  },
+  {
+    "label": "after-final",
+    "width": 390,
+    "height": 844,
+    "leg": "back",
+    "id": "mist-pines",
+    "actor": {
+      "x": 13,
+      "y": 7
+    },
+    "cue": "0:2"
+  },
+  {
+    "label": "after-final",
+    "width": 390,
+    "height": 844,
+    "leg": "back",
+    "id": "cypresses",
+    "actor": {
+      "x": 13,
+      "y": 7
+    },
+    "cue": "6:2"
+  },
+  {
+    "label": "after-final",
+    "width": 390,
+    "height": 844,
+    "leg": "back",
+    "id": "wet-temple",
+    "actor": {
+      "x": 1,
+      "y": 7
+    },
+    "cue": "0:1"
+  },
+  {
+    "label": "after-final",
+    "width": 390,
+    "height": 844,
+    "leg": "back",
+    "id": "glass-reflection",
+    "actor": {
+      "x": 6,
+      "y": 1
+    },
+    "cue": "0:1"
+  },
+  {
+    "label": "after-final",
+    "width": 390,
+    "height": 844,
+    "leg": "back",
+    "id": "watershed-wheel",
+    "actor": {
+      "x": 5,
+      "y": 1
+    },
+    "cue": "6:2"
+  }
+]

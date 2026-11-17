@@ -1,0 +1,63 @@
+{
+  "frames": [
+    {
+      "w": 320,
+      "h": 477,
+      "id": "forest-picnic",
+      "neighbours": 0
+    },
+    {
+      "w": 320,
+      "h": 477,
+      "id": "glass-reflection",
+      "neighbours": 0
+    },
+    {
+      "w": 320,
+      "h": 477,
+      "id": "glacier-rest",
+      "neighbours": 0
+    },
+    {
+      "w": 390,
+      "h": 753,
+      "id": "forest-picnic",
+      "neighbours": 0
+    },
+    {
+      "w": 390,
+      "h": 753,
+      "id": "glass-reflection",
+      "neighbours": 0
+    },
+    {
+      "w": 390,
+      "h": 753,
+      "id": "glacier-rest",
+      "neighbours": 0
+    },
+    {
+      "w": 844,
+      "h": 316,
+      "id": "forest-picnic",
+      "neighbours": 86077
+    },
+    {
+      "w": 844,
+      "h": 316,
+      "id": "glass-reflection",
+      "neighbours": 158734
+    },
+    {
+      "w": 844,
+      "h": 316,
+      "id": "glacier-rest",
+      "neighbours": 158734
+    }
+  ],
+  "grassLandingDoesNotWidenTrail": true,
+  "outsideChanges": 0,
+  "outsideExamples": [],
+  "thinned": 250,
+  "stable": true
+}
